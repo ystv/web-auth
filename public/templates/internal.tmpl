@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Internal</title>
+  </head>
+  <body>
+    {{template "head.tmpl" .}}
+    <h1>Internal</h1>
+    <p>Username {{.User.Username}}</p>
+    <a href="/api/set_token">Get API token</a>
+    <a href="/api/test">Test API</a>
+    <a href="/api/refresh_token">Refresh token</a> (only works when expiry <30s)
+  </body>
+</html>

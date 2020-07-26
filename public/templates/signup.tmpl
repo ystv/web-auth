@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Signup</title>
+  </head>
+  <body>
+    {{template "head.tmpl" .}}
+    <h1>Signup</h1>
+    <form action="/signup/" method="POST">
+    Email:
+      <input
+        type="text"
+        name="email"
+        style="border: 1px solid gray; box-shadow: none;"
+      /><br />
+      Username:
+      <input
+        type="text"
+        name="username"
+        style="border: 1px solid gray; box-shadow: none;"
+      /><br />
+      Password:
+      <input
+        type="password"
+        name="password"
+        style="border: 1px solid gray; box-shadow: none;"
+      /><br />
+      <input
+        type="submit"
+        value="signup"
+        style="border: 1px solid gray; box-shadow: none;"
+      />
+    </form>
+  </body>
+</html>
