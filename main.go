@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/rmil/web-auth/views"
+	"github.com/ystv/web-auth/views"
 )
 
 func main() {
@@ -20,8 +20,6 @@ func main() {
 	http.HandleFunc("/signup/", views.SignUpFunc)
 
 	// API
-	// Returns the JWT directly
-	http.HandleFunc("/api/get_token", views.GetTokenHandler)
 	// Sets a cookie with the JWT inside of it
 	http.HandleFunc("/api/set_token", views.SetTokenHandler)
 	http.HandleFunc("/api/refresh_token", views.RefreshHandler)

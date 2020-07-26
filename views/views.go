@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/rmil/web-auth/sessions"
+	"github.com/ystv/web-auth/sessions"
 )
 
 var (
@@ -65,7 +65,7 @@ type User struct {
 }
 
 func getData(r *http.Request) *Context {
-	c := Context{Version: "0.3.0",
+	c := Context{Version: "0.4.0",
 		Greeting: "Auth service",
 		User: User{
 			IsLoggedIn: sessions.IsLoggedIn(r),

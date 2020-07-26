@@ -7,16 +7,22 @@
     {{template "head.tmpl" .}}
     <h1>Signup</h1>
     <form action="/signup/" method="POST">
-    Email:
-      <input
-        type="text"
-        name="email"
-        style="border: 1px solid gray; box-shadow: none;"
-      /><br />
-      Username:
+    Username:
       <input
         type="text"
         name="username"
+        style="border: 1px solid gray; box-shadow: none;"
+      /><br />
+      Name:
+      <input
+        type="text"
+        name="name"
+        style="border: 1px solid gray; box-shadow: none;"
+      /><br />
+      Nickname:
+      <input
+        type="text"
+        name="nickname"
         style="border: 1px solid gray; box-shadow: none;"
       /><br />
       Password:

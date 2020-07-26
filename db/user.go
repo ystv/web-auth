@@ -4,14 +4,14 @@ import "log"
 
 //CreateUser will create a new user, take as input the parameters and
 //insert it into database
-func CreateUser(username, password, email string) error {
-	err := Query("insert into user(username, password, email) values(?,?,?)", username, password, email)
+func CreateUser(username, name, nickname, password string) error {
+	err := Query("insert into user(username, name, nickname, password) values(?,?,?,?)", username, name, nickname, password)
 	return err
 }
 
-//ValidUser will check if the user exists in db and if exists if the username password
+//ValidateUser will check if the user exists in db and if exists if the username password
 //combination is valid
-func ValidUser(username, password string) bool {
+func ValidateUser(username, password string) bool {
 	var passwordFromDB string
 	userSQL := "select password from user where username=?"
 	log.Print("validating user ", username)

@@ -9,7 +9,7 @@
         <li><a href="/">Home</a></li>
         {{if .User.IsLoggedIn}}
             <li><a href="/internal/">Internal</a></li>
-            <li><a href="logout/">Logout ({{.User.Username}})</a></li>
+            <li><a href="/logout/">Logout ({{.User.Username}})</a></li>
         {{else}}
             <li><a href="/login/">Login</a></li>
             <li><a href="/signup/">Signup</a></li>

@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	whirl "github.com/balacode/zr-whirl"
-	"github.com/rmil/web-auth/db"
-	"github.com/rmil/web-auth/sessions"
+	"github.com/ystv/web-auth/db"
+	"github.com/ystv/web-auth/sessions"
 )
 
 // LogoutFunc Implements the logout functionality.
@@ -49,12 +49,13 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 
 		password = hashPassword(password)
 
-		if (username != "" && password != "") && db.ValidUser(username, password) {
+		if (username != "" && password != "") && db.ValidateUser(username, password) {
 			session.Values["loggedin"] = "true"
 			session.Values["userID"], _ = db.GetUserID(username)
 			session.Values["username"] = username
 			session.Save(r, w)
 			log.Printf("user \"%s\" is authenticated", username)
+			w = getJWTCookie(w, r)
 			http.Redirect(w, r, "/", http.StatusFound)
 			return
 		}
@@ -68,12 +69,13 @@ func SignUpFunc(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		r.ParseForm()
 		username := r.Form.Get("username")
+		name := r.Form.Get("name")
+		nickname := r.Form.Get("nickname")
 		password := r.Form.Get("password")
-		email := r.Form.Get("email")
 
 		password = hashPassword(password)
 
-		err := db.CreateUser(username, password, email)
+		err := db.CreateUser(username, name, nickname, password)
 		if err != nil {
 			http.Error(w, "Unable to sign user up", http.StatusInternalServerError)
 		} else {

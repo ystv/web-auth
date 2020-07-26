@@ -29,7 +29,9 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = database.db.Exec("CREATE TABLE `user` (`user_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` VARCHAR(50), `username` VARCHAR(50), `password` VARCHAR(50))")
+	_, err = database.db.Exec(`CREATE TABLE IF NOT EXISTS "user"
+	("user_id" INTEGER PRIMARY KEY AUTOINCREMENT, "username" VARCHAR(50),
+	"name" VARCHAR(5), "nickname" VARCHAR(50), "password" VARCHAR(50))`)
 	Close()
 	database.db, err = sql.Open("sqlite3", "./users.db")
 }
@@ -41,13 +43,8 @@ func Close() {
 
 //Query encapsulates running multiple queries which don't do much things
 func Query(sql string, args ...interface{}) error {
-	res, err := database.db.Exec("CREATE TABLE `user` (`user_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` VARCHAR(50), `username` VARCHAR(50), `password` VARCHAR(50))")
-	log.Printf("res: %+v err: %v", res, err)
-	log.Print("inside query")
 	SQL, err := database.db.Prepare(sql)
-	log.Print(err)
 	tx, err := database.db.Begin()
-	log.Print(err)
 	_, err = tx.Stmt(SQL).Exec(args...)
 	if err != nil {
 		log.Println("taskQuery: ", err)
@@ -58,7 +55,6 @@ func Query(sql string, args ...interface{}) error {
 			log.Println(err)
 			return err
 		}
-		log.Println("Commit successful")
 	}
 	return err
 }

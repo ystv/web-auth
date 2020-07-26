@@ -3,7 +3,7 @@ package views
 import (
 	"net/http"
 
-	"github.com/rmil/web-auth/sessions"
+	"github.com/ystv/web-auth/sessions"
 )
 
 // InternalFunc handles a request to the internal template
