@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Welcome</title>
+  </head>
+  <body>
+    {{template "head.gohtml" .}}
+    <section class="hero is-fullheight">
+      <div class="hero-body">
+        <div class="container">
+          <div class="columns is-centered">
+            <div class="column is-5-tablet is-4-desktop is-3-widescreen">
+              <div class="box">
+                <p class="title is-5">Web Auth</p>
+                <p>Provides access to</p>
+                <ul class="subtitle is-5">
+                  <li>MyTV</li>
+                  <li>Creator Studio</li>
+                  <li>Clapper</li>
+                  <li>Windows AD</li>
+                </ul>
+              </div>
+
+              <div class="notification">{{.Message}}</div>
+            </div>
+            <div class="column is-5-tablet is-4-desktop is-3-widescreen">
+              <form action="/login/" method="POST" class="box">
+                <div class="field">
+                  <label class="label">Email / Username</label>
+                  <div class="control has-icons-left">
+                    <input
+                      class="input"
+                      type="text"
+                      name="username"
+                      placeholder="e.g. rdjm502@york.ac.uk"
+                    />
+                    <span class="icon is-small is-left">
+                      <i class="fas fa-user"></i>
+                    </span>
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="label">Password</label>
+                  <div class="control has-icons-left">
+                    <input
+                      class="input"
+                      type="password"
+                      name="password"
+                      placeholder="********"
+                    />
+                    <span class="icon is-small is-left">
+                      <i class="fa fa-lock"></i>
+                    </span>
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="checkbox">
+                    <input type="checkbox" />
+                    Remember me
+                  </label>
+                </div>
+                <div class="control">
+                  <input class="button is-link" type="submit" value="Login" />
+                </div>
+              </form>
+              <p class="has-text-grey">
+                <a href="/signup">Sign Up</a> &nbsp;·&nbsp;
+                <a href="/forgot">Forgot Password</a> &nbsp;·&nbsp;
+                <a href="https://github.com/ystv/web-auth"
+                  >Version: {{.Version}}</a
+                >
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>
