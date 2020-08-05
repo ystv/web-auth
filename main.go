@@ -17,6 +17,7 @@ func main() {
 	http.HandleFunc("/login/", views.LoginFunc)
 	http.HandleFunc("/logout/", views.LogoutFunc)
 	http.HandleFunc("/signup/", views.SignUpFunc)
+	http.HandleFunc("/forgot/", views.ForgotFunc)
 
 	// API
 	// Sets a cookie with the JWT inside of it

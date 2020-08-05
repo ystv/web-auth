@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Signup</title>
+    {{template "head.gohtml" .}}
+  </head>
+  <body>
+    <section class="hero is-fullheight">
+      <div class="hero-body">
+        <div class="container">
+          <div class="columns is-centered">
+            <div class="column is-5-tablet is-4-desktop is-3-widescreen">
+              <div class="box">
+                <progress class="progress is-link" value="30" max="90"
+                  >30%</progress
+                >
+                <p class="title is-5">Forgot password</p>
+                <p>Oh dear, pop your email in and we'll send a reset link</p>
+
+                <form action="/forgot/" method="POST">
+                  <div class="field">
+                    <label class="label">Email address</label>
+                    <div class="control">
+                      <input
+                        class="input"
+                        type="text"
+                        name="email"
+                        placeholder="rdjm502@york.ac.uk"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="control">
+                    <input class="button is-link" type="submit" value="Reset" />
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>
