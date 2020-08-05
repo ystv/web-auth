@@ -2,21 +2,10 @@ package db
 
 import (
 	"context"
-	"os"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
-	"github.com/ystv/web-auth/types"
+	_ "github.com/lib/pq" // postgres driver
 )
-
-var store Store
-
-// Store interface, all functions offered by the db
-type Store interface {
-	VerifyUser(ctx context.Context, user *types.User) error
-	UpdateUser(ctx context.Context, user *types.User) error
-	GetPermissions(ctx context.Context, u *types.User) error
-}
 
 // DB is the connection pool
 type DB struct {
@@ -24,8 +13,8 @@ type DB struct {
 }
 
 // NewStore initialises the store
-func NewStore() (*DB, error) {
-	dbpool, err := sqlx.ConnectContext(context.Background(), "postgres", os.Getenv("DATABASE_URL"))
+func NewStore(dataSourceName string) (*DB, error) {
+	dbpool, err := sqlx.ConnectContext(context.Background(), "postgres", dataSourceName)
 	if err != nil {
 		return nil, err
 	}

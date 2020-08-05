@@ -9,10 +9,10 @@ import (
 // error returns an empty unauthenticated user
 func GetUser(s *sessions.Session) types.User {
 	val := s.Values["user"]
-	var user = types.User{}
-	user, ok := val.(types.User)
+	var u = types.User{}
+	u, ok := val.(types.User)
 	if !ok {
 		return types.User{Authenticated: false}
 	}
-	return user
+	return u
 }

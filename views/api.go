@@ -109,7 +109,7 @@ func getJWTCookie(w http.ResponseWriter, r *http.Request) http.ResponseWriter {
 
 	expirationTime := time.Now().Add(5 * time.Minute)
 	u := helpers.GetUser(session)
-	err := s.db.GetPermissions(context.Background(), &u)
+	err := uStore.GetPermissions(context.Background(), &u)
 	if err != nil {
 		log.Printf("getJWTCookie failed: %+v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

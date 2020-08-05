@@ -1,7 +1,6 @@
 package views
 
 import (
-	"context"
 	"log"
 	"net/http"
 
@@ -50,7 +49,7 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Authentication
-	if s.db.VerifyUser(context.Background(), &u) != nil {
+	if uStore.VerifyUser(r.Context(), &u) != nil {
 		log.Printf("Invalid user %d", u.UserID)
 		err = session.Save(r, w)
 		if err != nil {
@@ -86,16 +85,37 @@ func SignUpFunc(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-
 		if err != nil {
-			http.Error(w, "Unable to sign user up", http.StatusInternalServerError)
+			http.Error(w, "User doesn't ", http.StatusInternalServerError)
 		} else {
 			http.Redirect(w, r, "/login/", http.StatusFound)
 		}
 	} else if r.Method == "GET" {
-		err := tpl.ExecuteTemplate(w, "signup.gohtml", "")
+		err := tpl.ExecuteTemplate(w, "signup.gohtml", nil)
 		if err != nil {
 			log.Print(err)
 		}
 	}
+}
+
+// ForgotFunc will let users reset their password
+func ForgotFunc(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		tpl.ExecuteTemplate(w, "forgot.gohtml", nil)
+	case "POST":
+		r.ParseForm()
+		u := types.User{Email: r.Form.Get("email")}
+
+		if u.Email == "" {
+			tpl.ExecuteTemplate(w, "forgot.gohtml", nil)
+		}
+		// Get user and check if it exists
+		if uStore.GetUser(r.Context(), &u) != nil {
+			// User doesn't exist
+			// TODO send no user message
+			tpl.ExecuteTemplate(w, "forgot.gohtml", nil)
+		}
+	}
+
 }

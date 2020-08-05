@@ -5,29 +5,29 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/ystv/web-auth/db"
 	"github.com/ystv/web-auth/types"
+	"github.com/ystv/web-auth/user"
 )
 
-type storey struct {
-	db db.Store
-}
+var (
+	uStore *user.Store
 
-var s *storey
+	cStore *sessions.CookieStore
 
-var cStore *sessions.CookieStore
-
-var tpl *template.Template
+	tpl *template.Template
+)
 
 func init() {
-	dbStore, err := db.NewStore()
+	dbStore, err := db.NewStore(os.Getenv("DATABASE_URL"))
 	if err != nil {
-		log.Fatalf("Failed to connect to db: %+v", err)
+		log.Fatalf("NewStore failed: %+v", dbStore)
 	}
-	s = &storey{dbStore}
+	uStore = user.NewUserStore(dbStore)
 
 	authKeyOne := securecookie.GenerateRandomKey(64)
 	encryptionKeyOne := securecookie.GenerateRandomKey(32)
