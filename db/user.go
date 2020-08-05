@@ -11,7 +11,7 @@ import (
 
 // UpdateUser will update a user record by ID
 func (store *DB) UpdateUser(ctx context.Context, user *types.User) error {
-	_, err := store.Exec(ctx,
+	_, err := store.ExecContext(ctx,
 		`UPDATE people.users
 		SET password = $1,
 			salt = $2,
@@ -27,17 +27,18 @@ func (store *DB) UpdateUser(ctx context.Context, user *types.User) error {
 // VerifyUser will verify the identity of a user using any of the identity fields and password
 func (store *DB) VerifyUser(ctx context.Context, user *types.User) error {
 	plaintext := user.Password
-	err := store.QueryRow(ctx,
-		`SELECT password, salt
+	err := store.GetContext(ctx, user,
+		`SELECT user_id, password, salt
 		FROM people.users
-		WHERE username = $1;`, user.Username).Scan(&user.Password, &user.Salt)
+		WHERE username = $1 OR email = $1
+		LIMIT 1;`, user.Username)
 	if err != nil {
-		return errors.New("Invalid username/password")
+		return errors.New("Invalid credentials")
 	}
 	if hashPass(user.Salt+plaintext) == user.Password {
 		return nil
 	}
-	return errors.New("Invalid username/password")
+	return errors.New("Invalid credentials")
 
 }
 

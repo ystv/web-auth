@@ -23,7 +23,7 @@ var cStore *sessions.CookieStore
 var tpl *template.Template
 
 func init() {
-	dbStore, err := db.NewStore("")
+	dbStore, err := db.NewStore()
 	if err != nil {
 		log.Fatalf("Failed to connect to db: %+v", err)
 	}

@@ -1,6 +1,7 @@
 package views
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -9,11 +10,13 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ystv/web-auth/helpers"
+	"github.com/ystv/web-auth/types"
 )
 
 // JWTClaims represents basic identifiable/useful claims
 type JWTClaims struct {
-	UserID int `json:"userID"`
+	UserID      int                `json:"id"`
+	Permissions []types.Permission `json:"perms"`
 	jwt.StandardClaims
 }
 
@@ -105,8 +108,16 @@ func getJWTCookie(w http.ResponseWriter, r *http.Request) http.ResponseWriter {
 	session, _ := cStore.Get(r, "session")
 
 	expirationTime := time.Now().Add(5 * time.Minute)
+	u := helpers.GetUser(session)
+	err := s.db.GetPermissions(context.Background(), &u)
+	if err != nil {
+		log.Printf("getJWTCookie failed: %+v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return w
+	}
 	claims := &JWTClaims{
-		UserID: helpers.GetUser(session).UserID,
+		UserID:      u.UserID,
+		Permissions: u.Permissions,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},

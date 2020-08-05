@@ -1,7 +1,6 @@
 package views
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/ystv/web-auth/helpers"
@@ -16,7 +15,6 @@ func InternalFunc(w http.ResponseWriter, r *http.Request) {
 	}
 	c := getData(session)
 	err = tpl.ExecuteTemplate(w, "internal.gohtml", c)
-	log.Print(err)
 }
 
 //RequiresLogin is a middleware which will be used for each

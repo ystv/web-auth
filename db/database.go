@@ -4,7 +4,8 @@ import (
 	"context"
 	"os"
 
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"github.com/ystv/web-auth/types"
 )
 
@@ -14,16 +15,17 @@ var store Store
 type Store interface {
 	VerifyUser(ctx context.Context, user *types.User) error
 	UpdateUser(ctx context.Context, user *types.User) error
+	GetPermissions(ctx context.Context, u *types.User) error
 }
 
 // DB is the connection pool
 type DB struct {
-	*pgxpool.Pool
+	*sqlx.DB
 }
 
 // NewStore initialises the store
-func NewStore(dataSourceName string) (*DB, error) {
-	dbpool, err := pgxpool.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+func NewStore() (*DB, error) {
+	dbpool, err := sqlx.ConnectContext(context.Background(), "postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		return nil, err
 	}

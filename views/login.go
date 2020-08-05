@@ -93,6 +93,9 @@ func SignUpFunc(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/login/", http.StatusFound)
 		}
 	} else if r.Method == "GET" {
-		tpl.ExecuteTemplate(w, "signup.gohtml", "")
+		err := tpl.ExecuteTemplate(w, "signup.gohtml", "")
+		if err != nil {
+			log.Print(err)
+		}
 	}
 }
