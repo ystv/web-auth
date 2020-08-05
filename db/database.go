@@ -1,60 +1,31 @@
 package db
 
 import (
-	"database/sql"
-	"log"
+	"context"
+	"os"
 
-	//SQLite3 driver
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/ystv/web-auth/types"
 )
 
-var database Database
-var err error
+var store Store
 
-// Database encapsulates database
-type Database struct {
-	db *sql.DB
+// Store interface, all functions offered by the db
+type Store interface {
+	VerifyUser(ctx context.Context, user *types.User) error
+	UpdateUser(ctx context.Context, user *types.User) error
 }
 
-func (db Database) query(q string, args ...interface{}) (rows *sql.Rows) {
-	rows, err := db.db.Query(q, args...)
+// DB is the connection pool
+type DB struct {
+	*pgxpool.Pool
+}
+
+// NewStore initialises the store
+func NewStore(dataSourceName string) (*DB, error) {
+	dbpool, err := pgxpool.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
-		log.Println(err)
+		return nil, err
 	}
-	return rows
-}
-
-func init() {
-	database.db, err = sql.Open("sqlite3", "./users.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	_, err = database.db.Exec(`CREATE TABLE IF NOT EXISTS "user"
-	("user_id" INTEGER PRIMARY KEY AUTOINCREMENT, "username" VARCHAR(50),
-	"name" VARCHAR(5), "nickname" VARCHAR(50), "password" VARCHAR(50))`)
-	Close()
-	database.db, err = sql.Open("sqlite3", "./users.db")
-}
-
-// Close function closes this database connection
-func Close() {
-	database.db.Close()
-}
-
-//Query encapsulates running multiple queries which don't do much things
-func Query(sql string, args ...interface{}) error {
-	SQL, err := database.db.Prepare(sql)
-	tx, err := database.db.Begin()
-	_, err = tx.Stmt(SQL).Exec(args...)
-	if err != nil {
-		log.Println("taskQuery: ", err)
-		tx.Rollback()
-	} else {
-		err = tx.Commit()
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-	}
-	return err
+	return &DB{dbpool}, nil
 }

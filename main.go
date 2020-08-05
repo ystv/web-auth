@@ -8,10 +8,9 @@ import (
 )
 
 func main() {
-	views.PopulateTemplates()
 
 	// Static
-	fs := http.FileServer(http.Dir("./static"))
+	fs := http.FileServer(http.Dir("./public/static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	// Login logout
@@ -21,14 +20,13 @@ func main() {
 
 	// API
 	// Sets a cookie with the JWT inside of it
-	http.HandleFunc("/api/set_token", views.SetTokenHandler)
-	http.HandleFunc("/api/refresh_token", views.RefreshHandler)
+	http.HandleFunc("/api/set_token", views.RequiresLogin(views.SetTokenHandler))
 	http.HandleFunc("/api/test", views.TestAPI)
 
 	// Login required
 	http.HandleFunc("/internal/", views.RequiresLogin(views.InternalFunc))
 
 	// Public
-	http.HandleFunc("/", views.WelcomeFunc)
+	http.HandleFunc("/", views.IndexFunc)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

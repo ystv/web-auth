@@ -1,49 +1,65 @@
 package db
 
-import "log"
+import (
+	"context"
+	"encoding/hex"
+	"errors"
 
-//CreateUser will create a new user, take as input the parameters and
-//insert it into database
-func CreateUser(username, name, nickname, password string) error {
-	err := Query("insert into user(username, name, nickname, password) values(?,?,?,?)", username, name, nickname, password)
-	return err
+	whirl "github.com/balacode/zr-whirl"
+	"github.com/ystv/web-auth/types"
+)
+
+// UpdateUser will update a user record by ID
+func (store *DB) UpdateUser(ctx context.Context, user *types.User) error {
+	_, err := store.Exec(ctx,
+		`UPDATE people.users
+		SET password = $1,
+			salt = $2,
+			email = $3,
+			reset_pw = $4
+		WHERE user_id = $5;`, user.Password, user.Salt, user.Email, user.ResetPw)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-//ValidateUser will check if the user exists in db and if exists if the username password
-//combination is valid
-func ValidateUser(username, password string) bool {
-	var passwordFromDB string
-	userSQL := "select password from user where username=?"
-	log.Print("validating user ", username)
-	rows := database.query(userSQL, username)
+// VerifyUser will verify the identity of a user using any of the identity fields and password
+func (store *DB) VerifyUser(ctx context.Context, user *types.User) error {
+	plaintext := user.Password
+	err := store.QueryRow(ctx,
+		`SELECT password, salt
+		FROM people.users
+		WHERE username = $1;`, user.Username).Scan(&user.Password, &user.Salt)
+	if err != nil {
+		return errors.New("Invalid username/password")
+	}
+	if hashPass(user.Salt+plaintext) == user.Password {
+		return nil
+	}
+	return errors.New("Invalid username/password")
 
-	defer rows.Close()
-	if rows.Next() {
-		err := rows.Scan(&passwordFromDB)
-		if err != nil {
-			return false
-		}
-	}
-	//If the password matches, return true
-	if password == passwordFromDB {
-		return true
-	}
-	//by default return false
-	return false
 }
 
-//GetUserID will get the user's ID from the database
-func GetUserID(username string) (int, error) {
-	var userID int
-	userSQL := "select user_id from user where username=?"
-	rows := database.query(userSQL, username)
-
-	defer rows.Close()
-	if rows.Next() {
-		err := rows.Scan(&userID)
-		if err != nil {
-			return -1, err
-		}
+func hashPass(password string) string {
+	iter := 1000
+	var next string
+	for i := 0; i < iter; i++ {
+		next += password
+		tmp := whirl.HashOfBytes([]byte(next), []byte(""))
+		next = hex.EncodeToString(tmp)
 	}
-	return userID, nil
+	return next
 }
+
+// func hashPass(pass []byte) ([]byte, error) {
+// 	pass, err := bcrypt.GenerateFromPassword(pass, 10)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return pass, nil
+// }
+
+// func checkPassHash(hash, pass []byte) error {
+// 	return bcrypt.CompareHashAndPassword(hash, pass)
+// }

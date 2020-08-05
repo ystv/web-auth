@@ -8,14 +8,12 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/ystv/web-auth/sessions"
+	"github.com/ystv/web-auth/helpers"
 )
 
 // JWTClaims represents basic identifiable/useful claims
 type JWTClaims struct {
-	UserID   int    `json:"userID"`
-	Username string `json:"username"`
-
+	UserID int `json:"userID"`
 	jwt.StandardClaims
 }
 
@@ -45,40 +43,6 @@ func ValidateToken(myToken string) (bool, *JWTClaims) {
 
 // SetTokenHandler sets a valid JWT in a cookie instead of returning a string
 func SetTokenHandler(w http.ResponseWriter, r *http.Request) {
-	if !sessions.IsLoggedIn(r) {
-		w.WriteHeader(http.StatusForbidden)
-		return
-	}
-	w = getJWTCookie(w, r)
-}
-
-// RefreshHandler refreshes the JWT token using a stil in date
-// JWT instead of using the session.
-func RefreshHandler(w http.ResponseWriter, r *http.Request) {
-	c, err := r.Cookie("token")
-	if err != nil {
-		if err == http.ErrNoCookie {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	tokenString := c.Value
-	claims := &JWTClaims{}
-
-	ok, claims := ValidateToken(tokenString)
-	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	// Will check if token is within 30 seconds of expiry, otherwise bad request
-	if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) > 30*time.Second {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
 	w = getJWTCookie(w, r)
 }
 
@@ -114,7 +78,7 @@ func TestAPI(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		log.Printf("token is valid \"%s\" is logged in", claims.Username)
+		log.Printf("token is valid \"%d\" is logged in", claims.UserID)
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusOK)
 
@@ -137,11 +101,12 @@ type statusStruct struct {
 }
 
 func getJWTCookie(w http.ResponseWriter, r *http.Request) http.ResponseWriter {
-	expirationTime := time.Now().Add(5 * time.Minute)
+	// Probably would be nice to handle this error
+	session, _ := cStore.Get(r, "session")
 
+	expirationTime := time.Now().Add(5 * time.Minute)
 	claims := &JWTClaims{
-		UserID:   sessions.GetUserID(r),
-		Username: sessions.GetUsername(r),
+		UserID: helpers.GetUser(session).UserID,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
@@ -166,5 +131,6 @@ func getJWTCookie(w http.ResponseWriter, r *http.Request) http.ResponseWriter {
 		Domain:  ".ystv.co.uk",
 		Path:    "/",
 	})
+	w.Header().Set("Access-Control-Allow-Origin", "creator.ystv.co.uk:3000")
 	return w
 }
