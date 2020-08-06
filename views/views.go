@@ -6,9 +6,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
+	"github.com/patrickmn/go-cache"
 	"github.com/ystv/web-auth/infrastructure/db"
 	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/types"
@@ -23,6 +25,8 @@ var (
 	tpl *template.Template
 
 	m *mail.Mail
+
+	c *cache.Cache
 )
 
 // New initialises connections, templates, and cookies
@@ -36,14 +40,17 @@ func New() {
 
 	// Connecting to mail
 	m, err = mail.NewMailer(mail.Config{
-		Host:     "smtp.ystv.co.uk",
+		Host:     os.Getenv("SMTP_HOST"),
 		Port:     587,
-		Username: "Super secret username!",
-		Password: "random password for the commit gang. I'll move to environment",
+		Username: os.Getenv("SMTP_USERNAME"),
+		Password: os.Getenv("SMTP_PASSWORD"),
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Initialising cache
+	c = cache.New(1*time.Hour, 1*time.Hour)
 
 	// Initialising session cookie
 	authKeyOne := securecookie.GenerateRandomKey(64)

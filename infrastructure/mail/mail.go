@@ -42,7 +42,7 @@ func NewMailer(config Config) (*Mail, error) {
 
 // SendEmail sends a plaintext email
 func (m *Mail) SendEmail(recipient, subject, code string) error {
-	body := fmt.Sprintf(`<html><body><a href=https://comp.ystv.co.uk/reset/?code=%s>Reset password</a></body></html>`, code)
+	body := fmt.Sprintf(`<html><body><a href=https://comp.ystv.co.uk/reset/?code=%s>Reset password</a> <p>(Link valid for 1 hour)</p></body></html>`, code)
 	email := mail.NewMSG()
 	email.SetFrom("YSTV Security <no-reply@ystv.co.uk>").AddTo(recipient).SetSubject(subject)
 	email.SetBody(mail.TextHTML, body)

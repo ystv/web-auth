@@ -6,7 +6,9 @@ import (
 	"strconv"
 
 	"github.com/gorilla/schema"
+	"github.com/patrickmn/go-cache"
 	"github.com/ystv/web-auth/types"
+	"github.com/ystv/web-auth/utils"
 )
 
 var decoder = schema.NewDecoder()
@@ -44,6 +46,7 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	u := types.User{}
 	err = decoder.Decode(&u, r.PostForm)
+	u.Email = u.Username
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -68,7 +71,7 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	log.Printf("user \"%d\" is authenticated", u.UserID)
+	log.Printf("user \"%s\" is authenticated", u.Username)
 	w = getJWTCookie(w, r)
 	http.Redirect(w, r, "/internal", http.StatusFound)
 	return
@@ -116,8 +119,12 @@ func ForgotFunc(w http.ResponseWriter, r *http.Request) {
 			// TODO send no user message
 			tpl.ExecuteTemplate(w, "forgot.gohtml", nil)
 		}
+		code := utils.RandomString(10)
+		c.Set(code, u.UserID, cache.DefaultExpiration)
+
 		// Valid request, send email with reset code
-		err := m.SendEmail(u.Email, "Forgotten Password", "689")
+		log.Printf("reset email: %s, code: %s", u.Email, code)
+		err := m.SendEmail(u.Email, "Forgotten Password", string(code))
 		if err != nil {
 			log.Printf("SendEmail failed: %s", err)
 		}
@@ -132,18 +139,23 @@ func ResetFunc(w http.ResponseWriter, r *http.Request) {
 
 	if code == "" {
 		http.Redirect(w, r, "/", http.StatusFound)
+		return
 	}
 
+	id, found := c.Get(code)
+	if !found {
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+	c.Delete(code)
 	ctx := struct {
 		Code   string
-		UserID string
-	}{code, "3348"}
+		UserID int
+	}{code, id.(int)}
 
 	switch r.Method {
 	case "GET":
-		if code == "689" {
-			tpl.ExecuteTemplate(w, "reset.gohtml", ctx)
-		}
+		tpl.ExecuteTemplate(w, "reset.gohtml", ctx)
 	case "POST":
 		r.ParseForm()
 		p := r.Form.Get("password")
@@ -152,15 +164,21 @@ func ResetFunc(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// Good password
-		ctx.UserID = r.Form.Get("userid")
-
-		// Verify code
+		formUserID := r.Form.Get("userid")
+		// TODO error handling
+		ctx.UserID, _ = strconv.Atoi(formUserID)
+		if ctx.UserID != id.(int) {
+			http.Error(w, "Incorrect user id", http.StatusBadRequest)
+		}
 
 		// Update record
-		id, _ := strconv.Atoi(ctx.UserID)
-		u := types.User{UserID: id, Password: p}
-		log.Printf("Updating user: %d", u.UserID)
-		uStore.UpdateUserPassword(r.Context(), &u)
+
+		u := types.User{UserID: id.(int), Password: p}
+		err := uStore.UpdateUserPassword(r.Context(), &u)
+		if err != nil {
+			log.Printf("Failed to reset user: %+v", err)
+		}
+		log.Printf("updated user: %s", u.Username)
 		http.Redirect(w, r, "/", http.StatusFound)
 	}
 }

@@ -26,8 +26,8 @@ func (store *DB) GetUser(ctx context.Context, user *types.User) error {
 	return store.GetContext(ctx, user,
 		`SELECT user_id, username, email, salt, password
 		FROM people.users
-		WHERE username = $1 OR email = $1 OR user_id = $2 
-		LIMIT 1;`, user.Username, user.UserID)
+		WHERE username = $1 AND username != '' OR email = $2 AND email != '' OR user_id = $3
+		LIMIT 1;`, user.Username, user.Email, user.UserID)
 	// The login form stores both the user/email in the username field
 }
 
