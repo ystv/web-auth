@@ -9,7 +9,8 @@ import (
 
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
-	"github.com/ystv/web-auth/db"
+	"github.com/ystv/web-auth/infrastructure/db"
+	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/types"
 	"github.com/ystv/web-auth/user"
 )
@@ -20,31 +21,47 @@ var (
 	cStore *sessions.CookieStore
 
 	tpl *template.Template
+
+	m *mail.Mail
 )
 
-func init() {
+// New initialises connections, templates, and cookies
+func New() {
+	// Connecting to stores
 	dbStore, err := db.NewStore(os.Getenv("DATABASE_URL"))
 	if err != nil {
-		log.Fatalf("NewStore failed: %+v", dbStore)
+		log.Fatalf("NewStore failed: %+v", err)
 	}
 	uStore = user.NewUserStore(dbStore)
 
+	// Connecting to mail
+	m, err = mail.NewMailer(mail.Config{
+		Host:     "smtp.ystv.co.uk",
+		Port:     587,
+		Username: "Super secret username!",
+		Password: "random password for the commit gang. I'll move to environment",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Initialising session cookie
 	authKeyOne := securecookie.GenerateRandomKey(64)
 	encryptionKeyOne := securecookie.GenerateRandomKey(32)
-
 	cStore = sessions.NewCookieStore(
 		authKeyOne,
 		encryptionKeyOne,
 	)
-
 	cStore.Options = &sessions.Options{
 		MaxAge:   60 * 15,
 		HttpOnly: true,
 		Path:     "/",
 	}
 
+	// So we can use our struct in the cookie
 	gob.Register(types.User{})
 
+	// Loading templates
 	tpl = template.Must(template.ParseGlob("public/templates/*.gohtml"))
 }
 
@@ -75,7 +92,7 @@ func getData(s *sessions.Session) *Context {
 	if !ok {
 		u = types.User{Authenticated: false}
 	}
-	c := Context{Version: "0.4.1",
+	c := Context{Version: "0.4.3",
 		Message: "Auth service: now with postgres support",
 		User:    u,
 	}

@@ -3,6 +3,7 @@ package views
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/schema"
 	"github.com/ystv/web-auth/types"
@@ -47,7 +48,6 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
 	// Authentication
 	if uStore.VerifyUser(r.Context(), &u) != nil {
 		log.Printf("Invalid user %d", u.UserID)
@@ -88,7 +88,7 @@ func SignUpFunc(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			http.Error(w, "User doesn't ", http.StatusInternalServerError)
 		} else {
-			http.Redirect(w, r, "/login/", http.StatusFound)
+			http.Redirect(w, r, "/", http.StatusFound)
 		}
 	} else if r.Method == "GET" {
 		err := tpl.ExecuteTemplate(w, "signup.gohtml", nil)
@@ -98,7 +98,7 @@ func SignUpFunc(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ForgotFunc will let users reset their password
+// ForgotFunc handles sending a reset email
 func ForgotFunc(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
@@ -116,6 +116,51 @@ func ForgotFunc(w http.ResponseWriter, r *http.Request) {
 			// TODO send no user message
 			tpl.ExecuteTemplate(w, "forgot.gohtml", nil)
 		}
+		// Valid request, send email with reset code
+		err := m.SendEmail(u.Email, "Forgotten Password", "689")
+		if err != nil {
+			log.Printf("SendEmail failed: %s", err)
+		}
+		http.Redirect(w, r, "/", http.StatusFound)
 	}
 
+}
+
+// ResetFunc handles resetting the password
+func ResetFunc(w http.ResponseWriter, r *http.Request) {
+	code := r.URL.Query().Get("code")
+
+	if code == "" {
+		http.Redirect(w, r, "/", http.StatusFound)
+	}
+
+	ctx := struct {
+		Code   string
+		UserID string
+	}{code, "3348"}
+
+	switch r.Method {
+	case "GET":
+		if code == "689" {
+			tpl.ExecuteTemplate(w, "reset.gohtml", ctx)
+		}
+	case "POST":
+		r.ParseForm()
+		p := r.Form.Get("password")
+		if p != r.Form.Get("confirmpassword") || p == "" {
+			tpl.ExecuteTemplate(w, "reset.gohtml", ctx)
+			return
+		}
+		// Good password
+		ctx.UserID = r.Form.Get("userid")
+
+		// Verify code
+
+		// Update record
+		id, _ := strconv.Atoi(ctx.UserID)
+		u := types.User{UserID: id, Password: p}
+		log.Printf("Updating user: %d", u.UserID)
+		uStore.UpdateUserPassword(r.Context(), &u)
+		http.Redirect(w, r, "/", http.StatusFound)
+	}
 }

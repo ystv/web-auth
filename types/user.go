@@ -9,7 +9,7 @@ type (
 		Lastname      string `db:"last_name" json:"lastName" schema:"lastname"`
 		Password      string `db:"password" json:"-" schema:"password"`
 		Salt          string `db:"salt" json:"-"`
-		Email         string `db:"email" json:"email"`
+		Email         string `db:"email" json:"email" schema:"email"`
 		ResetPw       bool   `db:"reset_pw" json:"-"`
 		Authenticated bool
 		Permissions   []Permission `json:"permissions"`

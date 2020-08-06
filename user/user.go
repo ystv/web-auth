@@ -29,23 +29,34 @@ func NewUserStore(store IStore) *Store {
 
 // GetUser returns a user using any unique identity fields
 func (s *Store) GetUser(ctx context.Context, u *types.User) error {
-	return s.GetUser(ctx, u)
+	return s.userStore.GetUser(ctx, u)
 }
 
 // GetPermissions returns all permissions of a user
 func (s *Store) GetPermissions(ctx context.Context, u *types.User) error {
-	return s.GetPermissions(ctx, u)
+	return s.userStore.GetPermissions(ctx, u)
 }
 
 // VerifyUser will check that that the password is correct with provided
 // credentials
 func (s *Store) VerifyUser(ctx context.Context, u *types.User) error {
 	plaintext := u.Password
-	s.GetUser(ctx, u)
+	err := s.GetUser(ctx, u)
+	if err != nil {
+		return err
+	}
 	if hashPass(u.Salt+plaintext) == u.Password {
 		return nil
 	}
 	return errors.New("Invalid credentials")
+}
+
+// UpdateUserPassword will update the password and set the reset_pw to false
+func (s *Store) UpdateUserPassword(ctx context.Context, u *types.User) error {
+	s.GetUser(ctx, u)
+	u.Password = hashPass(u.Salt + u.Password)
+	u.ResetPw = false
+	return s.userStore.UpdateUser(ctx, u)
 }
 
 func hashPass(password string) string {

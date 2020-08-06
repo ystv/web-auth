@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-
+	views.New()
 	// Static
 	fs := http.FileServer(http.Dir("./public/static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
@@ -18,6 +18,7 @@ func main() {
 	http.HandleFunc("/logout/", views.LogoutFunc)
 	http.HandleFunc("/signup/", views.SignUpFunc)
 	http.HandleFunc("/forgot/", views.ForgotFunc)
+	http.HandleFunc("/reset/", views.ResetFunc)
 
 	// API
 	// Sets a cookie with the JWT inside of it

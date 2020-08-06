@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Reset password</title>
+    {{template "head.gohtml" .}}
+  </head>
+<body>
+    <section class="hero is-fullheight">
+      <div class="hero-body">
+        <div class="container">
+          <div class="columns is-centered">
+            <div class="column is-5-tablet is-4-desktop is-3-widescreen">
+              <div class="box">
+                <progress class="progress is-link" value="60" max="90"
+                  >60%</progress
+                >
+                <p class="title is-5">Reset password</p>
+                <p>Fantastic, let's get this password sorted.</p>
+                <form action="/reset/" method="POST">
+                  <div class="field">
+                  <label class="label">Password</label>
+                  <div class="control has-icons-left">
+                    <input
+                      class="input"
+                      type="password"
+                      name="password"
+                      placeholder="********"
+                    />
+                    <span class="icon is-small is-left">
+                      <i class="fa fa-lock"></i>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label class="label">Confirm password</label>
+                  <div class="control has-icons-left">
+                    <input
+                      class="input"
+                      type="password"
+                      name="confirmpassword"
+                      placeholder="********"
+                    />
+                    <span class="icon is-small is-left">
+                      <i class="fa fa-lock"></i>
+                    </span>
+                  </div>
+                </div>
+                    <input type="hidden" name="code" value="{{.Code}}" />
+                    <input type="hidden" name="userid" value="{{.UserID}}" />
+                  <div class="control">
+                    <input class="button is-link" type="submit" value="Reset" />
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>
