@@ -2,6 +2,7 @@ package views
 
 import (
 	"encoding/gob"
+	"encoding/hex"
 	"html/template"
 	"log"
 	"net/http"
@@ -53,11 +54,17 @@ func New() {
 	c = cache.New(1*time.Hour, 1*time.Hour)
 
 	// Initialising session cookie
-	authKeyOne := securecookie.GenerateRandomKey(64)
-	encryptionKeyOne := securecookie.GenerateRandomKey(32)
+	authKey, err := hex.DecodeString(os.Getenv("AUTHENTICATION_KEY"))
+	if err != nil {
+		authKey = securecookie.GenerateRandomKey(64)
+	}
+	encryptionKey, err := hex.DecodeString(os.Getenv("ENCRYPTION_KEY"))
+	if err != nil {
+		encryptionKey = securecookie.GenerateRandomKey(32)
+	}
 	cStore = sessions.NewCookieStore(
-		authKeyOne,
-		encryptionKeyOne,
+		authKey,
+		encryptionKey,
 	)
 	cStore.Options = &sessions.Options{
 		MaxAge:   60 * 15,
