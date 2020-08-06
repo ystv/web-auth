@@ -15,8 +15,5 @@ type DB struct {
 // NewStore initialises the store
 func NewStore(dataSourceName string) (*DB, error) {
 	dbpool, err := sqlx.ConnectContext(context.Background(), "postgres", dataSourceName)
-	if err != nil {
-		return nil, err
-	}
-	return &DB{dbpool}, nil
+	return &DB{dbpool}, err
 }
