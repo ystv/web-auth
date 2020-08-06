@@ -88,15 +88,22 @@ func IndexFunc(w http.ResponseWriter, r *http.Request) {
 	}
 	context := getData(session)
 	if r.Method == "GET" {
+		callback := r.URL.Query().Get("callback")
+		if context.User.Authenticated {
+			http.Redirect(w, r, context.Callback, http.StatusFound)
+		}
+		context.Callback = callback
 		tpl.ExecuteTemplate(w, "index.gohtml", context)
 	}
 }
 
 // Context is a struct that is applied to the templates.
 type Context struct {
-	Message string
-	Version string
-	User    types.User
+	Message  string
+	MsgType  string
+	Version  string
+	Callback string
+	User     types.User
 }
 
 func getData(s *sessions.Session) *Context {
@@ -106,9 +113,10 @@ func getData(s *sessions.Session) *Context {
 	if !ok {
 		u = types.User{Authenticated: false}
 	}
-	c := Context{Version: "0.4.5",
-		Message: "News: now with CORS support!",
-		User:    u,
+	c := Context{Version: "0.4.6",
+		Message:  "News: now with callback support!",
+		Callback: "/internal",
+		User:     u,
 	}
 	return &c
 }

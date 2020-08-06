@@ -45,12 +45,16 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 	// Parsing form to struct
 	r.ParseForm()
 	u := types.User{}
-	err = decoder.Decode(&u, r.PostForm)
+	decoder.Decode(&u, r.PostForm)
+	// Since we let users enter either an email or username, it's easier
+	// to just let it both for the query
 	u.Email = u.Username
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+
+	callback := r.FormValue("callback")
+	if callback == "" {
+		callback = "/internal"
 	}
+
 	// Authentication
 	if uStore.VerifyUser(r.Context(), &u) != nil {
 		log.Printf("Failed login for \"%s\"", u.Username)
@@ -60,7 +64,9 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ctx := getData(session)
+		ctx.Callback = callback
 		ctx.Message = "Invalid username or password"
+		ctx.MsgType = "is-danger"
 		tpl.ExecuteTemplate(w, "index.gohtml", ctx)
 		return
 	}
@@ -73,7 +79,7 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("user \"%s\" is authenticated", u.Username)
 	w = getJWTCookie(w, r)
-	http.Redirect(w, r, "/internal", http.StatusFound)
+	http.Redirect(w, r, callback, http.StatusFound)
 	return
 }
 

@@ -21,7 +21,7 @@
                 </ul>
               </div>
 
-              <div class="notification">{{.Message}}</div>
+              <div class="notification {{.MsgType}}">{{.Message}}</div>
             </div>
             <div class="column is-5-tablet is-4-desktop is-3-widescreen">
               <form action="/login/" method="POST" class="box">
@@ -53,6 +53,9 @@
                     </span>
                   </div>
                 </div>
+
+                <input type="hidden" name="callback" value="{{.Callback}}" />
+
                 <div
                   class="field is-horizontal"
                   style="justify-content: space-evenly;"
@@ -65,6 +68,7 @@
                       </label>
                     </p>
                   </div>
+
 
                   <div class="field">
                     <p class="control">
