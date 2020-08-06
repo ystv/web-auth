@@ -12,7 +12,7 @@ require (
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/lib/pq v1.3.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/rs/cors v1.7.0
 	github.com/xhit/go-simple-mail/v2 v2.5.0
-	github.com/patrickmn/go-cache v2.1.0+incompatible
 	google.golang.org/appengine v1.6.6 // indirect
 )

@@ -4,31 +4,41 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/rs/cors"
 	"github.com/ystv/web-auth/views"
 )
 
 func main() {
 	views.New()
+	mux := http.NewServeMux()
 	// Static
 	fs := http.FileServer(http.Dir("./public/static"))
-	http.Handle("/static/", http.StripPrefix("/static/", fs))
+	mux.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	// Login logout
-	http.HandleFunc("/login/", views.LoginFunc)
-	http.HandleFunc("/logout/", views.LogoutFunc)
-	http.HandleFunc("/signup/", views.SignUpFunc)
-	http.HandleFunc("/forgot/", views.ForgotFunc)
-	http.HandleFunc("/reset/", views.ResetFunc)
+	mux.HandleFunc("/login/", views.LoginFunc)
+	mux.HandleFunc("/logout/", views.LogoutFunc)
+	mux.HandleFunc("/signup/", views.SignUpFunc)
+	mux.HandleFunc("/forgot/", views.ForgotFunc)
+	mux.HandleFunc("/reset/", views.ResetFunc)
+
+	// CORS
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://creator.ystv.co.uk:3000, https://creator.ystv.co.uk"},
+		AllowCredentials: true,
+	})
 
 	// API
 	// Sets a cookie with the JWT inside of it
-	http.HandleFunc("/api/set_token", views.RequiresLogin(views.SetTokenHandler))
-	http.HandleFunc("/api/test", views.TestAPI)
+	mux.Handle("/api/set_token", c.Handler(views.RequiresLogin(http.HandlerFunc(views.SetTokenHandler))))
+	mux.HandleFunc("/api/test", views.TestAPI)
 
 	// Login required
-	http.HandleFunc("/internal/", views.RequiresLogin(views.InternalFunc))
+	mux.HandleFunc("/internal/", views.RequiresLogin(http.HandlerFunc(views.InternalFunc)))
 
 	// Public
-	http.HandleFunc("/", views.IndexFunc)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	mux.HandleFunc("/", views.IndexFunc)
+
+	// Serve
+	log.Fatal(http.ListenAndServe(":8080", mux))
 }

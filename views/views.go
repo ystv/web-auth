@@ -99,8 +99,8 @@ func getData(s *sessions.Session) *Context {
 	if !ok {
 		u = types.User{Authenticated: false}
 	}
-	c := Context{Version: "0.4.3",
-		Message: "Auth service: now with postgres support",
+	c := Context{Version: "0.4.5",
+		Message: "News: now with CORS support!",
 		User:    u,
 	}
 	return &c

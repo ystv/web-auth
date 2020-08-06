@@ -19,7 +19,23 @@ func InternalFunc(w http.ResponseWriter, r *http.Request) {
 
 //RequiresLogin is a middleware which will be used for each
 //httpHandler to check if there is any active session
-func RequiresLogin(handler func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
+// func RequiresLogin(handler func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		session, err := cStore.Get(r, "session")
+// 		if err != nil {
+// 			http.Error(w, err.Error(), http.StatusInternalServerError)
+// 			return
+// 		}
+// 		if !helpers.GetUser(session).Authenticated {
+// 			// Not authenticated
+// 			http.Redirect(w, r, "/", http.StatusFound)
+// 			return
+// 		}
+// 		handler(w, r)
+// 	}
+// }
+
+func RequiresLogin(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, err := cStore.Get(r, "session")
 		if err != nil {
@@ -31,6 +47,6 @@ func RequiresLogin(handler func(w http.ResponseWriter, r *http.Request)) func(w 
 			http.Redirect(w, r, "/", http.StatusFound)
 			return
 		}
-		handler(w, r)
+		h.ServeHTTP(w, r)
 	}
 }

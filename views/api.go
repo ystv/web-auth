@@ -23,7 +23,7 @@ type JWTClaims struct {
 var signingKey []byte
 
 func init() {
-	signingKey = []byte(os.Getenv("signing_key"))
+	signingKey = []byte(os.Getenv("SIGNING_KEY"))
 }
 
 // ValidateToken will validate the token
@@ -142,6 +142,24 @@ func getJWTCookie(w http.ResponseWriter, r *http.Request) http.ResponseWriter {
 		Domain:  ".ystv.co.uk",
 		Path:    "/",
 	})
-	w.Header().Set("Access-Control-Allow-Origin", "creator.ystv.co.uk:3000")
 	return w
+}
+
+// CorsHandler will apply cors to an endpoint
+func CorsHandler(h http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", "creator.ystv.co.uk:3000")
+		w.Header().Add("Vary", "Origin")
+		w.Header().Add("Vary", "Access-Control-Request-Method")
+		w.Header().Add("Vary", "Access-Control-Request-Headers")
+		w.Header().Add("Access-Control-Allow-Headers", "Content-Type, Origin, Accept, token")
+		w.Header().Add("Access-Control-Allow-Methods", "GET, POST,OPTIONS")
+		if r.Method == "OPTIONS" {
+			// Preflight
+			w.WriteHeader(http.StatusOK)
+			return
+		} else {
+			h.ServeHTTP(w, r)
+		}
+	}
 }

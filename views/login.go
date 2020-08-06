@@ -53,7 +53,7 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 	}
 	// Authentication
 	if uStore.VerifyUser(r.Context(), &u) != nil {
-		log.Printf("Invalid user %d", u.UserID)
+		log.Printf("Failed login for \"%s\"", u.Username)
 		err = session.Save(r, w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -147,7 +147,6 @@ func ResetFunc(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
-	c.Delete(code)
 	ctx := struct {
 		Code   string
 		UserID int
@@ -178,6 +177,7 @@ func ResetFunc(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Printf("Failed to reset user: %+v", err)
 		}
+		c.Delete(code)
 		log.Printf("updated user: %s", u.Username)
 		http.Redirect(w, r, "/", http.StatusFound)
 	}
