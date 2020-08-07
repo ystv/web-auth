@@ -8,6 +8,10 @@ import (
 	"github.com/ystv/web-auth/views"
 )
 
+func allow(origin string) bool {
+	return true
+}
+
 func main() {
 	views.New()
 	mux := http.NewServeMux()
@@ -23,8 +27,9 @@ func main() {
 	mux.HandleFunc("/reset/", views.ResetFunc)
 
 	// CORS
+
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://creator.ystv.co.uk:3000, https://creator.ystv.co.uk"},
+		AllowOriginFunc:  allow,
 		AllowCredentials: true,
 	})
 

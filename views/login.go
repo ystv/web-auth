@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/schema"
 	"github.com/patrickmn/go-cache"
@@ -29,6 +30,12 @@ func LogoutFunc(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	http.SetCookie(w, &http.Cookie{
+		Name:    "token",
+		Expires: time.Now(),
+		Domain:  ".ystv.co.uk",
+		Path:    "/",
+	})
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
@@ -36,10 +43,20 @@ func LogoutFunc(w http.ResponseWriter, r *http.Request) {
 // add a cookie to the cookie store for managing authentication
 func LoginFunc(w http.ResponseWriter, r *http.Request) {
 	session, err := cStore.Get(r, "session")
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	if r.Method == "GET" {
+		if getData(session).User.Authenticated {
+			callback := r.URL.Query().Get("callback")
+			if callback == "" {
+				callback = "/internal"
+			}
+			http.Redirect(w, r, callback, http.StatusFound)
+			return
+		}
 	}
 
 	// Parsing form to struct

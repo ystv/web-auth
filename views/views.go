@@ -54,12 +54,12 @@ func New() {
 	c = cache.New(1*time.Hour, 1*time.Hour)
 
 	// Initialising session cookie
-	authKey, err := hex.DecodeString(os.Getenv("AUTHENTICATION_KEY"))
-	if err != nil {
+	authKey, _ := hex.DecodeString(os.Getenv("AUTHENTICATION_KEY"))
+	if len(authKey) == 0 {
 		authKey = securecookie.GenerateRandomKey(64)
 	}
-	encryptionKey, err := hex.DecodeString(os.Getenv("ENCRYPTION_KEY"))
-	if err != nil {
+	encryptionKey, _ := hex.DecodeString(os.Getenv("ENCRYPTION_KEY"))
+	if len(encryptionKey) == 0 {
 		encryptionKey = securecookie.GenerateRandomKey(32)
 	}
 	cStore = sessions.NewCookieStore(
