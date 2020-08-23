@@ -3,7 +3,9 @@ package views
 import (
 	"log"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/schema"
@@ -42,11 +44,9 @@ func LogoutFunc(w http.ResponseWriter, r *http.Request) {
 // LoginFunc implements the login functionality, will
 // add a cookie to the cookie store for managing authentication
 func LoginFunc(w http.ResponseWriter, r *http.Request) {
-	session, err := cStore.Get(r, "session")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	session, _ := cStore.Get(r, "session")
+	// We're ignoring the error here since sometimes the cookies keys change and then we
+	// can overwrite it instead
 
 	if r.Method == "GET" {
 		if getData(session).User.Authenticated {
@@ -68,14 +68,14 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 	u.Email = u.Username
 
 	callback := r.FormValue("callback")
-	if callback == "" {
+	if callback == "" || strings.HasSuffix(callback, os.Getenv("DOMAIN")) {
 		callback = "/internal"
 	}
 
 	// Authentication
 	if uStore.VerifyUser(r.Context(), &u) != nil {
 		log.Printf("Failed login for \"%s\"", u.Username)
-		err = session.Save(r, w)
+		err := session.Save(r, w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -89,7 +89,7 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 	}
 	u.Authenticated = true
 	session.Values["user"] = u
-	err = session.Save(r, w)
+	err := session.Save(r, w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

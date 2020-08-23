@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gorilla/securecookie"
@@ -67,7 +68,7 @@ func New() {
 		encryptionKey,
 	)
 	cStore.Options = &sessions.Options{
-		MaxAge:   60 * 15,
+		MaxAge:   60 * 60 * 24,
 		HttpOnly: true,
 		Path:     "/",
 	}
@@ -87,8 +88,11 @@ func IndexFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	context := getData(session)
+	callback := r.URL.Query().Get("callback")
+	if strings.HasSuffix(callback, "ystv.co.uk") {
+		context.Callback = callback
+	}
 	if r.Method == "GET" {
-		callback := r.URL.Query().Get("callback")
 		if context.User.Authenticated {
 			http.Redirect(w, r, context.Callback, http.StatusFound)
 		}
@@ -113,7 +117,7 @@ func getData(s *sessions.Session) *Context {
 	if !ok {
 		u = types.User{Authenticated: false}
 	}
-	c := Context{Version: "0.4.6",
+	c := Context{Version: "0.4.7",
 		Message:  "News: now with callback support!",
 		Callback: "/internal",
 		User:     u,
