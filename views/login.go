@@ -1,6 +1,7 @@
 package views
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -94,10 +95,17 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 			tpl.ExecuteTemplate(w, "index.gohtml", ctx)
 			return
 		}
+		// Update last logged in
+		err := uStore.SetUserLoggedIn(r.Context(), &u)
+		if err != nil {
+			err = fmt.Errorf("failed to set user logged in: %w", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		u.Authenticated = true
 		session.Values["user"] = u
-		err := session.Save(r, w)
+		err = session.Save(r, w)
 		if err != nil {
+			err = fmt.Errorf("failed to save user session: %w", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

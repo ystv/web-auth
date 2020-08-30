@@ -13,8 +13,9 @@ func (store *DB) UpdateUser(ctx context.Context, user *types.User) error {
 		SET password = $1,
 			salt = $2,
 			email = $3,
-			reset_pw = $4
-		WHERE user_id = $5;`, user.Password, user.Salt, user.Email, user.ResetPw, user.UserID)
+			last_login = $4,
+			reset_pw = $5
+		WHERE user_id = $6;`, user.Password, user.Salt, user.Email, user.LastLogin, user.ResetPw, user.UserID)
 	if err != nil {
 		return err
 	}

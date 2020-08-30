@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/ystv/web-auth/types"
 	"github.com/ystv/web-auth/utils"
@@ -56,5 +57,11 @@ func (s *Store) UpdateUserPassword(ctx context.Context, u *types.User) error {
 	s.GetUser(ctx, u)
 	u.Password = utils.HashPass(u.Salt + plaintext)
 	u.ResetPw = false
+	return s.userStore.UpdateUser(ctx, u)
+}
+
+// SetUserLoggedIn will set the last login date to now
+func (s *Store) SetUserLoggedIn(ctx context.Context, u *types.User) error {
+	u.LastLogin = time.Now()
 	return s.userStore.UpdateUser(ctx, u)
 }
