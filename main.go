@@ -20,11 +20,11 @@ func main() {
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	// Login logout
-	mux.HandleFunc("/login/", views.LoginFunc)
-	mux.HandleFunc("/logout/", views.LogoutFunc)
-	mux.HandleFunc("/signup/", views.SignUpFunc)
-	mux.HandleFunc("/forgot/", views.ForgotFunc)
-	mux.HandleFunc("/reset/", views.ResetFunc)
+	mux.HandleFunc("/login", views.LoginFunc)
+	mux.HandleFunc("/logout", views.LogoutFunc)
+	mux.HandleFunc("/signup", views.SignUpFunc)
+	mux.HandleFunc("/forgot", views.ForgotFunc)
+	mux.HandleFunc("/reset", views.ResetFunc)
 
 	// CORS
 
@@ -39,7 +39,7 @@ func main() {
 	mux.HandleFunc("/api/test", views.TestAPI)
 
 	// Login required
-	mux.HandleFunc("/internal/", views.RequiresLogin(http.HandlerFunc(views.InternalFunc)))
+	mux.HandleFunc("/internal", views.RequiresLogin(http.HandlerFunc(views.InternalFunc)))
 
 	// Public
 	mux.HandleFunc("/", views.IndexFunc)

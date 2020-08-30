@@ -3,6 +3,7 @@ package views
 import (
 	"encoding/gob"
 	"encoding/hex"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -80,25 +81,28 @@ func New() {
 	tpl = template.Must(template.ParseGlob("public/templates/*.gohtml"))
 }
 
-// IndexFunc handles the welcome/index page.
+// IndexFunc handles the index page.
 func IndexFunc(w http.ResponseWriter, r *http.Request) {
 	session, err := cStore.Get(r, "session")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	// Data for our HTML template
 	context := getData(session)
+
+	// Check if there is a callback request
 	callback := r.URL.Query().Get("callback")
-	if strings.HasSuffix(callback, "ystv.co.uk") {
+	if callback != "" && strings.HasSuffix(callback, os.Getenv("DOMAIN_NAME")) {
 		context.Callback = callback
 	}
-	if r.Method == "GET" {
-		if context.User.Authenticated {
-			http.Redirect(w, r, context.Callback, http.StatusFound)
-		}
-		context.Callback = callback
-		tpl.ExecuteTemplate(w, "index.gohtml", context)
+	// Check if authenticated
+	if context.User.Authenticated {
+		http.Redirect(w, r, context.Callback, http.StatusFound)
+		return
 	}
+	loginCallback := fmt.Sprintf("login?callback=%s", context.Callback)
+	http.Redirect(w, r, loginCallback, http.StatusFound)
 }
 
 // Context is a struct that is applied to the templates.
@@ -118,7 +122,7 @@ func getData(s *sessions.Session) *Context {
 		u = types.User{Authenticated: false}
 	}
 	c := Context{Version: "0.4.7",
-		Message:  "News: now with callback support!",
+		Message:  "News: Removed trailing slash & relative routing",
 		Callback: "/internal",
 		User:     u,
 	}

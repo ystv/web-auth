@@ -16,6 +16,8 @@ You'll need to set a couple of environment variables first, usually by doing a g
 
 - `SMTP_PASSWORD` SMTP password
 
+- `DOMAIN_NAME` Domain name of where it's hosted so we can restrict callbacks to a certain domain
+
 Optional variables. Used to keep cookies secure, if left blank it will generate random keys instead
 
 - `AUTHENTICATION_KEY` 64 bytes of hex, used for cookies

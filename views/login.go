@@ -48,56 +48,64 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 	// We're ignoring the error here since sometimes the cookies keys change and then we
 	// can overwrite it instead
 
-	if r.Method == "GET" {
-		if getData(session).User.Authenticated {
-			callback := r.URL.Query().Get("callback")
-			if callback == "" {
-				callback = "/internal"
-			}
-			http.Redirect(w, r, callback, http.StatusFound)
+	switch r.Method {
+	case "GET":
+		// Data for our HTML template
+		context := getData(session)
+
+		// Check if there is a callback request
+		callback := r.URL.Query().Get("callback")
+		if strings.HasSuffix(callback, os.Getenv("DOMAIN_NAME")) {
+			context.Callback = callback
+		}
+		// Check if authenticated
+		if context.User.Authenticated {
+			http.Redirect(w, r, context.Callback, http.StatusFound)
 			return
 		}
-	}
+		tpl.ExecuteTemplate(w, "login.gohtml", context)
+		return
+	case "POST":
+		// Parsing form to struct
+		r.ParseForm()
+		u := types.User{}
+		decoder.Decode(&u, r.PostForm)
+		// Since we let users enter either an email or username, it's easier
+		// to just let it both for the query
+		u.Email = u.Username
 
-	// Parsing form to struct
-	r.ParseForm()
-	u := types.User{}
-	decoder.Decode(&u, r.PostForm)
-	// Since we let users enter either an email or username, it's easier
-	// to just let it both for the query
-	u.Email = u.Username
+		callback := r.FormValue("callback")
+		if callback == "" || !strings.HasSuffix(callback, os.Getenv("DOMAIN_NAME")) {
+			callback = "/internal"
+		}
 
-	callback := r.FormValue("callback")
-	if callback == "" || strings.HasSuffix(callback, os.Getenv("DOMAIN")) {
-		callback = "/internal"
-	}
-
-	// Authentication
-	if uStore.VerifyUser(r.Context(), &u) != nil {
-		log.Printf("Failed login for \"%s\"", u.Username)
+		// Authentication
+		if uStore.VerifyUser(r.Context(), &u) != nil {
+			log.Printf("Failed login for \"%s\"", u.Username)
+			err := session.Save(r, w)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			ctx := getData(session)
+			ctx.Callback = callback
+			ctx.Message = "Invalid username or password"
+			ctx.MsgType = "is-danger"
+			tpl.ExecuteTemplate(w, "index.gohtml", ctx)
+			return
+		}
+		u.Authenticated = true
+		session.Values["user"] = u
 		err := session.Save(r, w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		ctx := getData(session)
-		ctx.Callback = callback
-		ctx.Message = "Invalid username or password"
-		ctx.MsgType = "is-danger"
-		tpl.ExecuteTemplate(w, "index.gohtml", ctx)
+		log.Printf("user \"%s\" is authenticated", u.Username)
+		w = getJWTCookie(w, r)
+		http.Redirect(w, r, callback, http.StatusFound)
 		return
 	}
-	u.Authenticated = true
-	session.Values["user"] = u
-	err := session.Save(r, w)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	log.Printf("user \"%s\" is authenticated", u.Username)
-	w = getJWTCookie(w, r)
-	http.Redirect(w, r, callback, http.StatusFound)
-	return
 }
 
 // SignUpFunc will enable new users to sign up to our service
