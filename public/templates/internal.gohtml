@@ -1,15 +1,122 @@
 <!DOCTYPE html>
 <html>
   <head>
+    {{template "head.gohtml" .}}
     <title>Internal</title>
+    <link rel="stylesheet" type="text/css" href="../static/internal.css" />
   </head>
   <body>
-    {{template "head.gohtml" .}}
-    <h1>Internal</h1>
-    <p>Welcome {{.User.Username}}</p>
-    <a href="/api/set_token">Get API token</a>
-    <a href="/api/test">Test API</a>
-    <a href="http://creator.ystv.co.uk">Creator Studio</a>
-    <a href="/logout">Logout</a>
+    <nav class="navbar is-white">
+      <div class="container">
+        <div class="navbar-brand">
+          <a class="navbar-item brand-text" href="../">web-auth</a>
+          <a class="navbar-item" href="../logout">Logout</a>
+        </div>
+      </div>
+    </nav>
+    <div class="container">
+      <div class="columns">
+        <div class="column is-3">
+          <aside class="menu is-hidden-mobile">
+            <p class="menu-label">General</p>
+            <ul class="menu-list">
+              <li><a class="is-active">Dashboard</a></li>
+              <li><a>Users</a></li>
+              <li><a>Settings</a></li>
+            </ul>
+            <p class="menu-label">API Interactions</p>
+            <ul class="menu-list">
+              <li><a href="../api/get_token">Get API token</a></li>
+              <li><a href="../api/test">Test API</a></li>
+            </ul>
+            <p class="menu-label">Secured sites</p>
+            <ul class="menu-list">
+              <li><a href="https://my.ystv.co.uk">MyTV</a></li>
+              <li><a href="https://creator.ystv.co.uk">Creator Studio</a></li>
+            </ul>
+          </aside>
+        </div>
+        <div class="column is-9">
+          <section class="hero is-info welcome is-small">
+            <div class="hero-body">
+              <div class="container">
+                <h1 class="title">Hello, {{.Nickname}}.</h1>
+                <h2 class="subtitle">Last login: {{.LastLogin}}</h2>
+              </div>
+            </div>
+          </section>
+          <section class="info-tiles">
+            <div class="tile is-ancestor has-text-centered">
+              <div class="tile is-parent">
+                <article class="tile is-child box">
+                  <p class="title">{{.TotalUsers}}</p>
+                  <p class="subtitle">Total users</p>
+                </article>
+              </div>
+              <div class="tile is-parent">
+                <article class="tile is-child box">
+                  <p class="title">{{.LoginsPastDay}}</p>
+                  <p class="subtitle">Active users in past day</p>
+                </article>
+              </div>
+              <div class="tile is-parent">
+                <article class="tile is-child box">
+                  <p class="title">87</p>
+                  <p class="subtitle">Active users past current year</p>
+                </article>
+              </div>
+              <div class="tile is-parent">
+                <article class="tile is-child box">
+                  <p class="title">2</p>
+                  <p class="subtitle">Password resets past week</p>
+                </article>
+              </div>
+            </div>
+          </section>
+          <div class="columns">
+            <div class="column is-6">
+              <div class="card events-card">
+                <header class="card-header">
+                  <p class="card-header-title">Events</p>
+                </header>
+                <div class="card-table">
+                  <div class="content">
+                    <table class="table is-fullwidth is-striped">
+                      <tbody>
+                        <tr>
+                          <td width="5%"><i class="fa fa-bell-o"></i></td>
+                          <td>Password reset for user "Bob Dylan"</td>
+                        </tr>
+                        <tr>
+                          <td width="5%"><i class="fa fa-bell-o"></i></td>
+                          <td>User created "Bobby Dylan"</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="column is-6">
+              <div class="card">
+                <header class="card-header">
+                  <p class="card-header-title">User Search</p>
+                </header>
+                <div class="card-content">
+                  <div class="content">
+                    <div class="control has-icons-left has-icons-right">
+                      <input class="input" type="text" placeholder="" />
+                      <span class="icon is-medium is-left">
+                        <i class="fa fa-search"></i>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

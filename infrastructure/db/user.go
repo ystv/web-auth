@@ -25,11 +25,10 @@ func (store *DB) UpdateUser(ctx context.Context, user *types.User) error {
 // GetUser will get a user using any unique identity fields for a user
 func (store *DB) GetUser(ctx context.Context, user *types.User) error {
 	return store.GetContext(ctx, user,
-		`SELECT user_id, username, email, salt, password
+		`SELECT user_id, username, nickname, email, last_login, salt, password
 		FROM people.users
 		WHERE username = $1 AND username != '' OR email = $2 AND email != '' OR user_id = $3
 		LIMIT 1;`, user.Username, user.Email, user.UserID)
-	// The login form stores both the user/email in the username field
 }
 
 // GetPermissions returns all permissions for a user

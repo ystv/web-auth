@@ -7,6 +7,7 @@ type (
 	User struct {
 		UserID        int       `db:"user_id" json:"id"`
 		Username      string    `db:"username" json:"username" schema:"username"`
+		Nickname      string    `db:"nickname" schema:"nickname"`
 		Firstname     string    `db:"first_name" json:"firstName" schema:"firstname"`
 		Lastname      string    `db:"last_name" json:"lastName" schema:"lastname"`
 		Password      string    `db:"password" json:"-" schema:"password"`
