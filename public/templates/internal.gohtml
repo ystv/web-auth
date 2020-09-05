@@ -6,36 +6,10 @@
     <link rel="stylesheet" type="text/css" href="../static/internal.css" />
   </head>
   <body>
-    <nav class="navbar is-white">
-      <div class="container">
-        <div class="navbar-brand">
-          <a class="navbar-item brand-text" href="../">web-auth</a>
-          <a class="navbar-item" href="../logout">Logout</a>
-        </div>
-      </div>
-    </nav>
+    {{template "navbar.gohtml" .}}
     <div class="container">
       <div class="columns">
-        <div class="column is-3">
-          <aside class="menu is-hidden-mobile">
-            <p class="menu-label">General</p>
-            <ul class="menu-list">
-              <li><a class="is-active">Dashboard</a></li>
-              <li><a>Users</a></li>
-              <li><a>Settings</a></li>
-            </ul>
-            <p class="menu-label">API Interactions</p>
-            <ul class="menu-list">
-              <li><a href="../api/get_token">Get API token</a></li>
-              <li><a href="../api/test">Test API</a></li>
-            </ul>
-            <p class="menu-label">Secured sites</p>
-            <ul class="menu-list">
-              <li><a href="https://my.ystv.co.uk">MyTV</a></li>
-              <li><a href="https://creator.ystv.co.uk">Creator Studio</a></li>
-            </ul>
-          </aside>
-        </div>
+        {{template "sidebar.gohtml" .}}
         <div class="column is-9">
           <section class="hero is-info welcome is-small">
             <div class="hero-body">

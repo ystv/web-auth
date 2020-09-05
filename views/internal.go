@@ -1,18 +1,54 @@
 package views
 
 import (
-	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/dustin/go-humanize"
 	"github.com/ystv/web-auth/helpers"
+	"github.com/ystv/web-auth/types"
 )
 
-type InternalTemplate struct {
-	Nickname      string
-	LastLogin     string
-	TotalUsers    int
-	LoginsPastDay int
+type (
+	// InternalTemplate represents the context for the internal template
+	InternalTemplate struct {
+		Nickname      string
+		LastLogin     string
+		TotalUsers    int
+		LoginsPastDay int
+	}
+	// UsersTemplate represents the context for the user template
+	UsersTemplate struct {
+		Users                                 []User
+		CurPage, NextPage, PrevPage, LastPage int
+	}
+	// User represents user information, an administrator can view
+	User struct {
+		UserID    int
+		Username  string
+		Name      string
+		Email     string
+		LastLogin string
+	}
+)
+
+// DBToTemplateType converts from the DB layer type to the user template type
+func DBToTemplateType(dbUser *[]types.User) []User {
+	tplUsers := []User{}
+	user := User{}
+	for i := range *dbUser {
+		user.UserID = (*dbUser)[i].UserID
+		user.Username = (*dbUser)[i].Username
+		user.Name = (*dbUser)[i].Firstname + " " + (*dbUser)[i].Lastname
+		user.Email = (*dbUser)[i].Email
+		if (*dbUser)[i].LastLogin.Valid {
+			user.LastLogin = (*dbUser)[i].LastLogin.Time.Format("2006-01-02 15:04:05")
+		} else {
+			user.LastLogin = "-"
+		}
+		tplUsers = append(tplUsers, user)
+	}
+	return tplUsers
 }
 
 // InternalFunc handles a request to the internal template
@@ -23,19 +59,41 @@ func InternalFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	c := getData(session)
-	err = uStore.GetUser(r.Context(), &c.User)
-	if err != nil {
-		err = fmt.Errorf("failed to get user: %w", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	lastLogin := time.Now()
+	if c.User.LastLogin.Valid {
+		lastLogin = c.User.LastLogin.Time
 	}
 	ctx := InternalTemplate{
 		Nickname:      c.User.Nickname,
-		LastLogin:     humanize.Time(c.User.LastLogin),
+		LastLogin:     humanize.Time(lastLogin),
 		TotalUsers:    2000,
 		LoginsPastDay: 20,
 	}
 	err = tpl.ExecuteTemplate(w, "internal.gohtml", ctx)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// UsersFunc handles a users request
+func UsersFunc(w http.ResponseWriter, r *http.Request) {
+	dbUsers := &[]types.User{}
+	err := uStore.GetUsers(r.Context(), dbUsers)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tplUsers := DBToTemplateType(dbUsers)
+
+	ctx := UsersTemplate{
+		Users: tplUsers,
+	}
+	err = tpl.ExecuteTemplate(w, "users.gohtml", ctx)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 // RequiresLogin is a middleware which will be used for each

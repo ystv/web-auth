@@ -40,6 +40,7 @@ func main() {
 
 	// Login required
 	mux.HandleFunc("/internal", views.RequiresLogin(http.HandlerFunc(views.InternalFunc)))
+	mux.HandleFunc("/internal/users", views.RequiresLogin(http.HandlerFunc(views.UsersFunc)))
 
 	// Public
 	mux.HandleFunc("/", views.IndexFunc)

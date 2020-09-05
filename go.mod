@@ -16,4 +16,5 @@ require (
 	github.com/rs/cors v1.7.0
 	github.com/xhit/go-simple-mail/v2 v2.5.0
 	google.golang.org/appengine v1.6.6 // indirect
+	gopkg.in/guregu/null.v4 v4.0.0
 )

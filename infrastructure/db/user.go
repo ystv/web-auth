@@ -31,6 +31,13 @@ func (store *DB) GetUser(ctx context.Context, user *types.User) error {
 		LIMIT 1;`, user.Username, user.Email, user.UserID)
 }
 
+// GetUsers will get a group of users
+func (store *DB) GetUsers(ctx context.Context, u *[]types.User) error {
+	return store.SelectContext(ctx, u,
+		`SELECT user_id, username, nickname, first_name, last_name, email, last_login
+	FROM people.users;`)
+}
+
 // GetPermissions returns all permissions for a user
 func (store *DB) GetPermissions(ctx context.Context, u *types.User) error {
 	return store.SelectContext(ctx, &u.Permissions, `SELECT p.permission_id, p.name

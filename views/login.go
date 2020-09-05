@@ -95,6 +95,7 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 			tpl.ExecuteTemplate(w, "index.gohtml", ctx)
 			return
 		}
+		prevLogin := u.LastLogin
 		// Update last logged in
 		err := uStore.SetUserLoggedIn(r.Context(), &u)
 		if err != nil {
@@ -102,6 +103,8 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		u.Authenticated = true
+		// Bit of a cheat, just so we can have the last login displayed for internal
+		u.LastLogin = prevLogin
 		session.Values["user"] = u
 		err = session.Save(r, w)
 		if err != nil {
@@ -163,10 +166,15 @@ func ForgotFunc(w http.ResponseWriter, r *http.Request) {
 
 		// Valid request, send email with reset code
 		log.Printf("reset email: %s, code: %s", u.Email, code)
-		err := m.SendEmail(u.Email, "Forgotten Password", string(code))
-		if err != nil {
-			log.Printf("SendEmail failed: %s", err)
+		if m.Enabled {
+			err := m.SendEmail(u.Email, "Forgotten Password", string(code))
+			if err != nil {
+				log.Printf("SendEmail failed: %s", err)
+			}
+		} else {
+			log.Printf("no mailer present")
 		}
+
 		http.Redirect(w, r, "/", http.StatusFound)
 	}
 

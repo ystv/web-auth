@@ -11,6 +11,7 @@ import (
 // Mail encapsulates the dependency
 type Mail struct {
 	*mail.SMTPClient
+	Enabled bool
 }
 
 // Config represents a configuration to connect to an SMTP server
@@ -36,8 +37,10 @@ func NewMailer(config Config) (*Mail, error) {
 	}
 
 	smtpClient, err := smtpServer.Connect()
-
-	return &Mail{smtpClient}, err
+	if err != nil {
+		return &Mail{nil, false}, err
+	}
+	return &Mail{smtpClient, true}, err
 }
 
 // SendEmail sends a plaintext email

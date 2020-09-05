@@ -79,6 +79,6 @@ nav.navbar {
   margin-bottom: 0;
 }
 .events-card .card-table {
-  max-height: 250px;
+  max-height: 50em;
   overflow-y: scroll;
 }

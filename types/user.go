@@ -1,6 +1,8 @@
 package types
 
-import "time"
+import (
+	"gopkg.in/guregu/null.v4"
+)
 
 type (
 	// User represents relevant user fields
@@ -13,7 +15,7 @@ type (
 		Password      string    `db:"password" json:"-" schema:"password"`
 		Salt          string    `db:"salt" json:"-"`
 		Email         string    `db:"email" json:"email" schema:"email"`
-		LastLogin     time.Time `db:"last_login"`
+		LastLogin     null.Time `db:"last_login"`
 		ResetPw       bool      `db:"reset_pw" json:"-"`
 		Authenticated bool
 		Permissions   []Permission `json:"permissions"`

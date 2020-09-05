@@ -39,7 +39,7 @@ func New() {
 	if err != nil {
 		log.Fatalf("NewStore failed: %+v", err)
 	}
-	uStore = user.NewUserStore(dbStore)
+	uStore = user.NewUserRepo(dbStore)
 
 	// Connecting to mail
 	m, err = mail.NewMailer(mail.Config{
@@ -49,7 +49,7 @@ func New() {
 		Password: os.Getenv("SMTP_PASSWORD"),
 	})
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("mailer failed: %+v", err)
 	}
 
 	// Initialising cache
