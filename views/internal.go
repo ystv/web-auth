@@ -2,6 +2,8 @@ package views
 
 import (
 	"net/http"
+	"path"
+	"strconv"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -90,6 +92,29 @@ func UsersFunc(w http.ResponseWriter, r *http.Request) {
 		Users: tplUsers,
 	}
 	err = tpl.ExecuteTemplate(w, "users.gohtml", ctx)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// UserFunc handles a users request
+func UserFunc(w http.ResponseWriter, r *http.Request) {
+	userString := path.Base(r.URL.Path)
+	dbUser := &types.User{}
+	var err error
+	dbUser.UserID, err = strconv.Atoi(userString)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	err = uStore.GetUser(r.Context(), dbUser)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = tpl.ExecuteTemplate(w, "user.gohtml", nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

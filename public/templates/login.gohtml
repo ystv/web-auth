@@ -5,26 +5,26 @@
     {{template "head.gohtml" .}}
   </head>
   <body>
-    <section class="hero is-fullheight">
-      <div class="hero-body">
-        <div class="container">
-          <div class="columns is-centered">
-            <div class="column is-5-tablet is-4-desktop is-3-widescreen">
-              <div class="box">
-                <p class="title is-5">Web Auth</p>
+    <section class="container">
+      <div class="columns">
+        <div class="column is-6 is-offset-3 register">
+          <div class="columns card-title">
+            <p class="title is-3">Web Auth</p>
+          </div>
+          <div class="columns">
+            <div class="column left">
+              <div>
                 <p>Provides access to</p>
                 <ul class="subtitle is-5">
-                  <li>• MyTV</li>
-                  <li>• Creator Studio</li>
-                  <li>• Clapper</li>
-                  <li>• Windows AD</li>
+                  <li class="mt-2">• MyTV</li>
+                  <li class="mt-2">• Creator Studio</li>
+                  <li class="mt-2">• Clapper</li>
+                  <li class="mt-2">• Windows AD</li>
                 </ul>
               </div>
-
-              <div class="notification {{.MsgType}}">{{.Message}}</div>
             </div>
-            <div class="column is-5-tablet is-4-desktop is-3-widescreen">
-              <form action="" method="POST" class="box">
+            <div class="column right">
+              <form action="" method="POST">
                 <div class="field">
                   <label class="label">Email / Username</label>
                   <div class="control has-icons-left">
@@ -58,7 +58,7 @@
 
                 <div
                   class="field is-horizontal"
-                  style="justify-content: space-evenly;"
+                  style="justify-content: space-evenly"
                 >
                   <div class="field">
                     <p class="control">
@@ -68,7 +68,6 @@
                       </label>
                     </p>
                   </div>
-
 
                   <div class="field">
                     <p class="control">
@@ -81,17 +80,18 @@
                   </div>
                 </div>
               </form>
-              <p class="has-text-grey">
-                <a href="signup">Sign Up</a> &nbsp;·&nbsp;
-                <a href="forgot">Forgot Password</a> &nbsp;·&nbsp;
-                <a href="https://github.com/ystv/web-auth"
-                  >Version: {{.Version}}</a
-                >
-              </p>
             </div>
           </div>
         </div>
       </div>
+      <div class="column column is-6 is-offset-3">
+        <p class="has-text-grey">
+          <a href="signup">Sign Up</a> &nbsp;·&nbsp;
+          <a href="forgot">Forgot Password</a> &nbsp;·&nbsp;
+          <a href="https://github.com/ystv/web-auth"> Version: {{.Version}} </a>
+        </p>
+      </div>
+      <div class="notification {{.MsgType}}">{{.Message}}</div>
     </section>
   </body>
 </html>
