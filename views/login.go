@@ -111,6 +111,12 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		// Bit of a cheat, just so we can have the last login displayed for internal
 		u.LastLogin = prevLogin
 		session.Values["user"] = u
+
+		log.Print(r.Form.Get("remember"))
+		if r.Form.Get("remember") != "on" {
+			session.Options.MaxAge = 0
+		}
+
 		err = session.Save(r, w)
 		if err != nil {
 			err = fmt.Errorf("failed to save user session: %w", err)
