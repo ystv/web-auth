@@ -18,5 +18,8 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o /bin
 
 FROM scratch
 LABEL site="auth"
-COPY --from=build /bin/auth /bin/auth
-ENTRYPOINT ["/bin/auth"]
+# Copy binary
+COPY --from=build /bin/auth .
+# Copy static content and templates
+COPY --from=build src/public ./public
+ENTRYPOINT ["./auth"]
