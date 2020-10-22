@@ -121,7 +121,7 @@ func getData(s *sessions.Session) *Context {
 	if !ok {
 		u = types.User{Authenticated: false}
 	}
-	c := Context{Version: "0.4.7",
+	c := Context{Version: "0.4.8",
 		Message:  "News: Removed trailing slash & relative routing",
 		Callback: "/internal",
 		User:     u,

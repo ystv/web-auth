@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/ystv/web-auth/views"
 )
@@ -14,7 +15,7 @@ func allow(origin string) bool {
 
 func main() {
 	views.New()
-	mux := http.NewServeMux()
+	mux := mux.NewRouter()
 	// Static
 	fs := http.FileServer(http.Dir("./public/static"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
@@ -40,7 +41,7 @@ func main() {
 
 	// Login required
 	mux.HandleFunc("/internal/users", views.RequiresLogin(http.HandlerFunc(views.UsersFunc)))
-	mux.HandleFunc("/internal/user", views.RequiresLogin(http.HandlerFunc(views.UserFunc)))
+	mux.HandleFunc("/internal/user/{userid}", views.RequiresLogin(http.HandlerFunc(views.UserFunc)))
 	mux.HandleFunc("/internal", views.RequiresLogin(http.HandlerFunc(views.InternalFunc)))
 
 	// Public

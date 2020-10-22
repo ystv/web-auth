@@ -11,20 +11,48 @@
       <div class="columns">
         {{template "sidebar.gohtml" .}}
         <div class="column is-9">
-          <div class="box">
-            <figure class="avatar">
-              <img src="https://placehold.it/128x128" />
-            </figure>
-            <form>
-              <div class="field">
-                <div class="control">
-                  <input class="input" type="email" placeholder="Email" />
-                </div>
+          <div class="columns box">
+            <div class="column is-2">
+              <figure class="avatar">
+                <img src="https://placehold.it/128x128" />
+              </figure>
+              <div class="buttons">
+                <button class="button is-info is-outlined">
+                  Reset password
+                </button>
+                <button class="button is-warning is-outlined">
+                  Deactivate
+                </button>
+                <button class="button is-danger is-outlined">Delete</button>
               </div>
-              <button class="button is-block is-info is-large is-fullwidth">
-                Update
-              </button>
-            </form>
+            </div>
+            <div class="column">
+              <form>
+                <div class="field">
+                  <label class="label">Nickname</label>
+                  <div class="control">
+                    <input
+                      class="input"
+                      type="nickname"
+                      placeholder="Nickname"
+                    />
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="label">First name</label>
+                  <div class="control">
+                    <input class="input" type="input" placeholder="Nickname" />
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="label">Email</label>
+                  <div class="control">
+                    <input class="input" type="email" placeholder="Email" />
+                  </div>
+                </div>
+                <button class="button is-block is-info">Update</button>
+              </form>
+            </div>
           </div>
         </div>
       </div>

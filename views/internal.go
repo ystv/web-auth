@@ -2,11 +2,11 @@ package views
 
 import (
 	"net/http"
-	"path"
 	"strconv"
 	"time"
 
 	"github.com/dustin/go-humanize"
+	"github.com/gorilla/mux"
 	"github.com/ystv/web-auth/helpers"
 	"github.com/ystv/web-auth/types"
 )
@@ -100,10 +100,10 @@ func UsersFunc(w http.ResponseWriter, r *http.Request) {
 
 // UserFunc handles a users request
 func UserFunc(w http.ResponseWriter, r *http.Request) {
-	userString := path.Base(r.URL.Path)
+	userString := mux.Vars(r)
 	dbUser := &types.User{}
 	var err error
-	dbUser.UserID, err = strconv.Atoi(userString)
+	dbUser.UserID, err = strconv.Atoi(userString["userid"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
