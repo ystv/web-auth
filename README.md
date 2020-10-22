@@ -8,25 +8,29 @@ You can get the latest tagged version with `go get github.com/ystv/web-auth`, ot
 
 You'll need to set a couple of environment variables first, usually by doing a good `export key=value`
 
-- `SIGNING_KEY` used to sign JWTs
+- `WAUTH_SIGNING_KEY` used to sign JWTs
 
-- `DATABASE_URL` Database connection URL.
+- `WAUTH_DATABASE_URL` Database connection URL.
 
-- `SMTP_HOST` SMTP host, used to send forgotten password emails
+Optional variables
 
-- `SMTP_USERNAME` SMTP username
+will print reset codes instead of mailing
 
-- `SMTP_PASSWORD` SMTP password
+- `WAUTH_SMTP_HOST` SMTP host, used to send forgotten password emails
 
-- `DOMAIN_NAME` Domain name of where it's hosted so we can restrict callbacks to a certain domain
+- `WAUTH_SMTP_USERNAME` SMTP username
 
-Optional variables. Used to keep cookies secure, if left blank it will generate random keys instead
+- `WAUTH_SMTP_PASSWORD` SMTP password
 
-- `AUTHENTICATION_KEY` 64 bytes of hex, used for cookies
+- `WAUTH_DOMAIN_NAME` Domain name of where it's hosted so we can restrict callbacks to a certain domain
 
-- `ENCRYPTION_KEY` 32 bytes of hex, used for cookies
+Used to keep cookies secure, if left blank it will generate random keys instead
 
-- `LOGOUT_ENDPOINT` Where web-auth redirects after successful logout
+- `WAUTH_AUTHENTICATION_KEY` 64 bytes of hex, used for cookies
+
+- `WAUTH_ENCRYPTION_KEY` 32 bytes of hex, used for cookies
+
+- `WAUTH_LOGOUT_ENDPOINT` Where web-auth redirects after successful logout
 
 After all that is set you should be able to visit it at `:8080`.
 

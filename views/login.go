@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -19,8 +18,8 @@ var decoder = schema.NewDecoder()
 
 // LogoutFunc Implements the logout functionality.
 // Will delete the session information from the cookie store
-func LogoutFunc(w http.ResponseWriter, r *http.Request) {
-	session, err := cStore.Get(r, "session")
+func (v *Views) LogoutFunc(w http.ResponseWriter, r *http.Request) {
+	session, err := v.cookie.Get(r, "session")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -36,12 +35,12 @@ func LogoutFunc(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:    "token",
 		Expires: time.Now(),
-		Domain:  ".ystv.co.uk",
+		Domain:  v.conf.DomainName,
 		Path:    "/",
 	})
 	// TODO Don't call env in this function have an initialiser
 	// then fetch from that store?
-	endpoint := os.Getenv("LOGOUT_ENDPOINT")
+	endpoint := v.conf.LogoutEndpoint
 	if endpoint == "" {
 		endpoint = "/"
 	}
@@ -50,8 +49,8 @@ func LogoutFunc(w http.ResponseWriter, r *http.Request) {
 
 // LoginFunc implements the login functionality, will
 // add a cookie to the cookie store for managing authentication
-func LoginFunc(w http.ResponseWriter, r *http.Request) {
-	session, _ := cStore.Get(r, "session")
+func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
+	session, _ := v.cookie.Get(r, "session")
 	// We're ignoring the error here since sometimes the cookies keys change and then we
 	// can overwrite it instead
 
@@ -62,7 +61,7 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 
 		// Check if there is a callback request
 		callback := r.URL.Query().Get("callback")
-		if strings.HasSuffix(callback, os.Getenv("DOMAIN_NAME")) {
+		if strings.HasSuffix(callback, v.conf.DomainName) {
 			context.Callback = callback
 		}
 		// Check if authenticated
@@ -70,7 +69,7 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, context.Callback, http.StatusFound)
 			return
 		}
-		tpl.ExecuteTemplate(w, "login.gohtml", context)
+		v.tpl.ExecuteTemplate(w, "login.gohtml", context)
 		return
 	case "POST":
 		// Parsing form to struct
@@ -82,12 +81,12 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 		u.Email = u.Username
 
 		callback := r.FormValue("callback")
-		if callback == "" || !strings.HasSuffix(callback, os.Getenv("DOMAIN_NAME")) {
+		if callback == "" || !strings.HasSuffix(callback, v.conf.DomainName) {
 			callback = "/internal"
 		}
 
 		// Authentication
-		if uStore.VerifyUser(r.Context(), &u) != nil {
+		if v.user.VerifyUser(r.Context(), &u) != nil {
 			log.Printf("Failed login for \"%s\"", u.Username)
 			err := session.Save(r, w)
 			if err != nil {
@@ -98,12 +97,12 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 			ctx.Callback = callback
 			ctx.Message = "Invalid username or password"
 			ctx.MsgType = "is-danger"
-			tpl.ExecuteTemplate(w, "index.gohtml", ctx)
+			v.tpl.ExecuteTemplate(w, "index.gohtml", ctx)
 			return
 		}
 		prevLogin := u.LastLogin
 		// Update last logged in
-		err := uStore.SetUserLoggedIn(r.Context(), &u)
+		err := v.user.SetUserLoggedIn(r.Context(), &u)
 		if err != nil {
 			err = fmt.Errorf("failed to set user logged in: %w", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -119,14 +118,19 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		log.Printf("user \"%s\" is authenticated", u.Username)
-		w = getJWTCookie(w, r)
+		w, err = v.getJWTCookie(w, r)
+		if err != nil {
+			err = fmt.Errorf("login: failed to set cookie: %w", err)
+			log.Printf("%+v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		http.Redirect(w, r, callback, http.StatusFound)
 		return
 	}
 }
 
 // SignUpFunc will enable new users to sign up to our service
-func SignUpFunc(w http.ResponseWriter, r *http.Request) {
+func (v *Views) SignUpFunc(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		// Parsing form to struct
 		r.ParseForm()
@@ -142,7 +146,7 @@ func SignUpFunc(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/", http.StatusFound)
 		}
 	} else if r.Method == "GET" {
-		err := tpl.ExecuteTemplate(w, "signup.gohtml", nil)
+		err := v.tpl.ExecuteTemplate(w, "signup.gohtml", nil)
 		if err != nil {
 			log.Print(err)
 		}
@@ -150,30 +154,30 @@ func SignUpFunc(w http.ResponseWriter, r *http.Request) {
 }
 
 // ForgotFunc handles sending a reset email
-func ForgotFunc(w http.ResponseWriter, r *http.Request) {
+func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		tpl.ExecuteTemplate(w, "forgot.gohtml", nil)
+		v.tpl.ExecuteTemplate(w, "forgot.gohtml", nil)
 	case "POST":
 		r.ParseForm()
 		u := types.User{Email: r.Form.Get("email")}
 
 		if u.Email == "" {
-			tpl.ExecuteTemplate(w, "forgot.gohtml", nil)
+			v.tpl.ExecuteTemplate(w, "forgot.gohtml", nil)
 		}
 		// Get user and check if it exists
-		if uStore.GetUser(r.Context(), &u) != nil {
+		if v.user.GetUser(r.Context(), &u) != nil {
 			// User doesn't exist
 			// TODO send no user message
-			tpl.ExecuteTemplate(w, "forgot.gohtml", nil)
+			v.tpl.ExecuteTemplate(w, "forgot.gohtml", nil)
 		}
 		code := utils.RandomString(10)
-		c.Set(code, u.UserID, cache.DefaultExpiration)
+		v.cache.Set(code, u.UserID, cache.DefaultExpiration)
 
 		// Valid request, send email with reset code
 		log.Printf("reset email: %s, code: %s", u.Email, code)
-		if m.Enabled {
-			err := m.SendEmail(u.Email, "Forgotten Password", string(code))
+		if v.mail.Enabled {
+			err := v.mail.SendEmail(u.Email, "Forgotten Password", string(code))
 			if err != nil {
 				log.Printf("SendEmail failed: %s", err)
 			}
@@ -187,7 +191,7 @@ func ForgotFunc(w http.ResponseWriter, r *http.Request) {
 }
 
 // ResetFunc handles resetting the password
-func ResetFunc(w http.ResponseWriter, r *http.Request) {
+func (v *Views) ResetFunc(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 
 	if code == "" {
@@ -195,7 +199,7 @@ func ResetFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, found := c.Get(code)
+	id, found := v.cache.Get(code)
 	if !found {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
@@ -207,12 +211,12 @@ func ResetFunc(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		tpl.ExecuteTemplate(w, "reset.gohtml", ctx)
+		v.tpl.ExecuteTemplate(w, "reset.gohtml", ctx)
 	case "POST":
 		r.ParseForm()
 		p := r.Form.Get("password")
 		if p != r.Form.Get("confirmpassword") || p == "" {
-			tpl.ExecuteTemplate(w, "reset.gohtml", ctx)
+			v.tpl.ExecuteTemplate(w, "reset.gohtml", ctx)
 			return
 		}
 		// Good password
@@ -226,11 +230,11 @@ func ResetFunc(w http.ResponseWriter, r *http.Request) {
 		// Update record
 
 		u := types.User{UserID: id.(int), Password: p}
-		err := uStore.UpdateUserPassword(r.Context(), &u)
+		err := v.user.UpdateUserPassword(r.Context(), &u)
 		if err != nil {
 			log.Printf("Failed to reset user: %+v", err)
 		}
-		c.Delete(code)
+		v.cache.Delete(code)
 		log.Printf("updated user: %s", u.Username)
 		http.Redirect(w, r, "/", http.StatusFound)
 	}

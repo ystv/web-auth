@@ -56,7 +56,7 @@ pipeline {
                         echo err.getMessage()
                     }
                 }
-                sh "docker run -d --rm -p 1336:8081 --env-file /YSTV-ENVVARS/auth.env --name ystv-web-auth localhost:5000/ystv/web-auth:$BUILD_ID" // Deploying site
+                sh "docker run -d --rm -p 1335:8080 --env-file /YSTV-ENVVARS/auth.env --name ystv-web-auth localhost:5000/ystv/web-auth:$BUILD_ID" // Deploying site
                 sh 'docker image prune -a -f --filter "label=site=auth"' // remove old image
             }
         }

@@ -54,8 +54,8 @@ func DBToTemplateType(dbUser *[]types.User) []User {
 }
 
 // InternalFunc handles a request to the internal template
-func InternalFunc(w http.ResponseWriter, r *http.Request) {
-	session, err := cStore.Get(r, "session")
+func (v *Views) InternalFunc(w http.ResponseWriter, r *http.Request) {
+	session, err := v.cookie.Get(r, "session")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -71,7 +71,7 @@ func InternalFunc(w http.ResponseWriter, r *http.Request) {
 		TotalUsers:    2000,
 		LoginsPastDay: 20,
 	}
-	err = tpl.ExecuteTemplate(w, "internal.gohtml", ctx)
+	err = v.tpl.ExecuteTemplate(w, "internal.gohtml", ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -79,9 +79,9 @@ func InternalFunc(w http.ResponseWriter, r *http.Request) {
 }
 
 // UsersFunc handles a users request
-func UsersFunc(w http.ResponseWriter, r *http.Request) {
+func (v *Views) UsersFunc(w http.ResponseWriter, r *http.Request) {
 	dbUsers := &[]types.User{}
-	err := uStore.GetUsers(r.Context(), dbUsers)
+	err := v.user.GetUsers(r.Context(), dbUsers)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -91,7 +91,7 @@ func UsersFunc(w http.ResponseWriter, r *http.Request) {
 	ctx := UsersTemplate{
 		Users: tplUsers,
 	}
-	err = tpl.ExecuteTemplate(w, "users.gohtml", ctx)
+	err = v.tpl.ExecuteTemplate(w, "users.gohtml", ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -99,7 +99,7 @@ func UsersFunc(w http.ResponseWriter, r *http.Request) {
 }
 
 // UserFunc handles a users request
-func UserFunc(w http.ResponseWriter, r *http.Request) {
+func (v *Views) UserFunc(w http.ResponseWriter, r *http.Request) {
 	userString := mux.Vars(r)
 	dbUser := &types.User{}
 	var err error
@@ -108,13 +108,13 @@ func UserFunc(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = uStore.GetUser(r.Context(), dbUser)
+	err = v.user.GetUser(r.Context(), dbUser)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = tpl.ExecuteTemplate(w, "user.gohtml", nil)
+	err = v.tpl.ExecuteTemplate(w, "user.gohtml", nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -123,9 +123,9 @@ func UserFunc(w http.ResponseWriter, r *http.Request) {
 
 // RequiresLogin is a middleware which will be used for each
 // httpHandler to check if there is any active session
-func RequiresLogin(h http.Handler) http.HandlerFunc {
+func (v *Views) RequiresLogin(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		session, err := cStore.Get(r, "session")
+		session, err := v.cookie.Get(r, "session")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

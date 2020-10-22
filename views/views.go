@@ -7,7 +7,6 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -20,55 +19,103 @@ import (
 	"github.com/ystv/web-auth/user"
 )
 
-var (
-	uStore *user.Store
+type (
+	// Config the global web-auth configuration
+	Config struct {
+		DatabaseURL    string
+		DomainName     string
+		LogoutEndpoint string
+		Mail           SMTPConfig
+		Security       SecurityConfig
+	}
+	// SMTPConfig stores the SMTP mailer configuration
+	SMTPConfig struct {
+		Host     string
+		Username string
+		Password string
+	}
+	// SecConfig stores the security configuration
+	SecurityConfig struct {
+		EncryptionKey     string
+		AuthenticationKey string
+		SigningKey        string
+	}
 
-	cStore *sessions.CookieStore
+	// Repo defines all view interactions
+	Repo interface {
+		// index
+		IndexFunc(w http.ResponseWriter, r *http.Request)
+		// login
+		LogoutFunc(w http.ResponseWriter, r *http.Request)
+		LoginFunc(w http.ResponseWriter, r *http.Request)
+		SignUpFunc(w http.ResponseWriter, r *http.Request)
+		ForgotFunc(w http.ResponseWriter, r *http.Request)
+		ResetFunc(w http.ResponseWriter, r *http.Request)
+		// internal
+		InternalFunc(w http.ResponseWriter, r *http.Request)
+		UsersFunc(w http.ResponseWriter, r *http.Request)
+		UserFunc(w http.ResponseWriter, r *http.Request)
+		// middleware
+		RequiresLogin(h http.Handler) http.HandlerFunc
+		// api
+		ValidateToken(myToken string) (bool, *JWTClaims)
+		SetTokenHandler(w http.ResponseWriter, r *http.Request)
+		TestAPI(w http.ResponseWriter, r *http.Request)
+		getJWTCookie(w http.ResponseWriter, r *http.Request) (http.ResponseWriter, error)
+	}
 
-	tpl *template.Template
-
-	m *mail.Mail
-
-	c *cache.Cache
+	// Views encapsulates our view dependencies
+	Views struct {
+		conf   Config
+		user   *user.Store
+		cookie *sessions.CookieStore
+		tpl    *template.Template
+		mail   *mail.Mail
+		cache  *cache.Cache
+	}
 )
 
+// here to verify we are meeting the interface
+var _ Repo = &Views{}
+
 // New initialises connections, templates, and cookies
-func New() {
+func New(conf Config) *Views {
+	v := Views{}
 	// Connecting to stores
-	dbStore, err := db.NewStore(os.Getenv("DATABASE_URL"))
+	dbStore, err := db.NewStore(conf.DatabaseURL)
 	if err != nil {
 		log.Fatalf("NewStore failed: %+v", err)
 	}
-	uStore = user.NewUserRepo(dbStore)
+	v.user = user.NewUserRepo(dbStore)
 
 	// Connecting to mail
-	m, err = mail.NewMailer(mail.Config{
-		Host:     os.Getenv("SMTP_HOST"),
+	v.mail, err = mail.NewMailer(mail.Config{
+		Host:     conf.Mail.Host,
 		Port:     587,
-		Username: os.Getenv("SMTP_USERNAME"),
-		Password: os.Getenv("SMTP_PASSWORD"),
+		Username: conf.Mail.Username,
+		Password: conf.Mail.Password,
 	})
 	if err != nil {
 		log.Printf("mailer failed: %+v", err)
 	}
 
 	// Initialising cache
-	c = cache.New(1*time.Hour, 1*time.Hour)
+	v.cache = cache.New(1*time.Hour, 1*time.Hour)
 
 	// Initialising session cookie
-	authKey, _ := hex.DecodeString(os.Getenv("AUTHENTICATION_KEY"))
+	authKey, _ := hex.DecodeString(conf.Security.AuthenticationKey)
 	if len(authKey) == 0 {
 		authKey = securecookie.GenerateRandomKey(64)
 	}
-	encryptionKey, _ := hex.DecodeString(os.Getenv("ENCRYPTION_KEY"))
+	encryptionKey, _ := hex.DecodeString(conf.Security.EncryptionKey)
 	if len(encryptionKey) == 0 {
 		encryptionKey = securecookie.GenerateRandomKey(32)
 	}
-	cStore = sessions.NewCookieStore(
+	v.cookie = sessions.NewCookieStore(
 		authKey,
 		encryptionKey,
 	)
-	cStore.Options = &sessions.Options{
+	v.cookie.Options = &sessions.Options{
 		MaxAge:   60 * 60 * 24,
 		HttpOnly: true,
 		Path:     "/",
@@ -78,12 +125,16 @@ func New() {
 	gob.Register(types.User{})
 
 	// Loading templates
-	tpl = template.Must(template.ParseGlob("public/templates/*.gohtml"))
+	v.tpl = template.Must(template.ParseGlob("public/templates/*.gohtml"))
+
+	v.conf = conf
+
+	return &v
 }
 
 // IndexFunc handles the index page.
-func IndexFunc(w http.ResponseWriter, r *http.Request) {
-	session, err := cStore.Get(r, "session")
+func (v Views) IndexFunc(w http.ResponseWriter, r *http.Request) {
+	session, err := v.cookie.Get(r, "session")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -93,7 +144,7 @@ func IndexFunc(w http.ResponseWriter, r *http.Request) {
 
 	// Check if there is a callback request
 	callback := r.URL.Query().Get("callback")
-	if callback != "" && strings.HasSuffix(callback, os.Getenv("DOMAIN_NAME")) {
+	if callback != "" && strings.HasSuffix(callback, v.conf.DomainName) {
 		context.Callback = callback
 	}
 	// Check if authenticated
@@ -121,8 +172,8 @@ func getData(s *sessions.Session) *Context {
 	if !ok {
 		u = types.User{Authenticated: false}
 	}
-	c := Context{Version: "0.4.8",
-		Message:  "News: Removed trailing slash & relative routing",
+	c := Context{Version: "0.4.9",
+		Message:  "News: Dependency inject views",
 		Callback: "/internal",
 		User:     u,
 	}
