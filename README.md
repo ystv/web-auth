@@ -24,4 +24,6 @@ Optional variables. Used to keep cookies secure, if left blank it will generate 
 
 - `ENCRYPTION_KEY` 32 bytes of hex, used for cookies
 
+- `LOGOUT_ENDPOINT` Where web-auth redirects after successful logout
+
 After all that is set you should be able to visit it at `:8080`

@@ -39,7 +39,13 @@ func LogoutFunc(w http.ResponseWriter, r *http.Request) {
 		Domain:  ".ystv.co.uk",
 		Path:    "/",
 	})
-	http.Redirect(w, r, "/", http.StatusFound)
+	// TODO Don't call env in this function have an initialiser
+	// then fetch from that store?
+	endpoint := os.Getenv("LOGOUT_ENDPOINT")
+	if endpoint == "" {
+		endpoint = "/"
+	}
+	http.Redirect(w, r, endpoint, http.StatusFound)
 }
 
 // LoginFunc implements the login functionality, will
