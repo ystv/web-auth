@@ -34,7 +34,7 @@ type (
 		Username string
 		Password string
 	}
-	// SecConfig stores the security configuration
+	// SecurityConfig stores the security configuration
 	SecurityConfig struct {
 		EncryptionKey     string
 		AuthenticationKey string
