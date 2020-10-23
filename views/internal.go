@@ -138,3 +138,29 @@ func (v *Views) RequiresLogin(h http.Handler) http.HandlerFunc {
 		h.ServeHTTP(w, r)
 	}
 }
+
+// RequiresPermission is a middleware that will
+// ensure that the user has the given permission.
+func (v *Views) RequiresPermission(h http.Handler, p types.Permission) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		session, err := v.cookie.Get(r, "session")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		u := helpers.GetUser(session)
+		err = v.user.GetPermissions(r.Context(), &u)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		for _, perm := range u.Permissions {
+			if perm == p {
+				h.ServeHTTP(w, r)
+				return
+			}
+		}
+		v.tpl.ExecuteTemplate(w, "forbidden.gohtml", nil)
+		w.WriteHeader(http.StatusForbidden)
+	}
+}

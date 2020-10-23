@@ -113,7 +113,6 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		u.LastLogin = prevLogin
 		session.Values["user"] = u
 
-		log.Print(r.Form.Get("remember"))
 		if r.Form.Get("remember") != "on" {
 			session.Options.MaxAge = 0
 		}

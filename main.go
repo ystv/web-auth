@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
+	"github.com/ystv/web-auth/types"
 	"github.com/ystv/web-auth/views"
 )
 
@@ -31,6 +32,12 @@ func main() {
 			SigningKey:        os.Getenv("WAUTH_SIGNING_KEY"),
 		},
 	}
+
+	adminPerm := types.Permission{
+		ID:   19,
+		Name: "SuperUser",
+	}
+
 	v := views.New(conf)
 	mux := mux.NewRouter()
 	// Static
@@ -57,13 +64,14 @@ func main() {
 	mux.HandleFunc("/api/test", v.TestAPI)
 
 	// Login required
-	mux.HandleFunc("/internal/users", v.RequiresLogin(http.HandlerFunc(v.UsersFunc)))
+	mux.HandleFunc("/internal/users", v.RequiresPermission(v.RequiresLogin(http.HandlerFunc(v.UsersFunc)), adminPerm))
 	mux.HandleFunc("/internal/user/{userid}", v.RequiresLogin(http.HandlerFunc(v.UserFunc)))
 	mux.HandleFunc("/internal", v.RequiresLogin(http.HandlerFunc(v.InternalFunc)))
 
 	// Public
 	mux.HandleFunc("/", v.IndexFunc)
 
+	log.Println("web-auth started, listing on :8080")
 	// Serve
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }

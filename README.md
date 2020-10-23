@@ -34,8 +34,6 @@ Used to keep cookies secure, if left blank it will generate random keys instead
 
 After all that is set you should be able to visit it at `:8080`.
 
-If it succeeds on startup it won't print anything in the console, otherwise it will print the errors.
-
 ## Building
 
 Both methods require cloning the repo
