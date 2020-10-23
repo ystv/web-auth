@@ -1,0 +1,22 @@
+html,
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    background: #fbfbfb;
+}
+.register {
+    padding: 0.7rem;
+    background: white;
+    border-radius: 10px;
+}
+.card-title {
+    padding: 1rem;
+    background: #36d1dc;
+    background: -webkit-linear-gradient(to right, #5b86e5, #36d1dc);
+    background: linear-gradient(to right, #5b86e5, #36d1dc);
+}
+.card-title .title {
+    color: hsl(192, 17%, 99%);
+}

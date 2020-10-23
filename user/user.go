@@ -55,7 +55,7 @@ func (s *Store) VerifyUser(ctx context.Context, u *types.User) error {
 	if utils.HashPass(u.Salt+plaintext) == u.Password {
 		return nil
 	}
-	return errors.New("Invalid credentials")
+	return errors.New("invalid credentials")
 }
 
 // UpdateUserPassword will update the password and set the reset_pw to false

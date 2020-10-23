@@ -70,7 +70,11 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, context.Callback, http.StatusFound)
 			return
 		}
-		v.tpl.ExecuteTemplate(w, "login.gohtml", context)
+		err = v.tpl.ExecuteTemplate(w, "login", context)
+		if err != nil {
+			log.Printf("login failed to exec tmpl: %w", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		return
 	case "POST":
 		// Parsing form to struct
@@ -98,7 +102,11 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 			ctx.Callback = callback
 			ctx.Message = "Invalid username or password"
 			ctx.MsgType = "is-danger"
-			v.tpl.ExecuteTemplate(w, "index.gohtml", ctx)
+			err = v.tpl.ExecuteTemplate(w, "login", ctx)
+			if err != nil {
+				log.Printf("login failed to exec tmpl: %w", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 		prevLogin := u.LastLogin

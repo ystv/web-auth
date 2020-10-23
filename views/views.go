@@ -174,8 +174,7 @@ func getData(s *sessions.Session) *Context {
 	if !ok {
 		u = types.User{Authenticated: false}
 	}
-	c := Context{Version: "0.4.9",
-		Message:  "News: Dependency inject views",
+	c := Context{Version: "0.4.10",
 		Callback: "/internal",
 		User:     u,
 	}

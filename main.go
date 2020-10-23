@@ -42,7 +42,7 @@ func main() {
 	mux := mux.NewRouter()
 	// Static
 	fs := http.FileServer(http.Dir("./public/static"))
-	mux.Handle("/static/", http.StripPrefix("/static/", fs))
+	mux.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
 
 	// Login logout
 	mux.HandleFunc("/login", v.LoginFunc)
