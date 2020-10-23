@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -60,9 +61,9 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		context := getData(session)
 
 		// Check if there is a callback request
-		callback := r.URL.Query().Get("callback")
-		if strings.HasSuffix(callback, v.conf.DomainName) {
-			context.Callback = callback
+		callbackURL, err := url.Parse(r.URL.Query().Get("callback"))
+		if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.DomainName) && callbackURL.String() != "" {
+			context.Callback = callbackURL.String()
 		}
 		// Check if authenticated
 		if context.User.Authenticated {
@@ -80,11 +81,11 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		// to just let it both for the query
 		u.Email = u.Username
 
-		callback := r.FormValue("callback")
-		if callback == "" || !strings.HasSuffix(callback, v.conf.DomainName) {
-			callback = "/internal"
+		callback := "/internal"
+		callbackURL, err := url.Parse(r.URL.Query().Get("callback"))
+		if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.DomainName) && callbackURL.String() != "" {
+			callback = callbackURL.String()
 		}
-
 		// Authentication
 		if v.user.VerifyUser(r.Context(), &u) != nil {
 			log.Printf("Failed login for \"%s\"", u.Username)
@@ -102,7 +103,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		}
 		prevLogin := u.LastLogin
 		// Update last logged in
-		err := v.user.SetUserLoggedIn(r.Context(), &u)
+		err = v.user.SetUserLoggedIn(r.Context(), &u)
 		if err != nil {
 			err = fmt.Errorf("failed to set user logged in: %w", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -143,10 +144,11 @@ func (v Views) IndexFunc(w http.ResponseWriter, r *http.Request) {
 	context := getData(session)
 
 	// Check if there is a callback request
-	callback := r.URL.Query().Get("callback")
-	if callback != "" && strings.HasSuffix(callback, v.conf.DomainName) {
-		context.Callback = callback
+	callbackURL, err := url.Parse(r.URL.Query().Get("callback"))
+	if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.DomainName) && callbackURL.String() != "" {
+		context.Callback = callbackURL.String()
 	}
+
 	// Check if authenticated
 	if context.User.Authenticated {
 		http.Redirect(w, r, context.Callback, http.StatusFound)
