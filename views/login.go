@@ -72,7 +72,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		}
 		err = v.tpl.ExecuteTemplate(w, "login", context)
 		if err != nil {
-			log.Printf("login failed to exec tmpl: %w", err)
+			log.Printf("login failed to exec tmpl: %+v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		return
@@ -104,7 +104,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 			ctx.MsgType = "is-danger"
 			err = v.tpl.ExecuteTemplate(w, "login", ctx)
 			if err != nil {
-				log.Printf("login failed to exec tmpl: %w", err)
+				log.Printf("login failed to exec tmpl: %+v", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			return
@@ -171,13 +171,23 @@ func (v *Views) SignUpFunc(w http.ResponseWriter, r *http.Request) {
 func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		v.tpl.ExecuteTemplate(w, "forgot.gohtml", nil)
+		err := v.tpl.ExecuteTemplate(w, "forgot.gohtml", nil)
+		if err != nil {
+			err = fmt.Errorf("failed to exec tmpl: %w", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
 	case "POST":
 		r.ParseForm()
 		u := types.User{Email: r.Form.Get("email")}
 
 		if u.Email == "" {
-			v.tpl.ExecuteTemplate(w, "forgot.gohtml", nil)
+			err := v.tpl.ExecuteTemplate(w, "forgot.gohtml", nil)
+			if err != nil {
+				err = fmt.Errorf("failed to exec tmpl: %w", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
 		}
 		// Get user and check if it exists
 		if v.user.GetUser(r.Context(), &u) != nil {
@@ -189,11 +199,11 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 		v.cache.Set(code, u.UserID, cache.DefaultExpiration)
 
 		// Valid request, send email with reset code
-		log.Printf("reset email: %s, code: %s", u.Email, code)
 		if v.mail.Enabled {
 			err := v.mail.SendEmail(u.Email, "Forgotten Password", string(code))
 			if err != nil {
-				log.Printf("SendEmail failed: %s", err)
+				log.Printf("SendEmail failed: %s, ", err)
+				log.Printf("reset email: %s, code: %s", u.Email, code)
 			}
 		} else {
 			log.Printf("no mailer present")
