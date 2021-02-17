@@ -1,6 +1,8 @@
 package main
 
 import (
+	"embed"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -11,11 +13,24 @@ import (
 	"github.com/ystv/web-auth/views"
 )
 
+//go:embed public/*
+var content embed.FS
+
 func allow(origin string) bool {
 	return true
 }
 
 func main() {
+	// Setup files
+	static, err := fs.Sub(content, "public/static")
+	if err != nil {
+		log.Fatalf("static files failed: %+v", err)
+	}
+	templates, err := fs.Sub(content, "public/templates")
+	if err != nil {
+		log.Fatalf("template files failed: %+v", err)
+	}
+
 	// Generate config
 	conf := views.Config{
 		DatabaseURL:    os.Getenv("WAUTH_DATABASE_URL"),
@@ -38,10 +53,10 @@ func main() {
 		Name: "SuperUser",
 	}
 
-	v := views.New(conf)
+	v := views.New(conf, templates)
 	mux := mux.NewRouter()
 	// Static
-	fs := http.FileServer(http.Dir("./public/static"))
+	fs := http.FileServer(http.FS(static))
 	mux.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
 
 	// Login logout

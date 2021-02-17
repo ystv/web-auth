@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"html/template"
+	"io/fs"
 	"log"
 	"net/http"
 	"net/url"
@@ -80,7 +81,7 @@ type (
 var _ Repo = &Views{}
 
 // New initialises connections, templates, and cookies
-func New(conf Config) *Views {
+func New(conf Config, templates fs.FS) *Views {
 	v := Views{}
 	// Connecting to stores
 	dbStore, err := db.NewStore(conf.DatabaseURL)
@@ -126,7 +127,7 @@ func New(conf Config) *Views {
 	gob.Register(types.User{})
 
 	// Loading templates
-	v.tpl = template.Must(template.ParseGlob("public/templates/*.gohtml"))
+	v.tpl = template.Must(template.ParseFS(templates, "*.gohtml"))
 
 	v.conf = conf
 
