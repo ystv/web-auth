@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/patrickmn/go-cache"
@@ -68,12 +69,13 @@ type (
 
 	// Views encapsulates our view dependencies
 	Views struct {
-		conf   Config
-		user   *user.Store
-		cookie *sessions.CookieStore
-		tpl    *template.Template
-		mail   *mail.Mail
-		cache  *cache.Cache
+		conf     Config
+		user     *user.Store
+		cookie   *sessions.CookieStore
+		tpl      *template.Template
+		mail     *mail.Mail
+		cache    *cache.Cache
+		validate *validator.Validate
 	}
 )
 
@@ -131,6 +133,9 @@ func New(conf Config, templates fs.FS) *Views {
 
 	v.conf = conf
 
+	// Struct validator
+	v.validate = validator.New()
+
 	return &v
 }
 
@@ -175,7 +180,7 @@ func getData(s *sessions.Session) *Context {
 	if !ok {
 		u = types.User{Authenticated: false}
 	}
-	c := Context{Version: "0.4.10",
+	c := Context{Version: "0.4.12",
 		Callback: "/internal",
 		User:     u,
 	}
