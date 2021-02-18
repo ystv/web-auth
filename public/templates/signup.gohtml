@@ -48,21 +48,25 @@
                   </div>
                 </div>
 
-                <div class="field">
-                  <label class="label">Email address</label>
+                <label class="label">Email address</label>
+                <div class="field has-addons">
                   <div class="control has-icons-left">
                     <input
                       class="input"
                       type="text"
                       name="email"
-                      placeholder="rdjm502@york.ac.uk"
+                      placeholder="rdjm502"
                     />
                     <span class="icon is-small is-left">
                       <i class="fas fa-envelope"></i>
                     </span>
                   </div>
+                  <p class="control">
+                    <a class="button is-static">
+                      @york.ac.uk
+                    </a>
+                  </p>
                 </div>
-
 
                 <div class="field">
                   <label class="label">Password</label>
@@ -100,6 +104,11 @@
               </form>
             </div>
           </div>
+          {{if .}}
+            <div class="notification is-danger">
+              <p>{{.}}</p>
+            </div>
+          {{end}}
         </div>
       </div>
     </section>

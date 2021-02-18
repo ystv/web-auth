@@ -7,6 +7,7 @@ require (
 	github.com/balacode/zr-whirl v0.0.0-20200620091057-5757a79e41f7
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustin/go-humanize v1.0.0
+	github.com/go-playground/validator/v10 v10.4.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/schema v1.2.0
 	github.com/gorilla/securecookie v1.1.1
