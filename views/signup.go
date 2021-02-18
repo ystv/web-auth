@@ -64,7 +64,7 @@ func (v *Views) SignUpFunc(w http.ResponseWriter, r *http.Request) {
 }
 
 func (v *Views) signupTmplExec(w http.ResponseWriter, msg string) {
-	err := v.tpl.ExecuteTemplate(w, "signup.gohtml", msg)
+	err := v.tpl.ExecuteTemplate(w, "signup.tmpl", msg)
 	if err != nil {
 		err = fmt.Errorf("signup template exec failed: %w", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

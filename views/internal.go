@@ -70,7 +70,7 @@ func (v *Views) InternalFunc(w http.ResponseWriter, r *http.Request) {
 		TotalUsers:    2000,
 		LoginsPastDay: 20,
 	}
-	err = v.tpl.ExecuteTemplate(w, "internal.gohtml", ctx)
+	err = v.tpl.ExecuteTemplate(w, "internal.tmpl", ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -90,7 +90,7 @@ func (v *Views) UsersFunc(w http.ResponseWriter, r *http.Request) {
 	ctx := UsersTemplate{
 		Users: tplUsers,
 	}
-	err = v.tpl.ExecuteTemplate(w, "users.gohtml", ctx)
+	err = v.tpl.ExecuteTemplate(w, "users.tmpl", ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -113,7 +113,7 @@ func (v *Views) UserFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = v.tpl.ExecuteTemplate(w, "user.gohtml", nil)
+	err = v.tpl.ExecuteTemplate(w, "user.tmpl", nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

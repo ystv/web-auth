@@ -46,7 +46,7 @@ func (v *Views) RequiresPermission(h http.Handler, p types.Permission) http.Hand
 				return
 			}
 		}
-		v.tpl.ExecuteTemplate(w, "forbidden.gohtml", nil)
+		v.tpl.ExecuteTemplate(w, "forbidden.tmpl", nil)
 		w.WriteHeader(http.StatusForbidden)
 	}
 }

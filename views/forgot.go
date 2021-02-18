@@ -11,11 +11,17 @@ import (
 	"github.com/ystv/web-auth/utils"
 )
 
+var notification = types.Notifcation{
+	Title:   "Reset code sent",
+	Type:    "",
+	Message: "Cheers! If your account exists, you should receive a new email from \"YSTV Security\" with a link to reset your password shortly.",
+}
+
 // ForgotFunc handles sending a reset email
 func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		err := v.tpl.ExecuteTemplate(w, "forgot.gohtml", nil)
+		err := v.tpl.ExecuteTemplate(w, "forgot.tmpl", nil)
 		if err != nil {
 			err = fmt.Errorf("failed to exec tmpl: %w", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -26,7 +32,7 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 		u := types.User{Email: r.Form.Get("email")}
 
 		if u.Email == "" {
-			err := v.tpl.ExecuteTemplate(w, "forgot.gohtml", nil)
+			err := v.tpl.ExecuteTemplate(w, "forgot.tmpl", nil)
 			if err != nil {
 				err = fmt.Errorf("failed to exec tmpl: %w", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -35,9 +41,14 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 		}
 		// Get user and check if it exists
 		if v.user.GetUser(r.Context(), &u) != nil {
-			// User doesn't exist
-			// TODO send no user message
-			v.tpl.ExecuteTemplate(w, "forgot.gohtml", nil)
+			// User doesn't exist, we'll pretend they've got an email
+			log.Printf("request for reset on unknown email \"%s\"", u.Email)
+			err := v.tpl.ExecuteTemplate(w, "notification.tmpl", notification)
+			if err != nil {
+				err = fmt.Errorf("failed to exec template: %w", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
 		}
 		code := utils.RandomString(10)
 		v.cache.Set(code, u.UserID, cache.DefaultExpiration)
@@ -47,16 +58,22 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 			err := v.mail.SendEmail(u.Email, "Forgotten Password", string(code))
 			if err != nil {
 				log.Printf("SendEmail failed: %s, ", err)
-				log.Printf("reset email: %s, code: %s", u.Email, code)
+				log.Printf("request for password reset email \"%s\":reset code \"%s\"", u.Email, code)
 			}
+			log.Printf("request for password reset email: \"%s\"", u.Email)
 		} else {
 			log.Printf("no mailer present")
+			log.Printf("reset email: %s, code: %s", u.Email, code)
 		}
 
-		http.Redirect(w, r, "/", http.StatusFound)
-		return
+		// User doesn't exist, we'll pretend they've got an email
+		err := v.tpl.ExecuteTemplate(w, "notification.tmpl", notification)
+		if err != nil {
+			err = fmt.Errorf("failed to exec template: %w", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
-
 }
 
 // ResetFunc handles resetting the password
@@ -80,12 +97,12 @@ func (v *Views) ResetFunc(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		v.tpl.ExecuteTemplate(w, "reset.gohtml", ctx)
+		v.tpl.ExecuteTemplate(w, "reset.tmpl", ctx)
 	case "POST":
 		r.ParseForm()
 		p := r.Form.Get("password")
 		if p != r.Form.Get("confirmpassword") || p == "" {
-			v.tpl.ExecuteTemplate(w, "reset.gohtml", ctx)
+			v.tpl.ExecuteTemplate(w, "reset.tmpl", ctx)
 			return
 		}
 		// Good password
