@@ -9,6 +9,7 @@ import (
 	"github.com/ystv/web-auth/types"
 )
 
+// UserSignup represents the HTML form
 type UserSignup struct {
 	Firstname       string `db:"first_name" schema:"firstname" validate:"required,gte=3"`
 	Lastname        string `db:"last_name" schema:"lastname" validate:"required,gte=3"`

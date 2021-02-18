@@ -129,7 +129,7 @@ func New(conf Config, templates fs.FS) *Views {
 	gob.Register(types.User{})
 
 	// Loading templates
-	v.tpl = template.Must(template.ParseFS(templates, "*.gohtml"))
+	v.tpl = template.Must(template.ParseFS(templates, "*.tmpl"))
 
 	v.conf = conf
 
