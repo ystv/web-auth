@@ -15,8 +15,6 @@ pipeline {
         stage('Registry Upload') {
             steps {
                 sh "docker push localhost:5000/ystv/web-auth:$BUILD_ID" // Uploaded to registry
-                sh "docker image prune -f --filter label=site=auth --filter label=stage=builder" // Removing the local builder image
-                sh "docker image rm localhost:5000/ystv/web-auth:$BUILD_ID" // Removing the local builder image
             }
         }
         stage('Deploy') {
@@ -35,7 +33,7 @@ pipeline {
                                 sh 'rsync -av $APP_ENV deploy@web:/data/webs/web-auth/env'
                                 sh '''ssh -tt deploy@web << EOF
                                     docker pull localhost:5000/ystv/web-auth:$BUILD_ID
-                                    docker kill ystv-web-auth || true
+                                    docker rm -f ystv-web-auth || true
                                     docker run -d -p 1335:8080 --env-file /data/webs/web-api/env --name ystv-web-auth localhost:5000/ystv/web-auth:$BUILD_ID
                                     docker image prune -a -f --filter "label=site=auth"
                                 EOF'''
@@ -57,7 +55,7 @@ pipeline {
                         sh "docker pull localhost:5000/ystv/web-auth:$BUILD_ID" // Pulling image from registry
                         script {
                             try {
-                                sh "docker kill ystv-web-auth" // Stop old container if it exists
+                                sh "docker rm -f ystv-web-auth" // Stop old container if it exists
                             }
                             catch (err) {
                                 echo "Couldn't find container to stop"
@@ -77,6 +75,10 @@ pipeline {
         }
         failure {
             echo 'That is not ideal, cheeky bugger'
+        }
+        always {
+            sh "docker image prune -f --filter label=site=auth --filter label=stage=builder" // Removing the local builder image
+            sh "docker image rm localhost:5000/ystv/web-auth:$BUILD_ID" // Removing the local builder image
         }
     }
 }
