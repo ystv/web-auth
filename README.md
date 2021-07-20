@@ -24,6 +24,8 @@ will print reset codes instead of mailing
 
 - `WAUTH_DOMAIN_NAME` Domain name of where it's hosted so we can restrict callbacks to a certain domain
 
+- `WAUTH_LOGOUT_ENDPOINT` URL of where to redirect after successful logout
+
 Used to keep cookies secure, if left blank it will generate random keys instead
 
 - `WAUTH_AUTHENTICATION_KEY` 64 bytes of hex, used for cookies

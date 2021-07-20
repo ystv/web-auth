@@ -3,62 +3,72 @@ pipeline {
 
     stages {
         stage('Update Components') {
-            when {
-                anyOf {
-                    branch 'master'
-                    }
-                }
             steps {
-                echo "Updating"
-                sh "docker pull golang:1.15-alpine" // Update with current go image
+                sh "docker pull golang:1.16-alpine" // Update with current go image
             }
         }
         stage('Build') {
-            when {
-                anyOf {
-                    branch 'master'
-                    }
-                }
             steps {
-                echo "Building"
                 sh "docker build -t localhost:5000/ystv/web-auth:$BUILD_ID ."
             }
         }
-        stage('Upload & Cleanup') {
-            when {
-                anyOf {
-                    branch 'master'
-                    }
-                }
+        stage('Registry Upload') {
             steps {
-                echo "Uploading To Registry"
                 sh "docker push localhost:5000/ystv/web-auth:$BUILD_ID" // Uploaded to registry
-                echo "Performing Cleanup"
                 sh "docker image prune -f --filter label=site=auth --filter label=stage=builder" // Removing the local builder image
                 sh "docker image rm localhost:5000/ystv/web-auth:$BUILD_ID" // Removing the local builder image
             }
         }
         stage('Deploy') {
-            when {
-                anyOf {
-                    branch 'master'
+            stages {
+                stage('Production') {
+                    when {
+                        branch 'master'
+                        tag "v*[0-9].*[0-9].*[0-9]"
+                    }
+                    environment {
+                        APP_ENV = credentials('wauth-prod-env')
+                    }
+                    steps {
+                        sshagent(credentials : ['deploy-web']) {
+                            script {
+                                sh 'rsync -av $APP_ENV deploy@web:/data/webs/web-auth/env'
+                                sh '''ssh -tt deploy@web << EOF
+                                    docker pull localhost:5000/ystv/web-auth:$BUILD_ID
+                                    docker kill ystv-web-auth || true
+                                    docker run -d --rm -p 1335:8080 --env-file /data/webs/web-api/env --name ystv-web-auth localhost:5000/ystv/web-auth:$BUILD_ID
+                                    docker image prune -a -f --filter "label=site=auth"
+                                EOF'''
+                            }
+                        }
                     }
                 }
-            steps {
-                echo "Deploying"
-                sh "docker pull localhost:5000/ystv/web-auth:$BUILD_ID" // Pulling image from local registry
-                script {
-                    try {
-                        sh "docker kill ystv-web-auth" // Stop old container
+                stage('Development') {
+                    when {
+                        branch 'master'
+                        not {
+                            tag "v*[0-9].*[0-9].*[0-9]"
+                        }
                     }
-                    catch (err) {
-                        echo "Couldn't find container to stop"
-                        echo err.getMessage()
+                    environment {
+                        APP_ENV = credentials('wauth-dev-env')
+                    }
+                    steps {
+                        sh "docker pull localhost:5000/ystv/web-auth:$BUILD_ID" // Pulling image from registry
+                        script {
+                            try {
+                                sh "docker kill ystv-web-auth" // Stop old container if it exists
+                            }
+                            catch (err) {
+                                echo "Couldn't find container to stop"
+                                echo err.getMessage()
+                            }
+                        }
+                        sh 'docker run -d --rm -p 1335:8080 --env-file $APP_ENV --name ystv-web-auth localhost:5000/ystv/web-auth:$BUILD_ID' // Deploying site
+                        sh 'docker image prune -a -f --filter "label=site=auth"' // remove old image
                     }
                 }
-                sh "docker run -d --rm -p 1335:8080 --env-file /etc/opt/WAUTH-ENV --name ystv-web-auth localhost:5000/ystv/web-auth:$BUILD_ID" // Deploying site
-                sh 'docker image prune -a -f --filter "label=site=auth"' // remove old image
-            }
+            }   
         }
     }
     post {
