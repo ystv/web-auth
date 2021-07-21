@@ -25,7 +25,6 @@ pipeline {
             stages {
                 stage('Production') {
                     when {
-                        branch 'master'
                         expression { return env.TAG_NAME ==~ /v(0|[1-9]*)\.(0|[1-9]*)\.(0|[1-9]*)/ } // Checking if it is main semantic version release
                     }
                     environment {
