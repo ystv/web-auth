@@ -26,7 +26,7 @@ pipeline {
                 stage('Production') {
                     when {
                         branch 'master'
-                        tag pattern: "v@(0|[1-9]).@(0|[1-9]).@(0|[1-9])", comparator: "GLOB" // Checking if it is main semantic version release
+                        tag pattern: "v@([0-9]).@([0-9]).@([0-9])", comparator: "GLOB" // Checking if it is main semantic version release
                     }
                     environment {
                         APP_ENV = credentials('wauth-prod-env')
@@ -49,7 +49,7 @@ pipeline {
                     when {
                         branch 'master'
                         not {
-                            tag pattern: "v@(0|[1-9]).@(0|[1-9]).@(0|[1-9])", comparator: "GLOB"
+                            tag pattern: "v@([0-9]).@([0-9]).@([0-9])", comparator: "GLOB"
                         }
                     }
                     environment {
