@@ -39,6 +39,7 @@ pipeline {
                                     docker rm -f ystv-web-auth || true
                                     docker run -d -p 1335:8080 --env-file /data/webs/web-auth/env -e WAUTH_VERSION=$TAG_NAME --name ystv-web-auth $REGISTRY_ENDPOINT/ystv/web-auth:$BUILD_ID
                                     docker image prune -a -f --filter "label=site=auth"
+                                    exit
                                 EOF'''
                             }
                         }
