@@ -59,7 +59,7 @@ func (v *Views) InternalFunc(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	c := getData(session)
+	c := v.getData(session)
 	lastLogin := time.Now()
 	if c.User.LastLogin.Valid {
 		lastLogin = c.User.LastLogin.Time

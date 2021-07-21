@@ -25,6 +25,7 @@ import (
 type (
 	// Config the global web-auth configuration
 	Config struct {
+		Version        string
 		DatabaseURL    string
 		DomainName     string
 		LogoutEndpoint string
@@ -147,7 +148,7 @@ func (v Views) IndexFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Data for our HTML template
-	context := getData(session)
+	context := v.getData(session)
 
 	// Check if there is a callback request
 	callbackURL, err := url.Parse(r.URL.Query().Get("callback"))
@@ -173,14 +174,14 @@ type Context struct {
 	User     types.User
 }
 
-func getData(s *sessions.Session) *Context {
+func (v Views) getData(s *sessions.Session) *Context {
 	val := s.Values["user"]
 	u := types.User{}
 	u, ok := val.(types.User)
 	if !ok {
 		u = types.User{Authenticated: false}
 	}
-	c := Context{Version: "0.4.12",
+	c := Context{Version: v.conf.Version,
 		Callback: "/internal",
 		User:     u,
 	}

@@ -38,7 +38,7 @@ pipeline {
                                 sh '''ssh -tt deploy@web << EOF
                                     docker pull $REGISTRY_ENDPOINT/ystv/web-auth:$BUILD_ID
                                     docker rm -f ystv-web-auth || true
-                                    docker run -d -p 1335:8080 --env-file /data/webs/web-auth/env --name ystv-web-auth $REGISTRY_ENDPOINT/ystv/web-auth:$BUILD_ID
+                                    docker run -d -p 1335:8080 --env-file /data/webs/web-auth/env -e WAUTH_VERSION=$TAG_NAME --name ystv-web-auth $REGISTRY_ENDPOINT/ystv/web-auth:$BUILD_ID
                                     docker image prune -a -f --filter "label=site=auth"
                                 EOF'''
                             }
@@ -66,7 +66,7 @@ pipeline {
                                 echo err.getMessage()
                             }
                         }
-                        sh 'docker run -d -p 1335:8080 --env-file $APP_ENV --name ystv-web-auth $REGISTRY_ENDPOINT/ystv/web-auth:$BUILD_ID' // Deploying site
+                        sh 'docker run -d -p 1335:8080 --env-file $APP_ENV -e WAUTH_VERSION=$TAG_NAME --name ystv-web-auth $REGISTRY_ENDPOINT/ystv/web-auth:$BUILD_ID' // Deploying site
                         sh 'docker image prune -a -f --filter "label=site=auth"' // remove old image
                     }
                 }

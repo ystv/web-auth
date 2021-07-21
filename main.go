@@ -31,8 +31,14 @@ func main() {
 		log.Fatalf("template files failed: %+v", err)
 	}
 
+	version := os.Getenv("WAUTH_VERSION")
+	if version == "" {
+		version = "unknown"
+	}
+
 	// Generate config
 	conf := views.Config{
+		Version:        version,
 		DatabaseURL:    os.Getenv("WAUTH_DATABASE_URL"),
 		DomainName:     os.Getenv("WAUTH_DOMAIN_NAME"),
 		LogoutEndpoint: os.Getenv("WAUTH_LOGOUT_ENDPOINT"),

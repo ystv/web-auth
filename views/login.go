@@ -55,7 +55,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		// Data for our HTML template
-		context := getData(session)
+		context := v.getData(session)
 
 		// Check if there is a callback request
 		callbackURL, err := url.Parse(r.URL.Query().Get("callback"))
@@ -95,7 +95,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			ctx := getData(session)
+			ctx := v.getData(session)
 			ctx.Callback = callback
 			ctx.Message = "Invalid username or password"
 			ctx.MsgType = "is-danger"
