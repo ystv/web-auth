@@ -34,7 +34,7 @@ pipeline {
                                 sh '''ssh -tt deploy@web << EOF
                                     docker pull localhost:5000/ystv/web-auth:$BUILD_ID
                                     docker rm -f ystv-web-auth || true
-                                    docker run -d -p 1335:8080 --env-file /data/webs/web-api/env --name ystv-web-auth localhost:5000/ystv/web-auth:$BUILD_ID
+                                    docker run -d -p 1335:8080 --env-file /data/webs/web-auth/env --name ystv-web-auth localhost:5000/ystv/web-auth:$BUILD_ID
                                     docker image prune -a -f --filter "label=site=auth"
                                 EOF'''
                             }
