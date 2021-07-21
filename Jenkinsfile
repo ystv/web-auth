@@ -78,7 +78,6 @@ pipeline {
         }
         always {
             sh "docker image prune -f --filter label=site=auth --filter label=stage=builder" // Removing the local builder image
-            sh "docker image rm localhost:5000/ystv/web-auth:$BUILD_ID" // Removing the local builder image
         }
     }
 }
