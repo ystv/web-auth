@@ -25,7 +25,7 @@ pipeline {
             stages {
                 stage('Production') {
                     when {
-                        expression { return env.TAG_NAME ==~ /v(0|[1-9]*)\.(0|[1-9]*)\.(0|[1-9]*)/ } // Checking if it is main semantic version release
+                        expression { return env.TAG_NAME ==~ /v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)/ } // Checking if it is main semantic version release
                     }
                     environment {
                         APP_ENV = credentials('wauth-prod-env')
@@ -49,7 +49,7 @@ pipeline {
                     when {
                         branch 'master'
                         not {
-                            expression { return env.TAG_NAME ==~ /v(0|[1-9]*)\.(0|[1-9]*)\.(0|[1-9]*)/ }
+                            expression { return env.TAG_NAME ==~ /v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)/ }
                         }
                     }
                     environment {
