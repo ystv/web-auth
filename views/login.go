@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/schema"
-	"github.com/ystv/web-auth/types"
+	"github.com/ystv/web-auth/user"
 )
 
 var decoder = schema.NewDecoder()
@@ -23,7 +23,7 @@ func (v *Views) LogoutFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session.Values["user"] = types.User{}
+	session.Values["user"] = user.User{}
 	session.Options.MaxAge = -1
 	err = session.Save(r, w)
 	if err != nil {
@@ -76,7 +76,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		// Parsing form to struct
 		r.ParseForm()
-		u := types.User{}
+		u := user.User{}
 		decoder.Decode(&u, r.PostForm)
 		// Since we let users enter either an email or username, it's easier
 		// to just let it both for the query
@@ -88,7 +88,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 			callback = callbackURL.String()
 		}
 		// Authentication
-		if v.user.VerifyUser(r.Context(), &u) != nil {
+		if v.user.VerifyUser(r.Context(), u) != nil {
 			log.Printf("Failed login for \"%s\"", u.Username)
 			err := session.Save(r, w)
 			if err != nil {
@@ -108,7 +108,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		}
 		prevLogin := u.LastLogin
 		// Update last logged in
-		err = v.user.SetUserLoggedIn(r.Context(), &u)
+		err = v.user.SetUserLoggedIn(r.Context(), u)
 		if err != nil {
 			err = fmt.Errorf("failed to set user logged in: %w", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)

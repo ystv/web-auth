@@ -7,7 +7,7 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/gorilla/mux"
-	"github.com/ystv/web-auth/types"
+	"github.com/ystv/web-auth/user"
 )
 
 type (
@@ -34,7 +34,7 @@ type (
 )
 
 // DBToTemplateType converts from the DB layer type to the user template type
-func DBToTemplateType(dbUser *[]types.User) []User {
+func DBToTemplateType(dbUser *[]user.User) []User {
 	tplUsers := []User{}
 	user := User{}
 	for i := range *dbUser {
@@ -79,13 +79,13 @@ func (v *Views) InternalFunc(w http.ResponseWriter, r *http.Request) {
 
 // UsersFunc handles a users request
 func (v *Views) UsersFunc(w http.ResponseWriter, r *http.Request) {
-	dbUsers := &[]types.User{}
-	err := v.user.GetUsers(r.Context(), dbUsers)
+
+	dbUsers, err := v.user.GetUsers(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	tplUsers := DBToTemplateType(dbUsers)
+	tplUsers := DBToTemplateType(&dbUsers)
 
 	ctx := UsersTemplate{
 		Users: tplUsers,
@@ -100,14 +100,12 @@ func (v *Views) UsersFunc(w http.ResponseWriter, r *http.Request) {
 // UserFunc handles a users request
 func (v *Views) UserFunc(w http.ResponseWriter, r *http.Request) {
 	userString := mux.Vars(r)
-	dbUser := &types.User{}
-	var err error
-	dbUser.UserID, err = strconv.Atoi(userString["userid"])
+	userID, err := strconv.Atoi(userString["userid"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = v.user.GetUser(r.Context(), dbUser)
+	_, err = v.user.GetUser(r.Context(), user.User{UserID: userID})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

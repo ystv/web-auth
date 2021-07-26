@@ -6,12 +6,13 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/ystv/web-auth/user"
+
 	"github.com/patrickmn/go-cache"
-	"github.com/ystv/web-auth/types"
 	"github.com/ystv/web-auth/utils"
 )
 
-var notification = types.Notifcation{
+var notification = Notifcation{
 	Title:   "Reset code sent",
 	Type:    "",
 	Message: "Cheers! If your account exists, you should receive a new email from \"YSTV Security\" with a link to reset your password shortly.",
@@ -29,7 +30,7 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	case "POST":
 		r.ParseForm()
-		u := types.User{Email: r.Form.Get("email")}
+		u := user.User{Email: r.Form.Get("email")}
 
 		if u.Email == "" {
 			err := v.tpl.ExecuteTemplate(w, "forgot.tmpl", nil)
@@ -40,7 +41,8 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// Get user and check if it exists
-		if v.user.GetUser(r.Context(), &u) != nil {
+		u, err := v.user.GetUser(r.Context(), u)
+		if err != nil {
 			// User doesn't exist, we'll pretend they've got an email
 			log.Printf("request for reset on unknown email \"%s\"", u.Email)
 			err := v.tpl.ExecuteTemplate(w, "notification.tmpl", notification)
@@ -67,7 +69,7 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// User doesn't exist, we'll pretend they've got an email
-		err := v.tpl.ExecuteTemplate(w, "notification.tmpl", notification)
+		err = v.tpl.ExecuteTemplate(w, "notification.tmpl", notification)
 		if err != nil {
 			err = fmt.Errorf("failed to exec template: %w", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -115,8 +117,8 @@ func (v *Views) ResetFunc(w http.ResponseWriter, r *http.Request) {
 
 		// Update record
 
-		u := types.User{UserID: id.(int), Password: p}
-		err := v.user.UpdateUserPassword(r.Context(), &u)
+		u := user.User{UserID: id.(int), Password: p}
+		err := v.user.UpdateUserPassword(r.Context(), u)
 		if err != nil {
 			log.Printf("Failed to reset user: %+v", err)
 		}

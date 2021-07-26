@@ -7,13 +7,8 @@ import (
 	_ "github.com/lib/pq" // postgres driver
 )
 
-// DB is the connection pool
-type DB struct {
-	*sqlx.DB
-}
-
 // NewStore initialises the store
-func NewStore(dataSourceName string) (*DB, error) {
+func NewStore(dataSourceName string) (*sqlx.DB, error) {
 	dbpool, err := sqlx.ConnectContext(context.Background(), "postgres", dataSourceName)
-	return &DB{dbpool}, err
+	return dbpool, err
 }

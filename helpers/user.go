@@ -1,18 +1,19 @@
 package helpers
 
 import (
+	"github.com/ystv/web-auth/user"
+
 	"github.com/gorilla/sessions"
-	"github.com/ystv/web-auth/types"
 )
 
 // GetUser returns a user from a session on
 // error returns an empty unauthenticated user
-func GetUser(s *sessions.Session) types.User {
+func GetUser(s *sessions.Session) user.User {
 	val := s.Values["user"]
-	var u = types.User{}
-	u, ok := val.(types.User)
+	var u = user.User{}
+	u, ok := val.(user.User)
 	if !ok {
-		return types.User{Authenticated: false}
+		return user.User{Authenticated: false}
 	}
 	return u
 }

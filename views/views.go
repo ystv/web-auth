@@ -18,7 +18,6 @@ import (
 	"github.com/patrickmn/go-cache"
 	"github.com/ystv/web-auth/infrastructure/db"
 	"github.com/ystv/web-auth/infrastructure/mail"
-	"github.com/ystv/web-auth/types"
 	"github.com/ystv/web-auth/user"
 )
 
@@ -78,6 +77,13 @@ type (
 		cache    *cache.Cache
 		validate *validator.Validate
 	}
+
+	// Notifcation template for messages
+	Notifcation struct {
+		Title   string
+		Type    string
+		Message string
+	}
 )
 
 // here to verify we are meeting the interface
@@ -127,7 +133,7 @@ func New(conf Config, templates fs.FS) *Views {
 	}
 
 	// So we can use our struct in the cookie
-	gob.Register(types.User{})
+	gob.Register(user.User{})
 
 	// Loading templates
 	v.tpl = template.Must(template.ParseFS(templates, "*.tmpl"))
@@ -171,15 +177,15 @@ type Context struct {
 	MsgType  string
 	Version  string
 	Callback string
-	User     types.User
+	User     user.User
 }
 
 func (v Views) getData(s *sessions.Session) *Context {
 	val := s.Values["user"]
-	u := types.User{}
-	u, ok := val.(types.User)
+	u := user.User{}
+	u, ok := val.(user.User)
 	if !ok {
-		u = types.User{Authenticated: false}
+		u = user.User{Authenticated: false}
 	}
 	c := Context{Version: v.conf.Version,
 		Callback: "/internal",

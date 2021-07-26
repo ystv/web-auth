@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/ystv/web-auth/types"
+	"github.com/ystv/web-auth/user"
 )
 
 // UserSignup represents the HTML form
@@ -47,11 +47,11 @@ func (v *Views) SignUpFunc(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		uNormal := types.User{
+		uNormal := user.User{
 			Email: uSignup.Email,
 		}
 
-		err = v.user.GetUser(r.Context(), &uNormal)
+		_, err = v.user.GetUser(r.Context(), uNormal)
 		if err == nil {
 			v.signupTmplExec(w, "Account already exists")
 			return

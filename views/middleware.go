@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ystv/web-auth/helpers"
-	"github.com/ystv/web-auth/types"
+	"github.com/ystv/web-auth/user"
 )
 
 // RequiresLogin is a middleware which will be used for each
@@ -27,7 +27,7 @@ func (v *Views) RequiresLogin(h http.Handler) http.HandlerFunc {
 
 // RequiresPermission is a middleware that will
 // ensure that the user has the given permission.
-func (v *Views) RequiresPermission(h http.Handler, p types.Permission) http.HandlerFunc {
+func (v *Views) RequiresPermission(h http.Handler, p user.Permission) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, err := v.cookie.Get(r, "session")
 		if err != nil {
@@ -35,12 +35,12 @@ func (v *Views) RequiresPermission(h http.Handler, p types.Permission) http.Hand
 			return
 		}
 		u := helpers.GetUser(session)
-		err = v.user.GetPermissions(r.Context(), &u)
+		perms, err := v.user.GetPermissions(r.Context(), u)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		for _, perm := range u.Permissions {
+		for _, perm := range perms {
 			if perm == p {
 				h.ServeHTTP(w, r)
 				return

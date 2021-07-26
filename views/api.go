@@ -10,14 +10,14 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ystv/web-auth/helpers"
-	"github.com/ystv/web-auth/types"
+	"github.com/ystv/web-auth/user"
 )
 
 type (
 	// JWTClaims represents basic identifiable/useful claims
 	JWTClaims struct {
-		UserID      int                `json:"id"`
-		Permissions []types.Permission `json:"perms"`
+		UserID      int               `json:"id"`
+		Permissions []user.Permission `json:"perms"`
 		jwt.StandardClaims
 	}
 	// statusStruct used for test API as the return JSON
@@ -109,14 +109,14 @@ func (v *Views) getJWTCookie(w http.ResponseWriter, r *http.Request) (http.Respo
 
 	expirationTime := time.Now().Add(5 * time.Minute)
 	u := helpers.GetUser(session)
-	err := v.user.GetPermissions(context.Background(), &u)
+	perms, err := v.user.GetPermissions(context.Background(), u)
 	if err != nil {
 		log.Printf("getJWTCookie failed: %+v", err)
 		return nil, err
 	}
 	claims := &JWTClaims{
 		UserID:      u.UserID,
-		Permissions: u.Permissions,
+		Permissions: perms,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
