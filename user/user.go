@@ -53,7 +53,7 @@ func NewUserRepo(db *sqlx.DB) *Store {
 
 // GetUser returns a user using any unique identity fields
 func (s *Store) GetUser(ctx context.Context, u User) (User, error) {
-	return s.GetUser(ctx, u)
+	return s.getUser(ctx, u)
 }
 
 // GetUsers returns a group of users, used for administration
