@@ -8,8 +8,9 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"github.com/rs/cors"
-	"github.com/ystv/web-auth/types"
+	"github.com/ystv/web-auth/user"
 	"github.com/ystv/web-auth/views"
 )
 
@@ -21,6 +22,13 @@ func allow(origin string) bool {
 }
 
 func main() {
+	// Load environment
+	err := godotenv.Load()            // Load .env file for production
+	err = godotenv.Load(".env.local") // Load .env.local for developing
+	if err != nil {
+		log.Print("Failed to load env file, using global env")
+	}
+
 	// Setup files
 	static, err := fs.Sub(content, "public/static")
 	if err != nil {
@@ -35,6 +43,7 @@ func main() {
 	if version == "" {
 		version = "unknown"
 	}
+	log.Println("web-auth version " + version + " loaded")
 
 	// Generate config
 	conf := views.Config{
@@ -54,7 +63,7 @@ func main() {
 		},
 	}
 
-	adminPerm := types.Permission{
+	adminPerm := user.Permission{
 		ID:   19,
 		Name: "SuperUser",
 	}

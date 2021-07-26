@@ -1,2 +1,2 @@
-/web-auth
-/init.sh
+.env.local
+web-api
