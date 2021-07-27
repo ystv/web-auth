@@ -41,10 +41,10 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// Get user and check if it exists
-		u, err := v.user.GetUser(r.Context(), u)
+		user, err := v.user.GetUser(r.Context(), u)
 		if err != nil {
 			// User doesn't exist, we'll pretend they've got an email
-			log.Printf("request for reset on unknown email \"%s\"", u.Email)
+			log.Printf("request for reset on unknown email \"%s\"", user.Email)
 			err := v.tpl.ExecuteTemplate(w, "notification.tmpl", notification)
 			if err != nil {
 				err = fmt.Errorf("failed to exec template: %w", err)
@@ -53,19 +53,19 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		code := utils.RandomString(10)
-		v.cache.Set(code, u.UserID, cache.DefaultExpiration)
+		v.cache.Set(code, user.UserID, cache.DefaultExpiration)
 
 		// Valid request, send email with reset code
 		if v.mail.Enabled {
-			err := v.mail.SendEmail(u.Email, "Forgotten Password", string(code))
+			err := v.mail.SendEmail(user.Email, "Forgotten Password", string(code))
 			if err != nil {
 				log.Printf("SendEmail failed: %s, ", err)
-				log.Printf("request for password reset email \"%s\":reset code \"%s\"", u.Email, code)
+				log.Printf("request for password reset email \"%s\":reset code \"%s\"", user.Email, code)
 			}
-			log.Printf("request for password reset email: \"%s\"", u.Email)
+			log.Printf("request for password reset email: \"%s\"", user.Email)
 		} else {
 			log.Printf("no mailer present")
-			log.Printf("reset email: %s, code: %s", u.Email, code)
+			log.Printf("reset email: %s, code: %s, reset link: https://%s/reset?code=%s", user.Email, code, v.conf.DomainName, code)
 		}
 
 		// User doesn't exist, we'll pretend they've got an email
@@ -112,18 +112,18 @@ func (v *Views) ResetFunc(w http.ResponseWriter, r *http.Request) {
 		// TODO error handling
 		ctx.UserID, _ = strconv.Atoi(formUserID)
 		if ctx.UserID != id.(int) {
-			http.Error(w, "Incorrect user id", http.StatusBadRequest)
+			http.Error(w, "incorrect user id", http.StatusBadRequest)
 		}
 
 		// Update record
 
 		u := user.User{UserID: id.(int), Password: p}
-		err := v.user.UpdateUserPassword(r.Context(), u)
+		user, err := v.user.UpdateUserPassword(r.Context(), u)
 		if err != nil {
-			log.Printf("Failed to reset user: %+v", err)
+			log.Printf("failed to reset user: %+v", err)
 		}
 		v.cache.Delete(code)
-		log.Printf("updated user: %s", u.Username)
+		log.Printf("updated user: %s", user.Username)
 		http.Redirect(w, r, "/", http.StatusFound)
 	}
 }

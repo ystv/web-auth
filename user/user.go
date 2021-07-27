@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -81,12 +82,19 @@ func (s *Store) VerifyUser(ctx context.Context, u User) error {
 }
 
 // UpdateUserPassword will update the password and set the reset_pw to false
-func (s *Store) UpdateUserPassword(ctx context.Context, u User) error {
+func (s *Store) UpdateUserPassword(ctx context.Context, u User) (User, error) {
 	plaintext := u.Password
-	s.GetUser(ctx, u)
-	u.Password = utils.HashPass(u.Salt + plaintext)
+	user, err := s.GetUser(ctx, u)
+	if err != nil {
+		return u, fmt.Errorf("failed to get user: %w", err)
+	}
+	u.Password = utils.HashPass(user.Salt + plaintext)
 	u.ResetPw = false
-	return s.updateUser(ctx, u)
+	err = s.updateUser(ctx, user)
+	if err != nil {
+		return u, fmt.Errorf("failed to update user: %w", err)
+	}
+	return user, nil
 }
 
 // SetUserLoggedIn will set the last login date to now

@@ -11,15 +11,17 @@ import (
 // Mail encapsulates the dependency
 type Mail struct {
 	*mail.SMTPClient
-	Enabled bool
+	Enabled    bool
+	DomainName string
 }
 
 // Config represents a configuration to connect to an SMTP server
 type Config struct {
-	Host     string
-	Port     int
-	Username string
-	Password string
+	Host       string
+	Port       int
+	Username   string
+	Password   string
+	DomainName string
 }
 
 // NewMailer creates a new SMTP client
@@ -38,14 +40,14 @@ func NewMailer(config Config) (*Mail, error) {
 
 	smtpClient, err := smtpServer.Connect()
 	if err != nil {
-		return &Mail{nil, false}, err
+		return &Mail{nil, false, config.DomainName}, err
 	}
-	return &Mail{smtpClient, true}, err
+	return &Mail{smtpClient, true, config.DomainName}, err
 }
 
 // SendEmail sends a plaintext email
 func (m *Mail) SendEmail(recipient, subject, code string) error {
-	body := fmt.Sprintf(`<html><body><a href=https://auth.ystv.co.uk/reset?code=%s>Reset password</a> <p>(Link valid for 1 hour)</p></body></html>`, code)
+	body := fmt.Sprintf(`<html><body><a href=https://%s/reset?code=%s>Reset password</a> <p>(Link valid for 1 hour)</p></body></html>`, m.DomainName, code)
 	email := mail.NewMSG()
 	email.SetFrom("YSTV Security <no-reply@ystv.co.uk>").AddTo(recipient).SetSubject(subject)
 	email.SetBody(mail.TextHTML, body)

@@ -50,7 +50,6 @@ func (v *Views) SetTokenHandler(w http.ResponseWriter, r *http.Request) {
 	w, err := v.getJWTCookie(w, r)
 	if err != nil {
 		err = fmt.Errorf("login: failed to set cookie: %w", err)
-		log.Printf("%+v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

@@ -89,7 +89,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		}
 		// Authentication
 		if v.user.VerifyUser(r.Context(), u) != nil {
-			log.Printf("Failed login for \"%s\"", u.Username)
+			log.Printf("failed login for \"%s\"", u.Username)
 			err := session.Save(r, w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -132,7 +132,6 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		w, err = v.getJWTCookie(w, r)
 		if err != nil {
 			err = fmt.Errorf("login: failed to set cookie: %w", err)
-			log.Printf("%+v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		http.Redirect(w, r, callback, http.StatusFound)

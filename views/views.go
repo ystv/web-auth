@@ -101,10 +101,11 @@ func New(conf Config, templates fs.FS) *Views {
 
 	// Connecting to mail
 	v.mail, err = mail.NewMailer(mail.Config{
-		Host:     conf.Mail.Host,
-		Port:     587,
-		Username: conf.Mail.Username,
-		Password: conf.Mail.Password,
+		Host:       conf.Mail.Host,
+		Port:       587,
+		Username:   conf.Mail.Username,
+		Password:   conf.Mail.Password,
+		DomainName: conf.DomainName,
 	})
 	if err != nil {
 		log.Printf("mailer failed: %+v", err)

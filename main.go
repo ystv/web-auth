@@ -26,7 +26,7 @@ func main() {
 	err := godotenv.Load()            // Load .env file for production
 	err = godotenv.Load(".env.local") // Load .env.local for developing
 	if err != nil {
-		log.Print("Failed to load env file, using global env")
+		log.Print("failed to load env file, using global env")
 	}
 
 	// Setup files
