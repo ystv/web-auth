@@ -3,12 +3,10 @@ package user
 import (
 	"context"
 	"fmt"
-	"log"
 )
 
 // updateUser will update a user record by ID
 func (s *Store) updateUser(ctx context.Context, user User) error {
-	log.Printf("%+v", user)
 	_, err := s.db.ExecContext(ctx,
 		`UPDATE people.users
 		SET password = $1,
@@ -31,7 +29,6 @@ func (s *Store) getUser(ctx context.Context, user User) (User, error) {
 		FROM people.users
 		WHERE username = $1 AND username != '' OR email = $2 AND email != '' OR user_id = $3
 		LIMIT 1;`, user.Username, user.Email, user.UserID)
-	log.Printf("%+v", u)
 	if err != nil {
 		return u, fmt.Errorf("failed to get user from db: %w", err)
 	}

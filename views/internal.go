@@ -54,11 +54,8 @@ func DBToTemplateType(dbUser *[]user.User) []User {
 
 // InternalFunc handles a request to the internal template
 func (v *Views) InternalFunc(w http.ResponseWriter, r *http.Request) {
-	session, err := v.cookie.Get(r, "session")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	session, _ := v.cookie.Get(r, "session")
+
 	c := v.getData(session)
 	lastLogin := time.Now()
 	if c.User.LastLogin.Valid {
@@ -70,7 +67,7 @@ func (v *Views) InternalFunc(w http.ResponseWriter, r *http.Request) {
 		TotalUsers:    2000,
 		LoginsPastDay: 20,
 	}
-	err = v.tpl.ExecuteTemplate(w, "internal.tmpl", ctx)
+	err := v.tpl.ExecuteTemplate(w, "internal.tmpl", ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

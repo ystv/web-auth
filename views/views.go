@@ -149,11 +149,8 @@ func New(conf Config, templates fs.FS) *Views {
 
 // IndexFunc handles the index page.
 func (v Views) IndexFunc(w http.ResponseWriter, r *http.Request) {
-	session, err := v.cookie.Get(r, "session")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	session, _ := v.cookie.Get(r, "session")
+
 	// Data for our HTML template
 	context := v.getData(session)
 
