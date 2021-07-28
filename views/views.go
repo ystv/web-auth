@@ -3,13 +3,10 @@ package views
 import (
 	"encoding/gob"
 	"encoding/hex"
-	"fmt"
 	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
-	"net/url"
-	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -145,28 +142,6 @@ func New(conf Config, templates fs.FS) *Views {
 	v.validate = validator.New()
 
 	return &v
-}
-
-// IndexFunc handles the index page.
-func (v Views) IndexFunc(w http.ResponseWriter, r *http.Request) {
-	session, _ := v.cookie.Get(r, "session")
-
-	// Data for our HTML template
-	context := v.getData(session)
-
-	// Check if there is a callback request
-	callbackURL, err := url.Parse(r.URL.Query().Get("callback"))
-	if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.DomainName) && callbackURL.String() != "" {
-		context.Callback = callbackURL.String()
-	}
-
-	// Check if authenticated
-	if context.User.Authenticated {
-		http.Redirect(w, r, context.Callback, http.StatusFound)
-		return
-	}
-	loginCallback := fmt.Sprintf("login?callback=%s", context.Callback)
-	http.Redirect(w, r, loginCallback, http.StatusFound)
 }
 
 // Context is a struct that is applied to the templates.
