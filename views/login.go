@@ -88,7 +88,8 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 			callback = callbackURL.String()
 		}
 		// Authentication
-		if v.user.VerifyUser(r.Context(), u) != nil {
+		u, err = v.user.VerifyUser(r.Context(), u)
+		if err != nil {
 			log.Printf("failed login for \"%s\"", u.Username)
 			err := session.Save(r, w)
 			if err != nil {
@@ -119,7 +120,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		session.Values["user"] = u
 
 		if r.Form.Get("remember") != "on" {
-			session.Options.MaxAge = 0
+			session.Options.MaxAge = 86400 * 31
 		}
 
 		err = session.Save(r, w)
