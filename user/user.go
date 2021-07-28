@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Clarilab/gocloaksession"
 	"github.com/jmoiron/sqlx"
 	"github.com/ystv/web-auth/utils"
 	"gopkg.in/guregu/null.v4"
@@ -22,7 +23,8 @@ type (
 	}
 	// Store stores the dependencies
 	Store struct {
-		db *sqlx.DB
+		db    *sqlx.DB
+		cloak *gocloaksession.GoCloakSession
 	}
 	// User represents relevant user fields
 	User struct {
@@ -49,7 +51,9 @@ type (
 
 // NewUserRepo stores our dependency
 func NewUserRepo(db *sqlx.DB) *Store {
-	return &Store{db}
+	return &Store{
+		db: db,
+	}
 }
 
 // GetUser returns a user using any unique identity fields
@@ -68,28 +72,26 @@ func (s *Store) GetPermissions(ctx context.Context, u User) ([]Permission, error
 }
 
 // VerifyUser will check that that the password is correct with provided
-// credentials
-func (s *Store) VerifyUser(ctx context.Context, u User) error {
-	plaintext := u.Password
+// credentials and if verified will return the User object
+func (s *Store) VerifyUser(ctx context.Context, u User) (User, error) {
 	user, err := s.getUser(ctx, u)
 	if err != nil {
-		return err
+		return u, fmt.Errorf("failed to get user: %w", err)
 	}
-	if utils.HashPass(user.Salt+plaintext) == user.Password {
-		return nil
+	if utils.HashPass(user.Salt+u.Password) == user.Password {
+		return user, nil
 	}
-	return errors.New("invalid credentials")
+	return u, errors.New("invalid credentials")
 }
 
 // UpdateUserPassword will update the password and set the reset_pw to false
 func (s *Store) UpdateUserPassword(ctx context.Context, u User) (User, error) {
-	plaintext := u.Password
 	user, err := s.GetUser(ctx, u)
 	if err != nil {
 		return u, fmt.Errorf("failed to get user: %w", err)
 	}
-	u.Password = utils.HashPass(user.Salt + plaintext)
-	u.ResetPw = false
+	user.Password = utils.HashPass(user.Salt + u.Password)
+	user.ResetPw = false
 	err = s.updateUser(ctx, user)
 	if err != nil {
 		return u, fmt.Errorf("failed to update user: %w", err)
