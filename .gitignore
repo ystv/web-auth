@@ -1,2 +1,4 @@
+*.swp
+
 .env.local
-web-api
+web-auth
