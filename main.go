@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"fmt"
 	"io/fs"
 	"log"
 	"net/http"
@@ -23,11 +24,29 @@ func allow(origin string) bool {
 
 func main() {
 	// Load environment
-	err := godotenv.Load()            // Load .env file for production
-	err = godotenv.Load(".env.local") // Load .env.local for developing
+	godotenv.Load(".env")                  // Load .env file for production
+	err := godotenv.Overload(".env.local") // Load .env.local for developing
 	if err != nil {
-		log.Print("failed to load env file, using global env")
+		log.Println("failed to load env file, using global env")
 	}
+
+	// Validate the required config is set
+	if os.Getenv("WAUTH_SIGNING_KEY") == "" {
+		log.Fatalf("signing key not set")
+	}
+	if os.Getenv("WAUTH_DB_HOST") == "" {
+		log.Fatalf("database host not set")
+	}
+
+	dbConnectionString := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		os.Getenv("WAUTH_DB_HOST"),
+		os.Getenv("WAUTH_DB_PORT"),
+		os.Getenv("WAUTH_DB_USER"),
+		os.Getenv("WAUTH_DB_PASSWORD"),
+		os.Getenv("WAUTH_DB_DBNAME"),
+		os.Getenv("WAUTH_DB_SSLMODE"),
+	)
 
 	// Setup files
 	static, err := fs.Sub(content, "public/static")
@@ -48,7 +67,7 @@ func main() {
 	// Generate config
 	conf := views.Config{
 		Version:        version,
-		DatabaseURL:    os.Getenv("WAUTH_DATABASE_URL"),
+		DatabaseURL:    dbConnectionString,
 		DomainName:     os.Getenv("WAUTH_DOMAIN_NAME"),
 		LogoutEndpoint: os.Getenv("WAUTH_LOGOUT_ENDPOINT"),
 		Mail: views.SMTPConfig{
