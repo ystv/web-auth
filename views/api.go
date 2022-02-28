@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -27,91 +28,42 @@ type (
 	}
 )
 
-// ValidateToken will validate the token
-func (v *Views) ValidateToken(myToken string) (bool, *JWTClaims) {
-	token, err := jwt.ParseWithClaims(myToken, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(v.conf.Security.SigningKey), nil
-	})
-
-	if err != nil {
-		return false, nil
-	}
-
-	if !token.Valid {
-		return false, nil
-	}
-
-	claims := token.Claims.(*JWTClaims)
-	return token.Valid, claims
-}
-
 // SetTokenHandler sets a valid JWT in a cookie instead of returning a string
 func (v *Views) SetTokenHandler(w http.ResponseWriter, r *http.Request) {
-	w, err := v.getJWTCookie(w, r)
-	if err != nil {
-		err = fmt.Errorf("login: failed to set cookie: %w", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-// TestAPI returns a JSON object with a valid JWT
-func (v *Views) TestAPI(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		var err error
-		var message string
-		var status statusStruct
-		token, err := r.Cookie("token")
-		if err != nil {
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-
-		IsTokenValid, claims := v.ValidateToken(token.Value)
-		// When the token is not valid show
-		// the default error JOSN document
-		if !IsTokenValid {
-			status = statusStruct{
-				StatusCode: http.StatusBadRequest,
-				Message:    message,
-			}
-			w.WriteHeader(http.StatusInternalServerError)
-			// the following statment will write the
-			// JSON document to the HTTP ReponseWriter object
-			err = json.NewEncoder(w).Encode(status)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			return
-		}
-
-		log.Printf("token is valid \"%d\" is logged in", claims.UserID)
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(http.StatusOK)
-
-		status = statusStruct{
-			StatusCode: http.StatusOK,
-			Message:    "Good",
-		}
-
-		err = json.NewEncoder(w).Encode(status)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	}
-}
-
-func (v *Views) getJWTCookie(w http.ResponseWriter, r *http.Request) (http.ResponseWriter, error) {
-	// Probably would be nice to handle this error
 	session, _ := v.cookie.Get(r, "session")
-
-	expirationTime := time.Now().Add(5 * time.Minute)
 	u := helpers.GetUser(session)
+
+	tokenString, err := v.newJWT(u)
+	if err != nil {
+		err = fmt.Errorf("failed to set cookie: %w", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	token := struct {
+		Token string `json:"token"`
+	}{Token: tokenString}
+	tokenByte, err := json.Marshal(token)
+	if err != nil {
+		err = fmt.Errorf("failed to marshal jwt", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_, err = w.Write(tokenByte)
+	if err != nil {
+		err = fmt.Errorf("failed to write token to http body", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (v *Views) newJWT(u user.User) (string, error) {
+	expirationTime := time.Now().Add(5 * time.Minute)
 	perms, err := v.user.GetPermissions(context.Background(), u)
 	if err != nil {
-		log.Printf("getJWTCookie failed: %+v", err)
-		return nil, err
+		return "", fmt.Errorf("failed to get user permissions: %w", err)
 	}
 	claims := &JWTClaims{
 		UserID:      u.UserID,
@@ -128,16 +80,67 @@ func (v *Views) getJWTCookie(w http.ResponseWriter, r *http.Request) (http.Respo
 	tokenString, err := token.SignedString([]byte(v.conf.Security.SigningKey))
 	if err != nil {
 		// If there is an error in creating the JWT
-		return nil, err
+		return "", fmt.Errorf("failed to make jwt string: %w", err)
 	}
-	// Finally, we set the client cooke for the "token" as the JWT
-	// we generated, also setting the expiry time as the same
-	http.SetCookie(w, &http.Cookie{
-		Name:    "token",
-		Value:   tokenString,
-		Expires: expirationTime,
-		Domain:  v.conf.DomainName,
-		Path:    "/",
+	return tokenString, nil
+}
+
+// TestAPI returns a JSON object with a valid JWT
+func (v *Views) TestAPI(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		token := r.Header.Get("Authorization")
+		splitToken := strings.Split(token, "Bearer ")
+		token = splitToken[1]
+
+		if token == "" {
+			http.Error(w, "no bearer token provided", http.StatusBadRequest)
+			return
+		}
+
+		IsTokenValid, claims := v.ValidateToken(token)
+		if !IsTokenValid {
+			status := statusStruct{
+				StatusCode: http.StatusBadRequest,
+				Message:    "invalid token",
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			err := json.NewEncoder(w).Encode(status)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
+		}
+
+		log.Printf("token is valid \"%d\" is logged in", claims.UserID)
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.WriteHeader(http.StatusOK)
+
+		status := statusStruct{
+			StatusCode: http.StatusOK,
+			Message:    "valid token",
+		}
+
+		err := json.NewEncoder(w).Encode(status)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+// ValidateToken will validate the token
+func (v *Views) ValidateToken(token string) (bool, *JWTClaims) {
+	parsedToken, err := jwt.ParseWithClaims(token, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(v.conf.Security.SigningKey), nil
 	})
-	return w, nil
+
+	if err != nil {
+		return false, nil
+	}
+
+	if !parsedToken.Valid {
+		return false, nil
+	}
+
+	claims := parsedToken.Claims.(*JWTClaims)
+	return parsedToken.Valid, claims
 }

@@ -58,10 +58,10 @@ type (
 		// middleware
 		RequiresLogin(h http.Handler) http.HandlerFunc
 		// api
-		ValidateToken(myToken string) (bool, *JWTClaims)
 		SetTokenHandler(w http.ResponseWriter, r *http.Request)
+		ValidateToken(myToken string) (bool, *JWTClaims)
+		newJWT(u user.User) (string, error)
 		TestAPI(w http.ResponseWriter, r *http.Request)
-		getJWTCookie(w http.ResponseWriter, r *http.Request) (http.ResponseWriter, error)
 	}
 
 	// Views encapsulates our view dependencies
