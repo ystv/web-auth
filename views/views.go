@@ -21,12 +21,13 @@ import (
 type (
 	// Config the global web-auth configuration
 	Config struct {
-		Version        string
-		DatabaseURL    string
-		DomainName     string
-		LogoutEndpoint string
-		Mail           SMTPConfig
-		Security       SecurityConfig
+		Version           string
+		DatabaseURL       string
+		DomainName        string
+		LogoutEndpoint    string
+		SessionCookieName string
+		Mail              SMTPConfig
+		Security          SecurityConfig
 	}
 	// SMTPConfig stores the SMTP mailer configuration
 	SMTPConfig struct {

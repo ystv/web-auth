@@ -30,7 +30,7 @@ type (
 
 // SetTokenHandler sets a valid JWT in a cookie instead of returning a string
 func (v *Views) SetTokenHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := v.cookie.Get(r, "session")
+	session, _ := v.cookie.Get(r, v.conf.SessionCookieName)
 	u := helpers.GetUser(session)
 
 	tokenString, err := v.newJWT(u)

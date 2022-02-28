@@ -54,7 +54,7 @@ func DBToTemplateType(dbUser *[]user.User) []User {
 
 // InternalFunc handles a request to the internal template
 func (v *Views) InternalFunc(w http.ResponseWriter, r *http.Request) {
-	session, _ := v.cookie.Get(r, "session")
+	session, _ := v.cookie.Get(r, v.conf.SessionCookieName)
 
 	c := v.getData(session)
 	lastLogin := time.Now()
