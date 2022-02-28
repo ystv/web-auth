@@ -17,8 +17,8 @@ import (
 type (
 	// JWTClaims represents basic identifiable/useful claims
 	JWTClaims struct {
-		UserID      int               `json:"id"`
-		Permissions []user.Permission `json:"perms"`
+		UserID      int      `json:"id"`
+		Permissions []string `json:"perms"`
 		jwt.StandardClaims
 	}
 	// statusStruct used for test API as the return JSON

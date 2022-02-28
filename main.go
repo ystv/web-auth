@@ -83,7 +83,6 @@ func main() {
 	}
 
 	adminPerm := user.Permission{
-		ID:   19,
 		Name: "SuperUser",
 	}
 

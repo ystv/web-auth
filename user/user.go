@@ -44,7 +44,6 @@ type (
 
 	// Permission represents an individual permission. Attempting to implement some RBAC here.
 	Permission struct {
-		ID   int    `db:"permission_id" json:"id"`
 		Name string `db:"name" json:"name"`
 	}
 )
@@ -67,7 +66,7 @@ func (s *Store) GetUsers(ctx context.Context) ([]User, error) {
 }
 
 // GetPermissions returns all permissions of a user
-func (s *Store) GetPermissions(ctx context.Context, u User) ([]Permission, error) {
+func (s *Store) GetPermissions(ctx context.Context, u User) ([]string, error) {
 	return s.getPermissions(ctx, u)
 }
 
