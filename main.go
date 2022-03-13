@@ -38,6 +38,16 @@ func main() {
 		log.Fatalf("database host not set")
 	}
 
+	// Set defaults
+	version := os.Getenv("WAUTH_VERSION")
+	if version == "" {
+		version = "unknown"
+	}
+	sessionCookieName := os.Getenv("WAUTH_SESSION_COOKIE_NAME")
+	if sessionCookieName == "" {
+		sessionCookieName = "session"
+	}
+
 	dbConnectionString := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		os.Getenv("WAUTH_DB_HOST"),
@@ -58,18 +68,15 @@ func main() {
 		log.Fatalf("template files failed: %+v", err)
 	}
 
-	version := os.Getenv("WAUTH_VERSION")
-	if version == "" {
-		version = "unknown"
-	}
-	log.Println("web-auth version " + version + " loaded")
+	log.Printf("web-auth version %s loaded", version)
 
 	// Generate config
 	conf := views.Config{
-		Version:        version,
-		DatabaseURL:    dbConnectionString,
-		DomainName:     os.Getenv("WAUTH_DOMAIN_NAME"),
-		LogoutEndpoint: os.Getenv("WAUTH_LOGOUT_ENDPOINT"),
+		Version:           version,
+		DatabaseURL:       dbConnectionString,
+		DomainName:        os.Getenv("WAUTH_DOMAIN_NAME"),
+		LogoutEndpoint:    os.Getenv("WAUTH_LOGOUT_ENDPOINT"),
+		SessionCookieName: sessionCookieName,
 		Mail: views.SMTPConfig{
 			Host:     os.Getenv("WAUTH_SMTP_HOST"),
 			Username: os.Getenv("WAUTH_SMTP_USERNAME"),
@@ -83,7 +90,6 @@ func main() {
 	}
 
 	adminPerm := user.Permission{
-		ID:   19,
 		Name: "SuperUser",
 	}
 

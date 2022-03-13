@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/gorilla/schema"
 	"github.com/ystv/web-auth/user"
@@ -30,12 +29,6 @@ func (v *Views) LogoutFunc(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	http.SetCookie(w, &http.Cookie{
-		Name:    "token",
-		Expires: time.Now(),
-		Domain:  v.conf.DomainName,
-		Path:    "/",
-	})
 	// TODO Don't call env in this function have an initialiser
 	// then fetch from that store?
 	endpoint := v.conf.LogoutEndpoint
@@ -130,11 +123,6 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		log.Printf("user \"%s\" is authenticated", u.Username)
-		w, err = v.getJWTCookie(w, r)
-		if err != nil {
-			err = fmt.Errorf("login: failed to set cookie: %w", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
 		http.Redirect(w, r, callback, http.StatusFound)
 		return
 	}

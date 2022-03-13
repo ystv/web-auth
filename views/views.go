@@ -21,12 +21,13 @@ import (
 type (
 	// Config the global web-auth configuration
 	Config struct {
-		Version        string
-		DatabaseURL    string
-		DomainName     string
-		LogoutEndpoint string
-		Mail           SMTPConfig
-		Security       SecurityConfig
+		Version           string
+		DatabaseURL       string
+		DomainName        string
+		LogoutEndpoint    string
+		SessionCookieName string
+		Mail              SMTPConfig
+		Security          SecurityConfig
 	}
 	// SMTPConfig stores the SMTP mailer configuration
 	SMTPConfig struct {
@@ -58,10 +59,10 @@ type (
 		// middleware
 		RequiresLogin(h http.Handler) http.HandlerFunc
 		// api
-		ValidateToken(myToken string) (bool, *JWTClaims)
 		SetTokenHandler(w http.ResponseWriter, r *http.Request)
+		ValidateToken(myToken string) (bool, *JWTClaims)
+		newJWT(u user.User) (string, error)
 		TestAPI(w http.ResponseWriter, r *http.Request)
-		getJWTCookie(w http.ResponseWriter, r *http.Request) (http.ResponseWriter, error)
 	}
 
 	// Views encapsulates our view dependencies

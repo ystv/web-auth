@@ -48,15 +48,15 @@ func (s *Store) getUsers(ctx context.Context) ([]User, error) {
 }
 
 // getPermissions returns all permissions for a user
-func (s *Store) getPermissions(ctx context.Context, u User) ([]Permission, error) {
-	p := []Permission{}
-	err := s.db.SelectContext(ctx, &p, `SELECT p.permission_id, p.name
+func (s *Store) getPermissions(ctx context.Context, u User) ([]string, error) {
+	p := []string{}
+	err := s.db.SelectContext(ctx, &p, `SELECT p.name
 	FROM people.permissions p
 	INNER JOIN people.role_permissions rp ON rp.permission_id = p.permission_id
 	INNER JOIN people.role_members rm ON rm.role_id = rp.role_id
 	WHERE rm.user_id = $1;`, u.UserID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get user permissions: %w", err)
 	}
 	return p, nil
 }

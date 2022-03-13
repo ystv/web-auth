@@ -11,7 +11,7 @@ import (
 // httpHandler to check if there is any active session
 func (v *Views) RequiresLogin(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		session, err := v.cookie.Get(r, "session")
+		session, err := v.cookie.Get(r, v.conf.SessionCookieName)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -29,7 +29,7 @@ func (v *Views) RequiresLogin(h http.Handler) http.HandlerFunc {
 // ensure that the user has the given permission.
 func (v *Views) RequiresPermission(h http.Handler, p user.Permission) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		session, err := v.cookie.Get(r, "session")
+		session, err := v.cookie.Get(r, v.conf.SessionCookieName)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -41,7 +41,7 @@ func (v *Views) RequiresPermission(h http.Handler, p user.Permission) http.Handl
 			return
 		}
 		for _, perm := range perms {
-			if perm == p {
+			if perm == p.Name {
 				h.ServeHTTP(w, r)
 				return
 			}
