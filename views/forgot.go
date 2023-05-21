@@ -12,7 +12,7 @@ import (
 	"github.com/ystv/web-auth/utils"
 )
 
-var notification = Notifcation{
+var notification = Notification{
 	Title:   "Reset code sent",
 	Type:    "",
 	Message: "Cheers! If your account exists, you should receive a new email from \"YSTV Security\" with a link to reset your password shortly.",

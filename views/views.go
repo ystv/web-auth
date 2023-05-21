@@ -77,8 +77,8 @@ type (
 		validate *validator.Validate
 	}
 
-	// Notifcation template for messages
-	Notifcation struct {
+	// Notification template for messages
+	Notification struct {
 		Title   string
 		Type    string
 		Message string
