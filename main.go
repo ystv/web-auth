@@ -58,8 +58,8 @@ func main() {
 		os.Getenv("WAUTH_DB_HOST"),
 		os.Getenv("WAUTH_DB_PORT"),
 		os.Getenv("WAUTH_DB_USER"),
-		os.Getenv("WAUTH_DB_PASSWORD"),
-		os.Getenv("WAUTH_DB_DBNAME"),
+		os.Getenv("WAUTH_DB_PASS"),
+		os.Getenv("WAUTH_DB_NAME"),
 		os.Getenv("WAUTH_DB_SSLMODE"),
 	)
 
@@ -89,8 +89,8 @@ func main() {
 		SessionCookieName: sessionCookieName,
 		Mail: views.SMTPConfig{
 			Host:     os.Getenv("WAUTH_MAIL_HOST"),
-			Username: os.Getenv("WAUTH_MAIL_USERNAME"),
-			Password: os.Getenv("WAUTH_MAIL_PASSWORD"),
+			Username: os.Getenv("WAUTH_MAIL_USER"),
+			Password: os.Getenv("WAUTH_MAIL_PASS"),
 			Port:     port,
 		},
 		Security: views.SecurityConfig{
