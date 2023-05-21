@@ -8,7 +8,7 @@ import (
 
 // RandomString generates a random ascii string
 func RandomString(length int) string {
-	rand.Seed(time.Now().UnixNano())
+	rand.NewSource(time.Now().UnixNano())
 	chars := []rune("abcdefghijklmnopqrstuvwxyz" + "0123456789")
 	var b strings.Builder
 	for i := 0; i < length; i++ {
