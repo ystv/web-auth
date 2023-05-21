@@ -9,7 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
+
 	"github.com/ystv/web-auth/helpers"
 	"github.com/ystv/web-auth/user"
 )
@@ -19,7 +20,7 @@ type (
 	JWTClaims struct {
 		UserID      int      `json:"id"`
 		Permissions []string `json:"perms"`
-		jwt.StandardClaims
+		jwt.RegisteredClaims
 	}
 	// statusStruct used for test API as the return JSON
 	statusStruct struct {
@@ -44,7 +45,7 @@ func (v *Views) SetTokenHandler(w http.ResponseWriter, r *http.Request) {
 	}{Token: tokenString}
 	tokenByte, err := json.Marshal(token)
 	if err != nil {
-		err = fmt.Errorf("failed to marshal jwt", err)
+		err = fmt.Errorf("failed to marshal jwt: %w", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -53,7 +54,7 @@ func (v *Views) SetTokenHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	_, err = w.Write(tokenByte)
 	if err != nil {
-		err = fmt.Errorf("failed to write token to http body", err)
+		err = fmt.Errorf("failed to write token to http body: %w", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -68,8 +69,8 @@ func (v *Views) newJWT(u user.User) (string, error) {
 	claims := &JWTClaims{
 		UserID:      u.UserID,
 		Permissions: perms,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: &jwt.NumericDate{Time: expirationTime},
 		},
 	}
 
