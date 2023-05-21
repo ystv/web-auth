@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     {{template "head.tmpl" .}}
     <title>Internal: Users</title>
@@ -14,7 +14,7 @@
           <div class="columns box">
             <div class="column is-2">
               <figure class="avatar">
-                <img src="https://placehold.it/128x128" />
+                <img src="https://placehold.it/128x128"  alt="placeholder"/>
               </figure>
               <div class="buttons">
                 <button class="button is-info is-outlined">
@@ -29,25 +29,26 @@
             <div class="column">
               <form>
                 <div class="field">
-                  <label class="label">Nickname</label>
+                  <label class="label" for="nickname">Nickname</label>
                   <div class="control">
                     <input
+                      id="nickname"
                       class="input"
-                      type="nickname"
+                      type="text"
                       placeholder="Nickname"
                     />
                   </div>
                 </div>
                 <div class="field">
-                  <label class="label">First name</label>
+                  <label class="label" for="firstname">First name</label>
                   <div class="control">
-                    <input class="input" type="input" placeholder="Nickname" />
+                    <input class="input" type="text" placeholder="Nickname" />
                   </div>
                 </div>
                 <div class="field">
-                  <label class="label">Email</label>
+                  <label class="label" for="email">Email</label>
                   <div class="control">
-                    <input class="input" type="email" placeholder="Email" />
+                    <input class="input" type="email" placeholder="Email" id="email" />
                   </div>
                 </div>
                 <button class="button is-block is-info">Update</button>
