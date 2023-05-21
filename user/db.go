@@ -39,7 +39,7 @@ func (s *Store) getUser(ctx context.Context, user User) (User, error) {
 func (s *Store) getUsers(ctx context.Context) ([]User, error) {
 	var u []User
 	err := s.db.SelectContext(ctx, &u,
-		`user_id, username, nickname, first_name, last_name, email, last_login
+		`SELECT user_id, username, nickname, first_name, last_name, email, last_login
 	FROM people.users;`)
 	if err != nil {
 		return nil, err
