@@ -34,6 +34,7 @@ type (
 		Host     string
 		Username string
 		Password string
+		Port     int
 	}
 	// SecurityConfig stores the security configuration
 	SecurityConfig struct {

@@ -78,9 +78,10 @@ func main() {
 		LogoutEndpoint:    os.Getenv("WAUTH_LOGOUT_ENDPOINT"),
 		SessionCookieName: sessionCookieName,
 		Mail: views.SMTPConfig{
-			Host:     os.Getenv("WAUTH_SMTP_HOST"),
-			Username: os.Getenv("WAUTH_SMTP_USERNAME"),
-			Password: os.Getenv("WAUTH_SMTP_PASSWORD"),
+			Host:     os.Getenv("WAUTH_MAIL_HOST"),
+			Username: os.Getenv("WAUTH_MAIL_USERNAME"),
+			Password: os.Getenv("WAUTH_MAIL_PASSWORD"),
+			Port:     port,
 		},
 		Security: views.SecurityConfig{
 			EncryptionKey:     os.Getenv("WAUTH_ENCRYPTION_KEY"),
