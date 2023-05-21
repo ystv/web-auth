@@ -37,9 +37,9 @@ func (s *Store) getUser(ctx context.Context, user User) (User, error) {
 
 // getUsers will get a group of users
 func (s *Store) getUsers(ctx context.Context) ([]User, error) {
-	u := []User{}
+	var u []User
 	err := s.db.SelectContext(ctx, &u,
-		`s.dbuser_id, username, nickname, first_name, last_name, email, last_login
+		`user_id, username, nickname, first_name, last_name, email, last_login
 	FROM people.users;`)
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (s *Store) getUsers(ctx context.Context) ([]User, error) {
 
 // getPermissions returns all permissions for a user
 func (s *Store) getPermissions(ctx context.Context, u User) ([]string, error) {
-	p := []string{}
+	var p []string
 	err := s.db.SelectContext(ctx, &p, `SELECT p.name
 	FROM people.permissions p
 	INNER JOIN people.role_permissions rp ON rp.permission_id = p.permission_id
