@@ -23,9 +23,13 @@ func (v *Views) SignUpFunc(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
 		// Parsing form to struct
-		r.ParseForm()
+		err := r.ParseForm()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		uSignup := UserSignup{}
-		err := decoder.Decode(&uSignup, r.PostForm)
+		err = decoder.Decode(&uSignup, r.PostForm)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

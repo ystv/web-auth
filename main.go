@@ -24,8 +24,11 @@ func allow(origin string) bool {
 
 func main() {
 	// Load environment
-	godotenv.Load(".env")                  // Load .env file for production
-	err := godotenv.Overload(".env.local") // Load .env.local for developing
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Println("failed to load global env file")
+	} // Load .env file for production
+	err = godotenv.Overload(".env.local") // Load .env.local for developing
 	if err != nil {
 		log.Println("failed to load env file, using global env")
 	}
@@ -69,6 +72,11 @@ func main() {
 	}
 
 	log.Printf("web-auth version %s loaded", version)
+
+	port, err := strconv.Atoi(os.Getenv("WAUTH_MAIL_PORT"))
+	if err != nil {
+		log.Fatalf("failed to get port for mailer: %v", err)
+	}
 
 	// Generate config
 	conf := views.Config{

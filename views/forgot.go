@@ -20,6 +20,7 @@ var notification = Notifcation{
 
 // ForgotFunc handles sending a reset email
 func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
+	var err error
 	switch r.Method {
 	case "GET":
 		err := v.tpl.ExecuteTemplate(w, "forgot.tmpl", nil)
@@ -29,19 +30,22 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	case "POST":
-		r.ParseForm()
+		err = r.ParseForm()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
 		u := user.User{Email: r.Form.Get("email")}
 
 		if u.Email == "" {
-			err := v.tpl.ExecuteTemplate(w, "forgot.tmpl", nil)
+			err = v.tpl.ExecuteTemplate(w, "forgot.tmpl", nil)
 			if err != nil {
 				err = fmt.Errorf("failed to exec tmpl: %w", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			return
 		}
-		// Get user and check if it exists
-		user, err := v.user.GetUser(r.Context(), u)
+		// Get user1 and check if it exists
+		user1, err := v.user.GetUser(r.Context(), u)
 		if err != nil {
 			// User doesn't exist, we'll pretend they've got an email
 			log.Printf("request for reset on unknown email \"%s\"", user.Email)
@@ -80,6 +84,8 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 
 // ResetFunc handles resetting the password
 func (v *Views) ResetFunc(w http.ResponseWriter, r *http.Request) {
+	var err error
+
 	code := r.URL.Query().Get("code")
 
 	if code == "" {
@@ -99,12 +105,21 @@ func (v *Views) ResetFunc(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		v.tpl.ExecuteTemplate(w, "reset.tmpl", ctx)
+		err = v.tpl.ExecuteTemplate(w, "reset.tmpl", ctx)
+		if err != nil {
+			return
+		}
 	case "POST":
-		r.ParseForm()
+		err = r.ParseForm()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
 		p := r.Form.Get("password")
 		if p != r.Form.Get("confirmpassword") || p == "" {
-			v.tpl.ExecuteTemplate(w, "reset.tmpl", ctx)
+			err = v.tpl.ExecuteTemplate(w, "reset.tmpl", ctx)
+			if err != nil {
+				return
+			}
 			return
 		}
 		// Good password

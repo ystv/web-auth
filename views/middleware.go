@@ -46,7 +46,10 @@ func (v *Views) RequiresPermission(h http.Handler, p user.Permission) http.Handl
 				return
 			}
 		}
-		v.tpl.ExecuteTemplate(w, "forbidden.tmpl", nil)
+		err = v.tpl.ExecuteTemplate(w, "forbidden.tmpl", nil)
+		if err != nil {
+			fmt.Println(err)
+		}
 		w.WriteHeader(http.StatusForbidden)
 	}
 }

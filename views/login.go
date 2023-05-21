@@ -41,6 +41,8 @@ func (v *Views) LogoutFunc(w http.ResponseWriter, r *http.Request) {
 // LoginFunc implements the login functionality, will
 // add a cookie to the cookie store for managing authentication
 func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
+	var err error
+
 	session, _ := v.cookie.Get(r, "session")
 	// We're ignoring the error here since sometimes the cookies keys change and then we
 	// can overwrite it instead
@@ -68,9 +70,15 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	case "POST":
 		// Parsing form to struct
-		r.ParseForm()
+		err = r.ParseForm()
+		if err != nil {
+			return
+		}
 		u := user.User{}
-		decoder.Decode(&u, r.PostForm)
+		err = decoder.Decode(&u, r.PostForm)
+		if err != nil {
+			return
+		}
 		// Since we let users enter either an email or username, it's easier
 		// to just let it both for the query
 		u.Email = u.Username
@@ -84,7 +92,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		u, err = v.user.VerifyUser(r.Context(), u)
 		if err != nil {
 			log.Printf("failed login for \"%s\"", u.Username)
-			err := session.Save(r, w)
+			err = session.Save(r, w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
