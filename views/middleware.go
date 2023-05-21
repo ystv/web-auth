@@ -1,6 +1,7 @@
 package views
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/ystv/web-auth/helpers"
