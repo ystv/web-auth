@@ -155,7 +155,7 @@ type Context struct {
 	User     user.User
 }
 
-func (v Views) getData(s *sessions.Session) *Context {
+func (v *Views) getData(s *sessions.Session) *Context {
 	val := s.Values["user"]
 	u := user.User{}
 	u, ok := val.(user.User)
