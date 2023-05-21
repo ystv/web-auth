@@ -35,19 +35,19 @@ type (
 
 // DBToTemplateType converts from the DB layer type to the user template type
 func DBToTemplateType(dbUser *[]user.User) []User {
-	tplUsers := []User{}
-	user := User{}
+	var tplUsers []User
 	for i := range *dbUser {
-		user.UserID = (*dbUser)[i].UserID
-		user.Username = (*dbUser)[i].Username
-		user.Name = (*dbUser)[i].Firstname + " " + (*dbUser)[i].Lastname
-		user.Email = (*dbUser)[i].Email
+		user1 := User{}
+		user1.UserID = (*dbUser)[i].UserID
+		user1.Username = (*dbUser)[i].Username
+		user1.Name = (*dbUser)[i].Firstname + " " + (*dbUser)[i].Lastname
+		user1.Email = (*dbUser)[i].Email
 		if (*dbUser)[i].LastLogin.Valid {
-			user.LastLogin = (*dbUser)[i].LastLogin.Time.Format("2006-01-02 15:04:05")
+			user1.LastLogin = (*dbUser)[i].LastLogin.Time.Format("2006-01-02 15:04:05")
 		} else {
-			user.LastLogin = "-"
+			user1.LastLogin = "-"
 		}
-		tplUsers = append(tplUsers, user)
+		tplUsers = append(tplUsers, user1)
 	}
 	return tplUsers
 }

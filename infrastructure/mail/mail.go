@@ -31,8 +31,8 @@ func NewMailer(config Config) (*Mail, error) {
 		Port:           config.Port,
 		Username:       config.Username,
 		Password:       config.Password,
-		Encryption:     mail.EncryptionTLS,
-		Authentication: mail.AuthPlain,
+		Encryption:     mail.EncryptionSTARTTLS,
+		Authentication: mail.AuthLogin,
 		ConnectTimeout: 10 * time.Second,
 		SendTimeout:    10 * time.Second,
 		TLSConfig:      &tls.Config{InsecureSkipVerify: true},
@@ -47,7 +47,7 @@ func NewMailer(config Config) (*Mail, error) {
 
 // SendEmail sends a plaintext email
 func (m *Mail) SendEmail(recipient, subject, code string) error {
-	body := fmt.Sprintf(`<html><body><a href=https://%s/reset?code=%s>Reset password</a> <p>(Link valid for 1 hour)</p></body></html>`, m.DomainName, code)
+	body := fmt.Sprintf(`<html><body><a href=https://auth.%s/reset?code=%s>Reset password</a> <p>(Link valid for 1 hour)</p></body></html>`, m.DomainName, code)
 	email := mail.NewMSG()
 	email.SetFrom("YSTV Security <no-reply@ystv.co.uk>").AddTo(recipient).SetSubject(subject)
 	email.SetBody(mail.TextHTML, body)
