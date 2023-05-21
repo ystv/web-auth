@@ -9,6 +9,6 @@ import (
 
 // NewStore initialises the store
 func NewStore(dataSourceName string) (*sqlx.DB, error) {
-	dbpool, err := sqlx.ConnectContext(context.Background(), "postgres", dataSourceName)
-	return dbpool, err
+	db, err := sqlx.ConnectContext(context.Background(), "postgres", dataSourceName)
+	return db, err
 }
