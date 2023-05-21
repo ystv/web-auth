@@ -2,11 +2,13 @@ package main
 
 import (
 	"embed"
+	json2 "encoding/json"
 	"fmt"
 	"io/fs"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -103,17 +105,17 @@ func main() {
 	}
 
 	v := views.New(conf, templates)
-	mux := mux.NewRouter()
+	mux1 := mux.NewRouter()
 	// Static
-	fs := http.FileServer(http.FS(static))
-	mux.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
+	fs1 := http.FileServer(http.FS(static))
+	mux1.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs1))
 
 	// Login logout
-	mux.HandleFunc("/login", v.LoginFunc)
-	mux.HandleFunc("/logout", v.LogoutFunc)
-	mux.HandleFunc("/signup", v.SignUpFunc)
-	mux.HandleFunc("/forgot", v.ForgotFunc)
-	mux.HandleFunc("/reset", v.ResetFunc)
+	mux1.HandleFunc("/login", v.LoginFunc)
+	mux1.HandleFunc("/logout", v.LogoutFunc)
+	mux1.HandleFunc("/signup", v.SignUpFunc)
+	mux1.HandleFunc("/forgot", v.ForgotFunc)
+	mux1.HandleFunc("/reset", v.ResetFunc)
 
 	// CORS
 
@@ -124,18 +126,36 @@ func main() {
 
 	// API
 	// Sets a cookie with the JWT inside of it
-	mux.Handle("/api/set_token", c.Handler(v.RequiresLogin(http.HandlerFunc(v.SetTokenHandler))))
-	mux.HandleFunc("/api/test", v.TestAPI)
+	mux1.Handle("/api/set_token", c.Handler(v.RequiresLogin(http.HandlerFunc(v.SetTokenHandler))))
+	mux1.HandleFunc("/api/test", v.TestAPI)
+	mux1.HandleFunc("/api/health", func(w http.ResponseWriter, _ *http.Request) {
+		marshal, err := json2.Marshal(struct {
+			Status int `json:"status"`
+		}{
+			Status: http.StatusOK,
+		})
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_, err = w.Write(marshal)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+	})
 
 	// Login required
-	mux.HandleFunc("/internal/users", v.RequiresPermission(v.RequiresLogin(http.HandlerFunc(v.UsersFunc)), adminPerm))
-	mux.HandleFunc("/internal/user/{userid}", v.RequiresLogin(http.HandlerFunc(v.UserFunc)))
-	mux.HandleFunc("/internal", v.RequiresLogin(http.HandlerFunc(v.InternalFunc)))
+	mux1.HandleFunc("/internal/users", v.RequiresPermission(v.RequiresLogin(http.HandlerFunc(v.UsersFunc)), adminPerm))
+	mux1.HandleFunc("/internal/user/{userid}", v.RequiresLogin(http.HandlerFunc(v.UserFunc)))
+	mux1.HandleFunc("/internal", v.RequiresLogin(http.HandlerFunc(v.InternalFunc)))
 
 	// Public
-	mux.HandleFunc("/", v.IndexFunc)
+	mux1.HandleFunc("/", v.IndexFunc)
 
 	log.Println("web-auth started, listing on :8080")
 	// Serve
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	log.Fatal(http.ListenAndServe(":8080", mux1))
 }
