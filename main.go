@@ -62,6 +62,8 @@ func main() {
 		os.Getenv("WAUTH_DB_SSLMODE"),
 	)
 
+	fmt.Println(dbConnectionString)
+
 	// Setup files
 	static, err := fs.Sub(content, "public/static")
 	if err != nil {
