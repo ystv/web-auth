@@ -94,7 +94,6 @@ func New(conf Config) *Views {
 	// Connecting to stores
 	dbStore, err := db.NewStore(conf.DatabaseURL)
 	if err != nil {
-		log.Println(conf.DatabaseURL)
 		log.Fatalf("NewStore failed: %+v", err)
 	}
 	v.user = user.NewUserRepo(dbStore)
