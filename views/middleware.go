@@ -33,15 +33,19 @@ func (v *Views) RequiresPermission(h http.Handler, p user.Permission) http.Handl
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, err := v.cookie.Get(r, v.conf.SessionCookieName)
 		if err != nil {
+			fmt.Println(1, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		u := helpers.GetUser(session)
+		fmt.Println(u)
 		perms, err := v.user.GetPermissions(r.Context(), u)
 		if err != nil {
+			fmt.Println(2, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		fmt.Println(perms)
 		for _, perm := range perms {
 			fmt.Println(perm, p, p.Name)
 			if perm == p.Name {
@@ -52,8 +56,10 @@ func (v *Views) RequiresPermission(h http.Handler, p user.Permission) http.Handl
 		err = v.template.RenderNoNavsTemplate(w, nil, templates.ForbiddenTemplate)
 		//err = v.tpl.ExecuteTemplate(w, "forbidden.tmpl", nil)
 		if err != nil {
+			fmt.Println(3, err)
 			fmt.Println(err)
 		}
+		fmt.Println(4)
 		w.WriteHeader(http.StatusForbidden)
 	}
 }
