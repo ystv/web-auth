@@ -37,7 +37,7 @@ func (v *Views) RequiresPermission(h http.Handler, p user.Permission) http.Handl
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		fmt.Println(session, v.conf.SessionCookieName)
+		fmt.Println(session, session.Options, session.Values, v.conf.SessionCookieName)
 		u := helpers.GetUser(session)
 		fmt.Println(u)
 		perms, err := v.user.GetPermissions(r.Context(), u)
