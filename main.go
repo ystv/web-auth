@@ -9,6 +9,11 @@ import (
 	"github.com/rs/cors"
 	"github.com/ystv/web-auth/user"
 	"github.com/ystv/web-auth/views"
+	"io/fs"
+	"log"
+	"net/http"
+	"os"
+	"strconv"
 )
 
 //go:embed public/static/*
