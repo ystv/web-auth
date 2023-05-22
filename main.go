@@ -4,12 +4,6 @@ import (
 	"embed"
 	json2 "encoding/json"
 	"fmt"
-	"io/fs"
-	"log"
-	"net/http"
-	"os"
-	"strconv"
-
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
@@ -17,7 +11,7 @@ import (
 	"github.com/ystv/web-auth/views"
 )
 
-//go:embed public/*
+//go:embed public/static/*
 var content embed.FS
 
 func allow(origin string) bool {
@@ -68,10 +62,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("static files failed: %+v", err)
 	}
-	templates, err := fs.Sub(content, "public/templates")
-	if err != nil {
-		log.Fatalf("template files failed: %+v", err)
-	}
+	//templates, err := fs.Sub(content, "public/templates")
+	//if err != nil {
+	//	log.Fatalf("template files failed: %+v", err)
+	//}
 
 	log.Printf("web-auth version %s loaded", version)
 
@@ -104,7 +98,8 @@ func main() {
 		Name: "SuperUser",
 	}
 
-	v := views.New(conf, templates)
+	//v := views.New(conf, templates)
+	v := views.New(conf)
 	mux1 := mux.NewRouter()
 	// Static
 	fs1 := http.FileServer(http.FS(static))

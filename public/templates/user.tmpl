@@ -1,62 +1,50 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    {{template "head.tmpl" .}}
-    <title>Internal: Users</title>
-    <link rel="stylesheet" type="text/css" href="/static/internal.css" />
-  </head>
-  <body>
-    {{template "navbar.tmpl" .}}
-    <div class="container">
-      <div class="columns">
-        {{template "sidebar.tmpl" .}}
-        <div class="column is-9">
-          <div class="columns box">
+{{define "title"}}Internal: Users{{end}}
+{{define "content"}}
+    <div class="column is-9">
+        <div class="columns box">
             <div class="column is-2">
-              <figure class="avatar">
-                <img src="https://placehold.it/128x128"  alt="placeholder"/>
-              </figure>
-              <div class="buttons">
-                <button class="button is-info is-outlined">
-                  Reset password
-                </button>
-                <button class="button is-warning is-outlined">
-                  Deactivate
-                </button>
-                <button class="button is-danger is-outlined">Delete</button>
-              </div>
+                <p>{{.User}}</p>
+                <figure class="avatar">
+                    <img src="https://placehold.it/128x128" alt="placeholder"/>
+                </figure>
+                <div class="buttons">
+                    <button class="button is-info is-outlined">
+                        Reset password
+                    </button>
+                    <button class="button is-warning is-outlined">
+                        Deactivate
+                    </button>
+                    <button class="button is-danger is-outlined">Delete</button>
+                </div>
             </div>
             <div class="column">
-              <form>
-                <div class="field">
-                  <label class="label" for="nickname">Nickname</label>
-                  <div class="control">
-                    <input
-                      id="nickname"
-                      class="input"
-                      type="text"
-                      placeholder="Nickname"
-                    />
-                  </div>
-                </div>
-                <div class="field">
-                  <label class="label" for="firstname">First name</label>
-                  <div class="control">
-                    <input class="input" type="text" placeholder="Nickname" />
-                  </div>
-                </div>
-                <div class="field">
-                  <label class="label" for="email">Email</label>
-                  <div class="control">
-                    <input class="input" type="email" placeholder="Email" id="email" />
-                  </div>
-                </div>
-                <button class="button is-block is-info">Update</button>
-              </form>
+                <form>
+                    <div class="field">
+                        <label class="label" for="nickname">Nickname</label>
+                        <div class="control">
+                            <input
+                                    id="nickname"
+                                    class="input"
+                                    type="text"
+                                    placeholder="Nickname"
+                            />
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label" for="firstname">First name</label>
+                        <div class="control">
+                            <input class="input" type="text" placeholder="Nickname"/>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label" for="email">Email</label>
+                        <div class="control">
+                            <input class="input" type="email" placeholder="Email" id="email"/>
+                        </div>
+                    </div>
+                    <button class="button is-block is-info">Update</button>
+                </form>
             </div>
-          </div>
         </div>
-      </div>
     </div>
-  </body>
-</html>
+{{end}}

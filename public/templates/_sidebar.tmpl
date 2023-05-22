@@ -1,0 +1,22 @@
+<div class="column is-3">
+    <aside class="menu is-hidden-mobile">
+        {{ $page := .ActivePage }}
+        <p class="menu-label">General</p>
+        <ul class="menu-list">
+            <li><a {{if eq $page "dashboard"}}class="is-active"{{end}} href="/internal">Dashboard</a></li>
+            <li><a {{if eq $page "users"}}class="is-active"{{end}} href="/internal/users">Users</a></li>
+            <li><a {{if eq $page "settings"}}class="is-active"{{end}} href="/settings">Settings</a></li>
+        </ul>
+        <p class="menu-label">API Interactions</p>
+        <ul class="menu-list">
+            <li><a {{if eq $page "apiGet"}}class="is-active"{{end}} href="/api/get_token">Get API token</a></li>
+            <li><a {{if eq $page "apiTest"}}class="is-active"{{end}} href="/api/test">Test API</a></li>
+        </ul>
+        <p class="menu-label">Secured sites</p>
+        <ul class="menu-list">
+            <li><a href="https://my.ystv.co.uk">MyTV</a></li>
+            <li><a href="https://creator.ystv.co.uk">Creator Studio</a></li>
+            <li><a href="https://cobra.ystv.co.uk">COBRA</a></li>
+        </ul>
+    </aside>
+</div>

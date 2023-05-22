@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"github.com/ystv/web-auth/public/templates"
 	"log"
 	"net/http"
 	"strconv"
@@ -23,7 +24,8 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 	var err error
 	switch r.Method {
 	case "GET":
-		err := v.tpl.ExecuteTemplate(w, "forgot.tmpl", nil)
+		err = v.template.RenderNoNavsTemplate(w, nil, templates.ForgotTemplate)
+		//err = v.tpl.ExecuteTemplate(w, "forgot.tmpl", nil)
 		if err != nil {
 			err = fmt.Errorf("failed to exec tmpl: %w", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -37,7 +39,8 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 		u := user.User{Email: r.Form.Get("email")}
 
 		if u.Email == "" {
-			err = v.tpl.ExecuteTemplate(w, "forgot.tmpl", nil)
+			err = v.template.RenderNoNavsTemplate(w, nil, templates.ForgotTemplate)
+			//err = v.tpl.ExecuteTemplate(w, "forgot.tmpl", nil)
 			if err != nil {
 				err = fmt.Errorf("failed to exec tmpl: %w", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -49,7 +52,8 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			// User doesn't exist, we'll pretend they've got an email
 			log.Printf("request for reset on unknown email \"%s\"", user1.Email)
-			err = v.tpl.ExecuteTemplate(w, "notification.tmpl", notification)
+			err = v.template.RenderNoNavsTemplate(w, notification, templates.NotificationTemplate)
+			//err = v.tpl.ExecuteTemplate(w, "notification.tmpl", notification)
 			if err != nil {
 				err = fmt.Errorf("failed to exec template: %w", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -73,7 +77,8 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// User doesn't exist, we'll pretend they've got an email
-		err = v.tpl.ExecuteTemplate(w, "notification.tmpl", notification)
+		err = v.template.RenderNoNavsTemplate(w, notification, templates.NotificationTemplate)
+		//err = v.tpl.ExecuteTemplate(w, "notification.tmpl", notification)
 		if err != nil {
 			err = fmt.Errorf("failed to exec template: %w", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -105,7 +110,8 @@ func (v *Views) ResetFunc(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		err = v.tpl.ExecuteTemplate(w, "reset.tmpl", ctx)
+		err = v.template.RenderNoNavsTemplate(w, ctx, templates.ResetTemplate)
+		//err = v.tpl.ExecuteTemplate(w, "reset.tmpl", ctx)
 		if err != nil {
 			return
 		}
@@ -116,7 +122,8 @@ func (v *Views) ResetFunc(w http.ResponseWriter, r *http.Request) {
 		}
 		p := r.Form.Get("password")
 		if p != r.Form.Get("confirmpassword") || p == "" {
-			err = v.tpl.ExecuteTemplate(w, "reset.tmpl", ctx)
+			err = v.template.RenderNoNavsTemplate(w, ctx, templates.ResetTemplate)
+			//err = v.tpl.ExecuteTemplate(w, "reset.tmpl", ctx)
 			if err != nil {
 				return
 			}

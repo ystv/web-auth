@@ -1,16 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <title>Forbidden</title>
-    {{template "head.tmpl" .}}
-  </head>
-  <body>
+{{define "title"}}Forbidden{{end}}
+{{define "content"}}
     <div class="container">
-      <div class="columns box">
-       <div class="column">
-         <h1>500 - Forbidden</h1>
-       </div>
-      </div>
+        <div class="columns box">
+            <div class="column">
+                <h1>500 - Forbidden</h1>
+            </div>
+        </div>
     </div>
-  </body>
-</html>
+{{end}}

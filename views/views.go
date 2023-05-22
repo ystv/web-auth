@@ -3,8 +3,7 @@ package views
 import (
 	"encoding/gob"
 	"encoding/hex"
-	"html/template"
-	"io/fs"
+	"github.com/ystv/web-auth/public/templates"
 	"log"
 	"net/http"
 	"time"
@@ -68,13 +67,14 @@ type (
 
 	// Views encapsulates our view dependencies
 	Views struct {
-		conf     Config
-		user     *user.Store
-		cookie   *sessions.CookieStore
-		tpl      *template.Template
+		conf   Config
+		user   *user.Store
+		cookie *sessions.CookieStore
+		//tpl      *template.Template
 		mail     *mail.Mail
 		cache    *cache.Cache
 		validate *validator.Validate
+		template *templates.Templater
 	}
 
 	// Notification template for messages
@@ -89,7 +89,7 @@ type (
 var _ Repo = &Views{}
 
 // New initialises connections, templates, and cookies
-func New(conf Config, templates fs.FS) *Views {
+func New(conf Config) *Views {
 	v := Views{}
 	// Connecting to stores
 	dbStore, err := db.NewStore(conf.DatabaseURL)
@@ -135,8 +135,8 @@ func New(conf Config, templates fs.FS) *Views {
 	// So we can use our struct in the cookie
 	gob.Register(user.User{})
 
-	// Loading templates
-	v.tpl = template.Must(template.ParseFS(templates, "*.tmpl"))
+	//// Loading templates
+	//v.tpl = template.Must(template.ParseFS(templates, "*.tmpl"))
 
 	v.conf = conf
 

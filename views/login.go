@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"github.com/ystv/web-auth/public/templates"
 	"log"
 	"net/http"
 	"net/url"
@@ -62,7 +63,8 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, context.Callback, http.StatusFound)
 			return
 		}
-		err = v.tpl.ExecuteTemplate(w, "login", context)
+		err = v.template.RenderNoNavsTemplate(w, nil, templates.LoginTemplate)
+		//err = v.tpl.ExecuteTemplate(w, "login", context)
 		if err != nil {
 			log.Printf("login failed to exec tmpl: %+v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -101,7 +103,8 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 			ctx.Callback = callback
 			ctx.Message = "Invalid username or password"
 			ctx.MsgType = "is-danger"
-			err = v.tpl.ExecuteTemplate(w, "login", ctx)
+			err = v.template.RenderNoNavsTemplate(w, ctx, templates.LoginTemplate)
+			//err = v.tpl.ExecuteTemplate(w, "login", ctx)
 			if err != nil {
 				log.Printf("login failed to exec tmpl: %+v", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)

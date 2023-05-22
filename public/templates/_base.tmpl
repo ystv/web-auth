@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "_head.tmpl" .}}
+    <title>{{block "title" .}}Web Auth{{end}}</title>
+    <link rel="stylesheet" type="text/css" href="/static/internal.css"/>
+</head>
+<body>
+{{block "navbar-block" .}}
+    {{template "navbar" .}}
+{{end}}
+<div class="container">
+    <div class="columns">
+        {{block "sidebar-block" .}}
+            {{template "sidebar.tmpl" .}}
+        {{end}}
+        {{block "content-block" .}}
+            {{template "content" .}}
+        {{end}}
+    </div>
+</div>
+{{block "footer-block" .}}
+    {{template "footer" .}}
+{{end}}
+</body>
+</html>

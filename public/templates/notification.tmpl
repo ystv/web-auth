@@ -1,26 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <title>{{.Title}}</title>
     {{template "head.tmpl" .}}
-  </head>
-  <body>
-    <section class="hero is-fullheight">
-      <div class="hero-body">
+</head>
+<body>
+<section class="hero is-fullheight">
+    <div class="hero-body">
         <div class="container">
-          <div class="columns is-centered">
-            <div class="column is-5-tablet is-4-desktop is-3-widescreen">
-              <div class="box">
-                <progress class="progress is-link" value="60" max="90"
-                  >60%</progress
-                >
-                <p class="title is-5">{{.Title}}</p>
-                <p>{{.Message}}</p>
-              </div>
+            <div class="columns is-centered">
+                <div class="column is-5-tablet is-4-desktop is-3-widescreen">
+                    <div class="box">
+                        <progress class="progress is-link" value="60" max="90"
+                        >60%
+                        </progress
+                        >
+                        <p class="title is-5">{{.Title}}</p>
+                        <p>{{.Message}}</p>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
-    </section>
-  </body>
+    </div>
+</section>
+</body>
 </html>

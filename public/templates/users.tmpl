@@ -1,51 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    {{template "head.tmpl" .}}
-    <title>Internal: Users</title>
-    <link rel="stylesheet" type="text/css" href="/static/internal.css" />
-  </head>
-  <body>
-    {{template "navbar.tmpl" .}}
-    <div class="container">
-      <div class="columns">
-        {{template "sidebar.tmpl" .}}
-        <div class="column is-9">
-          <div class="card events-card">
+{{define "title"}}Internal: Users{{end}}
+{{define "content"}}
+    <div class="column is-9">
+        <div class="card events-card">
             <header class="card-header">
-              <p class="card-header-title">Users</p>
+                <p class="card-header-title">Users</p>
             </header>
             <div class="card-table">
-              <div class="content">
-                <table class="table is-fullwidth is-hoverable">
-                  <thead>
-                    <tr>
-                      <th>User ID</th>
-                      <th>Name</th>
-                      <th>Username</th>
-                      <th>Email</th>
-                      <th>Last login</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {{ range $user := .Users }}
-                    <tr>
-                      <th>{{ $user.UserID }}</th>
-                      <td>{{ $user.Name }}</td>
-                      <td>{{ $user.Username }}</td>
-                      <td>{{ $user.Email }}</td>
-                      <td>{{ $user.LastLogin }}</td>
-                      <td><a href="./user/{{ $user.UserID }}">View</a></td>
-                    </tr>
-                    {{ end }}
-                  </tbody>
-                </table>
-              </div>
+                <div class="content">
+                    <table class="table is-fullwidth is-hoverable">
+                        <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Name</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Last login</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {{ range $user := .Users }}
+                            <tr>
+                                <th>{{ $user.UserID }}</th>
+                                <td>{{ $user.Name }}</td>
+                                <td>{{ $user.Username }}</td>
+                                <td>{{ $user.Email }}</td>
+                                <td>{{ $user.LastLogin }}</td>
+                                <td><a href="./user/{{ $user.UserID }}">View</a></td>
+                            </tr>
+                        {{ end }}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
     </div>
-  </body>
-</html>
+{{end}}

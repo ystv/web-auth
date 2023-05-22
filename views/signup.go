@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"github.com/ystv/web-auth/public/templates"
 	"log"
 	"net/http"
 
@@ -68,7 +69,8 @@ func (v *Views) SignUpFunc(w http.ResponseWriter, r *http.Request) {
 }
 
 func (v *Views) signupTmplExec(w http.ResponseWriter, msg string) {
-	err := v.tpl.ExecuteTemplate(w, "signup.tmpl", msg)
+	err := v.template.RenderNoNavsTemplate(w, msg, templates.SignupTemplate)
+	//err := v.tpl.ExecuteTemplate(w, "signup.tmpl", msg)
 	if err != nil {
 		err = fmt.Errorf("signup template exec failed: %w", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

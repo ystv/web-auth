@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"github.com/ystv/web-auth/public/templates"
 	"net/http"
 
 	"github.com/ystv/web-auth/helpers"
@@ -47,7 +48,8 @@ func (v *Views) RequiresPermission(h http.Handler, p user.Permission) http.Handl
 				return
 			}
 		}
-		err = v.tpl.ExecuteTemplate(w, "forbidden.tmpl", nil)
+		err = v.template.RenderNoNavsTemplate(w, nil, templates.ForbiddenTemplate)
+		//err = v.tpl.ExecuteTemplate(w, "forbidden.tmpl", nil)
 		if err != nil {
 			fmt.Println(err)
 		}
