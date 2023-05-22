@@ -45,7 +45,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	session, _ := v.cookie.Get(r, "session")
-	// We're ignoring the error here since sometimes the cookies keys change and then we
+	// We're ignoring the error here since sometimes the cookies keys change, and then we
 	// can overwrite it instead
 
 	switch r.Method {

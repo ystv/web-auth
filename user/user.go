@@ -30,16 +30,18 @@ type (
 	User struct {
 		UserID        int       `db:"user_id" json:"id"`
 		Username      string    `db:"username" json:"username" schema:"username"`
-		Nickname      string    `db:"nickname" schema:"nickname"`
+		Nickname      string    `db:"nickname" json:"nickname" schema:"nickname"`
 		Firstname     string    `db:"first_name" json:"firstName" schema:"firstname"`
 		Lastname      string    `db:"last_name" json:"lastName" schema:"lastname"`
 		Password      string    `db:"password" json:"-" schema:"password"`
 		Salt          string    `db:"salt" json:"-"`
+		Avatar        string    `db:"avatar" json:"avatar" schema:"avatar"`
 		Email         string    `db:"email" json:"email" schema:"email"`
 		LastLogin     null.Time `db:"last_login"`
 		ResetPw       bool      `db:"reset_pw" json:"-"`
 		Authenticated bool
 		Permissions   []Permission `json:"permissions"`
+		UseGravatar   bool         `db:"use_gravatar" json:"useGravatar" schema:"useGravatar"`
 	}
 
 	// Permission represents an individual permission. Attempting to implement some RBAC here.

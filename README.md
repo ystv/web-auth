@@ -18,7 +18,7 @@ Both methods require cloning the repo
 
 ### Docker
 
-Execute `docker build -t webauth .` in the root directory and you'll have a container `webauth:latest`.
+Execute `docker build -t webauth .` in the root directory, and you'll have a container `webauth:latest`.
 
 ### Static binary
 
