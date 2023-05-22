@@ -17,7 +17,7 @@ var decoder = schema.NewDecoder()
 // LogoutFunc Implements the logout functionality.
 // Will delete the session information from the cookie store
 func (v *Views) LogoutFunc(w http.ResponseWriter, r *http.Request) {
-	session, err := v.cookie.Get(r, "session")
+	session, err := v.cookie.Get(r, v.conf.SessionCookieName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -44,7 +44,7 @@ func (v *Views) LogoutFunc(w http.ResponseWriter, r *http.Request) {
 func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 	var err error
 
-	session, _ := v.cookie.Get(r, "session")
+	session, _ := v.cookie.Get(r, v.conf.SessionCookieName)
 	// We're ignoring the error here since sometimes the cookies keys change, and then we
 	// can overwrite it instead
 
