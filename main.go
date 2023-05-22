@@ -52,6 +52,8 @@ func main() {
 		sessionCookieName = "session"
 	}
 
+	fmt.Println(sessionCookieName)
+
 	dbConnectionString := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		os.Getenv("WAUTH_DB_HOST"),
