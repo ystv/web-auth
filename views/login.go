@@ -81,15 +81,14 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 			log.Printf("parse form fail: %v", err)
 			return
 		}
-		fmt.Println(r)
 		username := r.FormValue("username")
 		password := r.FormValue("password")
 		u := user.User{}
-		err = decoder.Decode(&u, r.PostForm)
-		if err != nil {
-			log.Printf("decode fail: %v", err)
-			return
-		}
+		//err = decoder.Decode(&u, r.PostForm)
+		//if err != nil {
+		//	log.Printf("decode fail: %v", err)
+		//	return
+		//}
 		// Since we let users enter either an email or username, it's easier
 		// to just let it both for the query
 		fmt.Println(u)
