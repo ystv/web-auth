@@ -23,6 +23,7 @@ type UserSignup struct {
 func (v *Views) SignUpFunc(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
+		fmt.Println("DEBUG - SIGNUP POST")
 		// Parsing form to struct
 		err := r.ParseForm()
 		if err != nil {
@@ -64,6 +65,7 @@ func (v *Views) SignUpFunc(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusFound)
 
 	case "GET":
+		fmt.Println("DEBUG - SIGNUP POST")
 		v.signupTmplExec(w, "")
 	}
 }

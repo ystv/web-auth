@@ -12,6 +12,7 @@ import (
 // RequiresLogin is a middleware which will be used for each
 // httpHandler to check if there is any active session
 func (v *Views) RequiresLogin(h http.Handler) http.HandlerFunc {
+	fmt.Println("DEBUG - REQUIRE LOGIN")
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, err := v.cookie.Get(r, v.conf.SessionCookieName)
 		if err != nil {
@@ -30,6 +31,7 @@ func (v *Views) RequiresLogin(h http.Handler) http.HandlerFunc {
 // RequiresPermission is a middleware that will
 // ensure that the user has the given permission.
 func (v *Views) RequiresPermission(h http.Handler, p user.Permission) http.HandlerFunc {
+	fmt.Println("DEBUG - REQUIRE PERMISSION")
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, err := v.cookie.Get(r, v.conf.SessionCookieName)
 		if err != nil {

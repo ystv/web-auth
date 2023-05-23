@@ -50,6 +50,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
+		fmt.Println("DEBUG - LOGIN GET")
 		// Data for our HTML template
 		context := v.getData(session)
 
@@ -71,6 +72,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	case "POST":
+		fmt.Println("DEBUG - LOGIN POST")
 		// Parsing form to struct
 		err = r.ParseForm()
 		if err != nil {

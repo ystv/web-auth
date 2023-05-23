@@ -1,6 +1,7 @@
 package views
 
 import (
+	"fmt"
 	"github.com/ystv/web-auth/public/templates"
 	"net/http"
 	"strconv"
@@ -57,6 +58,7 @@ func DBToTemplateType(dbUser *[]user.User) []User {
 
 // InternalFunc handles a request to the internal template
 func (v *Views) InternalFunc(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("DEBUG - INTERNAL")
 	session, _ := v.cookie.Get(r, v.conf.SessionCookieName)
 
 	c := v.getData(session)
@@ -81,7 +83,7 @@ func (v *Views) InternalFunc(w http.ResponseWriter, r *http.Request) {
 
 // UsersFunc handles a users request
 func (v *Views) UsersFunc(w http.ResponseWriter, r *http.Request) {
-
+	fmt.Println("DEBUG - USERS")
 	dbUsers, err := v.user.GetUsers(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -103,6 +105,7 @@ func (v *Views) UsersFunc(w http.ResponseWriter, r *http.Request) {
 
 // UserFunc handles a users request
 func (v *Views) UserFunc(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("DEBUG - USER")
 	userString := mux.Vars(r)
 	userID, err := strconv.Atoi(userString["userid"])
 	if err != nil {

@@ -24,6 +24,7 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 	var err error
 	switch r.Method {
 	case "GET":
+		fmt.Println("DEBUG - FORGOT GET")
 		err = v.template.RenderNoNavsTemplate(w, nil, templates.ForgotTemplate)
 		//err = v.tpl.ExecuteTemplate(w, "forgot.tmpl", nil)
 		if err != nil {
@@ -32,6 +33,7 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	case "POST":
+		fmt.Println("DEBUG - FORGOT POST")
 		err = r.ParseForm()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -89,6 +91,7 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 
 // ResetFunc handles resetting the password
 func (v *Views) ResetFunc(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("DEBUG - RESET")
 	var err error
 
 	code := r.URL.Query().Get("code")
@@ -110,12 +113,14 @@ func (v *Views) ResetFunc(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
+		fmt.Println("DEBUG - RESET GET")
 		err = v.template.RenderNoNavsTemplate(w, ctx, templates.ResetTemplate)
 		//err = v.tpl.ExecuteTemplate(w, "reset.tmpl", ctx)
 		if err != nil {
 			return
 		}
 	case "POST":
+		fmt.Println("DEBUG - RESET POST")
 		err = r.ParseForm()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
