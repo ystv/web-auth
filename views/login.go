@@ -8,11 +8,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/gorilla/schema"
 	"github.com/ystv/web-auth/user"
 )
-
-var decoder = schema.NewDecoder()
 
 // LogoutFunc Implements the logout functionality.
 // Will delete the session information from the cookie store

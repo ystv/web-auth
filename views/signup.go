@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"github.com/gorilla/schema"
 	"github.com/ystv/web-auth/public/templates"
 	"log"
 	"net/http"
@@ -9,6 +10,8 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/ystv/web-auth/user"
 )
+
+var decoder = schema.NewDecoder()
 
 // UserSignup represents the HTML form
 type UserSignup struct {

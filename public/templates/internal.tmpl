@@ -1,6 +1,6 @@
 {{define "title"}}Internal{{end}}
 {{define "content"}}
-    <div class="column is-9">
+    <div class="column is-10">
         <section class="hero is-info welcome is-small">
             <div class="hero-body">
                 <div class="container">
@@ -38,7 +38,7 @@
             </div>
         </section>
         <div class="columns">
-            <div class="column is-6">
+            <div class="column is-6" style="padding-left: 0;">
                 <div class="card events-card">
                     <header class="card-header">
                         <p class="card-header-title">Events</p>
@@ -61,15 +61,15 @@
                     </div>
                 </div>
             </div>
-            <div class="column is-6">
+            <div class="column is-6" style="padding-right: 0;">
                 <div class="card">
                     <header class="card-header">
-                        <p class="card-header-title">User Search</p>
+                        <label class="card-header-title" for="searchUser">User Search</label>
                     </header>
                     <div class="card-content">
                         <div class="content">
                             <div class="control has-icons-left has-icons-right">
-                                <input class="input" type="text" placeholder=""/>
+                                <input id="searchUser" name="searhUser" class="input" type="text" placeholder=""/>
                                 <span class="icon is-medium is-left">
                         <i class="fa fa-search"></i>
                       </span>
