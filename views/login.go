@@ -81,6 +81,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 			log.Printf("parse form fail: %v", err)
 			return
 		}
+		fmt.Println(r)
 		u := user.User{}
 		err = decoder.Decode(&u, r.PostForm)
 		if err != nil {
