@@ -93,7 +93,7 @@ func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Templ
 		},
 	})
 
-	t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_top.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", string(mainTmpl))
+	t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", string(mainTmpl))
 	if err != nil {
 		fmt.Println(err)
 		return err
