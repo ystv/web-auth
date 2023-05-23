@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    {{template "_head.tmpl" .}}
+    {{template "head" .}}
     <title>{{block "title" .}}Web Auth{{end}}</title>
     <link rel="stylesheet" type="text/css" href="/static/internal.css"/>
 </head>
@@ -12,7 +12,7 @@
 <div class="container">
     <div class="columns">
         {{block "sidebar-block" .}}
-            {{template "sidebar.tmpl" .}}
+            {{template "sidebar" .}}
         {{end}}
         {{block "content-block" .}}
             {{template "content" .}}
