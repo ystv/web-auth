@@ -27,7 +27,7 @@ func (s *Store) getUser(ctx context.Context, user User) (User, error) {
 	err := s.db.GetContext(ctx, &u,
 		`SELECT user_id, username, nickname, email, last_login, salt, password
 		FROM people.users
-		WHERE username = $1 AND username != '' OR email = $2 AND email != '' OR user_id = $3
+		WHERE (username = $1 AND username != '') OR (email = $2 AND email != '') OR user_id = $3
 		LIMIT 1;`, user.Username, user.Email, user.UserID)
 	if err != nil {
 		return u, fmt.Errorf("failed to get user from db: %w", err)
