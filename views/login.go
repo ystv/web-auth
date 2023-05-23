@@ -48,6 +48,8 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 	// We're ignoring the error here since sometimes the cookies keys change, and then we
 	// can overwrite it instead
 
+	fmt.Println(r)
+
 	switch r.Method {
 	case "GET":
 		fmt.Println("DEBUG - LOGIN GET")
@@ -85,7 +87,9 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		}
 		// Since we let users enter either an email or username, it's easier
 		// to just let it both for the query
+		fmt.Println(u)
 		u.Email = u.Username
+		fmt.Println(u)
 
 		callback := "/internal"
 		callbackURL, err := url.Parse(r.URL.Query().Get("callback"))
@@ -94,6 +98,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		}
 		// Authentication
 		u, err = v.user.VerifyUser(r.Context(), u)
+		fmt.Println(u)
 		if err != nil {
 			log.Printf("failed login for \"%s\"", u.Username)
 			err = session.Save(r, w)
