@@ -82,6 +82,8 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		fmt.Println(r)
+		username := r.FormValue("username")
+		password := r.FormValue("password")
 		u := user.User{}
 		err = decoder.Decode(&u, r.PostForm)
 		if err != nil {
@@ -91,8 +93,9 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		// Since we let users enter either an email or username, it's easier
 		// to just let it both for the query
 		fmt.Println(u)
+		u.Username = username
 		u.Email = u.Username
-		fmt.Println(u)
+		u.Password = password
 
 		callback := "/internal"
 		callbackURL, err := url.Parse(r.URL.Query().Get("callback"))
