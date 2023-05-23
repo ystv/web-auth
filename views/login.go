@@ -78,11 +78,13 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		// Parsing form to struct
 		err = r.ParseForm()
 		if err != nil {
+			log.Printf("parse form fail: %v", err)
 			return
 		}
 		u := user.User{}
 		err = decoder.Decode(&u, r.PostForm)
 		if err != nil {
+			log.Printf("decode fail: %v", err)
 			return
 		}
 		// Since we let users enter either an email or username, it's easier
