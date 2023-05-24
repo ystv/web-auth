@@ -157,6 +157,8 @@ func main() {
 	// Public
 	mux1.HandleFunc("/", v.IndexFunc)
 
+	mux1.NotFoundHandler = http.HandlerFunc(v.Error404)
+
 	log.Println("web-auth started, listing on :8080")
 	// Serve
 	log.Fatal(http.ListenAndServe(":8080", mux1))
