@@ -225,6 +225,7 @@ func (v *Views) UsersFunc(w http.ResponseWriter, r *http.Request) {
 		dbUsers, err = v.user.GetUsers(r.Context())
 	}
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -241,6 +242,7 @@ func (v *Views) UsersFunc(w http.ResponseWriter, r *http.Request) {
 	err = v.template.RenderTemplate(w, ctx, templates.UsersTemplate)
 	//err = v.tpl.ExecuteTemplate(w, "users.tmpl", ctx)
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
