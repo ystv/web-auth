@@ -23,6 +23,7 @@ type (
 	}
 	SettingsTemplate struct {
 		User       user.User
+		LastLogin  string
 		ActivePage string
 	}
 	// UsersTemplate represents the context for the user template
@@ -110,8 +111,13 @@ func (v *Views) SettingsFunc(w http.ResponseWriter, r *http.Request) {
 	session, _ := v.cookie.Get(r, v.conf.SessionCookieName)
 
 	c := v.getData(session)
+	lastLogin := time.Now()
+	if c.User.LastLogin.Valid {
+		lastLogin = c.User.LastLogin.Time
+	}
 	ctx := SettingsTemplate{
 		User:       c.User,
+		LastLogin:  lastLogin,
 		ActivePage: "settings",
 	}
 	//err := v.tpl.ExecuteTemplate(w, "internal.tmpl", ctx)
