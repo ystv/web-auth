@@ -19,6 +19,7 @@ func (s *Store) countUsers(ctx context.Context) (int, error) {
 }
 
 // countUsers24Hours will get the number of users in the last 24 hours
+// TODO make this a lot less bad, it just is bad
 func (s *Store) countUsers24Hours(ctx context.Context) (int, error) {
 	count := 0
 	err := s.db.GetContext(ctx, &count,
