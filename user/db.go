@@ -56,8 +56,11 @@ func (s *Store) updateUser(ctx context.Context, user User) error {
 			last_login = $4,
 			reset_pw = $5,
 			avatar = $6,
-			use_gravatar = $7
-		WHERE user_id = $8;`, user.Password, user.Salt, user.Email, user.LastLogin, user.ResetPw, user.Avatar, user.UseGravatar, user.UserID)
+			use_gravatar = $7,
+			first_name = $8,
+			last_name = $9,
+			nickname = $10
+		WHERE user_id = $11;`, user.Password, user.Salt, user.Email, user.LastLogin, user.ResetPw, user.Avatar, user.UseGravatar, user.Firstname, user.Lastname, user.Nickname, user.UserID)
 	if err != nil {
 		return err
 	}
@@ -68,7 +71,7 @@ func (s *Store) updateUser(ctx context.Context, user User) error {
 func (s *Store) getUser(ctx context.Context, user User) (User, error) {
 	u := User{}
 	err := s.db.GetContext(ctx, &u,
-		`SELECT user_id, username, nickname, email, last_login, salt, password, avatar, use_gravatar
+		`SELECT user_id, username, nickname, first_name, last_name, email, last_login, salt, password, avatar, use_gravatar
 		FROM people.users
 		WHERE (username = $1 AND username != '') OR (email = $2 AND email != '') OR user_id = $3
 		LIMIT 1;`, user.Username, user.Email, user.UserID)
