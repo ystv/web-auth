@@ -32,6 +32,20 @@ func (s *Store) countUsers24Hours(ctx context.Context) (int, error) {
 	return count, nil
 }
 
+// countUsersPastYear will get the number of users in the last 24 hours
+// TODO make this a lot less bad, it just is bad
+func (s *Store) countUsersPastYear(ctx context.Context) (int, error) {
+	count := 0
+	err := s.db.GetContext(ctx, &count,
+		`SELECT COUNT(*)
+		FROM people.users
+		WHERE last_login > timestamp '`+time.Now().AddDate(-1, 0, 0).Format("2006-01-02 15:04:05")+`';`)
+	if err != nil {
+		return count, fmt.Errorf("failed to count users 24 hours from db: %w", err)
+	}
+	return count, nil
+}
+
 // updateUser will update a user record by ID
 func (s *Store) updateUser(ctx context.Context, user User) error {
 	_, err := s.db.ExecContext(ctx,
@@ -40,8 +54,10 @@ func (s *Store) updateUser(ctx context.Context, user User) error {
 			salt = $2,
 			email = $3,
 			last_login = $4,
-			reset_pw = $5
-		WHERE user_id = $6;`, user.Password, user.Salt, user.Email, user.LastLogin, user.ResetPw, user.UserID)
+			reset_pw = $5,
+			avatar = $6,
+			use_gravatar = $7
+		WHERE user_id = $8;`, user.Password, user.Salt, user.Email, user.LastLogin, user.ResetPw, user.Avatar, user.UseGravatar, user.UserID)
 	if err != nil {
 		return err
 	}
@@ -52,7 +68,7 @@ func (s *Store) updateUser(ctx context.Context, user User) error {
 func (s *Store) getUser(ctx context.Context, user User) (User, error) {
 	u := User{}
 	err := s.db.GetContext(ctx, &u,
-		`SELECT user_id, username, nickname, email, last_login, salt, password
+		`SELECT user_id, username, nickname, email, last_login, salt, password, avatar, use_gravatar
 		FROM people.users
 		WHERE (username = $1 AND username != '') OR (email = $2 AND email != '') OR user_id = $3
 		LIMIT 1;`, user.Username, user.Email, user.UserID)
@@ -66,7 +82,7 @@ func (s *Store) getUser(ctx context.Context, user User) (User, error) {
 func (s *Store) getUsers(ctx context.Context) ([]User, error) {
 	var u []User
 	err := s.db.SelectContext(ctx, &u,
-		`SELECT user_id, username, nickname, first_name, last_name, email, last_login
+		`SELECT user_id, username, nickname, first_name, last_name, email, last_login, avatar, use_gravatar
 	FROM people.users;`)
 	if err != nil {
 		return nil, err

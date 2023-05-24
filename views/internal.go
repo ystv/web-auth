@@ -15,11 +15,12 @@ import (
 type (
 	// InternalTemplate represents the context for the internal template
 	InternalTemplate struct {
-		Nickname          string
-		LastLogin         string
-		TotalUsers        int
-		LoginsPast24Hours int
-		ActivePage        string
+		Nickname            string
+		LastLogin           string
+		TotalUsers          int
+		LoginsPast24Hours   int
+		ActiveUsersPastYear int
+		ActivePage          string
 	}
 	SettingsTemplate struct {
 		User       User
@@ -111,12 +112,20 @@ func (v *Views) InternalFunc(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	pastYear, err := v.user.CountUsersPastYear(r.Context())
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
 	ctx := InternalTemplate{
-		Nickname:          c.User.Nickname,
-		LastLogin:         humanize.Time(lastLogin),
-		TotalUsers:        count,
-		LoginsPast24Hours: hours24,
-		ActivePage:        "dashboard",
+		Nickname:            c.User.Nickname,
+		LastLogin:           humanize.Time(lastLogin),
+		TotalUsers:          count,
+		LoginsPast24Hours:   hours24,
+		ActiveUsersPastYear: pastYear,
+		ActivePage:          "dashboard",
 	}
 	//err := v.tpl.ExecuteTemplate(w, "internal.tmpl", ctx)
 	err = v.template.RenderTemplate(w, ctx, templates.InternalTemplate)
