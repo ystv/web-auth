@@ -40,6 +40,7 @@ type (
 	User struct {
 		UserID      int
 		Username    string
+		Nickname    string
 		Name        string
 		Email       string
 		LastLogin   string
@@ -55,6 +56,7 @@ func DBToTemplateType(dbUser *[]user.User) []User {
 		user1 := User{}
 		user1.UserID = (*dbUser)[i].UserID
 		user1.Username = (*dbUser)[i].Username
+		user1.Nickname = (*dbUser)[i].Nickname
 		user1.Name = (*dbUser)[i].Firstname + " " + (*dbUser)[i].Lastname
 		user1.Email = (*dbUser)[i].Email
 		user1.Avatar = (*dbUser)[i].Avatar
@@ -74,6 +76,7 @@ func DBToTemplateTypeSingle(dbUser user.User) User {
 	var tplUsers User
 	tplUsers.UserID = dbUser.UserID
 	tplUsers.Username = dbUser.Username
+	tplUsers.Nickname = dbUser.Nickname
 	tplUsers.Name = dbUser.Firstname + " " + dbUser.Lastname
 	tplUsers.Email = dbUser.Email
 	tplUsers.Avatar = dbUser.Avatar
