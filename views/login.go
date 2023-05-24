@@ -96,7 +96,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		// Authentication
 		u, err = v.user.VerifyUser(r.Context(), u)
 		if err != nil {
-			log.Printf("failed login for \"%s\"", u.Username)
+			log.Printf("failed login for \"%s\": %v", u.Username, err)
 			err = session.Save(r, w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
