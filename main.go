@@ -55,13 +55,13 @@ func main() {
 	fmt.Println(sessionCookieName)
 
 	dbConnectionString := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		"host=%s port=%s user=%s dbname=%s sslmode=%s password=%s",
 		os.Getenv("WAUTH_DB_HOST"),
 		os.Getenv("WAUTH_DB_PORT"),
 		os.Getenv("WAUTH_DB_USER"),
-		os.Getenv("WAUTH_DB_PASS"),
 		os.Getenv("WAUTH_DB_NAME"),
 		os.Getenv("WAUTH_DB_SSLMODE"),
+		os.Getenv("WAUTH_DB_PASS"),
 	)
 
 	// Setup files
