@@ -203,7 +203,7 @@ func (s *Store) getUsersLLA(ctx context.Context) ([]User, error) {
 	err := s.db.SelectContext(ctx, &u,
 		`SELECT user_id, username, nickname, first_name, last_name, email, last_login, avatar, use_gravatar
 		FROM people.users
-		ORDER BY last_login ASC;`)
+		ORDER BY last_login ASC NULLS FIRST;`)
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +216,7 @@ func (s *Store) getUsersLLD(ctx context.Context) ([]User, error) {
 	err := s.db.SelectContext(ctx, &u,
 		`SELECT user_id, username, nickname, first_name, last_name, email, last_login, avatar, use_gravatar
 		FROM people.users
-		ORDER BY last_login DESC;`)
+		ORDER BY last_login DESC NULLS LAST;`)
 	if err != nil {
 		return nil, err
 	}
