@@ -82,6 +82,48 @@ func (s *Store) GetUsers(ctx context.Context) ([]User, error) {
 	return s.getUsers(ctx)
 }
 
+// GetUsersSorted returns a group of users, used for administration with sorting
+func (s *Store) GetUsersSorted(ctx context.Context, column, direction string) ([]User, error) {
+	switch column {
+	case "userId":
+		switch direction {
+		case "asc":
+			return s.getUsersIDA(ctx)
+		case "desc":
+			return s.getUsersIDD(ctx)
+		}
+	case "name":
+		switch direction {
+		case "asc":
+			return s.getUsersFLNA(ctx)
+		case "desc":
+			return s.getUsersFLND(ctx)
+		}
+	case "username":
+		switch direction {
+		case "asc":
+			return s.getUsersUA(ctx)
+		case "desc":
+			return s.getUsersUD(ctx)
+		}
+	case "email":
+		switch direction {
+		case "asc":
+			return s.getUsersEA(ctx)
+		case "desc":
+			return s.getUsersED(ctx)
+		}
+	case "lastLogin":
+		switch direction {
+		case "asc":
+			return s.getUsersLLA(ctx)
+		case "desc":
+			return s.getUsersLLD(ctx)
+		}
+	}
+	return nil, nil
+}
+
 // GetPermissions returns all permissions of a user
 func (s *Store) GetPermissions(ctx context.Context, u User) ([]string, error) {
 	return s.getPermissions(ctx, u)

@@ -171,12 +171,58 @@ func (v *Views) UsersFunc(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		http.Redirect(w, r, fmt.Sprintf("/internal/users?column=%s&direction=%s"), http.StatusFound)
+		column := r.FormValue("column")
+		direction := r.FormValue("direction")
+		valid := true
+		switch column {
+		case "userId":
+		case "name":
+		case "username":
+		case "email":
+		case "lastLogin":
+			break
+		default:
+			valid = false
+		}
+		switch direction {
+		case "asc":
+		case "desc":
+			break
+		default:
+			valid = false
+		}
+		if valid {
+			http.Redirect(w, r, fmt.Sprintf("/internal/users?column=%s&direction=%s", column, direction), http.StatusFound)
+		}
 	}
 	orderingString := mux.Vars(r)
 	column := orderingString["column"]
 	direction := orderingString["direction"]
-	dbUsers, err := v.user.GetUsers(r.Context())
+	valid := true
+	switch column {
+	case "userId":
+	case "name":
+	case "username":
+	case "email":
+	case "lastLogin":
+		break
+	default:
+		valid = false
+	}
+	switch direction {
+	case "asc":
+	case "desc":
+		break
+	default:
+		valid = false
+	}
+	var dbUsers []user.User
+	var err error
+	if valid {
+		dbUsers, err = v.user.GetUsersSorted(r.Context(), column, direction)
+	} else {
+		dbUsers, err = v.user.GetUsers(r.Context())
+	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

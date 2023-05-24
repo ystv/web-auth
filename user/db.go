@@ -86,7 +86,137 @@ func (s *Store) getUsers(ctx context.Context) ([]User, error) {
 	var u []User
 	err := s.db.SelectContext(ctx, &u,
 		`SELECT user_id, username, nickname, first_name, last_name, email, last_login, avatar, use_gravatar
-	FROM people.users;`)
+		FROM people.users;`)
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
+}
+
+// getUsersIDA will get a group of users by userId ASC
+func (s *Store) getUsersIDA(ctx context.Context) ([]User, error) {
+	var u []User
+	err := s.db.SelectContext(ctx, &u,
+		`SELECT user_id, username, nickname, first_name, last_name, email, last_login, avatar, use_gravatar
+		FROM people.users
+		ORDER BY user_id ASC;`)
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
+}
+
+// getUsersIDD will get a group of users by userId DESC
+func (s *Store) getUsersIDD(ctx context.Context) ([]User, error) {
+	var u []User
+	err := s.db.SelectContext(ctx, &u,
+		`SELECT user_id, username, nickname, first_name, last_name, email, last_login, avatar, use_gravatar
+		FROM people.users
+		ORDER BY user_id DESC;`)
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
+}
+
+// getUsersFLNA will get a group of users by first and last name ASC
+func (s *Store) getUsersFLNA(ctx context.Context) ([]User, error) {
+	var u []User
+	err := s.db.SelectContext(ctx, &u,
+		`SELECT user_id, username, nickname, first_name, last_name, email, last_login, avatar, use_gravatar
+		FROM people.users
+		ORDER BY first_name ASC, last_name ASC;`)
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
+}
+
+// getUsersIDD will get a group of users by first and last DESC
+func (s *Store) getUsersFLND(ctx context.Context) ([]User, error) {
+	var u []User
+	err := s.db.SelectContext(ctx, &u,
+		`SELECT user_id, username, nickname, first_name, last_name, email, last_login, avatar, use_gravatar
+		FROM people.users
+		ORDER BY first_name DESC, last_name DESC;`)
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
+}
+
+// getUsersUA will get a group of users by username ASC
+func (s *Store) getUsersUA(ctx context.Context) ([]User, error) {
+	var u []User
+	err := s.db.SelectContext(ctx, &u,
+		`SELECT user_id, username, nickname, first_name, last_name, email, last_login, avatar, use_gravatar
+		FROM people.users
+		ORDER BY username ASC;`)
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
+}
+
+// getUsersUD will get a group of users by username DESC
+func (s *Store) getUsersUD(ctx context.Context) ([]User, error) {
+	var u []User
+	err := s.db.SelectContext(ctx, &u,
+		`SELECT user_id, username, nickname, first_name, last_name, email, last_login, avatar, use_gravatar
+		FROM people.users
+		ORDER BY username DESC;`)
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
+}
+
+// getUsersEA will get a group of users by email ASC
+func (s *Store) getUsersEA(ctx context.Context) ([]User, error) {
+	var u []User
+	err := s.db.SelectContext(ctx, &u,
+		`SELECT user_id, username, nickname, first_name, last_name, email, last_login, avatar, use_gravatar
+		FROM people.users
+		ORDER BY email ASC;`)
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
+}
+
+// getUsersED will get a group of users by email DESC
+func (s *Store) getUsersED(ctx context.Context) ([]User, error) {
+	var u []User
+	err := s.db.SelectContext(ctx, &u,
+		`SELECT user_id, username, nickname, first_name, last_name, email, last_login, avatar, use_gravatar
+		FROM people.users
+		ORDER BY email DESC;`)
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
+}
+
+// getUsersLLA will get a group of users by lastLogin ASC
+func (s *Store) getUsersLLA(ctx context.Context) ([]User, error) {
+	var u []User
+	err := s.db.SelectContext(ctx, &u,
+		`SELECT user_id, username, nickname, first_name, last_name, email, last_login, avatar, use_gravatar
+		FROM people.users
+		ORDER BY last_login ASC;`)
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
+}
+
+// getUsersLLD will get a group of users by lastLogin DESC
+func (s *Store) getUsersLLD(ctx context.Context) ([]User, error) {
+	var u []User
+	err := s.db.SelectContext(ctx, &u,
+		`SELECT user_id, username, nickname, first_name, last_name, email, last_login, avatar, use_gravatar
+		FROM people.users
+		ORDER BY last_login DESC;`)
 	if err != nil {
 		return nil, err
 	}
@@ -97,10 +227,10 @@ func (s *Store) getUsers(ctx context.Context) ([]User, error) {
 func (s *Store) getPermissions(ctx context.Context, u User) ([]string, error) {
 	var p []string
 	err := s.db.SelectContext(ctx, &p, `SELECT p.name
-	FROM people.permissions p
-	INNER JOIN people.role_permissions rp ON rp.permission_id = p.permission_id
-	INNER JOIN people.role_members rm ON rm.role_id = rp.role_id
-	WHERE rm.user_id = $1;`, u.UserID)
+		FROM people.permissions p
+		INNER JOIN people.role_permissions rp ON rp.permission_id = p.permission_id
+		INNER JOIN people.role_members rm ON rm.role_id = rp.role_id
+		WHERE rm.user_id = $1;`, u.UserID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user permissions: %w", err)
 	}
