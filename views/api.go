@@ -31,7 +31,7 @@ type (
 
 // SetTokenHandler sets a valid JWT in a cookie instead of returning a string
 func (v *Views) SetTokenHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("DEBUG - SET TOKEN")
+	//fmt.Println("DEBUG - SET TOKEN")
 	session, _ := v.cookie.Get(r, v.conf.SessionCookieName)
 	u := helpers.GetUser(session)
 
@@ -89,7 +89,7 @@ func (v *Views) newJWT(u user.User) (string, error) {
 
 // TestAPI returns a JSON object with a valid JWT
 func (v *Views) TestAPI(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("DEBUG - TEST API")
+	//fmt.Println("DEBUG - TEST API")
 	if r.Method == "GET" {
 		token := r.Header.Get("Authorization")
 		splitToken := strings.Split(token, "Bearer ")

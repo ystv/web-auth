@@ -45,11 +45,8 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 	// We're ignoring the error here since sometimes the cookies keys change, and then we
 	// can overwrite it instead
 
-	fmt.Println(r)
-
 	switch r.Method {
 	case "GET":
-		fmt.Println("DEBUG - LOGIN GET")
 		// Data for our HTML template
 		context := v.getData(session)
 
@@ -71,7 +68,6 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	case "POST":
-		fmt.Println("DEBUG - LOGIN POST")
 		// Parsing form to struct
 		err = r.ParseForm()
 		if err != nil {
@@ -88,7 +84,6 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		//}
 		// Since we let users enter either an email or username, it's easier
 		// to just let it both for the query
-		fmt.Println(u)
 		u.Username = username
 		u.Email = u.Username
 		u.Password = password
@@ -100,7 +95,6 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		}
 		// Authentication
 		u, err = v.user.VerifyUser(r.Context(), u)
-		fmt.Println(u)
 		if err != nil {
 			log.Printf("failed login for \"%s\"", u.Username)
 			err = session.Save(r, w)

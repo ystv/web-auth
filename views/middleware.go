@@ -13,7 +13,7 @@ import (
 // httpHandler to check if there is any active session
 func (v *Views) RequiresLogin(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("DEBUG - REQUIRE LOGIN")
+		//fmt.Println("DEBUG - REQUIRE LOGIN")
 		session, err := v.cookie.Get(r, v.conf.SessionCookieName)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -32,23 +32,23 @@ func (v *Views) RequiresLogin(h http.Handler) http.HandlerFunc {
 // ensure that the user has the given permission.
 func (v *Views) RequiresPermission(h http.Handler, p user.Permission) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("DEBUG - REQUIRE PERMISSION")
+		//fmt.Println("DEBUG - REQUIRE PERMISSION")
 		session, err := v.cookie.Get(r, v.conf.SessionCookieName)
 		if err != nil {
-			fmt.Println(1, err)
+			fmt.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		fmt.Println(session, session.Options, session.Values, v.conf.SessionCookieName)
+		//fmt.Println(session, session.Options, session.Values, v.conf.SessionCookieName)
 		u := helpers.GetUser(session)
-		fmt.Println(u)
+		//fmt.Println(u)
 		perms, err := v.user.GetPermissions(r.Context(), u)
 		if err != nil {
-			fmt.Println(2, err)
+			fmt.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		fmt.Println(perms)
+		//fmt.Println(perms)
 		for _, perm := range perms {
 			fmt.Println(perm, p, p.Name)
 			if perm == p.Name {
@@ -59,10 +59,10 @@ func (v *Views) RequiresPermission(h http.Handler, p user.Permission) http.Handl
 		err = v.template.RenderNoNavsTemplate(w, nil, templates.ForbiddenTemplate)
 		//err = v.tpl.ExecuteTemplate(w, "forbidden.tmpl", nil)
 		if err != nil {
-			fmt.Println(3, err)
+			//fmt.Println(3, err)
 			fmt.Println(err)
 		}
-		fmt.Println(4)
+		//fmt.Println(4)
 		w.WriteHeader(http.StatusForbidden)
 	}
 }

@@ -9,7 +9,6 @@ import (
 
 // IndexFunc handles the index page.
 func (v *Views) IndexFunc(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("DEBUG - INDEX")
 	session, _ := v.cookie.Get(r, v.conf.SessionCookieName)
 
 	// Data for our HTML template

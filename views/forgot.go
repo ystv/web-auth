@@ -24,7 +24,7 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 	var err error
 	switch r.Method {
 	case "GET":
-		fmt.Println("DEBUG - FORGOT GET")
+		//fmt.Println("DEBUG - FORGOT GET")
 		err = v.template.RenderNoNavsTemplate(w, nil, templates.ForgotTemplate)
 		//err = v.tpl.ExecuteTemplate(w, "forgot.tmpl", nil)
 		if err != nil {
@@ -33,7 +33,7 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	case "POST":
-		fmt.Println("DEBUG - FORGOT POST")
+		//fmt.Println("DEBUG - FORGOT POST")
 		err = r.ParseForm()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
