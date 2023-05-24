@@ -2,15 +2,14 @@ package views
 
 import (
 	"fmt"
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
+	"github.com/patrickmn/go-cache"
+	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/public/templates"
+	"github.com/ystv/web-auth/user"
 	"log"
 	"net/http"
-	"strconv"
-
-	"github.com/ystv/web-auth/user"
-
-	"github.com/patrickmn/go-cache"
-	"github.com/ystv/web-auth/utils"
 )
 
 var notification = Notification{
@@ -62,20 +61,67 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
-		code := utils.RandomString(10)
-		v.cache.Set(code, user1.UserID, cache.DefaultExpiration)
+		url := uuid.NewString()
+		v.cache.Set(url, user1.UserID, cache.DefaultExpiration)
 
 		// Valid request, send email with reset code
-		if v.mail.Enabled {
-			err = v.mail.SendEmail(user1.Email, "Forgotten Password", code)
+		if v.mailer.Enabled {
+			v.mailer, err = mail.NewMailer(mail.Config{
+				Host:       v.conf.Mail.Host,
+				Port:       v.conf.Mail.Port,
+				Username:   v.conf.Mail.Username,
+				Password:   v.conf.Mail.Password,
+				DomainName: v.conf.DomainName,
+			})
 			if err != nil {
-				log.Printf("SendEmail failed: %s, ", err)
-				log.Printf("request for password reset email \"%s\":reset code \"%s\"", user1.Email, code)
+				log.Printf("mailer failed: %+v", err)
 			}
+
+			//forgot := forgotPasswords.ForgotPassword{
+			//	URL:    uuid.NewString(),
+			//	UserID: user1.UserID,
+			//}
+
+			//err = v.forgot.InsertURL(r.Context(), forgot)
+			//if err != nil {
+			//	err = v.errorHandle(w, err)
+			//	if err != nil {
+			//		return
+			//	}
+			//	return
+			//}
+
+			file := mail.Mail{
+				Subject: "YSTV Security - Reset Password",
+				Tpl:     v.template.RenderEmail(templates.ForgotEmailTemplate),
+				To:      user1.Email,
+				From:    "YSTV Security <no-reply@ystv.co.uk>",
+				TplData: struct {
+					Email string
+					URL   string
+				}{
+					Email: user1.Email,
+					URL:   "https://" + v.conf.DomainName + "/forgot/" + url,
+				},
+			}
+
+			err = v.mailer.SendMail(file)
+			if err != nil {
+				err = v.errorHandle(w, err)
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
+
+			//err = v.mailer.SendResetEmail(user1.Email, "Forgotten Password", code)
+			//if err != nil {
+			//	log.Printf("SendResetEmail failed: %s, ", err)
+			//	log.Printf("request for password reset email \"%s\":reset code \"%s\"", user1.Email, code)
+			//}
 			log.Printf("request for password reset email: \"%s\"", user1.Email)
 		} else {
 			log.Printf("no mailer present")
-			log.Printf("reset email: %s, code: %s, reset link: https://auth.%s/reset?code=%s", user1.Email, code, v.conf.DomainName, code)
+			log.Printf("reset email: %s, code: %s, reset link: https://%s/reset?code=%s", user1.Email, url, v.conf.DomainName, url)
 		}
 
 		// User doesn't exist, we'll pretend they've got an email
@@ -89,68 +135,95 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ResetFunc handles resetting the password
-func (v *Views) ResetFunc(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("DEBUG - RESET")
-	var err error
+func (v *Views) ResetURLFunc(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	url1 := vars["url"]
 
-	code := r.URL.Query().Get("code")
-
-	if code == "" {
-		http.Redirect(w, r, "/", http.StatusFound)
-		return
-	}
-
-	id, found := v.cache.Get(code)
+	userID, found := v.cache.Get(url1)
 	if !found {
-		http.Redirect(w, r, "/", http.StatusFound)
+		err := v.errorHandle(w, fmt.Errorf("failed to get url"))
+		if err != nil {
+			fmt.Println(err)
+		}
 		return
 	}
-	ctx := struct {
-		Code   string
-		UserID int
-	}{code, id.(int)}
+
+	user1, err := v.user.GetUser(r.Context(), user.User{UserID: userID.(int)})
+	if err != nil {
+		v.cache.Delete(url1)
+		err = v.errorHandle(w, fmt.Errorf("url is invalid because this user doesn't exist"))
+		if err != nil {
+			fmt.Println(err)
+		}
+		return
+	}
 
 	switch r.Method {
 	case "GET":
-		fmt.Println("DEBUG - RESET GET")
-		err = v.template.RenderNoNavsTemplate(w, ctx, templates.ResetTemplate)
-		//err = v.tpl.ExecuteTemplate(w, "reset.tmpl", ctx)
+		err = v.template.RenderNoNavsTemplate(w, nil, templates.ResetTemplate)
 		if err != nil {
+			err = v.errorHandle(w, err)
+			if err != nil {
+				fmt.Println(err)
+			}
 			return
 		}
+		return
 	case "POST":
-		fmt.Println("DEBUG - RESET POST")
+		err = r.ParseForm()
+		if err != nil {
+			err = v.errorHandle(w, err)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+
+		password := r.FormValue("password")
+		if password != r.FormValue("confirmpassword") {
+			err = v.template.RenderNoNavsTemplate(w, nil, templates.ResetTemplate)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		}
+
+		//fmt.Println("DEBUG - RESET POST")
 		err = r.ParseForm()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 		p := r.Form.Get("password")
 		if p != r.Form.Get("confirmpassword") || p == "" {
-			err = v.template.RenderNoNavsTemplate(w, ctx, templates.ResetTemplate)
+			err = v.template.RenderNoNavsTemplate(w, nil, templates.ResetTemplate)
 			//err = v.tpl.ExecuteTemplate(w, "reset.tmpl", ctx)
 			if err != nil {
 				return
 			}
 			return
 		}
-		// Good password
-		formUserID := r.Form.Get("userid")
-		// TODO error handling
-		ctx.UserID, _ = strconv.Atoi(formUserID)
-		if ctx.UserID != id.(int) {
-			http.Error(w, "incorrect user id", http.StatusBadRequest)
-		}
+		user1.Password = password
 
-		// Update record
-
-		u := user.User{UserID: id.(int), Password: p}
-		user1, err := v.user.UpdateUserPassword(r.Context(), u)
+		user2, err := v.user.UpdateUserPassword(r.Context(), user1)
 		if err != nil {
 			log.Printf("failed to reset user: %+v", err)
 		}
-		v.cache.Delete(code)
-		log.Printf("updated user: %s", user1.Username)
+		v.cache.Delete(url1)
+		log.Printf("updated user: %s", user2.Username)
 		http.Redirect(w, r, "/", http.StatusFound)
 	}
+}
+
+func (v *Views) errorHandle(w http.ResponseWriter, err error) error {
+	data := struct {
+		Error string
+	}{
+		Error: err.Error(),
+	}
+	fmt.Println(data.Error)
+	err = v.template.RenderNoNavsTemplate(w, data, templates.ErrorTemplate)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
 }

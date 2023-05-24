@@ -20,10 +20,13 @@ type (
 const (
 	ForbiddenTemplate    Template = "forbidden.tmpl"
 	ForgotTemplate       Template = "forgot.tmpl"
+	Error404Template     Template = "404.tmpl"
+	ForgotEmailTemplate  Template = "forgotEmail.tmpl"
 	InternalTemplate     Template = "internal.tmpl"
 	LoginTemplate        Template = "login.tmpl"
 	NotificationTemplate Template = "notification.tmpl"
 	ResetTemplate        Template = "reset.tmpl"
+	ErrorTemplate        Template = "error.tmpl"
 	SettingsTemplate     Template = "settings.tmpl"
 	SignupTemplate       Template = "signup.tmpl"
 	UserTemplate         Template = "user.tmpl"
@@ -171,5 +174,5 @@ func (t *Templater) RenderNoNavsTemplate(w io.Writer, data interface{}, mainTmpl
 }
 
 func (t *Templater) RenderEmail(emailTemplate Template) *template.Template {
-	return template.Must(template.New("email.tmpl").ParseFS(tmpls, emailTemplate.GetString()))
+	return template.Must(template.New("forgotEmail.tmpl").ParseFS(tmpls, emailTemplate.GetString()))
 }
