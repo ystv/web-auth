@@ -121,7 +121,7 @@ func (s *Store) GetUsersSorted(ctx context.Context, column, direction string) ([
 			return s.getUsersLLD(ctx)
 		}
 	}
-	return nil, nil
+	return nil, fmt.Errorf("error in db sorting")
 }
 
 // GetPermissions returns all permissions of a user

@@ -50,7 +50,6 @@ func (v *Views) RequiresPermission(h http.Handler, p user.Permission) http.Handl
 		}
 		//fmt.Println(perms)
 		for _, perm := range perms {
-			fmt.Println(perm, p, p.Name)
 			if perm == p.Name {
 				h.ServeHTTP(w, r)
 				return

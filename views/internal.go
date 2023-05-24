@@ -198,6 +198,7 @@ func (v *Views) UsersFunc(w http.ResponseWriter, r *http.Request) {
 	orderingString := mux.Vars(r)
 	column := orderingString["column"]
 	direction := orderingString["direction"]
+	fmt.Println(column, direction)
 	valid := true
 	switch column {
 	case "userId":
