@@ -195,9 +195,8 @@ func (v *Views) UsersFunc(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, fmt.Sprintf("/internal/users?column=%s&direction=%s", column, direction), http.StatusFound)
 		}
 	}
-	orderingString := mux.Vars(r)
-	column := orderingString["column"]
-	direction := orderingString["direction"]
+	column := r.URL.Query().Get("column")
+	direction := r.URL.Query().Get("direction")
 	fmt.Println(column, direction)
 	valid := true
 	switch column {
