@@ -117,7 +117,7 @@ func (v *Views) SettingsFunc(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := SettingsTemplate{
 		User:       c.User,
-		LastLogin:  lastLogin,
+		LastLogin:  humanize.Time(lastLogin),
 		ActivePage: "settings",
 	}
 	//err := v.tpl.ExecuteTemplate(w, "internal.tmpl", ctx)
