@@ -151,6 +151,7 @@ func main() {
 
 	// Login required
 	mux1.HandleFunc("/internal", v.RequiresLogin(http.HandlerFunc(v.InternalFunc)))
+	mux1.HandleFunc("/internal/settings", v.RequiresLogin(http.HandlerFunc(v.SettingsFunc)))
 	mux1.HandleFunc("/internal/users", v.RequiresLogin(v.RequiresPermission(http.HandlerFunc(v.UsersFunc), adminPerm)))
 	mux1.HandleFunc("/internal/user/{userid}", v.RequiresLogin(http.HandlerFunc(v.UserFunc)))
 

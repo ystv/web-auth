@@ -21,6 +21,10 @@ type (
 		LoginsPastDay int
 		ActivePage    string
 	}
+	SettingsTemplate struct {
+		User       user.User
+		ActivePage string
+	}
 	// UsersTemplate represents the context for the user template
 	UsersTemplate struct {
 		Users                                 []User
@@ -74,6 +78,23 @@ func (v *Views) InternalFunc(w http.ResponseWriter, r *http.Request) {
 	}
 	//err := v.tpl.ExecuteTemplate(w, "internal.tmpl", ctx)
 	err := v.template.RenderTemplate(w, ctx, templates.InternalTemplate)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// SettingsFunc handles a request to the internal template
+func (v *Views) SettingsFunc(w http.ResponseWriter, r *http.Request) {
+	session, _ := v.cookie.Get(r, v.conf.SessionCookieName)
+
+	c := v.getData(session)
+	ctx := SettingsTemplate{
+		User:       c.User,
+		ActivePage: "settings",
+	}
+	//err := v.tpl.ExecuteTemplate(w, "internal.tmpl", ctx)
+	err := v.template.RenderTemplate(w, ctx, templates.SettingsTemplate)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
