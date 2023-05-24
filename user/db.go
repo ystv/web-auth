@@ -24,7 +24,7 @@ func (s *Store) countUsers24Hours(ctx context.Context) (int, error) {
 	err := s.db.GetContext(ctx, &count,
 		`SELECT COUNT(*)
 		FROM people.users
-		WHERE last_login > timestamp '$1';`, time.Now().AddDate(0, 0, -1).Format("2006-01-02 15:04:05"))
+		WHERE last_login > timestamp '`+time.Now().AddDate(0, 0, -1).Format("2006-01-02 15:04:05")+`';`)
 	if err != nil {
 		return count, fmt.Errorf("failed to count users 24 hours from db: %w", err)
 	}
