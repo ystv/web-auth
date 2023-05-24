@@ -57,6 +57,11 @@ func NewUserRepo(db *sqlx.DB) *Store {
 	}
 }
 
+// CountUsers returns the number of users
+func (s *Store) CountUsers(ctx context.Context) (int, error) {
+	return s.countUsers(ctx)
+}
+
 // GetUser returns a user using any unique identity fields
 func (s *Store) GetUser(ctx context.Context, u User) (User, error) {
 	return s.getUser(ctx, u)

@@ -5,6 +5,18 @@ import (
 	"fmt"
 )
 
+// getUser will get a user using any unique identity fields for a user
+func (s *Store) countUsers(ctx context.Context) (int, error) {
+	count := 0
+	err := s.db.GetContext(ctx, &count,
+		`SELECT COUNT(*)
+		FROM people.users;`)
+	if err != nil {
+		return count, fmt.Errorf("failed to count users from db: %w", err)
+	}
+	return count, nil
+}
+
 // updateUser will update a user record by ID
 func (s *Store) updateUser(ctx context.Context, user User) error {
 	_, err := s.db.ExecContext(ctx,

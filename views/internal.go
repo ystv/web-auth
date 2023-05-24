@@ -77,15 +77,20 @@ func (v *Views) InternalFunc(w http.ResponseWriter, r *http.Request) {
 	if c.User.LastLogin.Valid {
 		lastLogin = c.User.LastLogin.Time
 	}
+	count, err := v.user.CountUsers(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	ctx := InternalTemplate{
 		Nickname:      c.User.Nickname,
 		LastLogin:     humanize.Time(lastLogin),
-		TotalUsers:    2000,
+		TotalUsers:    count,
 		LoginsPastDay: 20,
 		ActivePage:    "dashboard",
 	}
 	//err := v.tpl.ExecuteTemplate(w, "internal.tmpl", ctx)
-	err := v.template.RenderTemplate(w, ctx, templates.InternalTemplate)
+	err = v.template.RenderTemplate(w, ctx, templates.InternalTemplate)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
