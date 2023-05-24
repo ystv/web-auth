@@ -6,35 +6,39 @@
                 <p class="card-header-title">Sort by</p>
             </header>
             <form method="post" action="">
-                <div class="field">
-                    <label for="column">Select the column to sort</label>
-                    <div class="control has-icons-left">
-                        <select id="column" name="column">
-                            <option value="userId">User ID</option>
-                            <option value="name">Name</option>
-                            <option value="username">Username</option>
-                            <option value="email">Email</option>
-                            <option value="lastLogin">Last Login</option>
-                        </select>
+                <div class="register">
+                    <div class="columns">
+                        <div class="field">
+                            <label for="column">Select the column to sort</label>
+                            <div class="control has-icons-left">
+                                <select id="column" name="column">
+                                    <option value="userId">User ID</option>
+                                    <option value="name">Name</option>
+                                    <option value="username">Username</option>
+                                    <option value="email">Email</option>
+                                    <option value="lastLogin">Last Login</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="direction">Ascending or Descending</label>
+                            <div class="control has-icons-left">
+                                <select id="direction" name="direction">
+                                    <option value="asc">Ascending</option>
+                                    <option value="desc">Descending</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <p class="control">
+                                <input
+                                        class="button is-link"
+                                        type="submit"
+                                        value="Submit"
+                                />
+                            </p>
+                        </div>
                     </div>
-                </div>
-                <div class="field">
-                    <label for="direction">Ascending or Descending</label>
-                    <div class="control has-icons-left">
-                        <select id="direction" name="direction">
-                            <option value="asc">Ascending</option>
-                            <option value="desc">Descending</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="field">
-                    <p class="control">
-                        <input
-                                class="button is-link"
-                                type="submit"
-                                value="Submit"
-                        />
-                    </p>
                 </div>
             </form>
         </div>
