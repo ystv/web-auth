@@ -18,6 +18,7 @@
                         <tr>
                             <th>User ID</th>
                             <th>Name</th>
+                            <th>Nickname</th>
                             <th>Username</th>
                             <th>Email</th>
                             <th>Last login</th>
@@ -29,6 +30,7 @@
                             <tr>
                                 <th>{{ $user.UserID }}</th>
                                 <td>{{ $user.Name }}</td>
+                                <td>{{ $user.Nickname }}</td>
                                 <td>{{ $user.Username }}</td>
                                 <td>{{ $user.Email }}</td>
                                 <td>{{ $user.LastLogin }}</td>
@@ -36,6 +38,17 @@
                             </tr>
                         {{ end }}
                         </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Name</th>
+                            <th>Nickname</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Last login</th>
+                            <th>Actions</th>
+                        </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
