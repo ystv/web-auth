@@ -22,7 +22,7 @@ type (
 		ActivePage        string
 	}
 	SettingsTemplate struct {
-		User       user.User
+		User       User
 		LastLogin  string
 		ActivePage string
 	}
@@ -65,6 +65,23 @@ func DBToTemplateType(dbUser *[]user.User) []User {
 			user1.LastLogin = "-"
 		}
 		tplUsers = append(tplUsers, user1)
+	}
+	return tplUsers
+}
+
+// DBToTemplateTypeSingle converts from the DB layer type to the user template type single
+func DBToTemplateTypeSingle(dbUser user.User) User {
+	var tplUsers User
+	tplUsers.UserID = dbUser.UserID
+	tplUsers.Username = dbUser.Username
+	tplUsers.Name = dbUser.Firstname + " " + dbUser.Lastname
+	tplUsers.Email = dbUser.Email
+	tplUsers.Avatar = dbUser.Avatar
+	tplUsers.UseGravatar = dbUser.UseGravatar
+	if dbUser.LastLogin.Valid {
+		tplUsers.LastLogin = dbUser.LastLogin.Time.Format("2006-01-02 15:04:05")
+	} else {
+		tplUsers.LastLogin = "-"
 	}
 	return tplUsers
 }
@@ -115,8 +132,11 @@ func (v *Views) SettingsFunc(w http.ResponseWriter, r *http.Request) {
 	if c.User.LastLogin.Valid {
 		lastLogin = c.User.LastLogin.Time
 	}
+
+	tplUser := DBToTemplateTypeSingle(c.User)
+
 	ctx := SettingsTemplate{
-		User:       c.User,
+		User:       tplUser,
 		LastLogin:  humanize.Time(lastLogin),
 		ActivePage: "settings",
 	}
