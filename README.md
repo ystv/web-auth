@@ -10,6 +10,14 @@ Copy the .env file as .env.local and set the variables as required
 
 After all that is set you should be able to visit it at `:8080`.
 
+### Dev side note
+
+If you are trying to connect to a database from your dev machine then I can recommend you use the following command to make your life easier.
+
+`ssh -L [local port]:127.0.0.1:[db port on remote server] [remote server user and ip]`
+
+This will prevent the full deploy being your dev environment and is much quicker.
+
 ## Building
 
 Both methods require cloning the repo
