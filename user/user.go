@@ -62,6 +62,11 @@ func (s *Store) CountUsers(ctx context.Context) (int, error) {
 	return s.countUsers(ctx)
 }
 
+// CountUsers24Hours returns the number of users who logged in the past 24 hours
+func (s *Store) CountUsers24Hours(ctx context.Context) (int, error) {
+	return s.countUsers24Hours(ctx)
+}
+
 // GetUser returns a user using any unique identity fields
 func (s *Store) GetUser(ctx context.Context, u User) (User, error) {
 	return s.getUser(ctx, u)
