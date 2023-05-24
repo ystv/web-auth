@@ -22,6 +22,7 @@ type (
 	Config struct {
 		Version           string
 		DatabaseURL       string
+		BaseDomainName    string
 		DomainName        string
 		LogoutEndpoint    string
 		SessionCookieName string
@@ -51,7 +52,8 @@ type (
 		LoginFunc(w http.ResponseWriter, r *http.Request)
 		SignUpFunc(w http.ResponseWriter, r *http.Request)
 		ForgotFunc(w http.ResponseWriter, r *http.Request)
-		ResetFunc(w http.ResponseWriter, r *http.Request)
+		ResetURLFunc(w http.ResponseWriter, r *http.Request)
+		//ResetFunc(w http.ResponseWriter, r *http.Request)
 		// internal
 		InternalFunc(w http.ResponseWriter, r *http.Request)
 		UsersFunc(w http.ResponseWriter, r *http.Request)
@@ -67,11 +69,11 @@ type (
 
 	// Views encapsulates our view dependencies
 	Views struct {
-		conf   Config
-		user   *user.Store
-		cookie *sessions.CookieStore
-		//tpl      *template.Template
-		mail     *mail.Mail
+		conf Config
+		user *user.Store
+		//forgot   *forgotPasswords.Store
+		cookie   *sessions.CookieStore
+		mailer   *mail.Mailer
 		cache    *cache.Cache
 		validate *validator.Validate
 		template *templates.Templater
@@ -99,9 +101,9 @@ func New(conf Config) *Views {
 	v.user = user.NewUserRepo(dbStore)
 
 	// Connecting to mail
-	v.mail, err = mail.NewMailer(mail.Config{
+	v.mailer, err = mail.NewMailer(mail.Config{
 		Host:       conf.Mail.Host,
-		Port:       587,
+		Port:       conf.Mail.Port,
 		Username:   conf.Mail.Username,
 		Password:   conf.Mail.Password,
 		DomainName: conf.DomainName,

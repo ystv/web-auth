@@ -52,7 +52,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 
 		// Check if there is a callback request
 		callbackURL, err := url.Parse(r.URL.Query().Get("callback"))
-		if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.DomainName) && callbackURL.String() != "" {
+		if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) && callbackURL.String() != "" {
 			context.Callback = callbackURL.String()
 		}
 		// Check if authenticated
@@ -90,7 +90,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 
 		callback := "/internal"
 		callbackURL, err := url.Parse(r.URL.Query().Get("callback"))
-		if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.DomainName) && callbackURL.String() != "" {
+		if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) && callbackURL.String() != "" {
 			callback = callbackURL.String()
 		}
 		// Authentication

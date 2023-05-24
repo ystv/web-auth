@@ -12,7 +12,7 @@
                             >
                             <p class="title is-5">Reset password</p>
                             <p>Fantastic, let's get this password sorted.</p>
-                            <form action="?code={{.Code}}" method="POST">
+                            <form action="" method="POST">
                                 <div class="field">
                                     <label class="label" for="password1">Password</label>
                                     <div class="control has-icons-left">
@@ -44,10 +44,8 @@
                     </span>
                                     </div>
                                 </div>
-                                <input type="hidden" name="code" value="{{.Code}}"/>
-                                <input type="hidden" name="userid" value="{{.UserID}}"/>
                                 <div class="control">
-                                    <input class="button is-link" type="submit" value="Reset"/>
+                                    <input class="button is-link" type="submit" value="Reset password"/>
                                 </div>
                             </form>
                         </div>

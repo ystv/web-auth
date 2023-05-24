@@ -30,14 +30,20 @@ type (
 		Users                                 []User
 		CurPage, NextPage, PrevPage, LastPage int
 		ActivePage                            string
+		Sort                                  struct {
+			Column    string
+			Direction string
+		}
 	}
 	// User represents user information, an administrator can view
 	User struct {
-		UserID    int
-		Username  string
-		Name      string
-		Email     string
-		LastLogin string
+		UserID      int
+		Username    string
+		Name        string
+		Email       string
+		LastLogin   string
+		Avatar      string
+		UseGravatar bool
 	}
 )
 
@@ -50,6 +56,8 @@ func DBToTemplateType(dbUser *[]user.User) []User {
 		user1.Username = (*dbUser)[i].Username
 		user1.Name = (*dbUser)[i].Firstname + " " + (*dbUser)[i].Lastname
 		user1.Email = (*dbUser)[i].Email
+		user1.Avatar = (*dbUser)[i].Avatar
+		user1.UseGravatar = (*dbUser)[i].UseGravatar
 		if (*dbUser)[i].LastLogin.Valid {
 			user1.LastLogin = (*dbUser)[i].LastLogin.Time.Format("2006-01-02 15:04:05")
 		} else {
@@ -103,7 +111,20 @@ func (v *Views) SettingsFunc(w http.ResponseWriter, r *http.Request) {
 
 // UsersFunc handles a users request
 func (v *Views) UsersFunc(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("DEBUG - USERS")
+	if r.Method == "POST" {
+		err := r.ParseForm()
+		if err != nil {
+			err = v.errorHandle(w, err)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		}
+		http.Redirect(w, r, fmt.Sprintf("/internal/users?column=%s&direction=%s"), http.StatusFound)
+	}
+	orderingString := mux.Vars(r)
+	column := orderingString["column"]
+	direction := orderingString["direction"]
 	dbUsers, err := v.user.GetUsers(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -114,6 +135,10 @@ func (v *Views) UsersFunc(w http.ResponseWriter, r *http.Request) {
 	ctx := UsersTemplate{
 		Users:      tplUsers,
 		ActivePage: "users",
+		Sort: struct {
+			Column    string
+			Direction string
+		}{Column: column, Direction: direction},
 	}
 	err = v.template.RenderTemplate(w, ctx, templates.UsersTemplate)
 	//err = v.tpl.ExecuteTemplate(w, "users.tmpl", ctx)

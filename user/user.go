@@ -72,7 +72,7 @@ func (s *Store) GetPermissions(ctx context.Context, u User) ([]string, error) {
 	return s.getPermissions(ctx, u)
 }
 
-// VerifyUser will check that that the password is correct with provided
+// VerifyUser will check that the password is correct with provided
 // credentials and if verified will return the User object
 func (s *Store) VerifyUser(ctx context.Context, u User) (User, error) {
 	user, err := s.getUser(ctx, u)

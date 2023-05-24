@@ -85,6 +85,7 @@ func main() {
 	conf := views.Config{
 		Version:           version,
 		DatabaseURL:       dbConnectionString,
+		BaseDomainName:    os.Getenv("WAUTH_BASE_DOMAIN_NAME"),
 		DomainName:        os.Getenv("WAUTH_DOMAIN_NAME"),
 		LogoutEndpoint:    os.Getenv("WAUTH_LOGOUT_ENDPOINT"),
 		SessionCookieName: sessionCookieName,
@@ -117,7 +118,8 @@ func main() {
 	mux1.HandleFunc("/logout", v.LogoutFunc)
 	mux1.HandleFunc("/signup", v.SignUpFunc)
 	mux1.HandleFunc("/forgot", v.ForgotFunc)
-	mux1.HandleFunc("/reset", v.ResetFunc)
+	//mux1.HandleFunc("/reset", v.ResetFunc)
+	mux1.HandleFunc("/reset/{url}", v.ResetURLFunc)
 
 	// CORS
 

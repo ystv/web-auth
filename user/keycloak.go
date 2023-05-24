@@ -6,6 +6,7 @@ import (
 	"github.com/Nerzal/gocloak/v8"
 )
 
+// TODO figure out what this is...
 func (s *Store) newUser(ctx context.Context, u User) error {
 	client := gocloak.NewClient("https://sso2.ystv.co.uk")
 	token, err := client.LoginAdmin(ctx, "user", "pass", "realmName")
