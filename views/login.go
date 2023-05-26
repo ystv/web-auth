@@ -11,6 +11,12 @@ import (
 	"github.com/ystv/web-auth/user"
 )
 
+type LoginTemplate struct {
+	Version string
+	Message string
+	MsgType string
+}
+
 // LogoutFunc Implements the logout functionality.
 // Will delete the session information from the cookie store
 func (v *Views) LogoutFunc(w http.ResponseWriter, r *http.Request) {
@@ -61,10 +67,10 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		data := struct {
-			Version string
-		}{
+		data := LoginTemplate{
 			Version: v.conf.Version,
+			Message: "",
+			MsgType: "",
 		}
 
 		err = v.template.RenderNoNavsTemplate(w, data, templates.LoginTemplate)
