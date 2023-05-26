@@ -12,7 +12,8 @@
         <div class="columns box" style="height: fit-content">
             <div class="column is-2">
                 <figure class="avatar">
-                    <img src="https://placehold.it/128x128" alt="placeholder"/>
+                    {{if .User.UseGravatar}}<img src="{{.Gravatar}}" alt="placeholder" width="128px" height="128px"/>{{else}}
+                    <img src="https://placehold.it/128x128" alt="placeholder"/>{{end}}
                 </figure>
                 <div class="buttons">
                     <button class="button is-info is-outlined">
@@ -25,6 +26,19 @@
                 </div>
             </div>
             <div class="column">
+                {{with .User}}
+                    <p>Current user information...<br>
+                        User ID: {{.UserID}}<br>
+                        First name: {{.Firstname}}<br>
+                        Last name: {{.Lastname}}<br>
+                        Nickname: {{.Nickname}}<br>
+                        Username: {{.Username}}<br>
+                        Email: {{.Email}}<br>
+                        Last login: {{$.LastLogin}}<br>
+                        Permissions: {{.Permissions}}<br>
+                        Avatar source: {{if .UseGravatar}}Using gravatar{{else}}Using local file{{end}}<br><br></p>
+                        <p class="subtitle">Use the fields below to modify the user.</p>
+                {{end}}
                 <form>
                     <div class="field">
                         <label class="label" for="nickname">Nickname</label>

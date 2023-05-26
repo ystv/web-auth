@@ -1,12 +1,15 @@
 package views
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/public/templates"
 	"github.com/ystv/web-auth/role"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -25,9 +28,10 @@ type (
 		ActivePage          string
 	}
 	SettingsTemplate struct {
-		User       User
+		User       user.User
 		LastLogin  string
 		ActivePage string
+		Gravatar   string
 	}
 	// UsersTemplate represents the context for the user template
 	UsersTemplate struct {
@@ -147,12 +151,20 @@ func (v *Views) SettingsFunc(w http.ResponseWriter, r *http.Request) {
 		lastLogin = c.User.LastLogin.Time
 	}
 
-	tplUser := DBToTemplateTypeSingle(c.User)
+	//tplUser := DBToTemplateTypeSingle(c.User)
+
+	var gravatar string
+
+	if c.User.UseGravatar {
+		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace("liam.burnand@bswdi.co.uk"))))
+		gravatar = fmt.Sprintf("https://www.gravatar.com/avatar/%s", hex.EncodeToString(hash[:]))
+	}
 
 	ctx := SettingsTemplate{
-		User:       tplUser,
+		User:       c.User,
 		LastLogin:  humanize.Time(lastLogin),
 		ActivePage: "settings",
+		Gravatar:   gravatar,
 	}
 	//err := v.tpl.ExecuteTemplate(w, "internal.tmpl", ctx)
 	err := v.template.RenderTemplate(w, ctx, templates.SettingsTemplate)
@@ -263,12 +275,36 @@ func (v *Views) UserFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	perms, err := v.user.GetPermissionsForUser(r.Context(), user1)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	for _, perm := range perms {
+		user1.Permissions = append(user1.Permissions, permission.Permission{Name: perm.Name})
+	}
+
+	var gravatar string
+
+	if user1.UseGravatar {
+		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace("liam.burnand@bswdi.co.uk"))))
+		gravatar = fmt.Sprintf("https://www.gravatar.com/avatar/%s", hex.EncodeToString(hash[:]))
+	}
+
+	//tplUser := DBToTemplateTypeSingle(user1)
+
 	data := struct {
 		User       user.User
 		ActivePage string
+		LastLogin  string
+		Gravatar   string
 	}{
 		ActivePage: "user",
 		User:       user1,
+		LastLogin:  user1.LastLogin.Time.Format("2006-01-02 15:04:05"),
+		Gravatar:   gravatar,
 	}
 
 	err = v.template.RenderTemplate(w, data, templates.UserTemplate)
