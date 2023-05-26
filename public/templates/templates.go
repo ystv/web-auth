@@ -31,6 +31,8 @@ const (
 	SignupTemplate       Template = "signup.tmpl"
 	UserTemplate         Template = "user.tmpl"
 	UsersTemplate        Template = "users.tmpl"
+	RolesTemplate        Template = "roles.tmpl"
+	PermissionsTemplate  Template = "permissions.tmpl"
 )
 
 func (t Template) GetString() string {
