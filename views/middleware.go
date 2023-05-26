@@ -2,11 +2,11 @@ package views
 
 import (
 	"fmt"
+	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/public/templates"
 	"net/http"
 
 	"github.com/ystv/web-auth/helpers"
-	"github.com/ystv/web-auth/user"
 )
 
 // RequiresLogin is a middleware which will be used for each
@@ -30,7 +30,7 @@ func (v *Views) RequiresLogin(h http.Handler) http.HandlerFunc {
 
 // RequiresPermission is a middleware that will
 // ensure that the user has the given permission.
-func (v *Views) RequiresPermission(h http.Handler, p user.Permission) http.HandlerFunc {
+func (v *Views) RequiresPermission(h http.Handler, p permission.Permission) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//fmt.Println("DEBUG - REQUIRE PERMISSION")
 		session, err := v.cookie.Get(r, v.conf.SessionCookieName)
@@ -42,7 +42,7 @@ func (v *Views) RequiresPermission(h http.Handler, p user.Permission) http.Handl
 		//fmt.Println(session, session.Options, session.Values, v.conf.SessionCookieName)
 		u := helpers.GetUser(session)
 		//fmt.Println(u)
-		perms, err := v.user.GetPermissions(r.Context(), u)
+		perms, err := v.user.GetPermissionsForUser(r.Context(), u)
 		if err != nil {
 			fmt.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -50,7 +50,7 @@ func (v *Views) RequiresPermission(h http.Handler, p user.Permission) http.Handl
 		}
 		//fmt.Println(perms)
 		for _, perm := range perms {
-			if perm == p.Name {
+			if perm.Name == p.Name {
 				h.ServeHTTP(w, r)
 				return
 			}

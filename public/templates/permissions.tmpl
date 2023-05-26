@@ -1,0 +1,42 @@
+{{define "title"}}Internal: Permissions{{end}}
+{{define "content"}}
+    <div class="column is-10">
+        <div class="card events-card">
+            <header class="card-header">
+                <p class="card-header-title">Permissions</p>
+            </header>
+            <div class="card-table">
+                <div class="content">
+                    <table class="table is-fullwidth is-hoverable">
+                        <thead>
+                        <tr>
+                            <th>Permission ID</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {{ range $permission := .Permissions }}
+                            <tr>
+                                <th>{{ $permission.PermissionID }}</th>
+                                <td>{{ $permission.Name }}</td>
+                                <td>{{ $permission.Description }}</td>
+                                <td><a href="./permission/{{ $permission.PermissionID }}">View</a></td>
+                            </tr>
+                        {{ end }}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>Permission ID</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{{end}}

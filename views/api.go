@@ -63,13 +63,17 @@ func (v *Views) SetTokenHandler(w http.ResponseWriter, r *http.Request) {
 
 func (v *Views) newJWT(u user.User) (string, error) {
 	expirationTime := time.Now().Add(5 * time.Minute)
-	perms, err := v.user.GetPermissions(context.Background(), u)
+	perms, err := v.user.GetPermissionsForUser(context.Background(), u)
 	if err != nil {
 		return "", fmt.Errorf("failed to get user permissions: %w", err)
 	}
+	var perm1 []string
+	for _, perm := range perms {
+		perm1 = append(perm1, perm.Name)
+	}
 	claims := &JWTClaims{
 		UserID:      u.UserID,
-		Permissions: perms,
+		Permissions: perm1,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: &jwt.NumericDate{Time: expirationTime},
 		},

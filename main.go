@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
-	"github.com/ystv/web-auth/user"
+	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/views"
 	"io/fs"
 	"log"
@@ -94,11 +94,6 @@ func main() {
 		},
 	}
 
-	adminPerm := user.Permission{
-		Name: "SuperUser",
-	}
-
-	//v := views.New(conf, templates)
 	v := views.New(conf)
 	mux1 := mux.NewRouter()
 	// Static
@@ -146,8 +141,10 @@ func main() {
 	// Login required
 	mux1.HandleFunc("/internal", v.RequiresLogin(http.HandlerFunc(v.InternalFunc)))
 	mux1.HandleFunc("/internal/settings", v.RequiresLogin(http.HandlerFunc(v.SettingsFunc)))
-	mux1.HandleFunc("/internal/users", v.RequiresLogin(v.RequiresPermission(http.HandlerFunc(v.UsersFunc), adminPerm)))
-	mux1.HandleFunc("/internal/user/{userid}", v.RequiresLogin(http.HandlerFunc(v.UserFunc)))
+	mux1.HandleFunc("/internal/users", v.RequiresLogin(v.RequiresPermission(http.HandlerFunc(v.UsersFunc), permission.Permission{Name: permission.SuperUser})))
+	mux1.HandleFunc("/internal/roles", v.RequiresLogin(v.RequiresPermission(http.HandlerFunc(v.RolesFunc), permission.Permission{Name: permission.SuperUser})))
+	mux1.HandleFunc("/internal/permissions", v.RequiresLogin(v.RequiresPermission(http.HandlerFunc(v.PermissionsFunc), permission.Permission{Name: permission.SuperUser})))
+	mux1.HandleFunc("/internal/user/{userid}", v.RequiresLogin(v.RequiresPermission(http.HandlerFunc(v.UserFunc), permission.Permission{Name: permission.SuperUser})))
 
 	// Public
 	mux1.HandleFunc("/", v.IndexFunc)

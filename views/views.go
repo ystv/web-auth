@@ -3,7 +3,9 @@ package views
 import (
 	"encoding/gob"
 	"encoding/hex"
+	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/public/templates"
+	"github.com/ystv/web-auth/role"
 	"log"
 	"net/http"
 	"time"
@@ -69,14 +71,15 @@ type (
 
 	// Views encapsulates our view dependencies
 	Views struct {
-		conf Config
-		user *user.Store
-		//forgot   *forgotPasswords.Store
-		cookie   *sessions.CookieStore
-		mailer   *mail.Mailer
-		cache    *cache.Cache
-		validate *validator.Validate
-		template *templates.Templater
+		conf       Config
+		permission *permission.Store
+		role       *role.Store
+		user       *user.Store
+		cookie     *sessions.CookieStore
+		mailer     *mail.Mailer
+		cache      *cache.Cache
+		validate   *validator.Validate
+		template   *templates.Templater
 	}
 
 	// Notification template for messages
@@ -98,6 +101,9 @@ func New(conf Config) *Views {
 	if err != nil {
 		log.Fatalf("NewStore failed: %+v", err)
 	}
+
+	v.permission = permission.NewPermissionRepo(dbStore)
+	v.role = role.NewRoleRepo(dbStore)
 	v.user = user.NewUserRepo(dbStore)
 
 	// Connecting to mail

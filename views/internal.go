@@ -2,7 +2,9 @@ package views
 
 import (
 	"fmt"
+	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/public/templates"
+	"github.com/ystv/web-auth/role"
 	"net/http"
 	"strconv"
 	"time"
@@ -272,6 +274,56 @@ func (v *Views) UserFunc(w http.ResponseWriter, r *http.Request) {
 	err = v.template.RenderTemplate(w, data, templates.UserTemplate)
 	//err = v.tpl.ExecuteTemplate(w, "user.tmpl", struct {ActivePage string}{ActivePage: "user"})
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// RolesFunc handles a roles request
+func (v *Views) RolesFunc(w http.ResponseWriter, r *http.Request) {
+	roles, err := v.role.GetRoles(r.Context())
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data := struct {
+		Roles      []role.Role
+		ActivePage string
+	}{
+		Roles:      roles,
+		ActivePage: "roles",
+	}
+
+	err = v.template.RenderTemplate(w, data, templates.RolesTemplate)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// PermissionsFunc handles a permissions request
+func (v *Views) PermissionsFunc(w http.ResponseWriter, r *http.Request) {
+	permissions, err := v.permission.GetPermissions(r.Context())
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data := struct {
+		Permissions []permission.Permission
+		ActivePage  string
+	}{
+		Permissions: permissions,
+		ActivePage:  "permissions",
+	}
+
+	err = v.template.RenderTemplate(w, data, templates.PermissionsTemplate)
+	if err != nil {
+		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

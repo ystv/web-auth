@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/ystv/web-auth/permission"
+	"github.com/ystv/web-auth/role"
 	"time"
 
 	"github.com/Clarilab/gocloaksession"
@@ -20,6 +22,8 @@ type (
 		UpdateUser(ctx context.Context, u User) error
 		GetPermissions(ctx context.Context, u User) error
 		CheckUserType(ctx context.Context, u User) error
+		GetPermissionsForUser(ctx context.Context, u User) ([]permission.Permission, error)
+		GetRolesForUser(ctx context.Context, u User) ([]role.Role, error)
 	}
 	// Store stores the dependencies
 	Store struct {
@@ -28,25 +32,20 @@ type (
 	}
 	// User represents relevant user fields
 	User struct {
-		UserID        int       `db:"user_id" json:"id"`
-		Username      string    `db:"username" json:"username" schema:"username"`
-		Nickname      string    `db:"nickname" json:"nickname" schema:"nickname"`
-		Firstname     string    `db:"first_name" json:"firstName" schema:"firstname"`
-		Lastname      string    `db:"last_name" json:"lastName" schema:"lastname"`
-		Password      string    `db:"password" json:"-" schema:"password"`
-		Salt          string    `db:"salt" json:"-"`
-		Avatar        string    `db:"avatar" json:"avatar" schema:"avatar"`
-		Email         string    `db:"email" json:"email" schema:"email"`
-		LastLogin     null.Time `db:"last_login"`
-		ResetPw       bool      `db:"reset_pw" json:"-"`
+		UserID        int                     `db:"user_id" json:"id"`
+		Username      string                  `db:"username" json:"username" schema:"username"`
+		Nickname      string                  `db:"nickname" json:"nickname" schema:"nickname"`
+		Firstname     string                  `db:"first_name" json:"firstName" schema:"firstname"`
+		Lastname      string                  `db:"last_name" json:"lastName" schema:"lastname"`
+		Password      string                  `db:"password" json:"-" schema:"password"`
+		Salt          string                  `db:"salt" json:"-"`
+		Avatar        string                  `db:"avatar" json:"avatar" schema:"avatar"`
+		Email         string                  `db:"email" json:"email" schema:"email"`
+		LastLogin     null.Time               `db:"last_login"`
+		ResetPw       bool                    `db:"reset_pw" json:"-"`
+		Permissions   []permission.Permission `json:"permissions"`
+		UseGravatar   bool                    `db:"use_gravatar" json:"useGravatar" schema:"useGravatar"`
 		Authenticated bool
-		Permissions   []Permission `json:"permissions"`
-		UseGravatar   bool         `db:"use_gravatar" json:"useGravatar" schema:"useGravatar"`
-	}
-
-	// Permission represents an individual permission. Attempting to implement some RBAC here.
-	Permission struct {
-		Name string `db:"name" json:"name"`
 	}
 )
 
@@ -124,11 +123,6 @@ func (s *Store) GetUsersSorted(ctx context.Context, column, direction string) ([
 	return nil, fmt.Errorf("error in db sorting")
 }
 
-// GetPermissions returns all permissions of a user
-func (s *Store) GetPermissions(ctx context.Context, u User) ([]string, error) {
-	return s.getPermissions(ctx, u)
-}
-
 // VerifyUser will check that the password is correct with provided
 // credentials and if verified will return the User object
 func (s *Store) VerifyUser(ctx context.Context, u User) (User, error) {
@@ -165,4 +159,14 @@ func (s *Store) SetUserLoggedIn(ctx context.Context, u User) error {
 
 func (s *Store) CheckUserType(ctx context.Context, u User) error {
 	return nil
+}
+
+// GetPermissionsForUser returns all permissions of a user
+func (s *Store) GetPermissionsForUser(ctx context.Context, u User) ([]permission.Permission, error) {
+	return s.getPermissionsForUser(ctx, u)
+}
+
+// GetRolesForUser returns all roles of a user
+func (s *Store) GetRolesForUser(ctx context.Context, u User) ([]role.Role, error) {
+	return s.getRolesForUser(ctx, u)
 }

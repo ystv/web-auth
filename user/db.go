@@ -3,6 +3,8 @@ package user
 import (
 	"context"
 	"fmt"
+	"github.com/ystv/web-auth/permission"
+	"github.com/ystv/web-auth/role"
 	"time"
 )
 
@@ -223,10 +225,9 @@ func (s *Store) getUsersLLD(ctx context.Context) ([]User, error) {
 	return u, nil
 }
 
-// getPermissions returns all permissions for a user
-func (s *Store) getPermissions(ctx context.Context, u User) ([]string, error) {
-	var p []string
-	err := s.db.SelectContext(ctx, &p, `SELECT p.name
+// getPermissionsForUser returns all permissions for a user
+func (s *Store) getPermissionsForUser(ctx context.Context, u User) (p []permission.Permission, err error) {
+	err = s.db.SelectContext(ctx, &p, `SELECT p.permission_id, p.name, p.description
 		FROM people.permissions p
 		INNER JOIN people.role_permissions rp ON rp.permission_id = p.permission_id
 		INNER JOIN people.role_members rm ON rm.role_id = rp.role_id
@@ -235,4 +236,16 @@ func (s *Store) getPermissions(ctx context.Context, u User) ([]string, error) {
 		return nil, fmt.Errorf("failed to get user permissions: %w", err)
 	}
 	return p, nil
+}
+
+// getRolesForUser returns all roles for a user
+func (s *Store) getRolesForUser(ctx context.Context, u User) (r []role.Role, err error) {
+	err = s.db.SelectContext(ctx, &r, `SELECT r.role_id, r.name, r.description
+		FROM people.roles r
+		INNER JOIN people.role_members rm ON rm.role_id = r.role_id
+		WHERE rm.user_id = $1;`, u.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user roles: %w", err)
+	}
+	return r, nil
 }
