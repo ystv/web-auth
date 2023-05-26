@@ -19,6 +19,8 @@ import (
 //go:embed public/static/*
 var content embed.FS
 
+var Version = "unknown"
+
 func allow(origin string) bool {
 	return true
 }
@@ -38,15 +40,11 @@ func main() {
 	if os.Getenv("WAUTH_SIGNING_KEY") == "" {
 		log.Fatalf("signing key not set")
 	}
+
 	if os.Getenv("WAUTH_DB_HOST") == "" {
 		log.Fatalf("database host not set")
 	}
 
-	// Set defaults
-	version := os.Getenv("WAUTH_VERSION")
-	if version == "" {
-		version = "unknown"
-	}
 	sessionCookieName := os.Getenv("WAUTH_SESSION_COOKIE_NAME")
 	if sessionCookieName == "" {
 		sessionCookieName = "session"
@@ -67,12 +65,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("static files failed: %+v", err)
 	}
-	//templates, err := fs.Sub(content, "public/templates")
-	//if err != nil {
-	//	log.Fatalf("template files failed: %+v", err)
-	//}
 
-	log.Printf("web-auth version %s loaded", version)
+	log.Printf("web-auth version %s loaded", Version)
 
 	port, err := strconv.Atoi(os.Getenv("WAUTH_MAIL_PORT"))
 	if err != nil {
@@ -81,7 +75,7 @@ func main() {
 
 	// Generate config
 	conf := views.Config{
-		Version:           version,
+		Version:           Version,
 		DatabaseURL:       dbConnectionString,
 		BaseDomainName:    os.Getenv("WAUTH_BASE_DOMAIN_NAME"),
 		DomainName:        os.Getenv("WAUTH_DOMAIN_NAME"),

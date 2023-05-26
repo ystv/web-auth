@@ -17,7 +17,7 @@ pipeline {
       steps {
         script {
           docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
-            image = docker.build(imageName)
+            image = docker.build(imageName, "--build-arg WAUTH_VERSION_ARG=${env.BRANCH_NAME}-${env.BUILD_ID} .")
           }
         }
       }

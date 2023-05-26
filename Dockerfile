@@ -4,6 +4,8 @@ LABEL stage="builder"
 
 WORKDIR /src/
 
+ARG WAUTH_VERSION_ARG
+
 # Stores our dependencies
 COPY go.mod .
 COPY go.sum .
@@ -14,7 +16,12 @@ RUN go mod download
 # Copy source
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o /bin/auth
+# Set build variables
+RUN echo -n "-X 'main.Version=$WAUTH_VERSION_ARG" > ./ldflags && \
+    tr -d \\n < ./ldflags > ./temp && mv ./temp ./ldflags && \
+    echo -n "'" >> ./ldflags
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -ldflags="$(cat ./ldflags)" -o /bin/auth
 
 FROM scratch
 LABEL site="auth"

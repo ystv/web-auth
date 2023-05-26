@@ -108,8 +108,8 @@
     <div class="column column">
         <p class="has-text-grey">
             <a href="signup">Sign Up</a> &nbsp;·&nbsp;
-            <a href="forgot">Forgot Password</a>{{/*&nbsp;·&nbsp;*/}}
-            {{/*    <a href="https://github.com/ystv/web-auth"> Version: {{.Version}} </a>*/}}
+            <a href="forgot">Forgot Password</a>{{if ne .Version ""}}&nbsp;·&nbsp;
+            <a href="https://github.com/ystv/web-auth"> Version: {{.Version}} </a>{{end}}
         </p>
     </div>
 {{end}}

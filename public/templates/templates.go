@@ -94,6 +94,9 @@ func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Templ
 		"incUInt64": func(a uint64) uint64 {
 			return a + 1
 		},
+		"len": func(a string) int {
+			return len(a)
+		},
 	})
 
 	t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", string(mainTmpl))
