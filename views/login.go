@@ -60,7 +60,14 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, context.Callback, http.StatusFound)
 			return
 		}
-		err = v.template.RenderNoNavsTemplate(w, nil, templates.LoginTemplate)
+
+		data := struct {
+			Version string
+		}{
+			Version: v.conf.Version,
+		}
+
+		err = v.template.RenderNoNavsTemplate(w, data, templates.LoginTemplate)
 		//err = v.tpl.ExecuteTemplate(w, "login", context)
 		if err != nil {
 			log.Printf("login failed to exec tmpl: %+v", err)
