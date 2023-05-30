@@ -21,13 +21,12 @@ func (s *Store) countUsers(ctx context.Context) (int, error) {
 }
 
 // countUsers24Hours will get the number of users in the last 24 hours
-// TODO make this a lot less bad, it just is bad
 func (s *Store) countUsers24Hours(ctx context.Context) (int, error) {
 	count := 0
 	err := s.db.GetContext(ctx, &count,
 		`SELECT COUNT(*)
 		FROM people.users
-		WHERE last_login > timestamp '`+time.Now().AddDate(0, 0, -1).Format("2006-01-02 15:04:05")+`';`)
+		WHERE last_login > TO_TIMESTAMP($1, 'YYYY-MM-DD HH24:MI:SS');`, time.Now().AddDate(0, 0, -1).Format("2006-01-02 15:04:05"))
 	if err != nil {
 		return count, fmt.Errorf("failed to count users 24 hours from db: %w", err)
 	}
@@ -35,15 +34,14 @@ func (s *Store) countUsers24Hours(ctx context.Context) (int, error) {
 }
 
 // countUsersPastYear will get the number of users in the last 24 hours
-// TODO make this a lot less bad, it just is bad
 func (s *Store) countUsersPastYear(ctx context.Context) (int, error) {
 	count := 0
 	err := s.db.GetContext(ctx, &count,
 		`SELECT COUNT(*)
 		FROM people.users
-		WHERE last_login > timestamp '`+time.Now().AddDate(-1, 0, 0).Format("2006-01-02 15:04:05")+`';`)
+		WHERE last_login > TO_TIMESTAMP($1, 'YYYY-MM-DD HH24:MI:SS');`, time.Now().AddDate(-1, 0, 0).Format("2006-01-02 15:04:05"))
 	if err != nil {
-		return count, fmt.Errorf("failed to count users 24 hours from db: %w", err)
+		return count, fmt.Errorf("failed to count users past year from db: %w", err)
 	}
 	return count, nil
 }
