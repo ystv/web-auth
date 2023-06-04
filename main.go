@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
-	"github.com/ystv/web-auth/permission"
+	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/views"
 	"io/fs"
 	"log"
@@ -141,10 +141,24 @@ func main() {
 	// Login required
 	mux1.HandleFunc("/internal", v.RequiresLogin(http.HandlerFunc(v.InternalFunc)))
 	mux1.HandleFunc("/internal/settings", v.RequiresLogin(http.HandlerFunc(v.SettingsFunc)))
-	mux1.HandleFunc("/internal/users", v.RequiresLogin(v.RequiresPermission(http.HandlerFunc(v.UsersFunc), permission.Permission{Name: permission.SuperUser})))
-	mux1.HandleFunc("/internal/roles", v.RequiresLogin(v.RequiresPermission(http.HandlerFunc(v.RolesFunc), permission.Permission{Name: permission.SuperUser})))
-	mux1.HandleFunc("/internal/permissions", v.RequiresLogin(v.RequiresPermission(http.HandlerFunc(v.PermissionsFunc), permission.Permission{Name: permission.SuperUser})))
-	mux1.HandleFunc("/internal/user/{userid}", v.RequiresLogin(v.RequiresPermission(http.HandlerFunc(v.UserFunc), permission.Permission{Name: permission.SuperUser})))
+
+	mux1.HandleFunc("/internal/permissions", v.RequiresLogin(v.RequiresMinimumPermission(http.HandlerFunc(v.PermissionsFunc), permissions.ManageMembersPermissions)))
+	//mux1.HandleFunc("/internal/permission/add", v.RequiresLogin(v.RequiresMinimumPermission(http.HandlerFunc(v.PermissionAddFunc), permissions.ManageMembersPermissions)))
+	//mux1.HandleFunc("/internal/permission/{permissionid}/edit", v.RequiresLogin(v.RequiresMinimumPermission(http.HandlerFunc(v.PermissionEditFunc), permissions.ManageMembersPermissions)))
+	//mux1.HandleFunc("/internal/permission/{permissionid}/delete", v.RequiresLogin(v.RequiresMinimumPermission(http.HandlerFunc(v.PermissionDeleteFunc), permissions.ManageMembersPermissions)))
+	//mux1.HandleFunc("/internal/permission/{permissionid}", v.RequiresLogin(v.RequiresMinimumPermission(http.HandlerFunc(v.PermissionFunc), permissions.ManageMembersPermissions)))
+
+	mux1.HandleFunc("/internal/roles", v.RequiresLogin(v.RequiresMinimumPermission(http.HandlerFunc(v.RolesFunc), permissions.ManageMembersGroup)))
+	//mux1.HandleFunc("/internal/role/add", v.RequiresLogin(v.RequiresMinimumPermission(http.HandlerFunc(v.RoleAddFunc), permissions.ManageMembersGroup)))
+	//mux1.HandleFunc("/internal/role/{roleid}/edit", v.RequiresLogin(v.RequiresMinimumPermission(http.HandlerFunc(v.RoleEditFunc), permissions.ManageMembersGroup)))
+	//mux1.HandleFunc("/internal/role/{roleid}/delete", v.RequiresLogin(v.RequiresMinimumPermission(http.HandlerFunc(v.RoleDeleteFunc), permissions.ManageMembersGroup)))
+	//mux1.HandleFunc("/internal/role/{roleid}", v.RequiresLogin(v.RequiresMinimumPermission(http.HandlerFunc(v.RoleFunc), permissions.ManageMembersGroup)))
+
+	mux1.HandleFunc("/internal/users", v.RequiresLogin(v.RequiresMinimumPermission(http.HandlerFunc(v.UsersFunc), permissions.ManageMembersMembersList)))
+	//mux1.HandleFunc("/internal/user/add", v.RequiresLogin(v.RequiresMinimumPermission(http.HandlerFunc(v.UserAddFunc), permissions.ManageMembersMembersAdd)))
+	//mux1.HandleFunc("/internal/user/{userid}/edit", v.RequiresLogin(v.RequiresMinimumPermission(http.HandlerFunc(v.UserEditFunc), permissions.ManageMembersMembersAdmin)))
+	//mux1.HandleFunc("/internal/user/{userid}/delete", v.RequiresLogin(v.RequiresMinimumPermission(http.HandlerFunc(v.UserDeleteFunc), permissions.ManageMembersMembersAdmin)))
+	mux1.HandleFunc("/internal/user/{userid}", v.RequiresLogin(v.RequiresMinimumPermission(http.HandlerFunc(v.UserFunc), permissions.ManageMembersMembersAdmin)))
 
 	// Public
 	mux1.HandleFunc("/", v.IndexFunc)

@@ -99,6 +99,51 @@ func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Templ
 		"len": func(a string) int {
 			return len(a)
 		},
+		"lenA": func(a []string) int {
+			return len(a)
+		},
+		"memberAddPermission": func(id int) bool {
+			u, err := t.User.GetUser(context.Background(), user.User{UserID: id})
+			if err != nil {
+				fmt.Println(err)
+				return false
+			}
+
+			p, err := t.User.GetPermissionsForUser(context.Background(), u)
+			if err != nil {
+				fmt.Println(err)
+				return false
+			}
+
+			for _, perm := range p {
+				if perm == permissions.ManageMembersMembersAdd.GetString() {
+					return true
+				}
+			}
+			return false
+		},
+		"checkPermission": func(id int, p string) bool {
+			m := GetValidPermissions(permissions.Permissions(p))
+
+			u, err := t.User.GetUser(context.Background(), user.User{UserID: id})
+			if err != nil {
+				fmt.Println(err)
+				return false
+			}
+
+			p1, err := t.User.GetPermissionsForUser(context.Background(), u)
+			if err != nil {
+				fmt.Println(err)
+				return false
+			}
+
+			for _, perm := range p1 {
+				if m[perm] {
+					return true
+				}
+			}
+			return false
+		},
 	})
 
 	t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", string(mainTmpl))
