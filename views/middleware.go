@@ -54,7 +54,8 @@ func (v *Views) RequiresPermission(h http.Handler, p permission.Permission) http
 				return
 			}
 		}
-		err = v.template.RenderNoNavsTemplate(w, nil, templates.ForbiddenTemplate)
+
+		err = v.template.RenderNoNavsTemplate(w, nil, templates.Forbidden500Template)
 		if err != nil {
 			log.Println(err)
 		}

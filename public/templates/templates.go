@@ -18,9 +18,9 @@ type (
 )
 
 const (
-	ForbiddenTemplate    Template = "forbidden.tmpl"
+	Forbidden500Template Template = "500Forbidden.tmpl"
 	ForgotTemplate       Template = "forgot.tmpl"
-	Error404Template     Template = "404.tmpl"
+	NotFound404Template  Template = "404NotFound.tmpl"
 	ForgotEmailTemplate  Template = "forgotEmail.tmpl"
 	InternalTemplate     Template = "internal.tmpl"
 	LoginTemplate        Template = "login.tmpl"
