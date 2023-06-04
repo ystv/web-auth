@@ -10,7 +10,7 @@
                     <table class="table is-fullwidth is-hoverable">
                         <thead>
                         <tr>
-                            <th>Permission ID</th>
+{{/*                            <th>Permission ID</th>*/}}
                             <th>Name</th>
                             <th>Description</th>
                             <th>Actions</th>
@@ -19,7 +19,7 @@
                         <tbody>
                         {{ range $permission := .Permissions }}
                             <tr>
-                                <th>{{ $permission.PermissionID }}</th>
+{{/*                                <th>{{ $permission.PermissionID }}</th>*/}}
                                 <td>{{ $permission.Name }}</td>
                                 <td>{{ $permission.Description }}</td>
                                 <td><a href="./permission/{{ $permission.PermissionID }}">View</a></td>
@@ -28,7 +28,7 @@
                         </tbody>
                         <tfoot>
                         <tr>
-                            <th>Permission ID</th>
+{{/*                            <th>Permission ID</th>*/}}
                             <th>Name</th>
                             <th>Description</th>
                             <th>Actions</th>

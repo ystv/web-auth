@@ -10,7 +10,7 @@
                     <table class="table is-fullwidth is-hoverable">
                         <thead>
                         <tr>
-                            <th>Role ID</th>
+{{/*                            <th>Role ID</th>*/}}
                             <th>Name</th>
                             <th>Description</th>
                             <th>Actions</th>
@@ -19,7 +19,7 @@
                         <tbody>
                         {{ range $role := .Roles }}
                             <tr>
-                                <th>{{ $role.RoleID }}</th>
+{{/*                                <th>{{ $role.RoleID }}</th>*/}}
                                 <td>{{ $role.Name }}</td>
                                 <td>{{ $role.Description }}</td>
                                 <td><a href="./role/{{ $role.RoleID }}">View</a></td>
@@ -28,7 +28,7 @@
                         </tbody>
                         <tfoot>
                         <tr>
-                            <th>Role ID</th>
+{{/*                            <th>Role ID</th>*/}}
                             <th>Name</th>
                             <th>Description</th>
                             <th>Actions</th>
