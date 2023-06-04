@@ -2,7 +2,10 @@ package views
 
 import (
 	"fmt"
+	"github.com/google/uuid"
+	"github.com/patrickmn/go-cache"
 	"github.com/ystv/web-auth/public/templates"
+	"gopkg.in/guregu/null.v4"
 	"log"
 	"net/http"
 	"net/url"
@@ -98,7 +101,8 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		// Since we let users enter either an email or username, it's easier
 		// to just let it both for the query
 		u.Username = username
-		u.Email = u.Username
+		u.Email = username
+		u.LDAPUsername = null.StringFrom(username)
 		u.Password = password
 
 		callback := "/internal"
@@ -107,7 +111,7 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 			callback = callbackURL.String()
 		}
 		// Authentication
-		u, err = v.user.VerifyUser(r.Context(), u)
+		u, resetPw, err := v.user.VerifyUser(r.Context(), u)
 		if err != nil {
 			log.Printf("failed login for \"%s\": %v", u.Username, err)
 			err = session.Save(r, w)
@@ -115,12 +119,24 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+
+			if resetPw {
+				ctx := v.getData(session)
+				ctx.Callback = callback
+				ctx.Message = "Password reset required"
+				ctx.MsgType = "is-danger"
+
+				url1 := uuid.NewString()
+				v.cache.Set(url1, u.UserID, cache.DefaultExpiration)
+
+				http.Redirect(w, r, "/forgot/"+url1, http.StatusFound)
+				return
+			}
 			ctx := v.getData(session)
 			ctx.Callback = callback
 			ctx.Message = "Invalid username or password"
 			ctx.MsgType = "is-danger"
 			err = v.template.RenderNoNavsTemplate(w, ctx, templates.LoginTemplate)
-			//err = v.tpl.ExecuteTemplate(w, "login", ctx)
 			if err != nil {
 				log.Printf("login failed to exec tmpl: %+v", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
