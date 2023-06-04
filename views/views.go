@@ -31,6 +31,7 @@ type (
 		Mail              SMTPConfig
 		Security          SecurityConfig
 	}
+
 	// SMTPConfig stores the SMTP mailer configuration
 	SMTPConfig struct {
 		Host     string
@@ -38,6 +39,7 @@ type (
 		Password string
 		Port     int
 	}
+
 	// SecurityConfig stores the security configuration
 	SecurityConfig struct {
 		EncryptionKey     string
@@ -81,13 +83,6 @@ type (
 		validate   *validator.Validate
 		template   *templates.Templater
 	}
-
-	// Notification template for messages
-	Notification struct {
-		Title   string
-		Type    string
-		Message string
-	}
 )
 
 // here to verify we are meeting the interface
@@ -105,6 +100,8 @@ func New(conf Config) *Views {
 	v.permission = permission.NewPermissionRepo(dbStore)
 	v.role = role.NewRoleRepo(dbStore)
 	v.user = user.NewUserRepo(dbStore)
+
+	v.template = templates.NewTemplate(v.permission, v.role, v.user)
 
 	// Connecting to mail
 	v.mailer, err = mail.NewMailer(mail.Config{
@@ -152,27 +149,4 @@ func New(conf Config) *Views {
 	v.validate = validator.New()
 
 	return &v
-}
-
-// Context is a struct that is applied to the templates.
-type Context struct {
-	Message  string
-	MsgType  string
-	Version  string
-	Callback string
-	User     user.User
-}
-
-func (v *Views) getData(s *sessions.Session) *Context {
-	val := s.Values["user"]
-	u := user.User{}
-	u, ok := val.(user.User)
-	if !ok {
-		u = user.User{Authenticated: false}
-	}
-	c := Context{Version: v.conf.Version,
-		Callback: "/internal",
-		User:     u,
-	}
-	return &c
 }
