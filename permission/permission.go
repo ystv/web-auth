@@ -11,6 +11,7 @@ type (
 	Repo interface {
 		GetPermissions(ctx context.Context) ([]Permission, error)
 		GetPermissionsForRole(ctx context.Context, r role.Role) ([]Permission, error)
+		GetPermission(ctx context.Context, p Permission) (Permission, error)
 		AddPermission(ctx context.Context, p Permission) (Permission, error)
 	}
 	// Store stores the dependencies
@@ -20,8 +21,9 @@ type (
 	// Permission represents relevant permission fields
 	Permission struct {
 		PermissionID int    `db:"permission_id" json:"id"`
-		Name         string `db:"name" json:"name" schema:"name"`
-		Description  string `db:"description" json:"description" schema:"description"`
+		Name         string `db:"name" json:"name"`
+		Description  string `db:"description" json:"description"`
+		//ParentID     int    `db:"parent_id" json:"parentID"`
 	}
 )
 
@@ -35,4 +37,9 @@ func NewPermissionRepo(db *sqlx.DB) *Store {
 // GetPermissions returns all permissions of a user
 func (s *Store) GetPermissions(ctx context.Context) ([]Permission, error) {
 	return s.getPermissions(ctx)
+}
+
+// GetPermission returns all permissions of a user
+func (s *Store) GetPermission(ctx context.Context, id int) (Permission, error) {
+	return s.getPermission(ctx, id)
 }
