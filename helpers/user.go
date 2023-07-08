@@ -10,7 +10,7 @@ import (
 // error returns an empty unauthenticated user
 func GetUser(s *sessions.Session) user.User {
 	val := s.Values["user"]
-	var u = user.User{}
+	var u user.User
 	u, ok := val.(user.User)
 	if !ok {
 		return user.User{Authenticated: false}
