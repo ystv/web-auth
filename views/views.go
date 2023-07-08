@@ -140,9 +140,6 @@ func New(conf Config) *Views {
 	// So we can use our struct in the cookie
 	gob.Register(user.User{})
 
-	//// Loading templates
-	//v.tpl = template.Must(template.ParseFS(templates, "*.tmpl"))
-
 	v.conf = conf
 
 	// Struct validator
