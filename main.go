@@ -15,14 +15,29 @@ import (
 var Version = "unknown"
 
 func main() {
+	var local, global bool
+	var err error
 	// Load environment
-	err := godotenv.Load(".env")
+	err = godotenv.Load(".env")
 	if err != nil {
-		log.Println("failed to load global env file")
-	} // Load .env file for production
+		global = false
+	} else {
+		global = true
+	}
+	// Load .env file for production
 	err = godotenv.Overload(".env.local") // Load .env.local for developing
 	if err != nil {
-		log.Println("failed to load env file, using global env")
+		local = false
+	} else {
+		local = true
+	}
+
+	if !local && !global {
+		log.Fatal("unable to find env files")
+	} else if !local {
+		log.Println("using global env file")
+	} else {
+		log.Println("using local env file")
 	}
 
 	// Validate the required config is set
