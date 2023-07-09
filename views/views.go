@@ -23,6 +23,8 @@ type (
 	// Config the global web-auth configuration
 	Config struct {
 		Version           string
+		Debug             bool
+		Port              string
 		DatabaseURL       string
 		BaseDomainName    string
 		DomainName        string
@@ -73,12 +75,12 @@ type (
 
 	// Views encapsulates our view dependencies
 	Views struct {
-		conf       Config
+		conf       *Config
 		permission *permission.Store
 		role       *role.Store
 		user       *user.Store
 		cookie     *sessions.CookieStore
-		mailer     *mail.Mailer
+		Mailer     *mail.Mailer
 		cache      *cache.Cache
 		validate   *validator.Validate
 		template   *templates.Templater
@@ -89,12 +91,18 @@ type (
 var _ Repo = &Views{}
 
 // New initialises connections, templates, and cookies
-func New(conf Config) *Views {
-	v := Views{}
+func New(conf *Config, host string) *Views {
+	var v *Views
 	// Connecting to stores
 	dbStore, err := db.NewStore(conf.DatabaseURL)
 	if err != nil {
-		log.Fatalf("NewStore failed: %+v", err)
+		if conf.Debug {
+			log.Printf("db failed: %+v", err)
+		} else {
+			log.Fatalf("db failed: %+v", err)
+		}
+	} else {
+		log.Printf("connected to db: %s", host)
 	}
 
 	v.permission = permission.NewPermissionRepo(dbStore)
@@ -104,7 +112,7 @@ func New(conf Config) *Views {
 	v.template = templates.NewTemplate(v.permission, v.role, v.user)
 
 	// Connecting to mail
-	v.mailer, err = mail.NewMailer(mail.Config{
+	v.Mailer, err = mail.NewMailer(mail.Config{
 		Host:       conf.Mail.Host,
 		Port:       conf.Mail.Port,
 		Username:   conf.Mail.Username,
@@ -147,5 +155,5 @@ func New(conf Config) *Views {
 	// Struct validator
 	v.validate = validator.New()
 
-	return &v
+	return v
 }
