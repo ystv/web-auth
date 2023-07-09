@@ -81,20 +81,6 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 				log.Printf("mailer failed: %+v", err)
 			}
 
-			//forgot := forgotPasswords.ForgotPassword{
-			//	URL:    uuid.NewString(),
-			//	UserID: user1.UserID,
-			//}
-
-			//err = v.forgot.InsertURL(r.Context(), forgot)
-			//if err != nil {
-			//	err = v.errorHandle(w, err)
-			//	if err != nil {
-			//		return
-			//	}
-			//	return
-			//}
-
 			file := mail.Mail{
 				Subject: "YSTV Security - Reset Password",
 				Tpl:     v.template.RenderEmail(templates.ForgotEmailTemplate),
