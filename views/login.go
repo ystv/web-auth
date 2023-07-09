@@ -3,8 +3,9 @@ package views
 import (
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	"github.com/patrickmn/go-cache"
-	"github.com/ystv/web-auth/public/templates"
+	"github.com/ystv/web-auth/templates"
 	"gopkg.in/guregu/null.v4"
 	"log"
 	"net/http"
@@ -20,54 +21,29 @@ type LoginTemplate struct {
 	MsgType string
 }
 
-// LogoutFunc Implements the logout functionality.
-// Will delete the session information from the cookie store
-func (v *Views) LogoutFunc(w http.ResponseWriter, r *http.Request) {
-	session, err := v.cookie.Get(r, v.conf.SessionCookieName)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	session.Values["user"] = user.User{}
-	session.Options.MaxAge = -1
-	err = session.Save(r, w)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	// TODO Don't call env in this function have an initialiser
-	// then fetch from that store?
-	endpoint := v.conf.LogoutEndpoint
-	if endpoint == "" {
-		endpoint = "/"
-	}
-	http.Redirect(w, r, endpoint, http.StatusFound)
-}
-
 // LoginFunc implements the login functionality, will
 // add a cookie to the cookie store for managing authentication
-func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
+func (v *Views) LoginFunc(c echo.Context) error {
 	var err error
 
-	session, _ := v.cookie.Get(r, v.conf.SessionCookieName)
+	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 	// We're ignoring the error here since sometimes the cookies keys change, and then we
 	// can overwrite it instead
 
-	switch r.Method {
+	switch c.Request().Method {
 	case "GET":
 		// Data for our HTML template
 		context := v.getData(session)
 
 		// Check if there is a callback request
-		callbackURL, err := url.Parse(r.URL.Query().Get("callback"))
+		callbackURL, err := url.Parse(c.Request().URL.Query().Get("callback"))
 		if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) && callbackURL.String() != "" {
 			context.Callback = callbackURL.String()
 		}
 		// Check if authenticated
 		if context.User.Authenticated {
-			http.Redirect(w, r, context.Callback, http.StatusFound)
-			return
+			//http.Redirect(w, r, context.Callback, http.StatusFound)
+			return c.Redirect(http.StatusFound, context.Callback)
 		}
 
 		data := LoginTemplate{
@@ -76,23 +52,17 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 			MsgType: "",
 		}
 
-		err = v.template.RenderNoNavsTemplate(w, data, templates.LoginTemplate)
-		//err = v.tpl.ExecuteTemplate(w, "login", context)
-		if err != nil {
-			log.Printf("login failed to exec tmpl: %+v", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		return
+		return v.template.RenderNoNavsTemplate(c.Response(), data, templates.LoginTemplate)
 	case "POST":
 		// Parsing form to struct
-		err = r.ParseForm()
+		err = c.Request().ParseForm()
 		if err != nil {
 			log.Printf("parse form fail: %v", err)
-			return
+			return v.errorHandle(c, err)
 		}
-		username := r.FormValue("username")
-		password := r.FormValue("password")
-		u := user.User{}
+		username := c.Request().FormValue("username")
+		password := c.Request().FormValue("password")
+		var u user.User
 		//err = decoder.Decode(&u, r.PostForm)
 		//if err != nil {
 		//	log.Printf("decode fail: %v", err)
@@ -103,21 +73,21 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		u.Username = username
 		u.Email = username
 		u.LDAPUsername = null.StringFrom(username)
-		u.Password = password
+		u.Password = null.StringFrom(password)
 
 		callback := "/internal"
-		callbackURL, err := url.Parse(r.URL.Query().Get("callback"))
+		callbackURL, err := url.Parse(c.Request().URL.Query().Get("callback"))
 		if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) && callbackURL.String() != "" {
 			callback = callbackURL.String()
 		}
 		// Authentication
-		u, resetPw, err := v.user.VerifyUser(r.Context(), u)
+		u, resetPw, err := v.user.VerifyUser(c.Request().Context(), u)
 		if err != nil {
 			log.Printf("failed login for \"%s\": %v", u.Username, err)
-			err = session.Save(r, w)
+			err = session.Save(c.Request(), c.Response())
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+				//http.Error(w, err.Error(), http.StatusInternalServerError)
+				return v.errorHandle(c, err)
 			}
 
 			if resetPw {
@@ -129,44 +99,38 @@ func (v *Views) LoginFunc(w http.ResponseWriter, r *http.Request) {
 				url1 := uuid.NewString()
 				v.cache.Set(url1, u.UserID, cache.DefaultExpiration)
 
-				http.Redirect(w, r, "/forgot/"+url1, http.StatusFound)
-				return
+				return c.Redirect(http.StatusFound, fmt.Sprintf("https://%s/forgot/%s", v.conf.DomainName, url1))
 			}
 			ctx := v.getData(session)
 			ctx.Callback = callback
 			ctx.Message = "Invalid username or password"
 			ctx.MsgType = "is-danger"
-			err = v.template.RenderNoNavsTemplate(w, ctx, templates.LoginTemplate)
-			if err != nil {
-				log.Printf("login failed to exec tmpl: %+v", err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			return
+			return v.template.RenderNoNavsTemplate(c.Response(), ctx, templates.LoginTemplate)
 		}
 		prevLogin := u.LastLogin
 		// Update last logged in
-		err = v.user.SetUserLoggedIn(r.Context(), u)
+		err = v.user.SetUserLoggedIn(c.Request().Context(), u)
 		if err != nil {
 			err = fmt.Errorf("failed to set user logged in: %w", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return v.errorHandle(c, err)
 		}
 		u.Authenticated = true
-		// Bit of a cheat, just so we can have the last login displayed for internal
+		// This is a bit of a cheat, just so we can have the last login displayed for internal
 		u.LastLogin = prevLogin
 		session.Values["user"] = u
 
-		if r.Form.Get("remember") != "on" {
+		if c.Request().Form.Get("remember") != "on" {
 			session.Options.MaxAge = 86400 * 31
 		}
 
-		err = session.Save(r, w)
+		err = session.Save(c.Request(), c.Response())
 		if err != nil {
 			err = fmt.Errorf("failed to save user session: %w", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return v.errorHandle(c, err)
 		}
+
 		log.Printf("user \"%s\" is authenticated", u.Username)
-		http.Redirect(w, r, callback, http.StatusFound)
-		return
+		return c.Redirect(http.StatusFound, callback)
 	}
+	return fmt.Errorf("failed to parse method")
 }
