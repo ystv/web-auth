@@ -1,39 +1,115 @@
 package views
 
 import (
-	"github.com/ystv/web-auth/public/templates"
+	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/role"
+	"github.com/ystv/web-auth/templates"
+	"github.com/ystv/web-auth/user"
 	"log"
-	"net/http"
+	"strconv"
 )
 
-// RolesFunc handles a roles request
-func (v *Views) RolesFunc(w http.ResponseWriter, r *http.Request) {
-	session, _ := v.cookie.Get(r, v.conf.SessionCookieName)
-
-	c := v.getData(session)
-
-	roles, err := v.role.GetRoles(r.Context())
-	if err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	data := struct {
+type (
+	RolesTemplate struct {
 		Roles      []role.Role
 		UserID     int
 		ActivePage string
-	}{
+	}
+
+	RoleTemplate struct {
+		Role       user.RoleTemplate
+		UserID     int
+		ActivePage string
+	}
+)
+
+func (v *Views) bindRoleToTemplate(r1 role.Role) user.RoleTemplate {
+	var r user.RoleTemplate
+	r.RoleID = r1.RoleID
+	r.Name = r1.Name
+	r.Description = r1.Description
+	return r
+}
+
+// RolesFunc handles a roles request
+func (v *Views) RolesFunc(c echo.Context) error {
+	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+
+	c1 := v.getData(session)
+
+	roles, err := v.role.GetRoles(c.Request().Context())
+	if err != nil {
+		log.Println(err)
+		if !v.conf.Debug {
+			return v.errorHandle(c, err)
+		}
+	}
+
+	data := RolesTemplate{
 		Roles:      roles,
-		UserID:     c.User.UserID,
+		UserID:     c1.User.UserID,
 		ActivePage: "roles",
 	}
 
-	err = v.template.RenderTemplate(w, data, templates.RolesTemplate)
+	return v.template.RenderTemplate(c.Response(), data, templates.RolesTemplate)
+}
+
+func (v *Views) RoleFunc(c echo.Context) error {
+	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+
+	c1 := v.getData(session)
+
+	roleID, err := strconv.Atoi(c.Param("roleid"))
 	if err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		log.Printf("failed to get roleid for role: %+v", err)
+		if !v.conf.Debug {
+			return v.errorHandle(c, err)
+		}
 	}
+
+	role1, err := v.role.GetRole(c.Request().Context(), role.Role{RoleID: roleID})
+	if err != nil {
+		log.Printf("failed to get role for role: %+v", err)
+		if !v.conf.Debug {
+			return v.errorHandle(c, err)
+		}
+	}
+
+	roleTemplate := v.bindRoleToTemplate(role1)
+
+	roleTemplate.Permissions, err = v.user.GetPermissionsForRole(c.Request().Context(), role1)
+	if err != nil {
+		log.Printf("failed to get permissions for role: %+v", err)
+		if !v.conf.Debug {
+			return v.errorHandle(c, err)
+		}
+	}
+
+	roleTemplate.Users, err = v.user.GetUsersForRole(c.Request().Context(), role1)
+	if err != nil {
+		log.Printf("failed to get users for role: %+v", err)
+		if !v.conf.Debug {
+			return v.errorHandle(c, err)
+		}
+	}
+
+	data := RoleTemplate{
+		Role:       roleTemplate,
+		UserID:     c1.User.UserID,
+		ActivePage: "role",
+	}
+
+	return v.template.RenderTemplate(c.Response(), data, templates.RoleTemplate)
+}
+
+func (v *Views) RoleAddFunc(c echo.Context) error {
+	return nil
+}
+
+func (v *Views) RoleEditFunc(c echo.Context) error {
+	return nil
+}
+
+func (v *Views) RoleDeleteFunc(c echo.Context) error {
+	return nil
 }

@@ -10,16 +10,13 @@ require (
 	github.com/go-playground/validator/v10 v10.13.0
 	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/google/uuid v1.3.0
-	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/schema v1.2.0
 	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/sessions v1.2.1
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/joho/godotenv v1.5.1
-	github.com/labstack/echo-jwt v0.0.0-20221127215225-c84d41a71003
 	github.com/lib/pq v1.10.9
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/rs/cors v1.9.0
 	github.com/xhit/go-simple-mail/v2 v2.13.0
 	gopkg.in/guregu/null.v4 v4.0.0
 )
