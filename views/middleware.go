@@ -2,8 +2,8 @@ package views
 
 import (
 	"context"
+	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/permission/permissions"
-	"github.com/ystv/web-auth/public/templates"
 	"github.com/ystv/web-auth/user"
 	"log"
 	"net/http"
@@ -13,57 +13,232 @@ import (
 
 // RequiresLogin is a middleware which will be used for each
 // httpHandler to check if there is any active session
-func (v *Views) RequiresLogin(h http.Handler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		session, err := v.cookie.Get(r, v.conf.SessionCookieName)
+func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 		if err != nil {
 			log.Println(err)
-			http.Redirect(w, r, "/login", http.StatusFound)
-			return
+			return v.LoginFunc(c)
 		}
-		if !helpers.GetUser(session).Authenticated {
+		user1 := helpers.GetUser(session)
+		user2, err := v.user.GetUser(c.Request().Context(), user1)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		if user2.DeletedBy.Valid || !user1.Enabled {
+			session.Values["user"] = &user.User{}
+			session.Options.MaxAge = -1
+			err = session.Save(c.Request(), c.Response())
+			if err != nil {
+				//http.Error(w, err.Error(), http.StatusInternalServerError)
+				return v.errorHandle(c, err)
+			}
+			return c.Redirect(http.StatusFound, "/")
+		}
+		if !user1.Authenticated {
 			// Not authenticated
-			http.Redirect(w, r, "/", http.StatusFound)
-			return
+			return c.Redirect(http.StatusFound, "/")
 		}
-		h.ServeHTTP(w, r)
+		return next(c)
 	}
 }
 
 // RequiresMinimumPermission is a middleware that will
 // ensure that the user has the given permission.
-func (v *Views) RequiresMinimumPermission(h http.Handler, p permissions.Permissions) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		session, err := v.cookie.Get(r, v.conf.SessionCookieName)
+func (v *Views) RequiresMinimumPermission(next echo.HandlerFunc, p permissions.Permissions) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
+			return v.LoginFunc(c)
 		}
 
 		u := helpers.GetUser(session)
 
-		perms, err := v.user.GetPermissionsForUser(r.Context(), u)
+		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
+			return v.LoginFunc(c)
 		}
 
 		acceptedPerms := GetValidPermissions(p)
 
 		for _, perm := range perms {
-			if acceptedPerms[perm] {
-				h.ServeHTTP(w, r)
-				return
+			if acceptedPerms[perm.Name] {
+				return next(c)
 			}
 		}
 
-		err = v.template.RenderNoNavsTemplate(w, nil, templates.Forbidden500Template)
+		c.Response().WriteHeader(http.StatusForbidden)
+		return v.Error500(c)
+	}
+}
+
+// RequiresMinimumPermissionMMP is a middleware that will
+// ensure that the user has ManageMembersPermissions.
+func (v *Views) RequiresMinimumPermissionMMP(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 		if err != nil {
 			log.Println(err)
+			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
+			return v.LoginFunc(c)
 		}
-		w.WriteHeader(http.StatusForbidden)
+
+		u := helpers.GetUser(session)
+
+		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
+		if err != nil {
+			log.Println(err)
+			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
+			return v.LoginFunc(c)
+		}
+
+		acceptedPerms := GetValidPermissions(permissions.ManageMembersPermissions)
+
+		for _, perm := range perms {
+			if acceptedPerms[perm.Name] {
+				return next(c)
+			}
+		}
+
+		c.Response().WriteHeader(http.StatusForbidden)
+		return v.Error500(c)
+	}
+}
+
+// RequiresMinimumPermissionMMG is a middleware that will
+// ensure that the user has ManageMembersGroup.
+func (v *Views) RequiresMinimumPermissionMMG(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+		if err != nil {
+			log.Println(err)
+			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
+			return v.LoginFunc(c)
+		}
+
+		u := helpers.GetUser(session)
+
+		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
+		if err != nil {
+			log.Println(err)
+			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
+			return v.LoginFunc(c)
+		}
+
+		acceptedPerms := GetValidPermissions(permissions.ManageMembersGroup)
+
+		for _, perm := range perms {
+			if acceptedPerms[perm.Name] {
+				return next(c)
+			}
+		}
+
+		c.Response().WriteHeader(http.StatusForbidden)
+		return v.Error500(c)
+	}
+}
+
+// RequiresMinimumPermissionMMML is a middleware that will
+// ensure that the user has ManageMembersMembersList.
+func (v *Views) RequiresMinimumPermissionMMML(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+		if err != nil {
+			log.Println(err)
+			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
+			return v.LoginFunc(c)
+		}
+
+		u := helpers.GetUser(session)
+
+		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
+		if err != nil {
+			log.Println(err)
+			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
+			return v.LoginFunc(c)
+		}
+
+		acceptedPerms := GetValidPermissions(permissions.ManageMembersMembersList)
+
+		for _, perm := range perms {
+			if acceptedPerms[perm.Name] {
+				return next(c)
+			}
+		}
+
+		c.Response().WriteHeader(http.StatusForbidden)
+		return v.Error500(c)
+	}
+}
+
+// RequiresMinimumPermissionMMAdd is a middleware that will
+// ensure that the user has ManageMembersMembersAdd.
+func (v *Views) RequiresMinimumPermissionMMAdd(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+		if err != nil {
+			log.Println(err)
+			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
+			return v.LoginFunc(c)
+		}
+
+		u := helpers.GetUser(session)
+
+		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
+		if err != nil {
+			log.Println(err)
+			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
+			return v.LoginFunc(c)
+		}
+
+		acceptedPerms := GetValidPermissions(permissions.ManageMembersMembersAdd)
+
+		for _, perm := range perms {
+			if acceptedPerms[perm.Name] {
+				return next(c)
+			}
+		}
+
+		c.Response().WriteHeader(http.StatusForbidden)
+		return v.Error500(c)
+	}
+}
+
+// RequiresMinimumPermissionMMAdmin is a middleware that will
+// ensure that the user has ManageMembersMembersAdmin.
+func (v *Views) RequiresMinimumPermissionMMAdmin(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+		if err != nil {
+			log.Println(err)
+			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
+			return v.LoginFunc(c)
+		}
+
+		u := helpers.GetUser(session)
+
+		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
+		if err != nil {
+			log.Println(err)
+			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
+			return v.LoginFunc(c)
+		}
+
+		acceptedPerms := GetValidPermissions(permissions.ManageMembersMembersAdmin)
+
+		for _, perm := range perms {
+			if acceptedPerms[perm.Name] {
+				return next(c)
+			}
+		}
+
+		c.Response().WriteHeader(http.StatusForbidden)
+		return v.Error500(c)
 	}
 }
 
@@ -83,7 +258,7 @@ func (v *Views) RequiresMinimumPermissionNoHttp(userID int, p permissions.Permis
 	m := GetValidPermissions(p)
 
 	for _, perm := range p1 {
-		if m[perm] {
+		if m[perm.Name] {
 			return true
 		}
 	}
