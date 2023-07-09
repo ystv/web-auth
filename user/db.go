@@ -9,7 +9,7 @@ import (
 
 // countUsers will get the number of total users
 func (s *Store) countUsers(ctx context.Context) (int, error) {
-	count := 0
+	var count int
 	err := s.db.GetContext(ctx, &count,
 		`SELECT COUNT(*)
 		FROM people.users;`)
@@ -21,7 +21,7 @@ func (s *Store) countUsers(ctx context.Context) (int, error) {
 
 // countUsers24Hours will get the number of users in the last 24 hours
 func (s *Store) countUsers24Hours(ctx context.Context) (int, error) {
-	count := 0
+	var count int
 	err := s.db.GetContext(ctx, &count,
 		`SELECT COUNT(*)
 		FROM people.users
@@ -34,7 +34,7 @@ func (s *Store) countUsers24Hours(ctx context.Context) (int, error) {
 
 // countUsersPastYear will get the number of users in the last 24 hours
 func (s *Store) countUsersPastYear(ctx context.Context) (int, error) {
-	count := 0
+	var count int
 	err := s.db.GetContext(ctx, &count,
 		`SELECT COUNT(*)
 		FROM people.users
@@ -68,7 +68,7 @@ func (s *Store) updateUser(ctx context.Context, user User) error {
 
 // getUser will get a user using any unique identity fields for a user
 func (s *Store) getUser(ctx context.Context, user User) (User, error) {
-	u := User{}
+	var u User
 	err := s.db.GetContext(ctx, &u,
 		`SELECT *
 		FROM people.users
