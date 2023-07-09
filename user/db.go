@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
 	"time"
 )
@@ -13,6 +14,19 @@ func (s *Store) countUsers(ctx context.Context) (int, error) {
 	err := s.db.GetContext(ctx, &count,
 		`SELECT COUNT(*)
 		FROM people.users;`)
+	if err != nil {
+		return count, fmt.Errorf("failed to count users from db: %w", err)
+	}
+	return count, nil
+}
+
+// countUsersActive will get the number of total active users
+func (s *Store) countUsersActive(ctx context.Context) (int, error) {
+	var count int
+	err := s.db.GetContext(ctx, &count,
+		`SELECT COUNT(*)
+		FROM people.users
+		WHERE enabled = true AND deleted_by IS NULL AND deleted_at IS NULL;`)
 	if err != nil {
 		return count, fmt.Errorf("failed to count users from db: %w", err)
 	}
@@ -58,8 +72,16 @@ func (s *Store) updateUser(ctx context.Context, user User) error {
 			use_gravatar = $7,
 			first_name = $8,
 			last_name = $9,
-			nickname = $10
-		WHERE user_id = $11;`, user.Password, user.Salt, user.Email, user.LastLogin, user.ResetPw, user.Avatar, user.UseGravatar, user.Firstname, user.Lastname, user.Nickname, user.UserID)
+			nickname = $10,
+			university_username = $11,
+			ldap_username = $12,
+			login_type = $13,
+			enabled = $14,
+			updated_by = $15,
+			updated_at = $16,
+			deleted_by = $17,
+			deleted_at = $18
+		WHERE user_id = $19;`, user.Password, user.Salt, user.Email, user.LastLogin, user.ResetPw, user.Avatar, user.UseGravatar, user.Firstname, user.Lastname, user.Nickname, user.UniversityUsername, user.LDAPUsername, user.LoginType, user.Enabled, user.UpdatedBy, user.UpdatedAt, user.DeletedBy, user.DeletedAt, user.UserID)
 	if err != nil {
 		return err
 	}
@@ -115,12 +137,12 @@ func (s *Store) getUsersSearch(ctx context.Context, search string) ([]User, erro
 		`SELECT *
 		FROM people.users
 		WHERE (CAST(user_id AS TEXT) LIKE '%' || $1 || '%')
-		   OR (username LIKE '%' || $1 || '%')
-		   OR (nickname LIKE '%' || $1 || '%')
-		   OR (first_name LIKE '%' || $1 || '%')
-		   or (last_name LIKE '%' || $1 || '%')
-		   OR (email LIKE '%' || $1 || '%')
-		   OR (first_name || ' ' || last_name LIKE '%' || $1 || '%');`, search)
+		   OR (LOWER(username) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(nickname) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(first_name) LIKE LOWER('%' || $1 || '%'))
+		   or (LOWER(last_name) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(email) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || $1 || '%'));`, search)
 	if err != nil {
 		return nil, err
 	}
@@ -134,12 +156,12 @@ func (s *Store) getUsersSearchSizePage(ctx context.Context, search string, size,
 		`SELECT *
 		FROM people.users
 		WHERE (CAST(user_id AS TEXT) LIKE '%' || $1 || '%')
-		   OR (username LIKE '%' || $1 || '%')
-		   OR (nickname LIKE '%' || $1 || '%')
-		   OR (first_name LIKE '%' || $1 || '%')
-		   or (last_name LIKE '%' || $1 || '%')
-		   OR (email LIKE '%' || $1 || '%')
-		   OR (first_name || ' ' || last_name LIKE '%' || $1 || '%')
+		   OR (LOWER(username) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(nickname) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(first_name) LIKE LOWER('%' || $1 || '%'))
+		   or (LOWER(last_name) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(email) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || $1 || '%'))
 -- 		GROUP BY u, user_id, username, university_username, email, first_name, last_name, nickname, login_type, password, salt, avatar, last_login, reset_pw, enabled, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by, use_gravatar, ldap_username
 		LIMIT $2
 		OFFSET $3;`, search, size, size*(page-1))
@@ -196,12 +218,12 @@ func (s *Store) getUsersSearchOptionsAsc(ctx context.Context, search, sortBy str
 		`SELECT *
 		FROM people.users
 		WHERE (CAST(user_id AS TEXT) LIKE '%' || $1 || '%')
-		   OR (username LIKE '%' || $1 || '%')
-		   OR (nickname LIKE '%' || $1 || '%')
-		   OR (first_name LIKE '%' || $1 || '%')
-		   or (last_name LIKE '%' || $1 || '%')
-		   OR (email LIKE '%' || $1 || '%')
-		   OR (first_name || ' ' || last_name LIKE '%' || $1 || '%')
+		   OR (LOWER(username) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(nickname) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(first_name) LIKE LOWER('%' || $1 || '%'))
+		   or (LOWER(last_name) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(email) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || $1 || '%'))
 		ORDER BY
 		    CASE WHEN $2 = 'userId' THEN user_id END ASC,
 		    CASE WHEN $2 = 'name' THEN first_name END ASC,
@@ -222,12 +244,12 @@ func (s *Store) getUsersSearchOptionsAscSizePage(ctx context.Context, search, so
 		`SELECT *
 		FROM people.users
 		WHERE (CAST(user_id AS TEXT) LIKE '%' || $1 || '%')
-		   OR (username LIKE '%' || $1 || '%')
-		   OR (nickname LIKE '%' || $1 || '%')
-		   OR (first_name LIKE '%' || $1 || '%')
-		   or (last_name LIKE '%' || $1 || '%')
-		   OR (email LIKE '%' || $1 || '%')
-		   OR (first_name || ' ' || last_name LIKE '%' || $1 || '%')
+		   OR (LOWER(username) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(nickname) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(first_name) LIKE LOWER('%' || $1 || '%'))
+		   or (LOWER(last_name) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(email) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || $1 || '%'))
 		ORDER BY
 		    CASE WHEN $2 = 'userId' THEN user_id END ASC,
 		    CASE WHEN $2 = 'name' THEN first_name END ASC,
@@ -290,12 +312,12 @@ func (s *Store) getUsersSearchOptionsDesc(ctx context.Context, search, sortBy st
 		`SELECT *
 		FROM people.users
 		WHERE (CAST(user_id AS TEXT) LIKE '%' || $1 || '%')
-		   OR (username LIKE '%' || $1 || '%')
-		   OR (nickname LIKE '%' || $1 || '%')
-		   OR (first_name LIKE '%' || $1 || '%')
-		   or (last_name LIKE '%' || $1 || '%')
-		   OR (email LIKE '%' || $1 || '%')
-		   OR (first_name || ' ' || last_name LIKE '%' || $1 || '%')
+		   OR (LOWER(username) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(nickname) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(first_name) LIKE LOWER('%' || $1 || '%'))
+		   or (LOWER(last_name) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(email) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || $1 || '%'))
 		ORDER BY
 		    CASE WHEN $2 = 'userId' THEN user_id END DESC,
 		    CASE WHEN $2 = 'name' THEN first_name END DESC,
@@ -316,12 +338,12 @@ func (s *Store) getUsersSearchOptionsDescSizePage(ctx context.Context, search, s
 		`SELECT *
 		FROM people.users
 		WHERE (CAST(user_id AS TEXT) LIKE '%' || $1 || '%')
-		   OR (username LIKE '%' || $1 || '%')
-		   OR (nickname LIKE '%' || $1 || '%')
-		   OR (first_name LIKE '%' || $1 || '%')
-		   or (last_name LIKE '%' || $1 || '%')
-		   OR (email LIKE '%' || $1 || '%')
-		   OR (first_name || ' ' || last_name LIKE '%' || $1 || '%')
+		   OR (LOWER(username) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(nickname) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(first_name) LIKE LOWER('%' || $1 || '%'))
+		   or (LOWER(last_name) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(email) LIKE LOWER('%' || $1 || '%'))
+		   OR (LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || $1 || '%'))
 		ORDER BY
 		    CASE WHEN $2 = 'userId' THEN user_id END DESC,
 		    CASE WHEN $2 = 'name' THEN first_name END DESC,
@@ -338,11 +360,12 @@ func (s *Store) getUsersSearchOptionsDescSizePage(ctx context.Context, search, s
 }
 
 // getPermissionsForUser returns all permissions for a user
-func (s *Store) getPermissionsForUser(ctx context.Context, u User) (p []string, err error) {
-	err = s.db.SelectContext(ctx, &p, `SELECT p.name
+func (s *Store) getPermissionsForUser(ctx context.Context, u User) ([]permission.Permission, error) {
+	var p []permission.Permission
+	err := s.db.SelectContext(ctx, &p, `SELECT p.*
 		FROM people.permissions p
-		INNER JOIN people.role_permissions rp ON rp.permission_id = p.permission_id
-		INNER JOIN people.role_members rm ON rm.role_id = rp.role_id
+		LEFT JOIN people.role_permissions rp ON rp.permission_id = p.permission_id
+		LEFT JOIN people.role_members rm ON rm.role_id = rp.role_id
 		WHERE rm.user_id = $1;`, u.UserID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user permissions: %w", err)
@@ -351,13 +374,53 @@ func (s *Store) getPermissionsForUser(ctx context.Context, u User) (p []string, 
 }
 
 // getRolesForUser returns all roles for a user
-func (s *Store) getRolesForUser(ctx context.Context, u User) (r []role.Role, err error) {
-	err = s.db.SelectContext(ctx, &r, `SELECT r.*
+func (s *Store) getRolesForUser(ctx context.Context, u User) ([]role.Role, error) {
+	var r []role.Role
+	err := s.db.SelectContext(ctx, &r, `SELECT r.*
 		FROM people.roles r
-		INNER JOIN people.role_members rm ON rm.role_id = r.role_id
+		LEFT JOIN people.role_members rm ON rm.role_id = r.role_id
 		WHERE rm.user_id = $1;`, u.UserID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user roles: %w", err)
+	}
+	return r, nil
+}
+
+// getUsersForRole returns all users for a role - moved here for cycle import reasons
+func (s *Store) getUsersForRole(ctx context.Context, r role.Role) ([]User, error) {
+	var u []User
+	err := s.db.SelectContext(ctx, &u, `SELECT u.*
+		FROM people.users u
+		LEFT JOIN people.role_members rm ON rm.user_id = u.user_id
+		WHERE rm.role_id = $1;`, r.RoleID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get role users: %w", err)
+	}
+	return u, nil
+}
+
+// getPermissionsForRole returns all permissions for a role - moved here for cycle import reasons
+func (s *Store) getPermissionsForRole(ctx context.Context, r role.Role) ([]permission.Permission, error) {
+	var p []permission.Permission
+	err := s.db.SelectContext(ctx, &p, `SELECT p.*
+		FROM people.permissions p
+		LEFT JOIN people.role_permissions rp on p.permission_id = rp.permission_id
+		WHERE rp.role_id = $1`, r.RoleID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get role permissions: %w", err)
+	}
+	return p, nil
+}
+
+// getRolesForPermission returns all roles for a permission - moved here for cycle import reasons
+func (s *Store) getRolesForPermission(ctx context.Context, p permission.Permission) ([]role.Role, error) {
+	var r []role.Role
+	err := s.db.SelectContext(ctx, &r, `SELECT r.*
+		FROM people.roles r
+		LEFT JOIN people.role_permissions rp on r.role_id = rp.role_id
+		WHERE rp.permission_id = $1`, p.PermissionID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get permission roles: %w", err)
 	}
 	return r, nil
 }
