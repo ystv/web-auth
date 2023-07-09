@@ -140,7 +140,7 @@ var _ Repo = &Views{}
 
 // New initialises connections, templates, and cookies
 func New(conf *Config, host string) *Views {
-	var v *Views
+	v := &Views{}
 	// Connecting to stores
 	dbStore, err := db.NewStore(conf.DatabaseURL)
 	if err != nil {
