@@ -5,32 +5,34 @@
             <header class="card-header">
                 <p class="card-header-title">Permissions</p>
             </header>
+            <div class="card" style="margin-bottom: 0">
+                <div class="column">
+                        <div class="field">
+                            <a onclick="" class="button is-info">Add Permission</a>
+                        </div>
+                </div>
+            </div>
             <div class="card-table">
                 <div class="content">
                     <table class="table is-fullwidth is-hoverable" style="max-height: 90%">
                         <thead>
                         <tr>
-{{/*                            <th>Permission ID</th>*/}}
+                            <th>Permission ID</th>
                             <th>Name</th>
                             <th>Description</th>
+                            <th>Roles</th>
                             <th>Actions</th>
                         </tr>
                         </thead>
                         <tbody>
-                        {{ range $permission := .Permissions }}
-                            <tr>
-{{/*                                <th>{{ $permission.PermissionID }}</th>*/}}
-                                <td>{{ $permission.Name }}</td>
-                                <td>{{ $permission.Description }}</td>
-                                <td><a href="./permission/{{ $permission.PermissionID }}">View</a></td>
-                            </tr>
-                        {{ end }}
+                        {{parseHTMLPermissions .Permissions}}
                         </tbody>
                         <tfoot>
                         <tr>
-{{/*                            <th>Permission ID</th>*/}}
+                            <th>Permission ID</th>
                             <th>Name</th>
                             <th>Description</th>
+                            <th>Roles</th>
                             <th>Actions</th>
                         </tr>
                         </tfoot>

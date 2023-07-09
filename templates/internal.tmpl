@@ -9,6 +9,16 @@
                 </div>
             </div>
         </section>
+        <section class="info-tiles">
+            <div class="tile is-ancestor has-text-centered">
+                <div class="tile is-parent">
+                    <article class="tile is-child box">
+                        <p class="title">Welcome to YSTV</p>
+                        <p class="subtitle">Please use the links on the left to use our services</p>
+                    </article>
+                </div>
+            </div>
+        </section>
         {{if (checkPermission .UserID "ManageMembers.Members.List")}}
             <section class="info-tiles">
                 <div class="tile is-ancestor has-text-centered">
@@ -16,6 +26,12 @@
                         <article class="tile is-child box">
                             <p class="title">{{.TotalUsers}}</p>
                             <p class="subtitle">Total users</p>
+                        </article>
+                    </div>
+                    <div class="tile is-parent">
+                        <article class="tile is-child box">
+                            <p class="title">{{.TotalActiveUsers}}</p>
+                            <p class="subtitle">Total active users (enabled and not deleted)</p>
                         </article>
                     </div>
                     <div class="tile is-parent">
@@ -36,17 +52,6 @@
     {{/*                        <p class="subtitle">Password resets past week</p>*/}}
     {{/*                    </article>*/}}
     {{/*                </div>*/}}
-                </div>
-            </section>
-        {{else}}
-            <section class="info-tiles">
-                <div class="tile is-ancestor has-text-centered">
-                    <div class="tile is-parent">
-                        <article class="tile is-child box">
-                            <p class="title">Welcome to YSTV</p>
-                            <p class="subtitle">Please use the links on the left to use our services</p>
-                        </article>
-                    </div>
                 </div>
             </section>
         {{end}}

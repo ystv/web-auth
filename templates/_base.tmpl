@@ -1,26 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    {{template "head" .}}
-    <title>{{block "title" .}}Web Auth{{end}}</title>
-    <link rel="stylesheet" type="text/css" href="/static/internal.css"/>
+    {{template "_head" .}}
+    <title>YSTV Web Auth - {{block "title" .}}{{end}}</title>
 </head>
 <body>
 {{block "navbar-block" .}}
-    {{template "navbar" .}}
+    {{template "_navbar" .}}
 {{end}}
 <div class="container">
     <div class="columns">
         {{block "sidebar-block" .}}
-            {{template "sidebar" .}}
+            {{template "_sidebar" .}}
         {{end}}
         {{block "content-block" .}}
             {{template "content" .}}
         {{end}}
     </div>
 </div>
+<br>
 {{block "footer-block" .}}
-    {{template "footer" .}}
+    {{template "_footer" .}}
 {{end}}
 </body>
 </html>

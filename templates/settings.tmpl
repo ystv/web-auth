@@ -1,0 +1,125 @@
+{{define "title"}}Settings{{end}}
+{{define "content"}}
+    <div class="column is-10">
+        <section class="hero is-info welcome is-small">
+            <div class="hero-body">
+                <div class="container">
+                    <h1 class="title">Hello, {{.User.Nickname}}.</h1>
+                    <h2 class="subtitle">Last login: {{.LastLogin}}</h2>
+                </div>
+            </div>
+        </section>
+        <br>
+        <div class="columns box" style="height: fit-content">
+            <div class="column is-2">
+                <figure class="avatar">
+                    {{if .User.UseGravatar}}<img src="{{.Gravatar}}" alt="placeholder" width="128px"
+                                                 height="128px"/>{{else}}
+                        <img src="https://placehold.it/128x128" alt="placeholder"/>{{end}}
+                </figure>
+                <div class="buttons">
+                    <a class="button is-info is-outlined">
+                        Change password
+                    </a>
+                    <a class="button is-info is-outlined">
+                        Update your details
+                    </a>
+                </div>
+            </div>
+            <div class="column">
+                <p id="message" style="color: green"></p>
+                <p id="error" style="color: red"></p>
+                {{with .User}}
+                    <p>Your current information...<br>
+                        First name: {{.Firstname}}<br>
+                        Last name: {{.Lastname}}<br>
+                        Nickname: {{.Nickname}}<br>
+                        Username: {{.Username}}<br>
+                        Email: {{.Email}}<br>
+                        Avatar source: {{if .UseGravatar}}Using gravatar{{else}}Using local file{{end}}<br><br></p>
+{{/*                    <p class="subtitle">Use the fields below to modify some of your details.</p>*/}}
+                {{end}}
+{{/*                <form>*/}}
+{{/*                    <div class="field">*/}}
+{{/*                        <label class="label" for="nickname">Nickname</label>*/}}
+{{/*                        <div class="control">*/}}
+{{/*                            <input*/}}
+{{/*                                    id="nickname"*/}}
+{{/*                                    class="input"*/}}
+{{/*                                    type="text"*/}}
+{{/*                                    placeholder="Nickname"*/}}
+{{/*                            />*/}}
+{{/*                        </div>*/}}
+{{/*                    </div>*/}}
+{{/*                    <div class="field">*/}}
+{{/*                        <label class="label" for="email">Email</label>*/}}
+{{/*                        <div class="control">*/}}
+{{/*                            <input class="input" type="email" placeholder="Email" id="email"/>*/}}
+{{/*                        </div>*/}}
+{{/*                    </div>*/}}
+{{/*                    <button class="button is-block is-info">Update</button>*/}}
+{{/*                </form>*/}}
+            </div>
+        </div>
+    </div>
+    {{template "modals" .}}
+{{end}}
+
+{{define "modals"}}
+    <div id="changePasswordModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title">Change your password</p>
+                            <p>Please enter your current password then your new password and confirm the new password.</p>
+{{/*                            <form id="changePasswordForm" action="/internal/changepassword" method="post">*/}}
+                            <form id="changePasswordForm">
+                                <label for="oldPassword">Enter your old password</label>
+                                <input class="input" type="password" placeholder="Old password" id="oldPassword" name="oldPassword" value="">
+                                <label for="newPassword">Enter your new password</label>
+                                <input class="input" type="password" placeholder="New password" id="newPassword" name="newPassword" value="">
+                                <label for="confirmationPassword">Enter your new password again</label>
+                                <input class="input" type="password" placeholder="New password again" id="confirmationPassword" name="confirmationPassword" value="">
+                            </form>
+                            <a class="button is-warning" onclick="changePassword()">Change password</a>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+<script>
+    document.querySelectorAll(
+        ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
+    ).forEach(($el) => {
+        const $modal = $el.closest(".modal");
+        $el.addEventListener("click", () => {
+            $modal.classList.remove("is-active");
+        });
+    });
+
+    function changePasswordModal() {
+        document.getElementById("changePasswordModal").classList.add("is-active");
+    }
+
+    function changePassword() {
+        // document.getElementById("changePasswordForm").submit();
+        $.ajax({
+            url: '/internal/changepassword',
+            type: 'post',
+            dataType: 'json',
+            contentType: 'application/json',
+            data: $('#changePasswordForm').serialize(),
+            success: function (data) {
+                document.getElementById("changePasswordModal").classList.remove("is-active");
+                $("#message").html(data.message);
+                $("#error").html(data.error);
+            },
+        })
+    }
+</script>
+{{end}}

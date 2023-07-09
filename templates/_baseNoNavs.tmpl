@@ -1,16 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    {{template "head" .}}
+    {{template "_head" .}}
     <title>{{block "title" .}}Web Auth{{end}}</title>
-    <link rel="stylesheet" type="text/css" href="/static/internal.css"/>
 </head>
 <body>
 {{block "content-block" .}}
     {{template "content" .}}
 {{end}}
 {{block "footer-block" .}}
-    {{template "footer" .}}
+    {{template "_footer" .}}
 {{end}}
 </body>
 </html>
