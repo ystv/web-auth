@@ -14,8 +14,16 @@ type (
 	// Mailer encapsulates the dependency
 	Mailer struct {
 		*mail.SMTPClient
+		Defaults   Defaults
 		Enabled    bool
 		DomainName string
+	}
+
+	Defaults struct {
+		DefaultTo   string
+		DefaultCC   []string
+		DefaultBCC  []string
+		DefaultFrom string
 	}
 
 	// Config represents a configuration to connect to an SMTP server
@@ -29,14 +37,15 @@ type (
 
 	// Mail represents an email to be sent
 	Mail struct {
-		Subject string
-		To      string
-		Cc      []string
-		Bcc     []string
-		From    string
-		Error   error
-		Tpl     *template.Template
-		TplData interface{}
+		Subject     string
+		To          string
+		Cc          []string
+		Bcc         []string
+		From        string
+		Error       error
+		UseDefaults bool
+		Tpl         *template.Template
+		TplData     interface{}
 	}
 )
 
@@ -56,9 +65,17 @@ func NewMailer(config Config) (*Mailer, error) {
 
 	smtpClient, err := smtpServer.Connect()
 	if err != nil {
-		return &Mailer{nil, false, config.DomainName}, err
+		return &Mailer{nil, Defaults{}, false, config.DomainName}, err
 	}
-	return &Mailer{smtpClient, true, config.DomainName}, err
+	return &Mailer{smtpClient, Defaults{}, true, config.DomainName}, err
+}
+
+// AddDefaults adds the default recipients
+func (m *Mailer) AddDefaults(defaults Defaults) {
+	m.Defaults.DefaultTo = defaults.DefaultTo
+	m.Defaults.DefaultCC = defaults.DefaultCC
+	m.Defaults.DefaultBCC = defaults.DefaultBCC
+	m.Defaults.DefaultFrom = defaults.DefaultFrom
 }
 
 // SendResetEmail sends a plaintext email
