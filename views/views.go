@@ -113,6 +113,8 @@ func New(conf Config) *Views {
 	})
 	if err != nil {
 		log.Printf("mailer failed: %+v", err)
+	} else {
+		log.Printf("connected to mailer: %s", conf.Mail.Host)
 	}
 
 	// Initialising cache
