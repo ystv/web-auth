@@ -32,7 +32,7 @@ type (
 		Security          SecurityConfig
 	}
 
-	// SMTPConfig stores the SMTP mailer configuration
+	// SMTPConfig stores the SMTP Mailer configuration
 	SMTPConfig struct {
 		Host     string
 		Username string
