@@ -139,7 +139,7 @@ type (
 var _ Repo = &Views{}
 
 // New initialises connections, templates, and cookies
-func New(conf *Config, host string) *Views {
+func New(conf *Config, host, port string) *Views {
 	v := &Views{}
 	// Connecting to stores
 	dbStore, err := db.NewStore(conf.DatabaseURL)
@@ -150,7 +150,7 @@ func New(conf *Config, host string) *Views {
 			log.Fatalf("db failed: %+v", err)
 		}
 	} else {
-		log.Printf("connected to db: %s", host)
+		log.Printf("connected to db: %s:%s", host, port)
 	}
 
 	v.permission = permission.NewPermissionRepo(dbStore)
@@ -170,7 +170,7 @@ func New(conf *Config, host string) *Views {
 	if err != nil {
 		log.Printf("mailer failed: %+v", err)
 	} else {
-		log.Printf("connected to mailer: %s", conf.Mail.Host)
+		log.Printf("connected to mailer: %s:%d", conf.Mail.Host, conf.Mail.Port)
 	}
 
 	// Initialising cache

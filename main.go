@@ -55,11 +55,12 @@ func main() {
 	}
 
 	host := os.Getenv("WAUTH_DB_HOST")
+	dbPort := os.Getenv("WAUTH_DB_PORT")
 
 	dbConnectionString := fmt.Sprintf(
 		"host=%s port=%s user=%s dbname=%s sslmode=%s password=%s",
 		host,
-		os.Getenv("WAUTH_DB_PORT"),
+		dbPort,
 		os.Getenv("WAUTH_DB_USER"),
 		os.Getenv("WAUTH_DB_NAME"),
 		os.Getenv("WAUTH_DB_SSLMODE"),
@@ -110,7 +111,7 @@ func main() {
 		},
 	}
 
-	v := views.New(conf, host)
+	v := views.New(conf, host, dbPort)
 
 	router1 := router.New(&router.NewRouter{
 		Config: conf,
