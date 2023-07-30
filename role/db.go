@@ -36,7 +36,16 @@ func (s *Store) getRole(ctx context.Context, r1 Role) (Role, error) {
 }
 
 func (s *Store) addRole(ctx context.Context, r1 Role) (Role, error) {
-	return Role{}, nil
+	var r Role
+	stmt, err := s.db.PrepareNamedContext(ctx, "INSERT INTO people.roles (name, description) VALUES (:name, :description) RETURNING role_id, name, description")
+	if err != nil {
+		return Role{}, fmt.Errorf("failed to add role: %w", err)
+	}
+	err = stmt.Get(&r, r1)
+	if err != nil {
+		return Role{}, fmt.Errorf("failed to add role: %w", err)
+	}
+	return r, nil
 }
 
 func (s *Store) editRole(ctx context.Context, r1 Role) (Role, error) {
