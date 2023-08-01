@@ -75,7 +75,7 @@ func (s *Store) updateUser(ctx context.Context, u1 User) (User, error) {
 			updated_at = :updated_at,
 			deleted_by = :deleted_by,
 			deleted_at = :deleted_at
-		WHERE user_id = :user_id;`, u1) //, user) //user.Password, user.Salt, user.Email, user.LastLogin, user.ResetPw, user.Avatar, user.UseGravatar, user.Firstname, user.Lastname, user.Nickname, user.UniversityUsername, user.LDAPUsername, user.LoginType, user.Enabled, user.UpdatedBy, user.UpdatedAt, user.DeletedBy, user.DeletedAt, user.UserID)
+		WHERE user_id = :user_id;`, u1)
 	if err != nil {
 		return User{}, fmt.Errorf("failed to update user: %w", err)
 	}
