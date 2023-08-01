@@ -1,11 +1,14 @@
 package views
 
 import (
+	"fmt"
 	"github.com/labstack/echo/v4"
+	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 	"log"
+	"net/http"
 	"strconv"
 )
 
@@ -17,9 +20,11 @@ type (
 	}
 
 	RoleTemplate struct {
-		Role       user.RoleTemplate
-		UserID     int
-		ActivePage string
+		Role                 user.RoleTemplate
+		UserID               int
+		PermissionsNotInRole []permission.Permission
+		UsersNotInRole       []user.User
+		ActivePage           string
 	}
 )
 
@@ -93,10 +98,86 @@ func (v *Views) RoleFunc(c echo.Context) error {
 		}
 	}
 
+	permissions, err := v.user.GetPermissionsNotInRole(c.Request().Context(), role1)
+	if err != nil {
+		log.Printf("failed to get permissions not in role for role: %+v", err)
+		if !v.conf.Debug {
+			return v.errorHandle(c, fmt.Errorf("failed to get permissions not in role for role: %+v", err))
+		}
+	}
+
+	users, err := v.user.GetUsersNotInRole(c.Request().Context(), role1)
+	if err != nil {
+		log.Printf("failed to get users not in role for role: %+v", err)
+		if !v.conf.Debug {
+			return v.errorHandle(c, fmt.Errorf("failed to get users not in role for role: %+v", err))
+		}
+	}
+
 	data := RoleTemplate{
-		Role:       roleTemplate,
-		UserID:     c1.User.UserID,
-		ActivePage: "role",
+		Role:                 roleTemplate,
+		UserID:               c1.User.UserID,
+		PermissionsNotInRole: permissions,
+		UsersNotInRole:       users,
+		ActivePage:           "role",
+	}
+
+	return v.template.RenderTemplate(c.Response(), data, templates.RoleTemplate)
+}
+
+func (v *Views) roleFunc(c echo.Context, roleID int) error {
+	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+
+	c1 := v.getData(session)
+
+	role1, err := v.role.GetRole(c.Request().Context(), role.Role{RoleID: roleID})
+	if err != nil {
+		log.Printf("failed to get role for role: %+v", err)
+		if !v.conf.Debug {
+			return v.errorHandle(c, err)
+		}
+	}
+
+	roleTemplate := v.bindRoleToTemplate(role1)
+
+	roleTemplate.Permissions, err = v.user.GetPermissionsForRole(c.Request().Context(), role1)
+	if err != nil {
+		log.Printf("failed to get roles for role: %+v", err)
+		if !v.conf.Debug {
+			return v.errorHandle(c, err)
+		}
+	}
+
+	roleTemplate.Users, err = v.user.GetUsersForRole(c.Request().Context(), role1)
+	if err != nil {
+		log.Printf("failed to get users for role: %+v", err)
+		if !v.conf.Debug {
+			return v.errorHandle(c, err)
+		}
+	}
+
+	permissions, err := v.user.GetPermissionsNotInRole(c.Request().Context(), role1)
+	if err != nil {
+		log.Printf("failed to get permissions not in role for role: %+v", err)
+		if !v.conf.Debug {
+			return v.errorHandle(c, fmt.Errorf("failed to get permissions not in role for role: %+v", err))
+		}
+	}
+
+	users, err := v.user.GetUsersNotInRole(c.Request().Context(), role1)
+	if err != nil {
+		log.Printf("failed to get users not in role for role: %+v", err)
+		if !v.conf.Debug {
+			return v.errorHandle(c, fmt.Errorf("failed to get users not in role for role: %+v", err))
+		}
+	}
+
+	data := RoleTemplate{
+		Role:                 roleTemplate,
+		UserID:               c1.User.UserID,
+		PermissionsNotInRole: permissions,
+		UsersNotInRole:       users,
+		ActivePage:           "role",
 	}
 
 	return v.template.RenderTemplate(c.Response(), data, templates.RoleTemplate)
@@ -298,6 +379,132 @@ func (v *Views) RoleRemovePermissionFunc(c echo.Context) error {
 			log.Printf("failed to remove rolePermission for roleRemoveRole: %+v", err)
 			if !v.conf.Debug {
 				return v.errorHandle(c, fmt.Errorf("failed to remove rolePermission for roleRemovePermission: %+v", err))
+			}
+		}
+
+		return v.roleFunc(c, roleID)
+	} else {
+		return v.errorHandle(c, fmt.Errorf("invalid method used"))
+	}
+}
+
+func (v *Views) RoleAddUserFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		err := c.Request().ParseForm()
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		roleID, err := strconv.Atoi(c.Param("roleid"))
+		if err != nil {
+			log.Printf("failed to get role for roleAddUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get role for roleAddUser: %+v", err))
+			}
+		}
+
+		_, err = v.role.GetRole(c.Request().Context(), role.Role{RoleID: roleID})
+		if err != nil {
+			log.Printf("failed to get user for roleAddUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get user for roleAddUser: %+v", err))
+			}
+		}
+
+		userID, err := strconv.Atoi(c.Request().FormValue("user"))
+		if err != nil {
+			log.Printf("failed to get userID for roleAddUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get userID for roleAddUser: %+v", err))
+			}
+		}
+		_, err = v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
+		if err != nil {
+			log.Printf("failed to get user for roleAddUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get user for roleAddUser: %+v", err))
+			}
+		}
+
+		roleUser := user.RoleUser{
+			RoleID: roleID,
+			UserID: userID,
+		}
+
+		_, err = v.user.GetRoleUser(c.Request().Context(), roleUser)
+		if err == nil {
+			log.Printf("failed to add roleUser for roleAddUser: row already exists")
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to add roleUser for roleAddUser: row already exists"))
+			}
+		}
+
+		_, err = v.user.AddRoleUser(c.Request().Context(), roleUser)
+		if err != nil {
+			log.Printf("failed to add roleUser for roleAddUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to add roleUser for roleAddUser: %+v", err))
+			}
+		}
+
+		return v.roleFunc(c, roleID)
+	} else {
+		return v.errorHandle(c, fmt.Errorf("invalid method used"))
+	}
+}
+
+func (v *Views) RoleRemoveUserFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		roleID, err := strconv.Atoi(c.Param("roleid"))
+		if err != nil {
+			log.Printf("failed to get roleid for roleRemoveUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get roleid for roleRemoveUser: %+v", err))
+			}
+		}
+
+		_, err = v.role.GetRole(c.Request().Context(), role.Role{RoleID: roleID})
+		if err != nil {
+			log.Printf("failed to get role for roleRemoveUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get role for roleRemoveUser: %+v", err))
+			}
+		}
+
+		userID, err := strconv.Atoi(c.Param("userid"))
+		if err != nil {
+			log.Printf("failed to get userID for roleRemoveUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get userID for roleRemoveUser: %+v", err))
+			}
+		}
+		_, err = v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
+		if err != nil {
+			log.Printf("failed to get user for roleRemoveUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get user for roleRemoveUser: %+v", err))
+			}
+		}
+
+		roleUser := user.RoleUser{
+			RoleID: roleID,
+			UserID: userID,
+		}
+
+		_, err = v.user.GetRoleUser(c.Request().Context(), roleUser)
+		if err != nil {
+			log.Printf("failed to get roleUser for roleRemoveUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get roleUser for roleRemoveUser: %+v", err))
+			}
+		}
+
+		err = v.user.RemoveRoleUser(c.Request().Context(), roleUser)
+		if err != nil {
+			log.Printf("failed to remove roleUser for roleRemoveUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to remove roleUser for roleRemoveUser: %+v", err))
 			}
 		}
 

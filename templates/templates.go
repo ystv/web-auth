@@ -247,33 +247,69 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			}
 			return template.HTML(output.String())
 		},
-		"parseHTMLRole": func(r user.RoleTemplate, userID int) template.HTML {
+		"parseHTMLRole": func(r user.RoleTemplate, permissionsNotInRole []permission.Permission, usersNotInRole []user.User, userID int) template.HTML {
 			permissionAdmin := t.permissionsParser(userID, permissions.ManageMembersPermissions.GetString())
 			membersList := t.permissionsParser(userID, permissions.ManageMembersMembersList.GetString())
-			var output, perms, users strings.Builder
+			var output, perms, users, permissionsToAdd, usersToAdd strings.Builder
 			if len(r.Permissions) > 0 {
 				perms.WriteString("Permissions: <ol>")
 				for _, p := range r.Permissions {
 					if permissionAdmin {
-						perms.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span><a href='/internal/permission/%d'>%s</a></li>", p.PermissionID, p.Name))
+						perms.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span><a href='/internal/permission/%[1]d'>%[2]s</a>&emsp;<a class=\"button is-danger is-outlined\" onclick=\"removePermission%[1]dFromRoleModal()\">Remove permission</a></li>", p.PermissionID, p.Name))
 					} else {
-						perms.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span>%s</li>", p.Name))
+						perms.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span>%[1]s&emsp;<a class=\"button is-danger is-outlined\" onclick=\"removePermission%[2]dFromRoleModal()\">Remove permission</a><</li>", p.Name, p.PermissionID))
 					}
+					perms.WriteString(fmt.Sprintf("<div id=\"removePermission%[1]dFromRoleModal\" class=\"modal\">\n        <div class=\"modal-background\"></div>\n        <div class=\"modal-content\">\n            <div class=\"box\">\n                <article class=\"media\">\n                    <div class=\"media-content\">\n                        <div class=\"content\">\n                            <p class=\"title\">Are you sure you want to remove \"%[2]s\" from this role?</p>\n                            <p><strong>This can be undone</strong></p>\n                            <form action=\"/internal/role/%[3]d/permission/remove/%[1]d\" method=\"post\">\n                                <button class=\"button is-danger\">Remove permission</button>\n                            </form>\n                        </div>\n                    </div>\n                </article>\n            </div>\n        </div>\n        <button class=\"modal-close is-large\" aria-label=\"close\"></button>\n    </div><script>function removePermission%[1]dFromRoleModal() {\n            document.getElementById(\"removePermission%[1]dFromRoleModal\").classList.add(\"is-active\");\n        }</script>", p.PermissionID, p.Name, r.RoleID))
 				}
 				perms.WriteString("</ol><br>")
 			}
 			if len(r.Users) > 0 {
-				users.WriteString("Inherited by: <ol>")
+				users.WriteString("<br>Inherited by: <ol>")
 				for _, u := range r.Users {
-					if membersList {
-						users.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span><a href='/internal/user/%d'>%s</a></li>", u.UserID, u.Firstname+" "+u.Lastname))
+					var name string
+					if u.Firstname != u.Nickname && len(u.Nickname) > 0 {
+						name = fmt.Sprintf("%s (%s) %s", u.Firstname, u.Nickname, u.Lastname)
 					} else {
-						users.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span>%s</li>", u.Firstname+" "+u.Lastname))
+						name = fmt.Sprintf("%s %s", u.Firstname, u.Lastname)
 					}
+					if membersList {
+						users.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span><a href='/internal/user/%[1]d'>%[2]s</a>&emsp;<a class=\"button is-danger is-outlined\" onclick=\"removeUser%[1]dFromRoleModal()\">Remove user</a></li>", u.UserID, name))
+					} else {
+						users.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span>%[1]s&emsp;<a class=\"button is-danger is-outlined\" onclick=\"removeUser%[2]dFromRoleModal()\">Remove user</a></li>", name, u.UserID))
+					}
+					users.WriteString(fmt.Sprintf("<div id=\"removeUser%[1]dFromRoleModal\" class=\"modal\">\n        <div class=\"modal-background\"></div>\n        <div class=\"modal-content\">\n            <div class=\"box\">\n                <article class=\"media\">\n                    <div class=\"media-content\">\n                        <div class=\"content\">\n                            <p class=\"title\">Are you sure you want to remove \"%[2]s\" from this role?</p>\n                            <p><strong>This can be undone</strong></p>\n                            <form action=\"/internal/role/%[3]d/user/remove/%[1]d\" method=\"post\">\n                                <button class=\"button is-danger\">Remove user</button>\n                            </form>\n                        </div>\n                    </div>\n                </article>\n            </div>\n        </div>\n        <button class=\"modal-close is-large\" aria-label=\"close\"></button>\n    </div><script>function removeUser%[1]dFromRoleModal() {\n            document.getElementById(\"removeUser%[1]dFromRoleModal\").classList.add(\"is-active\");\n        }</script>", u.UserID, name, r.RoleID))
 				}
-				users.WriteString("</ol>")
+				users.WriteString("</ol><br>")
 			}
-			output.WriteString(fmt.Sprintf("<p>Role ID: %d<br>Name: %s<br>Description: %s<br><br>%s%s</p>", r.RoleID, r.Name, r.Description, perms.String(), users.String()))
+			if len(permissionsNotInRole) > 0 {
+				permissionsToAdd.WriteString("Use the drop down below to add more permissions to this role.<br>")
+				permissionsToAdd.WriteString(fmt.Sprintf("<form method=\"post\" action=\"/internal/role/%d/permission/add\">", r.RoleID))
+				permissionsToAdd.WriteString("<div class=\"select\"><select id=\"permission\" name=\"permission\">")
+				permissionsToAdd.WriteString("<option value disabled selected>Please select</option>")
+				for _, p := range permissionsNotInRole {
+					permissionsToAdd.WriteString(fmt.Sprintf("<option value=\"%d\">%s</option>", p.PermissionID, p.Name))
+				}
+				permissionsToAdd.WriteString("</select></div><br>")
+				permissionsToAdd.WriteString("<button class=\"button is-info\">Add permission</button></form>")
+			}
+			if len(usersNotInRole) > 0 {
+				usersToAdd.WriteString("Use the drop down below to add more users to this role.<br>")
+				usersToAdd.WriteString(fmt.Sprintf("<form method=\"post\" action=\"/internal/role/%d/user/add\">", r.RoleID))
+				usersToAdd.WriteString("<div class=\"select\"><select id=\"user\" name=\"user\">")
+				usersToAdd.WriteString("<option value disabled selected>Please select</option>")
+				for _, u := range usersNotInRole {
+					var name string
+					if u.Firstname != u.Nickname && len(u.Nickname) > 0 {
+						name = fmt.Sprintf("%s (%s) %s", u.Firstname, u.Nickname, u.Lastname)
+					} else {
+						name = fmt.Sprintf("%s %s", u.Firstname, u.Lastname)
+					}
+					usersToAdd.WriteString(fmt.Sprintf("<option value=\"%d\">%s</option>", u.UserID, name))
+				}
+				usersToAdd.WriteString("</select></div><br>")
+				usersToAdd.WriteString("<button class=\"button is-info\">Add user</button></form>")
+			}
+			output.WriteString(fmt.Sprintf("<p>Role ID: %d<br>Name: %s<br>Description: %s<br><br>%s%s%s%s</p>", r.RoleID, r.Name, r.Description, perms.String(), permissionsToAdd.String(), users.String(), usersToAdd.String()))
 			return template.HTML(output.String())
 		},
 		"parseHTMLUsers": func(tmplUsers []user.StrippedUser, userID int) template.HTML {

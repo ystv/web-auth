@@ -105,6 +105,16 @@ func (r *Router) loadRoutes() {
 			{
 				roleID.Match(validMethods, "/edit", r.views.RoleEditFunc)
 				roleID.Match(validMethods, "/delete", r.views.RoleDeleteFunc)
+				permission1 := roleID.Group("/permission")
+				{
+					permission1.Match(validMethods, "/add", r.views.RoleAddPermissionFunc)
+					permission1.Match(validMethods, "/remove/:permissionid", r.views.RoleRemovePermissionFunc)
+				}
+				user1 := roleID.Group("/user")
+				{
+					user1.Match(validMethods, "/add", r.views.RoleAddUserFunc)
+					user1.Match(validMethods, "/remove/:userid", r.views.RoleRemoveUserFunc)
+				}
 				roleID.Match(validMethods, "", r.views.RoleFunc)
 			}
 		}

@@ -35,8 +35,17 @@ type (
 		GetPermissionsForUser(ctx context.Context, u User) ([]permission.Permission, error)
 		GetRolesForUser(ctx context.Context, u User) ([]role.Role, error)
 		GetUsersForRole(ctx context.Context, r role.Role) ([]User, error)
+		GetRoleUser(ctx context.Context, ru RoleUser) (RoleUser, error)
+		GetUsersNotInRole(ctx context.Context, r role.Role) ([]User, error)
+		AddRoleUser(ctx context.Context, ru RoleUser) (RoleUser, error)
+		RemoveRoleUser(ctx context.Context, ru RoleUser) error
 		GetPermissionsForRole(ctx context.Context, r role.Role) ([]permission.Permission, error)
 		GetRolesForPermission(ctx context.Context, p permission.Permission) ([]role.Role, error)
+		GetRolePermission(ctx context.Context, rp RolePermission) (RolePermission, error)
+		GetPermissionsNotInRole(ctx context.Context, r role.Role) ([]permission.Permission, error)
+		AddRolePermission(ctx context.Context, rp RolePermission) (RolePermission, error)
+		RemoveRolePermission(ctx context.Context, rp RolePermission) error
+
 		newUser(ctx context.Context, u User) error
 
 		countUsers(ctx context.Context) (int, error)
@@ -52,8 +61,16 @@ type (
 		getUsersSearchOrder(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, error)
 		getRolesForUser(ctx context.Context, u User) ([]role.Role, error)
 		getUsersForRole(ctx context.Context, r role.Role) ([]User, error)
+		getRoleUser(ctx context.Context, ru RoleUser) (RoleUser, error)
+		getUsersNotInRole(ctx context.Context, r role.Role) ([]User, error)
+		addRoleUser(ctx context.Context, ru RoleUser) (RoleUser, error)
+		removeRoleUser(ctx context.Context, ru RoleUser) error
 		getPermissionsForRole(ctx context.Context, r role.Role) ([]permission.Permission, error)
 		getRolesForPermission(ctx context.Context, p permission.Permission) ([]role.Role, error)
+		getRolePermission(ctx context.Context, rp RolePermission) (RolePermission, error)
+		getPermissionsNotInRole(ctx context.Context, r role.Role) ([]permission.Permission, error)
+		addRolePermission(ctx context.Context, rp RolePermission) (RolePermission, error)
+		removeRolePermission(ctx context.Context, rp RolePermission) error
 
 		parseDirection(direction string) (string, string, error)
 		parseEnabled(enabled string, includeAND bool) string
@@ -146,6 +163,16 @@ type (
 		Name         string
 		Description  string
 		Roles        []role.Role
+	}
+
+	RolePermission struct {
+		RoleID       int `db:"role_id" json:"roleID"`
+		PermissionID int `db:"permission_id" json:"permissionID"`
+	}
+
+	RoleUser struct {
+		RoleID int `db:"role_id" json:"roleID"`
+		UserID int `db:"user_id" json:"userID"`
 	}
 )
 
@@ -329,6 +356,22 @@ func (s *Store) GetUsersForRole(ctx context.Context, r role.Role) ([]User, error
 	return s.getUsersForRole(ctx, r)
 }
 
+func (s *Store) GetRoleUser(ctx context.Context, ru RoleUser) (RoleUser, error) {
+	return s.getRoleUser(ctx, ru)
+}
+
+func (s *Store) GetUsersNotInRole(ctx context.Context, r role.Role) ([]User, error) {
+	return s.getUsersNotInRole(ctx, r)
+}
+
+func (s *Store) AddRoleUser(ctx context.Context, ru RoleUser) (RoleUser, error) {
+	return s.addRoleUser(ctx, ru)
+}
+
+func (s *Store) RemoveRoleUser(ctx context.Context, ru RoleUser) error {
+	return s.removeRoleUser(ctx, ru)
+}
+
 // GetPermissionsForRole returns all permissions for role
 func (s *Store) GetPermissionsForRole(ctx context.Context, r role.Role) ([]permission.Permission, error) {
 	return s.getPermissionsForRole(ctx, r)
@@ -337,4 +380,21 @@ func (s *Store) GetPermissionsForRole(ctx context.Context, r role.Role) ([]permi
 // GetRolesForPermission returns all roles where a permission is used
 func (s *Store) GetRolesForPermission(ctx context.Context, p permission.Permission) ([]role.Role, error) {
 	return s.getRolesForPermission(ctx, p)
+}
+
+// GetRolePermission returns the role permission
+func (s *Store) GetRolePermission(ctx context.Context, rp RolePermission) (RolePermission, error) {
+	return s.getRolePermission(ctx, rp)
+}
+
+func (s *Store) GetPermissionsNotInRole(ctx context.Context, r role.Role) ([]permission.Permission, error) {
+	return s.getPermissionsNotInRole(ctx, r)
+}
+
+func (s *Store) AddRolePermission(ctx context.Context, rp RolePermission) (RolePermission, error) {
+	return s.addRolePermission(ctx, rp)
+}
+
+func (s *Store) RemoveRolePermission(ctx context.Context, rp RolePermission) error {
+	return s.removeRolePermission(ctx, rp)
 }

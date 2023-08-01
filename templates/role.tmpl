@@ -21,7 +21,7 @@
                 </div>
             </div>
             <div class="column">
-                {{parseHTMLRole .Role $.UserID}}
+                {{parseHTMLRole .Role .PermissionsNotInRole .UsersNotInRole $.UserID}}
             </div>
         </div>
     </div>

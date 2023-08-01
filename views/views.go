@@ -83,9 +83,14 @@ type (
 
 		RolesFunc(c echo.Context) error
 		RoleFunc(c echo.Context) error
+		roleFunc(c echo.Context, roleID int) error
 		RoleAddFunc(c echo.Context) error
 		RoleEditFunc(c echo.Context) error
 		RoleDeleteFunc(c echo.Context) error
+		RoleAddPermissionFunc(c echo.Context) error
+		RoleRemovePermissionFunc(c echo.Context) error
+		RoleAddUserFunc(c echo.Context) error
+		RoleRemoveUserFunc(c echo.Context) error
 		bindRoleToTemplate(r1 role.Role) user.RoleTemplate
 
 		UsersFunc(c echo.Context) error

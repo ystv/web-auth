@@ -318,6 +318,56 @@ func (s *Store) getUsersForRole(ctx context.Context, r role.Role) ([]User, error
 	return u, nil
 }
 
+// getRoleUser returns a role user - moved here for cycle import reasons
+func (s *Store) getRoleUser(ctx context.Context, ru1 RoleUser) (RoleUser, error) {
+	var ru RoleUser
+	err := s.db.GetContext(ctx, &ru, `SELECT *
+		FROM people.role_members
+		WHERE role_id = $1 AND user_id = $2
+		LIMIT 1`, ru1.RoleID, ru1.UserID)
+	if err != nil {
+		return RoleUser{}, fmt.Errorf("failed to get roleUser: %w", err)
+	}
+	return ru, nil
+}
+
+func (s *Store) getUsersNotInRole(ctx context.Context, r role.Role) ([]User, error) {
+	var u []User
+	err := s.db.SelectContext(ctx, &u, `SELECT DISTINCT u.*
+		FROM people.users u
+        WHERE user_id NOT IN
+        (SELECT u.user_id
+		FROM people.users u
+		LEFT JOIN people.role_members ru on u.user_id = ru.user_id
+		WHERE ru.role_id = $1)
+		ORDER BY first_name, last_name`, r.RoleID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get users not in role: %w", err)
+	}
+	return u, nil
+}
+
+func (s *Store) addRoleUser(ctx context.Context, ru1 RoleUser) (RoleUser, error) {
+	var ru RoleUser
+	stmt, err := s.db.PrepareNamedContext(ctx, "INSERT INTO people.role_members (role_id, user_id) VALUES (:role_id, :user_id) RETURNING role_id, user_id")
+	if err != nil {
+		return RoleUser{}, fmt.Errorf("failed to add roleUser: %w", err)
+	}
+	err = stmt.Get(&ru, ru1)
+	if err != nil {
+		return RoleUser{}, fmt.Errorf("failed to add roleUser: %w", err)
+	}
+	return ru, nil
+}
+
+func (s *Store) removeRoleUser(ctx context.Context, ru RoleUser) error {
+	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.role_members WHERE role_id = :role_id AND user_id = :user_id`, ru)
+	if err != nil {
+		return fmt.Errorf("failed to remove roleUser: %w", err)
+	}
+	return nil
+}
+
 // getPermissionsForRole returns all permissions for a role - moved here for cycle import reasons
 func (s *Store) getPermissionsForRole(ctx context.Context, r role.Role) ([]permission.Permission, error) {
 	var p []permission.Permission
@@ -342,4 +392,54 @@ func (s *Store) getRolesForPermission(ctx context.Context, p permission.Permissi
 		return nil, fmt.Errorf("failed to get permission roles: %w", err)
 	}
 	return r, nil
+}
+
+// getRolePermission returns a role permission - moved here for cycle import reasons
+func (s *Store) getRolePermission(ctx context.Context, rp1 RolePermission) (RolePermission, error) {
+	var rp RolePermission
+	err := s.db.GetContext(ctx, &rp, `SELECT *
+		FROM people.role_permissions
+		WHERE role_id = $1 AND permission_id = $2
+		LIMIT 1`, rp1.RoleID, rp1.PermissionID)
+	if err != nil {
+		return RolePermission{}, fmt.Errorf("failed to get rolePermisison: %w", err)
+	}
+	return rp, nil
+}
+
+func (s *Store) getPermissionsNotInRole(ctx context.Context, r role.Role) ([]permission.Permission, error) {
+	var p []permission.Permission
+	err := s.db.SelectContext(ctx, &p, `SELECT DISTINCT p.*
+		FROM people.permissions p
+        WHERE permission_id NOT IN
+        (SELECT p.permission_id
+		FROM people.permissions p
+		LEFT JOIN people.role_permissions rp on p.permission_id = rp.permission_id
+		WHERE rp.role_id = $1)
+		ORDER BY name`, r.RoleID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get permissions not in role: %w", err)
+	}
+	return p, nil
+}
+
+func (s *Store) addRolePermission(ctx context.Context, rp1 RolePermission) (RolePermission, error) {
+	var rp RolePermission
+	stmt, err := s.db.PrepareNamedContext(ctx, "INSERT INTO people.role_permissions (role_id, permission_id) VALUES (:role_id, :permission_id) RETURNING role_id, permission_id")
+	if err != nil {
+		return RolePermission{}, fmt.Errorf("failed to add rolePermission: %w", err)
+	}
+	err = stmt.Get(&rp, rp1)
+	if err != nil {
+		return RolePermission{}, fmt.Errorf("failed to add rolePermission: %w", err)
+	}
+	return rp, nil
+}
+
+func (s *Store) removeRolePermission(ctx context.Context, rp RolePermission) error {
+	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.role_permissions WHERE role_id = :role_id AND permission_id = :permission_id`, rp)
+	if err != nil {
+		return fmt.Errorf("failed to remove rolePermission: %w", err)
+	}
+	return nil
 }
