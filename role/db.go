@@ -53,5 +53,17 @@ func (s *Store) editRole(ctx context.Context, r1 Role) (Role, error) {
 }
 
 func (s *Store) deleteRole(ctx context.Context, r1 Role) error {
+	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.roles WHERE role_id = :role_id`, r1)
+	if err != nil {
+		return fmt.Errorf("failed to delete role: %w", err)
+	}
+	return nil
+}
+
+func (s *Store) deleteRolePermission(ctx context.Context, r1 Role) error {
+	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.role_permissions WHERE role_id = :role_id`, r1)
+	if err != nil {
+		return fmt.Errorf("failed to delete rolePermission: %w", err)
+	}
 	return nil
 }

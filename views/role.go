@@ -133,5 +133,176 @@ func (v *Views) RoleEditFunc(c echo.Context) error {
 }
 
 func (v *Views) RoleDeleteFunc(c echo.Context) error {
-	return nil
+	if c.Request().Method == http.MethodPost {
+		roleID, err := strconv.Atoi(c.Param("roleid"))
+		if err != nil {
+			log.Printf("failed to get roleid for role: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get roleid for role: %+v", err))
+			}
+		}
+
+		role1, err := v.role.GetRole(c.Request().Context(), role.Role{RoleID: roleID})
+		if err != nil {
+			log.Printf("failed to get role for deleteRole: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get role for deleteRole: %+v", err))
+			}
+		}
+
+		permissions, err := v.user.GetPermissionsForRole(c.Request().Context(), role1)
+		if err != nil {
+			log.Printf("failed to get permissions for deleteRole: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get permissions for deleteRole: %+v", err))
+			}
+		}
+
+		for _, p1 := range permissions {
+			err = v.permission.DeleteRolePermission(c.Request().Context(), p1)
+			if err != nil {
+				log.Printf("failed to delete rolePermission for deleteRole: %+v", err)
+				if !v.conf.Debug {
+					return v.errorHandle(c, fmt.Errorf("failed to delete rolePermission for deleteRole: %+v", err))
+				}
+			}
+		}
+
+		err = v.role.DeleteRole(c.Request().Context(), role1)
+		if err != nil {
+			log.Printf("failed to delete role for deleteRole: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to delete role for deleteRole: %+v", err))
+			}
+		}
+		return v.RolesFunc(c)
+	} else {
+		return v.errorHandle(c, fmt.Errorf("invalid method used"))
+	}
+}
+
+func (v *Views) RoleAddPermissionFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		err := c.Request().ParseForm()
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		roleID, err := strconv.Atoi(c.Param("roleid"))
+		if err != nil {
+			log.Printf("failed to get role for roleAddPermission: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get role for roleAddPermission: %+v", err))
+			}
+		}
+
+		_, err = v.role.GetRole(c.Request().Context(), role.Role{RoleID: roleID})
+		if err != nil {
+			log.Printf("failed to get role for roleAddPermission: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get role for roleAddPermission: %+v", err))
+			}
+		}
+
+		permissionID, err := strconv.Atoi(c.Request().FormValue("permission"))
+		if err != nil {
+			log.Printf("failed to get permissionid for roleAddPermission: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get permissionid for roleAddPermission: %+v", err))
+			}
+		}
+		_, err = v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: permissionID})
+		if err != nil {
+			log.Printf("failed to get permission for roleAddPermission: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get permission for roleAddPermission: %+v", err))
+			}
+		}
+
+		rolePermission := user.RolePermission{
+			RoleID:       roleID,
+			PermissionID: permissionID,
+		}
+
+		_, err = v.user.GetRolePermission(c.Request().Context(), rolePermission)
+		if err == nil {
+			log.Printf("failed to add rolePermisison for roleAddPermission: row already exists")
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to add rolePermission for roleAddPermission: row already exists"))
+			}
+		}
+
+		_, err = v.user.AddRolePermission(c.Request().Context(), rolePermission)
+		if err != nil {
+			log.Printf("failed to add rolePermission for roleAddPermission: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to add rolePermission for roleAddPermission: %+v", err))
+			}
+		}
+
+		return v.roleFunc(c, roleID)
+	} else {
+		return v.errorHandle(c, fmt.Errorf("invalid method used"))
+	}
+}
+
+func (v *Views) RoleRemovePermissionFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		roleID, err := strconv.Atoi(c.Param("roleid"))
+		if err != nil {
+			log.Printf("failed to get roleid for roleRemovePermission: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get roleid for roleRemovePermission: %+v", err))
+			}
+		}
+
+		_, err = v.role.GetRole(c.Request().Context(), role.Role{RoleID: roleID})
+		if err != nil {
+			log.Printf("failed to get role for roleRemovePermission: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get role for roleRemovePermission: %+v", err))
+			}
+		}
+
+		permissionID, err := strconv.Atoi(c.Param("permissionid"))
+		if err != nil {
+			log.Printf("failed to get permissionid for roleRemovePermission: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get permissionid for roleRemovePermission: %+v", err))
+			}
+		}
+		_, err = v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: permissionID})
+		if err != nil {
+			log.Printf("failed to get permission for roleRemovePermission: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get permission for roleRemovePermission: %+v", err))
+			}
+		}
+
+		rolePermission := user.RolePermission{
+			RoleID:       roleID,
+			PermissionID: permissionID,
+		}
+
+		_, err = v.user.GetRolePermission(c.Request().Context(), rolePermission)
+		if err != nil {
+			log.Printf("failed to get rolePermisison for roleRemovePermission: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get rolePermission for roleRemovePermission: %+v", err))
+			}
+		}
+
+		err = v.user.RemoveRolePermission(c.Request().Context(), rolePermission)
+		if err != nil {
+			log.Printf("failed to remove rolePermission for roleRemoveRole: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to remove rolePermission for roleRemovePermission: %+v", err))
+			}
+		}
+
+		return v.roleFunc(c, roleID)
+	} else {
+		return v.errorHandle(c, fmt.Errorf("invalid method used"))
+	}
 }
