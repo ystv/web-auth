@@ -36,16 +36,6 @@ type (
 		Users       int    `db:"users" json:"users"`
 		Permissions int    `db:"permissions" json:"permissions"`
 	}
-
-	//RolePermission struct {
-	//	RoleID       int `db:"role_id" json:"role_id"`
-	//	PermissionID int `db:"permission_id" json:"permission_id"`
-	//}
-	//
-	//RoleUser struct {
-	//	RoleID int `db:"role_id" json:"role_id"`
-	//	UserID int `db:"user_id" json:"user_id"`
-	//}
 )
 
 var _ Repo = &Store{}
