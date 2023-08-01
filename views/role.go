@@ -103,7 +103,29 @@ func (v *Views) RoleFunc(c echo.Context) error {
 }
 
 func (v *Views) RoleAddFunc(c echo.Context) error {
-	return nil
+	if c.Request().Method == http.MethodPost {
+		err := c.Request().ParseForm()
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		name := c.Request().FormValue("name")
+		description := c.Request().FormValue("description")
+
+		r1, err := v.role.GetRole(c.Request().Context(), role.Role{RoleID: 0, Name: name})
+		if err == nil && r1.RoleID > 0 {
+			return v.errorHandle(c, fmt.Errorf("role with name \"%s\" already exists", name))
+		}
+
+		_, err = v.role.AddRole(c.Request().Context(), role.Role{RoleID: -1, Name: name, Description: description})
+		if err != nil {
+			return v.errorHandle(c, err)
+		}
+		return v.RolesFunc(c)
+	} else {
+		return v.errorHandle(c, fmt.Errorf("invalid method used"))
+	}
 }
 
 func (v *Views) RoleEditFunc(c echo.Context) error {
