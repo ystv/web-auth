@@ -350,7 +350,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 					created = fmt.Sprintf("Created by UNKNOWN(%d) at %s<br>", u.CreatedBy.UserID, u.CreatedAt.String)
 				} else {
 					var name string
-					if u.CreatedBy.Firstname != u.CreatedBy.Nickname {
+					if u.CreatedBy.Firstname != u.CreatedBy.Nickname && len(u.CreatedBy.Nickname) > 0 {
 						name = fmt.Sprintf("%s (%s) %s", u.CreatedBy.Firstname, u.CreatedBy.Nickname, u.CreatedBy.Lastname)
 					} else {
 						name = fmt.Sprintf("%s %s", u.CreatedBy.Firstname, u.CreatedBy.Lastname)
@@ -365,7 +365,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 					updated = fmt.Sprintf("Updated by UNKNOWN(%d) at %s<br>", u.UpdatedBy.UserID, u.UpdatedAt.String)
 				} else {
 					var name string
-					if u.UpdatedBy.Firstname != u.UpdatedBy.Nickname {
+					if u.UpdatedBy.Firstname != u.UpdatedBy.Nickname && len(u.UpdatedBy.Nickname) > 0 {
 						name = fmt.Sprintf("%s (%s) %s", u.UpdatedBy.Firstname, u.UpdatedBy.Nickname, u.UpdatedBy.Lastname)
 					} else {
 						name = fmt.Sprintf("%s %s", u.UpdatedBy.Firstname, u.UpdatedBy.Lastname)
@@ -380,7 +380,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 					deleted = fmt.Sprintf("Deleted by UNKNOWN(%d) at %s<br>", u.DeletedBy.UserID, u.DeletedAt.String)
 				} else {
 					var name string
-					if u.DeletedBy.Firstname != u.DeletedBy.Nickname {
+					if u.DeletedBy.Firstname != u.DeletedBy.Nickname && len(u.DeletedBy.Nickname) > 0 {
 						name = fmt.Sprintf("%s (%s) %s", u.DeletedBy.Firstname, u.DeletedBy.Nickname, u.DeletedBy.Lastname)
 					} else {
 						name = fmt.Sprintf("%s %s", u.DeletedBy.Firstname, u.DeletedBy.Lastname)

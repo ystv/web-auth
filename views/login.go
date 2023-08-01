@@ -109,7 +109,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		}
 		prevLogin := u.LastLogin
 		// Update last logged in
-		err = v.user.SetUserLoggedIn(c.Request().Context(), u)
+		_, err = v.user.SetUserLoggedIn(c.Request().Context(), u)
 		if err != nil {
 			err = fmt.Errorf("failed to set user logged in: %w", err)
 			return v.errorHandle(c, err)

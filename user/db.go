@@ -55,32 +55,38 @@ func (s *Store) countUsersPastYear(ctx context.Context) (int, error) {
 }
 
 // updateUser will update a user record by ID
-func (s *Store) updateUser(ctx context.Context, user User) error {
-	_, err := s.db.ExecContext(ctx,
-		`UPDATE people.users
-		SET password = $1,
-			salt = $2,
-			email = $3,
-			last_login = $4,
-			reset_pw = $5,
-			avatar = $6,
-			use_gravatar = $7,
-			first_name = $8,
-			last_name = $9,
-			nickname = $10,
-			university_username = $11,
-			ldap_username = $12,
-			login_type = $13,
-			enabled = $14,
-			updated_by = $15,
-			updated_at = $16,
-			deleted_by = $17,
-			deleted_at = $18
-		WHERE user_id = $19;`, user.Password, user.Salt, user.Email, user.LastLogin, user.ResetPw, user.Avatar, user.UseGravatar, user.Firstname, user.Lastname, user.Nickname, user.UniversityUsername, user.LDAPUsername, user.LoginType, user.Enabled, user.UpdatedBy, user.UpdatedAt, user.DeletedBy, user.DeletedAt, user.UserID)
+func (s *Store) updateUser(ctx context.Context, u1 User) (User, error) {
+	stmt, err := s.db.NamedExecContext(ctx, `UPDATE people.users
+		SET password = :password,
+			salt = :salt,
+			email = :email,
+			last_login = :last_login,
+			reset_pw = :reset_pw,
+			avatar = :avatar,
+			use_gravatar = :use_gravatar,
+			first_name = :first_name,
+			last_name = :last_name,
+			nickname = :nickname,
+			university_username = :university_username,
+			ldap_username = :ldap_username,
+			login_type = :login_type,
+			enabled = :enabled,
+			updated_by = :updated_by,
+			updated_at = :updated_at,
+			deleted_by = :deleted_by,
+			deleted_at = :deleted_at
+		WHERE user_id = :user_id;`, u1) //, user) //user.Password, user.Salt, user.Email, user.LastLogin, user.ResetPw, user.Avatar, user.UseGravatar, user.Firstname, user.Lastname, user.Nickname, user.UniversityUsername, user.LDAPUsername, user.LoginType, user.Enabled, user.UpdatedBy, user.UpdatedAt, user.DeletedBy, user.DeletedAt, user.UserID)
 	if err != nil {
-		return err
+		return User{}, fmt.Errorf("failed to update user: %w", err)
 	}
-	return nil
+	rows, err := stmt.RowsAffected()
+	if err != nil {
+		return User{}, fmt.Errorf("failed to update user: %w", err)
+	}
+	if rows < 1 {
+		return User{}, fmt.Errorf("failed to update user: invalid rows affected: %d", rows)
+	}
+	return u1, nil
 }
 
 // getUser will get a user using any unique identity fields for a user

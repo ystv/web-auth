@@ -30,8 +30,8 @@ type (
 		VerifyUser(ctx context.Context, u User) (User, bool, error)
 		UpdateUserPassword(ctx context.Context, u User) (User, error)
 		UpdateUser(ctx context.Context, u User, userID int) (User, error)
-		SetUserLoggedIn(ctx context.Context, u User) error
-		DeleteUser(ctx context.Context, u User, userID int) error
+		SetUserLoggedIn(ctx context.Context, u User) (User, error)
+		DeleteUser(ctx context.Context, u User, userID int) (User, error)
 		GetPermissionsForUser(ctx context.Context, u User) ([]permission.Permission, error)
 		GetRolesForUser(ctx context.Context, u User) ([]role.Role, error)
 		GetUsersForRole(ctx context.Context, r role.Role) ([]User, error)
@@ -69,7 +69,7 @@ type (
 
 	// User represents relevant user fields
 	User struct {
-		UserID             int                     `db:"user_id" json:"id"`
+		UserID             int                     `db:"user_id" json:"userID"`
 		Username           string                  `db:"username" json:"username" schema:"username"`
 		UniversityUsername null.String             `db:"university_username" json:"universityUsername"`
 		LDAPUsername       null.String             `db:"ldap_username" json:"LDAPUsername"`
@@ -81,8 +81,8 @@ type (
 		Salt               null.String             `db:"salt" json:"-"`
 		Avatar             string                  `db:"avatar" json:"avatar" schema:"avatar"`
 		Email              string                  `db:"email" json:"email" schema:"email"`
-		LastLogin          null.Time               `db:"last_login"`
-		ResetPw            bool                    `db:"reset_pw" json:"-"`
+		LastLogin          null.Time               `db:"last_login" json:"lastLogin"`
+		ResetPw            bool                    `db:"reset_pw" json:"resetPw"`
 		Enabled            bool                    `db:"enabled" json:"enabled"`
 		CreatedAt          null.Time               `db:"created_at" json:"createdAt"`
 		CreatedBy          null.Int                `db:"created_by" json:"createdBy"`
@@ -149,9 +149,7 @@ type (
 	}
 )
 
-var (
-	_ Repo = &Store{}
-)
+var _ Repo = &Store{}
 
 // NewUserRepo stores our dependency
 func NewUserRepo(db *sqlx.DB) *Store {
@@ -240,7 +238,7 @@ func (s *Store) UpdateUserPassword(ctx context.Context, u User) (User, error) {
 	}
 	user.Password = null.StringFrom(utils.HashPass(user.Salt.String + u.Password.String))
 	user.ResetPw = false
-	err = s.updateUser(ctx, user)
+	user, err = s.updateUser(ctx, user)
 	if err != nil {
 		return u, fmt.Errorf("failed to update user: %w", err)
 	}
@@ -291,7 +289,7 @@ func (s *Store) UpdateUser(ctx context.Context, u User, userID int) (User, error
 	}
 	user.UpdatedBy = null.IntFrom(int64(userID))
 	user.UpdatedAt = null.TimeFrom(time.Now())
-	err = s.updateUser(ctx, user)
+	user, err = s.updateUser(ctx, user)
 	if err != nil {
 		return u, fmt.Errorf("failed to update user: %w", err)
 	}
@@ -299,13 +297,13 @@ func (s *Store) UpdateUser(ctx context.Context, u User, userID int) (User, error
 }
 
 // SetUserLoggedIn will set the last login date to now
-func (s *Store) SetUserLoggedIn(ctx context.Context, u User) error {
+func (s *Store) SetUserLoggedIn(ctx context.Context, u User) (User, error) {
 	u.LastLogin = null.TimeFrom(time.Now())
 	return s.updateUser(ctx, u)
 }
 
 // DeleteUser will delete a user
-func (s *Store) DeleteUser(ctx context.Context, u User, userID int) error {
+func (s *Store) DeleteUser(ctx context.Context, u User, userID int) (User, error) {
 	now := null.TimeFrom(time.Now())
 	u.Enabled = false
 	u.Password = null.NewString("", false)
