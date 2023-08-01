@@ -11,9 +11,7 @@ import (
 // countUsers will get the number of total users
 func (s *Store) countUsers(ctx context.Context) (int, error) {
 	var count int
-	err := s.db.GetContext(ctx, &count,
-		`SELECT COUNT(*)
-		FROM people.users;`)
+	err := s.db.GetContext(ctx, &count, `SELECT COUNT(*) FROM people.users;`)
 	if err != nil {
 		return count, fmt.Errorf("failed to count users from db: %w", err)
 	}
@@ -23,8 +21,7 @@ func (s *Store) countUsers(ctx context.Context) (int, error) {
 // countUsersActive will get the number of total active users
 func (s *Store) countUsersActive(ctx context.Context) (int, error) {
 	var count int
-	err := s.db.GetContext(ctx, &count,
-		`SELECT COUNT(*)
+	err := s.db.GetContext(ctx, &count, `SELECT COUNT(*)
 		FROM people.users
 		WHERE enabled = true AND deleted_by IS NULL AND deleted_at IS NULL;`)
 	if err != nil {
@@ -36,8 +33,7 @@ func (s *Store) countUsersActive(ctx context.Context) (int, error) {
 // countUsers24Hours will get the number of users in the last 24 hours
 func (s *Store) countUsers24Hours(ctx context.Context) (int, error) {
 	var count int
-	err := s.db.GetContext(ctx, &count,
-		`SELECT COUNT(*)
+	err := s.db.GetContext(ctx, &count, `SELECT COUNT(*)
 		FROM people.users
 		WHERE last_login > TO_TIMESTAMP($1, 'YYYY-MM-DD HH24:MI:SS');`, time.Now().AddDate(0, 0, -1).Format("2006-01-02 15:04:05"))
 	if err != nil {
@@ -49,8 +45,7 @@ func (s *Store) countUsers24Hours(ctx context.Context) (int, error) {
 // countUsersPastYear will get the number of users in the last 24 hours
 func (s *Store) countUsersPastYear(ctx context.Context) (int, error) {
 	var count int
-	err := s.db.GetContext(ctx, &count,
-		`SELECT COUNT(*)
+	err := s.db.GetContext(ctx, &count, `SELECT COUNT(*)
 		FROM people.users
 		WHERE last_login > TO_TIMESTAMP($1, 'YYYY-MM-DD HH24:MI:SS');`, time.Now().AddDate(-1, 0, 0).Format("2006-01-02 15:04:05"))
 	if err != nil {
@@ -91,8 +86,7 @@ func (s *Store) updateUser(ctx context.Context, user User) error {
 // getUser will get a user using any unique identity fields for a user
 func (s *Store) getUser(ctx context.Context, user User) (User, error) {
 	var u User
-	err := s.db.GetContext(ctx, &u,
-		`SELECT *
+	err := s.db.GetContext(ctx, &u, `SELECT *
 		FROM people.users
 		WHERE (username = $1 AND username != '') OR (email = $2 AND email != '') OR (ldap_username = $3 AND ldap_username != '') OR user_id = $4
 		LIMIT 1;`, user.Username, user.Email, user.LDAPUsername, user.UserID)
@@ -102,261 +96,180 @@ func (s *Store) getUser(ctx context.Context, user User) (User, error) {
 	return u, nil
 }
 
-// getUsers will get users
-func (s *Store) getUsers(ctx context.Context) ([]User, error) {
+// //getUsersSizePage will get users with page size
+// func (s *Store) getUsersSizePage(ctx context.Context, size, page int) ([]User, error) {
+// getUsers will get users with page size
+func (s *Store) getUsers(ctx context.Context, size, page int, enabled, deleted string) ([]User, error) {
 	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
-		FROM people.users;`)
-	if err != nil {
-		return nil, err
+	enabledSQL := s.parseEnabled(enabled, false)
+	deletedSQL := s.parseDeleted(deleted, len(enabledSQL) > 0)
+	var where string
+	if len(enabledSQL) > 0 || len(deletedSQL) > 0 {
+		where = `WHERE`
 	}
-	return u, nil
-}
-
-// getUsersSizePage will get users with page size
-func (s *Store) getUsersSizePage(ctx context.Context, size, page int) ([]User, error) {
-	var u []User
-	// SELECT u.*, COUNT(*) / $1 AS pages
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT u.*
+	pageSize := s.parsePageSize(page, size)
+	err := s.db.SelectContext(ctx, &u, fmt.Sprintf(`SELECT u.*
 		FROM people.users u
--- 		GROUP BY u, user_id, username, university_username, email, first_name, last_name, nickname, login_type, password, salt, avatar, last_login, reset_pw, enabled, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by, use_gravatar, ldap_username
-		LIMIT $1
-		OFFSET $2;`, size, size*(page-1))
+		%[1]s
+		%[2]s
+		%[3]s
+		%[4]s;`, where, enabledSQL, deletedSQL, pageSize))
 	if err != nil {
 		return nil, err
 	}
 	return u, nil
 }
 
-// getUsersSearch will get users search
-func (s *Store) getUsersSearch(ctx context.Context, search string) ([]User, error) {
+// getUsersSearchNoOrder will get users search with size and page
+func (s *Store) getUsersSearchNoOrder(ctx context.Context, size, page int, search, enabled, deleted string) ([]User, error) {
 	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
+	enabledSQL := s.parseEnabled(enabled, true)
+	deletedSQL := s.parseDeleted(deleted, true)
+	pageSize := s.parsePageSize(page, size)
+	err := s.db.SelectContext(ctx, &u, fmt.Sprintf(`SELECT *
 		FROM people.users
-		WHERE (CAST(user_id AS TEXT) LIKE '%' || $1 || '%')
-		   OR (LOWER(username) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(nickname) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(first_name) LIKE LOWER('%' || $1 || '%'))
-		   or (LOWER(last_name) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(email) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || $1 || '%'));`, search)
+		WHERE
+		    (CAST(user_id AS TEXT) LIKE '%' || $1 || '%'
+			OR (LOWER(username) LIKE LOWER('%' || $1 || '%'))
+			OR (LOWER(nickname) LIKE LOWER('%' || $1 || '%'))
+			OR (LOWER(first_name) LIKE LOWER('%' || $1 || '%'))
+			or (LOWER(last_name) LIKE LOWER('%' || $1 || '%'))
+			OR (LOWER(email) LIKE LOWER('%' || $1 || '%'))
+			OR (LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || $1 || '%')))
+			%[1]s
+			%[2]s
+		%[3]s;`, enabledSQL, deletedSQL, pageSize), search)
 	if err != nil {
 		return nil, err
 	}
 	return u, nil
 }
 
-// getUsersSearchSizePage will get users search with size and page
-func (s *Store) getUsersSearchSizePage(ctx context.Context, search string, size, page int) ([]User, error) {
+// getUsersOrderNoSearch will get users sorting with size and page
+// Use the parameter direction for determining of the sorting will be ascending(asc) or descending(desc)
+func (s *Store) getUsersOrderNoSearch(ctx context.Context, size, page int, sortBy, direction, enabled, deleted string) ([]User, error) {
 	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
-		FROM people.users
-		WHERE (CAST(user_id AS TEXT) LIKE '%' || $1 || '%')
-		   OR (LOWER(username) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(nickname) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(first_name) LIKE LOWER('%' || $1 || '%'))
-		   or (LOWER(last_name) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(email) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || $1 || '%'))
--- 		GROUP BY u, user_id, username, university_username, email, first_name, last_name, nickname, login_type, password, salt, avatar, last_login, reset_pw, enabled, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by, use_gravatar, ldap_username
-		LIMIT $2
-		OFFSET $3;`, search, size, size*(page-1))
+	dir, nulls, err := s.parseDirection(direction)
 	if err != nil {
 		return nil, err
 	}
-	return u, nil
-}
-
-// getUsersOptionsDesc will get users sorting asc
-func (s *Store) getUsersOptionsAsc(ctx context.Context, sortBy string) ([]User, error) {
-	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
+	enabledSQL := s.parseEnabled(enabled, false)
+	deletedSQL := s.parseDeleted(deleted, len(enabledSQL) > 0)
+	var where string
+	if len(enabledSQL) > 0 || len(deletedSQL) > 0 {
+		where = `WHERE`
+	}
+	pageSize := s.parsePageSize(page, size)
+	err = s.db.SelectContext(ctx, &u, fmt.Sprintf(`SELECT *
 		FROM people.users
+		%[3]s
+		%[4]s
+		%[5]s
 		ORDER BY
-		    CASE WHEN $1 = 'userId' THEN user_id END ASC,
-		    CASE WHEN $1 = 'name' THEN first_name END ASC,
-			CASE WHEN $1 = 'name' THEN last_name END ASC,
-		    CASE WHEN $1 = 'username' THEN username END ASC,
-		    CASE WHEN $1 = 'email' THEN email END ASC,
-		    CASE WHEN $1 = 'lastLogin' THEN last_login END ASC NULLS FIRST;`, sortBy)
+		    CASE WHEN $1 = 'userId' THEN user_id END %[1]s,
+		    CASE WHEN $1 = 'name' THEN first_name END %[1]s,
+			CASE WHEN $1 = 'name' THEN last_name END %[1]s,
+		    CASE WHEN $1 = 'username' THEN username END %[1]s,
+		    CASE WHEN $1 = 'email' THEN email END %[1]s,
+		    CASE WHEN $1 = 'lastLogin' THEN last_login END %[1]s NULLS %[2]s
+		%[6]s;`, dir, nulls, where, enabledSQL, deletedSQL, pageSize), sortBy)
 	if err != nil {
 		return nil, err
 	}
 	return u, nil
 }
 
-// getUsersOptionsDescSizePage will get users sorting asc with size and page
-func (s *Store) getUsersOptionsAscSizePage(ctx context.Context, sortBy string, size, page int) ([]User, error) {
+// getUsersSearchOrder will get users search with sorting with size and page, enabled and deleted
+// Use the parameter direction for determining of the sorting will be ascending(asc) or descending(desc)
+func (s *Store) getUsersSearchOrder(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, error) {
 	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
+	dir, nulls, err := s.parseDirection(direction)
+	if err != nil {
+		return nil, err
+	}
+	enabledSQL := s.parseEnabled(enabled, true)
+	deletedSQL := s.parseDeleted(deleted, true)
+	pageSize := s.parsePageSize(page, size)
+	err = s.db.SelectContext(ctx, &u, fmt.Sprintf(`SELECT *
 		FROM people.users
+		WHERE
+		    ((LOWER(CAST(user_id AS TEXT)) LIKE LOWER('%' || $1 || '%'))
+			OR (LOWER(username) LIKE LOWER('%' || $1 || '%'))
+			OR (LOWER(nickname) LIKE LOWER('%' || $1 || '%'))
+			OR (LOWER(first_name) LIKE LOWER('%' || $1 || '%'))
+			or (LOWER(last_name) LIKE LOWER('%' || $1 || '%'))
+			OR (LOWER(email) LIKE LOWER('%' || $1 || '%'))
+			OR (LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || $1 || '%')))
+			%[3]s
+			%[4]s
 		ORDER BY
-		    CASE WHEN $1 = 'userId' THEN user_id END ASC,
-		    CASE WHEN $1 = 'name' THEN first_name END ASC,
-			CASE WHEN $1 = 'name' THEN last_name END ASC,
-		    CASE WHEN $1 = 'username' THEN username END ASC,
-		    CASE WHEN $1 = 'email' THEN email END ASC,
-		    CASE WHEN $1 = 'lastLogin' THEN last_login END ASC NULLS FIRST
-		LIMIT $2
-		OFFSET $3;`, sortBy, size, size*(page-1))
+		    CASE WHEN $2 = 'userId' THEN user_id END %[1]s,
+		    CASE WHEN $2 = 'name' THEN first_name END %[1]s,
+			CASE WHEN $2 = 'name' THEN last_name END %[1]s,
+		    CASE WHEN $2 = 'username' THEN username END %[1]s,
+		    CASE WHEN $2 = 'email' THEN email END %[1]s,
+		    CASE WHEN $2 = 'lastLogin' THEN last_login END %[1]s NULLS %[2]s
+	    %[5]s;`, dir, nulls, enabledSQL, deletedSQL, pageSize), search, sortBy)
 	if err != nil {
 		return nil, err
 	}
 	return u, nil
 }
 
-// getUsersSearchOptionsAsc will get users search with sorting asc
-func (s *Store) getUsersSearchOptionsAsc(ctx context.Context, search, sortBy string) ([]User, error) {
-	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
-		FROM people.users
-		WHERE (CAST(user_id AS TEXT) LIKE '%' || $1 || '%')
-		   OR (LOWER(username) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(nickname) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(first_name) LIKE LOWER('%' || $1 || '%'))
-		   or (LOWER(last_name) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(email) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || $1 || '%'))
-		ORDER BY
-		    CASE WHEN $2 = 'userId' THEN user_id END ASC,
-		    CASE WHEN $2 = 'name' THEN first_name END ASC,
-			CASE WHEN $2 = 'name' THEN last_name END ASC,
-		    CASE WHEN $2 = 'username' THEN username END ASC,
-		    CASE WHEN $2 = 'email' THEN email END ASC,
-		    CASE WHEN $2 = 'lastLogin' THEN last_login END ASC NULLS FIRST;`, search, sortBy)
-	if err != nil {
-		return nil, err
+func (s *Store) parseDirection(direction string) (string, string, error) {
+	var dir, nulls string
+	if direction == "asc" {
+		dir = `ASC`
+		nulls = `FIRST`
+	} else if direction == "desc" {
+		dir = `DESC`
+		nulls = `LAST`
+	} else {
+		return ``, ``, fmt.Errorf("invalid sorting direction, entered \"%s\" of length %d, but expected either \"direction\" or \"desc\"", direction, len(direction))
 	}
-	return u, nil
+	return dir, nulls, nil
 }
 
-// getUsersSearchOptionsAscSizePage will get users search with sorting asc with size and page
-func (s *Store) getUsersSearchOptionsAscSizePage(ctx context.Context, search, sortBy string, size, page int) ([]User, error) {
-	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
-		FROM people.users
-		WHERE (CAST(user_id AS TEXT) LIKE '%' || $1 || '%')
-		   OR (LOWER(username) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(nickname) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(first_name) LIKE LOWER('%' || $1 || '%'))
-		   or (LOWER(last_name) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(email) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || $1 || '%'))
-		ORDER BY
-		    CASE WHEN $2 = 'userId' THEN user_id END ASC,
-		    CASE WHEN $2 = 'name' THEN first_name END ASC,
-			CASE WHEN $2 = 'name' THEN last_name END ASC,
-		    CASE WHEN $2 = 'username' THEN username END ASC,
-		    CASE WHEN $2 = 'email' THEN email END ASC,
-		    CASE WHEN $2 = 'lastLogin' THEN last_login END ASC NULLS FIRST
-		LIMIT $3
-		OFFSET $4;`, search, sortBy, size, size*(page-1))
-	if err != nil {
-		return nil, err
+func (s *Store) parseEnabled(enabled string, includeAND bool) string {
+	if enabled == "enabled" {
+		if includeAND {
+			return `AND enabled`
+		} else {
+			return `enabled`
+		}
+	} else if enabled == "disabled" {
+		if includeAND {
+			return `AND NOT enabled`
+		} else {
+			return `NOT enabled`
+		}
 	}
-	return u, nil
+	return ``
 }
 
-// getUsersOptionsDesc will get users sorting desc
-func (s *Store) getUsersOptionsDesc(ctx context.Context, sortBy string) ([]User, error) {
-	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
-		FROM people.users
-		ORDER BY
-		    CASE WHEN $1 = 'userId' THEN user_id END DESC,
-		    CASE WHEN $1 = 'name' THEN first_name END DESC,
-			CASE WHEN $1 = 'name' THEN last_name END DESC,
-		    CASE WHEN $1 = 'username' THEN username END DESC,
-		    CASE WHEN $1 = 'email' THEN email END DESC,
-		    CASE WHEN $1 = 'lastLogin' THEN last_login END DESC NULLS LAST;`, sortBy)
-	if err != nil {
-		return nil, err
+func (s *Store) parseDeleted(deleted string, includeAND bool) string {
+	if deleted == "deleted" {
+		if includeAND {
+			return `AND deleted_by IS NOT NULL`
+		} else {
+			return `deleted_by IS NOT NULL`
+		}
+	} else if deleted == "not_deleted" {
+		if includeAND {
+			return `AND deleted_by IS NULL`
+		} else {
+			return `deleted_by IS NULL`
+		}
 	}
-	return u, nil
+	return ``
 }
 
-// getUsersOptionsDescSizePage will get users sorting desc with size and page
-func (s *Store) getUsersOptionsDescSizePage(ctx context.Context, sortBy string, size, page int) ([]User, error) {
-	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
-		FROM people.users
-		ORDER BY
-		    CASE WHEN $1 = 'userId' THEN user_id END DESC,
-		    CASE WHEN $1 = 'name' THEN first_name END DESC,
-			CASE WHEN $1 = 'name' THEN last_name END DESC,
-		    CASE WHEN $1 = 'username' THEN username END DESC,
-		    CASE WHEN $1 = 'email' THEN email END DESC,
-		    CASE WHEN $1 = 'lastLogin' THEN last_login END DESC NULLS LAST
-		LIMIT $2
-		OFFSET $3;`, sortBy, size, size*(page-1))
-	if err != nil {
-		return nil, err
+func (s *Store) parsePageSize(page, size int) string {
+	if page < 1 || size < 5 || size > 100 {
+		return ``
+	} else {
+		return fmt.Sprintf(`LIMIT %d OFFSET %d`, size, size*(page-1))
 	}
-	return u, nil
-}
-
-// getUsersSearchOptionsDesc will get users search with sorting desc
-func (s *Store) getUsersSearchOptionsDesc(ctx context.Context, search, sortBy string) ([]User, error) {
-	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
-		FROM people.users
-		WHERE (CAST(user_id AS TEXT) LIKE '%' || $1 || '%')
-		   OR (LOWER(username) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(nickname) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(first_name) LIKE LOWER('%' || $1 || '%'))
-		   or (LOWER(last_name) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(email) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || $1 || '%'))
-		ORDER BY
-		    CASE WHEN $2 = 'userId' THEN user_id END DESC,
-		    CASE WHEN $2 = 'name' THEN first_name END DESC,
-			CASE WHEN $2 = 'name' THEN last_name END DESC,
-		    CASE WHEN $2 = 'username' THEN username END DESC,
-		    CASE WHEN $2 = 'email' THEN email END DESC,
-		    CASE WHEN $2 = 'lastLogin' THEN last_login END DESC NULLS LAST;`, search, sortBy)
-	if err != nil {
-		return nil, err
-	}
-	return u, nil
-}
-
-// getUsersSearchOptionsDescSizePage will get users search with sorting desc with size and page
-func (s *Store) getUsersSearchOptionsDescSizePage(ctx context.Context, search, sortBy string, size, page int) ([]User, error) {
-	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
-		FROM people.users
-		WHERE (CAST(user_id AS TEXT) LIKE '%' || $1 || '%')
-		   OR (LOWER(username) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(nickname) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(first_name) LIKE LOWER('%' || $1 || '%'))
-		   or (LOWER(last_name) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(email) LIKE LOWER('%' || $1 || '%'))
-		   OR (LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || $1 || '%'))
-		ORDER BY
-		    CASE WHEN $2 = 'userId' THEN user_id END DESC,
-		    CASE WHEN $2 = 'name' THEN first_name END DESC,
-			CASE WHEN $2 = 'name' THEN last_name END DESC,
-		    CASE WHEN $2 = 'username' THEN username END DESC,
-		    CASE WHEN $2 = 'email' THEN email END DESC,
-		    CASE WHEN $2 = 'lastLogin' THEN last_login END DESC NULLS LAST
-		LIMIT $3
-		OFFSET $4;`, search, sortBy, size, size*(page-1))
-	if err != nil {
-		return nil, err
-	}
-	return u, nil
 }
 
 // getPermissionsForUser returns all permissions for a user

@@ -22,15 +22,11 @@ type (
 		CountUsers24Hours(ctx context.Context) (int, error)
 		CountUsersPastYear(ctx context.Context) (int, error)
 
-		GetUsers(ctx context.Context) ([]User, error)
 		GetUser(ctx context.Context, u User) (User, error)
-		GetUsersSizePage(ctx context.Context, size, page int) ([]User, error)
-		GetUsersSearch(ctx context.Context, search string) ([]User, error)
-		GetUsersSearchSizePage(ctx context.Context, search string, size, page int) ([]User, error)
-		GetUsersSorted(ctx context.Context, column, direction string) ([]User, error)
-		GetUsersSortedSizePage(ctx context.Context, column, direction string, size, page int) ([]User, error)
-		GetUsersSortedSearch(ctx context.Context, column, direction, search string) ([]User, error)
-		GetUsersSortedSearchSizePage(ctx context.Context, column, direction, search string, size, page int) ([]User, error)
+		GetUsers(ctx context.Context, size, page int, enabled, deleted string) ([]User, error)
+		GetUsersSearchNoOrder(ctx context.Context, size, page int, search, enabled, deleted string) ([]User, error)
+		GetUsersOrderNoSearch(ctx context.Context, size, page int, sortBy, direction, enabled, deleted string) ([]User, error)
+		GetUsersSearchOrder(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, error)
 		VerifyUser(ctx context.Context, u User) (User, bool, error)
 		UpdateUserPassword(ctx context.Context, u User) (User, error)
 		UpdateUser(ctx context.Context, u User, userID int) (User, error)
@@ -47,24 +43,22 @@ type (
 		countUsersActive(ctx context.Context) (int, error)
 		countUsers24Hours(ctx context.Context) (int, error)
 		countUsersPastYear(ctx context.Context) (int, error)
-		updateUser(ctx context.Context, user User) error
+
+		updateUser(ctx context.Context, user User) (User, error)
 		getUser(ctx context.Context, user User) (User, error)
-		getUsers(ctx context.Context) ([]User, error)
-		getUsersSizePage(ctx context.Context, size, page int) ([]User, error)
-		getUsersSearch(ctx context.Context, search string) ([]User, error)
-		getUsersSearchSizePage(ctx context.Context, search string, size, page int) ([]User, error)
-		getUsersOptionsAsc(ctx context.Context, sortBy string) ([]User, error)
-		getUsersOptionsAscSizePage(ctx context.Context, sortBy string, size, page int) ([]User, error)
-		getUsersSearchOptionsAsc(ctx context.Context, search, sortBy string) ([]User, error)
-		getUsersSearchOptionsAscSizePage(ctx context.Context, search, sortBy string, size, page int) ([]User, error)
-		getUsersOptionsDesc(ctx context.Context, sortBy string) ([]User, error)
-		getUsersOptionsDescSizePage(ctx context.Context, sortBy string, size, page int) ([]User, error)
-		getUsersSearchOptionsDesc(ctx context.Context, search, sortBy string) ([]User, error)
-		getUsersSearchOptionsDescSizePage(ctx context.Context, search, sortBy string, size, page int) ([]User, error)
+		getUsers(ctx context.Context, size, page int, enabled, deleted string) ([]User, error)
+		getUsersSearchNoOrder(ctx context.Context, size, page int, search, enabled, deleted string) ([]User, error)
+		getUsersOrderNoSearch(ctx context.Context, size, page int, sortBy, direction, enabled, deleted string) ([]User, error)
+		getUsersSearchOrder(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, error)
 		getRolesForUser(ctx context.Context, u User) ([]role.Role, error)
 		getUsersForRole(ctx context.Context, r role.Role) ([]User, error)
 		getPermissionsForRole(ctx context.Context, r role.Role) ([]permission.Permission, error)
 		getRolesForPermission(ctx context.Context, p permission.Permission) ([]role.Role, error)
+
+		parseDirection(direction string) (string, string, error)
+		parseEnabled(enabled string, includeAND bool) string
+		parseDeleted(deleted string, includeAND bool) string
+		parsePageSize(page, size int) string
 	}
 
 	// Store stores the dependencies
@@ -191,35 +185,13 @@ func (s *Store) GetUser(ctx context.Context, u User) (User, error) {
 	return s.getUser(ctx, u)
 }
 
-// GetUsers returns a group of users, used for administration
-func (s *Store) GetUsers(ctx context.Context) ([]User, error) {
-	return s.getUsers(ctx)
+// GetUsers returns a group of users, used for administration with size and page
+func (s *Store) GetUsers(ctx context.Context, size, page int, enabled, deleted string) ([]User, error) {
+	return s.getUsers(ctx, size, page, enabled, deleted)
 }
 
-// GetUsersSizePage returns a group of users, used for administration with size and page
-func (s *Store) GetUsersSizePage(ctx context.Context, size, page int) ([]User, error) {
-	return s.getUsersSizePage(ctx, size, page)
-}
-
-// GetUsersSearch returns a group of users, used for administration
-func (s *Store) GetUsersSearch(ctx context.Context, search string) ([]User, error) {
-	return s.getUsersSearch(ctx, search)
-}
-
-// GetUsersSearchSizePage returns a group of users, used for administration with size and page
-func (s *Store) GetUsersSearchSizePage(ctx context.Context, search string, size, page int) ([]User, error) {
-	return s.getUsersSearchSizePage(ctx, search, size, page)
-}
-
-// GetUsersSorted returns a group of users, used for administration with sorting
-func (s *Store) GetUsersSorted(ctx context.Context, column, direction string) ([]User, error) {
-	switch direction {
-	case "asc":
-		return s.getUsersOptionsAsc(ctx, column)
-	case "desc":
-		return s.getUsersOptionsDesc(ctx, column)
-	}
-	return nil, fmt.Errorf("error in db sorting")
+func (s *Store) GetUsersSearchNoOrder(ctx context.Context, size, page int, search, enabled, deleted string) ([]User, error) {
+	return s.getUsersSearchNoOrder(ctx, size, page, search, enabled, deleted)
 }
 
 // GetUsersSortedSizePage returns a group of users, used for administration with sorting with size and page
@@ -233,26 +205,8 @@ func (s *Store) GetUsersSortedSizePage(ctx context.Context, column, direction st
 	return nil, fmt.Errorf("error in db sorting size page")
 }
 
-// GetUsersSortedSearch returns a group of users, used for administration with sorting and searching
-func (s *Store) GetUsersSortedSearch(ctx context.Context, column, direction, search string) ([]User, error) {
-	switch direction {
-	case "asc":
-		return s.getUsersSearchOptionsAsc(ctx, search, column)
-	case "desc":
-		return s.getUsersSearchOptionsDesc(ctx, search, column)
-	}
-	return nil, fmt.Errorf("error in db sorting")
-}
-
-// GetUsersSortedSearchSizePage returns a group of users, used for administration with sorting and searching with pages
-func (s *Store) GetUsersSortedSearchSizePage(ctx context.Context, column, direction, search string, size, page int) ([]User, error) {
-	switch direction {
-	case "asc":
-		return s.getUsersSearchOptionsAscSizePage(ctx, search, column, size, page)
-	case "desc":
-		return s.getUsersSearchOptionsDescSizePage(ctx, search, column, size, page)
-	}
-	return nil, fmt.Errorf("error in db sorting size page")
+func (s *Store) GetUsersSearchOrder(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, error) {
+	return s.getUsersSearchOrder(ctx, size, page, search, sortBy, direction, enabled, deleted)
 }
 
 // VerifyUser will check that the password is correct with provided
