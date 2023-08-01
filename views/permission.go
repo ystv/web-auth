@@ -147,21 +147,11 @@ func (v *Views) PermissionDeleteFunc(c echo.Context) error {
 			}
 		}
 
-		roles, err := v.user.GetRolesForPermission(c.Request().Context(), permission1)
+		err = v.permission.DeleteRolePermission(c.Request().Context(), permission1)
 		if err != nil {
-			log.Printf("failed to get roles for deletePermission: %+v", err)
+			log.Printf("failed to delete rolePermission for deletePermission: %+v", err)
 			if !v.conf.Debug {
-				return v.errorHandle(c, fmt.Errorf("failed to get roles for deletePermission: %+v", err))
-			}
-		}
-
-		for _, role1 := range roles {
-			err = v.role.DeleteRolePermission(c.Request().Context(), role1)
-			if err != nil {
-				log.Printf("failed to delete rolePermission for deletePermission: %+v", err)
-				if !v.conf.Debug {
-					return v.errorHandle(c, fmt.Errorf("failed to delete rolePermission for deletePermission: %+v", err))
-				}
+				return v.errorHandle(c, fmt.Errorf("failed to delete rolePermission for deletePermission: %+v", err))
 			}
 		}
 

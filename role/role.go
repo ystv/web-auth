@@ -14,6 +14,7 @@ type (
 		EditRole(ctx context.Context, r Role) (Role, error)
 		DeleteRole(ctx context.Context, r Role) error
 		DeleteRolePermission(ctx context.Context, r Role) error
+		DeleteRoleUser(ctx context.Context, r Role) error
 
 		getRoles(ctx context.Context) ([]Role, error)
 		getRole(ctx context.Context, r1 Role) (Role, error)
@@ -21,6 +22,7 @@ type (
 		editRole(ctx context.Context, r1 Role) (Role, error)
 		deleteRole(ctx context.Context, r1 Role) error
 		deleteRolePermission(ctx context.Context, r Role) error
+		deleteRoleUser(ctx context.Context, r Role) error
 	}
 
 	// Store stores the dependencies
@@ -75,4 +77,9 @@ func (s *Store) DeleteRole(ctx context.Context, r Role) error {
 // DeleteRolePermission deletes a rolePermission
 func (s *Store) DeleteRolePermission(ctx context.Context, r Role) error {
 	return s.deleteRolePermission(ctx, r)
+}
+
+// DeleteRoleUser deletes a roleUser
+func (s *Store) DeleteRoleUser(ctx context.Context, r Role) error {
+	return s.deleteRoleUser(ctx, r)
 }
