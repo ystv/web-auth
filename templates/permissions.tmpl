@@ -8,7 +8,7 @@
             <div class="card" style="margin-bottom: 0">
                 <div class="column">
                         <div class="field">
-                            <a onclick="" class="button is-info">Add Permission</a>
+                            <a onclick="addPermissionModal()" class="button is-info">Add Permission</a>
                         </div>
                 </div>
             </div>
@@ -41,4 +41,45 @@
             </div>
         </div>
     </div>
+    {{template "modal" .}}
+{{end}}
+
+{{define "modal"}}
+    <div id="addPermissionModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title">Add permission</p>
+                            <p>Enter the permission's details below.</p>
+                            <form id="addPermissionForm" action="/internal/permission/add" method="post">
+                                <label for="name">Name</label>
+                                <input type="text" class="input" name="name" id="name">
+                                <label for="description">Description</label>
+                                <textarea class="input" id="description" name="description"></textarea>
+                                <button class="button is-info">Add permission</button>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <script>
+        document.querySelectorAll(
+            ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
+        ).forEach(($el) => {
+            const $modal = $el.closest(".modal");
+            $el.addEventListener("click", () => {
+                $modal.classList.remove("is-active");
+            });
+        });
+
+        function addPermissionModal() {
+            document.getElementById("addPermissionModal").classList.add("is-active");
+        }
+    </script>
 {{end}}

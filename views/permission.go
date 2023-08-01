@@ -1,11 +1,13 @@
 package views
 
 import (
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 	"log"
+	"net/http"
 	"strconv"
 )
 
@@ -96,7 +98,29 @@ func (v *Views) PermissionFunc(c echo.Context) error {
 
 // PermissionAddFunc handles an add permission request
 func (v *Views) PermissionAddFunc(c echo.Context) error {
-	return nil
+	if c.Request().Method == http.MethodPost {
+		err := c.Request().ParseForm()
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		name := c.Request().FormValue("name")
+		description := c.Request().FormValue("description")
+
+		p1, err := v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: 0, Name: name})
+		if err == nil && p1.PermissionID > 0 {
+			return v.errorHandle(c, fmt.Errorf("permission with name \"%s\" already exists", name))
+		}
+
+		_, err = v.permission.AddPermission(c.Request().Context(), permission.Permission{PermissionID: -1, Name: name, Description: description})
+		if err != nil {
+			return v.errorHandle(c, err)
+		}
+		return v.PermissionsFunc(c)
+	} else {
+		return v.errorHandle(c, fmt.Errorf("invalid method used"))
+	}
 }
 
 // PermissionEditFunc handles an edit permission request
