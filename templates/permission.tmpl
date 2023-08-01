@@ -39,7 +39,9 @@
                             <p><strong>This can be undone{{if eq .Permission.Name "SuperUser"}}<br>
                             Be very careful, this is the most powerful permission and will break many, many things!<br>
                             {{end}}</strong></p>
-                            <a class="button is-danger" onclick="deletePermission()">Delete permission</a>
+                            <form action="/internal/permission/{{.Permission.PermissionID}}/delete" method="post">
+                                <button class="button is-danger">Delete permission</button>
+                            </form>
                         </div>
                     </div>
                 </article>
@@ -59,10 +61,6 @@
 
         function deletePermissionModal() {
             document.getElementById("deletePermissionModal").classList.add("is-active");
-        }
-
-        function deletePermission() {
-
         }
     </script>
 {{end}}

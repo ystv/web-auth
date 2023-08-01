@@ -13,12 +13,14 @@ type (
 		AddPermission(ctx context.Context, p1 Permission) (Permission, error)
 		EditPermission(ctx context.Context, p1 Permission) (Permission, error)
 		DeletePermission(ctx context.Context, p1 Permission) error
+		DeleteRolePermission(ctx context.Context, p1 Permission) error
 
 		getPermissions(ctx context.Context) ([]Permission, error)
 		getPermission(ctx context.Context, p1 Permission) (Permission, error)
 		addPermission(ctx context.Context, p1 Permission) (Permission, error)
 		editPermission(ctx context.Context, p1 Permission) (Permission, error)
 		deletePermission(ctx context.Context, p1 Permission) error
+		deleteRolePermission(ctx context.Context, p1 Permission) error
 	}
 
 	// Store stores the dependencies
@@ -67,4 +69,9 @@ func (s *Store) EditPermission(ctx context.Context, p Permission) (Permission, e
 // DeletePermission deletes a permission
 func (s *Store) DeletePermission(ctx context.Context, p Permission) error {
 	return s.deletePermission(ctx, p)
+}
+
+// DeleteRolePermission deletes a rolePermission
+func (s *Store) DeleteRolePermission(ctx context.Context, p Permission) error {
+	return s.deleteRolePermission(ctx, p)
 }
