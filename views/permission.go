@@ -78,6 +78,12 @@ func (v *Views) PermissionFunc(c echo.Context) error {
 	permissionTemplate := v.bindPermissionToTemplate(permission1)
 
 	permissionTemplate.Roles, err = v.user.GetRolesForPermission(c.Request().Context(), permission1)
+	if err != nil {
+		log.Printf("failed to get roles for permission: %+v", err)
+		if !v.conf.Debug {
+			return v.errorHandle(c, fmt.Errorf("failed to get roles for permission: %+v", err))
+		}
+	}
 
 	data := PermissionTemplate{
 		Permission: permissionTemplate,
