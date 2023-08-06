@@ -44,20 +44,9 @@ func (v *Views) RequiresMinimumPermission(h http.Handler, p permissions.Permissi
 
 		u := helpers.GetUser(session)
 
-		perms, err := v.user.GetPermissionsForUser(r.Context(), u)
-		if err != nil {
-			log.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		if v.RequiresMinimumPermissionNoHttp(u.UserID, p) {
+			h.ServeHTTP(w, r)
 			return
-		}
-
-		acceptedPerms := permission.GetValidPermissions(p)
-
-		for _, perm := range perms {
-			if acceptedPerms[perm] {
-				h.ServeHTTP(w, r)
-				return
-			}
 		}
 
 		err = v.template.RenderNoNavsTemplate(w, nil, templates.Forbidden500Template)
