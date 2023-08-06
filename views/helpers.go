@@ -167,7 +167,7 @@ func DBUserToDetailedUser(dbUser user.User, store *user.Store) user.DetailedUser
 	return u
 }
 
-func (v *Views) removeDuplicate(strSlice []permission.Permission) []permission.Permission {
+func removeDuplicate(strSlice []permission.Permission) []permission.Permission {
 	allKeys := make(map[int]bool)
 	var list []permission.Permission
 	for _, item := range strSlice {
@@ -179,7 +179,7 @@ func (v *Views) removeDuplicate(strSlice []permission.Permission) []permission.P
 	return list
 }
 
-func (v *Views) timer(name string) func() {
+func timer(name string) func() {
 	start := time.Now()
 	return func() {
 		fmt.Printf("%s took %v\n", name, time.Since(start))

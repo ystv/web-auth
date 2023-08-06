@@ -120,8 +120,6 @@ type (
 		TestAPI(c echo.Context) error
 
 		getData(s *sessions.Session) *Context
-		removeDuplicate(strSlice []permission.Permission) []permission.Permission
-		timer(name string) func()
 
 		errorHandle(c echo.Context, err error) error
 	}
