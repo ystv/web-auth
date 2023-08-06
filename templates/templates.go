@@ -49,6 +49,7 @@ const (
 	ErrorTemplate               Template = "error.tmpl"
 	SettingsTemplate            Template = "settings.tmpl"
 	SignupTemplate              Template = "signup.tmpl"
+	SignupEmailTemplate         Template = "signupEmail.tmpl"
 	UserTemplate                Template = "user.tmpl"
 	UsersTemplate               Template = "users.tmpl"
 	RolesTemplate               Template = "roles.tmpl"
