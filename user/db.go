@@ -381,6 +381,14 @@ func (s *Store) removeRoleUser(ctx context.Context, ru RoleUser) error {
 	return nil
 }
 
+func (s *Store) removeRoleUsers(ctx context.Context, u User) error {
+	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.role_members WHERE user_id = :user_id`, u)
+	if err != nil {
+		return fmt.Errorf("failed to remove roleUsers: %w", err)
+	}
+	return nil
+}
+
 // getPermissionsForRole returns all permissions for a role - moved here for cycle import reasons
 func (s *Store) getPermissionsForRole(ctx context.Context, r role.Role) ([]permission.Permission, error) {
 	var p []permission.Permission

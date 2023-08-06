@@ -383,6 +383,10 @@ func (s *Store) RemoveRoleUser(ctx context.Context, ru RoleUser) error {
 	return s.removeRoleUser(ctx, ru)
 }
 
+func (s *Store) RemoveRoleUsers(ctx context.Context, u User) error {
+	return s.removeRoleUsers(ctx, u)
+}
+
 // GetPermissionsForRole returns all permissions for role
 func (s *Store) GetPermissionsForRole(ctx context.Context, r role.Role) ([]permission.Permission, error) {
 	return s.getPermissionsForRole(ctx, r)
