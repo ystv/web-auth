@@ -1,7 +1,8 @@
 String registryEndpoint = 'registry.comp.ystv.co.uk'
 
+def branch = env.BRANCH_NAME.replaceAll("/", "_")
 def image
-String imageName = "ystv/web-auth:${env.BRANCH_NAME}-${env.BUILD_ID}"
+String imageName = "ystv/web-auth:${branch}-${env.BUILD_ID}"
 
 pipeline {
   agent {
