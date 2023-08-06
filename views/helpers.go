@@ -188,13 +188,6 @@ func removeDuplicate(strSlice []permission.Permission) []permission.Permission {
 	return list
 }
 
-func timer(name string) func() {
-	start := time.Now()
-	return func() {
-		fmt.Printf("%s took %v\n", name, time.Since(start))
-	}
-}
-
 func minRequirementsMet(password string) (errString string) {
 	var match bool
 	match, err := regexp.MatchString("^.*[a-z].*$", password)
