@@ -43,6 +43,10 @@ func (v *Views) getData(s *sessions.Session) *Context {
 // DBToTemplateType converts from the DB layer type to the user template type
 func DBToTemplateType(dbUsers []user.User) []user.StrippedUser {
 	var tplUsers []user.StrippedUser
+	location, err := time.LoadLocation("Europe/London")
+	if err != nil {
+		fmt.Println(err)
+	}
 	for _, dbUser := range dbUsers {
 		var user1 user.StrippedUser
 		user1.UserID = dbUser.UserID
@@ -60,7 +64,7 @@ func DBToTemplateType(dbUsers []user.User) []user.StrippedUser {
 			user1.Deleted = false
 		}
 		if dbUser.LastLogin.Valid {
-			user1.LastLogin = dbUser.LastLogin.Time.Format("2006-01-02 15:04:05")
+			user1.LastLogin = dbUser.LastLogin.Time.In(location).Format("2006-01-02 15:04:05 MST")
 		} else {
 			user1.LastLogin = "-"
 		}
@@ -72,6 +76,10 @@ func DBToTemplateType(dbUsers []user.User) []user.StrippedUser {
 func DBUserToDetailedUser(dbUser user.User, store *user.Store) user.DetailedUser {
 	var u user.DetailedUser
 	var err error
+	location, err := time.LoadLocation("Europe/London")
+	if err != nil {
+		fmt.Println(err)
+	}
 	u.UserID = dbUser.UserID
 	u.Username = dbUser.Username
 	u.UniversityUsername = dbUser.UniversityUsername
@@ -81,10 +89,10 @@ func DBUserToDetailedUser(dbUser user.User, store *user.Store) user.DetailedUser
 	u.Firstname = dbUser.Firstname
 	u.Lastname = dbUser.Lastname
 	u.Email = dbUser.Email
-	u.LastLogin = null.NewString(dbUser.LastLogin.Time.Format("2006-01-02 15:04:05"), dbUser.LastLogin.Valid)
+	u.LastLogin = null.NewString(dbUser.LastLogin.Time.In(location).Format("2006-01-02 15:04:05 MST"), dbUser.LastLogin.Valid)
 	u.ResetPw = dbUser.ResetPw
 	u.Enabled = dbUser.Enabled
-	u.CreatedAt = null.StringFrom(dbUser.CreatedAt.Time.Format("2006-01-02 15:04:05"))
+	u.CreatedAt = null.StringFrom(dbUser.CreatedAt.Time.In(location).Format("2006-01-02 15:04:05 MST"))
 	if dbUser.CreatedBy.Valid {
 		u.CreatedBy, err = store.GetUser(context.Background(), user.User{UserID: int(dbUser.CreatedBy.Int64)})
 		if err != nil {
@@ -105,7 +113,7 @@ func DBUserToDetailedUser(dbUser user.User, store *user.Store) user.DetailedUser
 		}
 	}
 	if dbUser.UpdatedAt.Valid {
-		u.UpdatedAt = null.StringFrom(dbUser.UpdatedAt.Time.Format("2006-01-02 15:04:05"))
+		u.UpdatedAt = null.StringFrom(dbUser.UpdatedAt.Time.In(location).Format("2006-01-02 15:04:05 MST"))
 	} else {
 		u.UpdatedAt = null.NewString("", false)
 	}
@@ -129,7 +137,7 @@ func DBUserToDetailedUser(dbUser user.User, store *user.Store) user.DetailedUser
 		}
 	}
 	if dbUser.DeletedAt.Valid {
-		u.DeletedAt = null.StringFrom(dbUser.DeletedAt.Time.Format("2006-01-02 15:04:05"))
+		u.DeletedAt = null.StringFrom(dbUser.DeletedAt.Time.In(location).Format("2006-01-02 15:04:05 MST"))
 	} else {
 		u.DeletedAt = null.NewString("", false)
 	}
