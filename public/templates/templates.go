@@ -233,7 +233,7 @@ func (t *Templater) RenderTemplatePagination(w io.Writer, data interface{}, main
 			}
 
 			for _, perm := range p {
-				if perm == permissions.ManageMembersMembersAdd.GetString() {
+				if perm == permissions.ManageMembersMembersAdd.String() {
 					return true
 				}
 			}

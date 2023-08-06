@@ -5,11 +5,11 @@ import "github.com/ystv/web-auth/permission/permissions"
 func GetValidPermissions(p permissions.Permissions) (m map[string]bool) {
 	m = make(map[string]bool)
 
-	m[p.GetString()] = true
+	m[p.String()] = true
 
 	switch p {
 	case permissions.MenuDisabled:
-		m[permissions.MenuDisabled.GetString()] = true
+		m[permissions.MenuDisabled.String()] = true
 		return m
 	case permissions.ManageMembersAdmin:
 	case permissions.KeyCardAccess:
@@ -33,61 +33,61 @@ func GetValidPermissions(p permissions.Permissions) (m map[string]bool) {
 		break
 	case permissions.ManageMembersMembersList:
 	case permissions.ManageMembersMembersAdd:
-		m[permissions.ManageMembersMembersAdmin.GetString()] = true
+		m[permissions.ManageMembersMembersAdmin.String()] = true
 	case permissions.ManageMembersPermissions:
 	case permissions.ManageMembersMicsKeyList:
 	case permissions.ManageMembersMiscUnpaidList:
 	case permissions.ManageMembersOfficers:
 	case permissions.ManageMembersGroup:
 	case permissions.ManageMembersMembersAdmin:
-		m[permissions.ManageMembersAdmin.GetString()] = true
+		m[permissions.ManageMembersAdmin.String()] = true
 		break
 	case permissions.EmailAccess:
 	case permissions.EmailAlumni:
 	case permissions.EmailOfficers:
-		m[permissions.EmailEveryone.GetString()] = true
+		m[permissions.EmailEveryone.String()] = true
 		break
 	case permissions.CalendarSocialCreator:
-		m[permissions.CalendarSocialAdmin.GetString()] = true
+		m[permissions.CalendarSocialAdmin.String()] = true
 	case permissions.CalendarSocialAdmin:
-		m[permissions.CalendarAdmin.GetString()] = true
+		m[permissions.CalendarAdmin.String()] = true
 		break
 	case permissions.CalendarShowCreator:
-		m[permissions.CalendarShowAdmin.GetString()] = true
+		m[permissions.CalendarShowAdmin.String()] = true
 	case permissions.CalendarShowAdmin:
-		m[permissions.CalendarAdmin.GetString()] = true
+		m[permissions.CalendarAdmin.String()] = true
 		break
 	case permissions.CalendarMeetingCreator:
-		m[permissions.CalendarMeetingAdmin.GetString()] = true
+		m[permissions.CalendarMeetingAdmin.String()] = true
 	case permissions.CalendarMeetingAdmin:
-		m[permissions.CalendarAdmin.GetString()] = true
+		m[permissions.CalendarAdmin.String()] = true
 		break
 	case permissions.CMSNewsItemCreator:
-		m[permissions.CMSNewsItemAdmin.GetString()] = true
+		m[permissions.CMSNewsItemAdmin.String()] = true
 	case permissions.CMSNewsItemAdmin:
-		m[permissions.CMSNewsAdmin.GetString()] = true
+		m[permissions.CMSNewsAdmin.String()] = true
 	case permissions.CMSEndboardAdmin:
 	case permissions.CMSView:
 	case permissions.CMSPermalinkAdmin:
 	case permissions.CMSNewsAdmin:
-		m[permissions.CMSAdmin.GetString()] = true
+		m[permissions.CMSAdmin.String()] = true
 		break
 	case permissions.CMSNewsCreator:
-		m[permissions.CMSNewsAdmin.GetString()] = true
-		m[permissions.CMSAdmin.GetString()] = true
+		m[permissions.CMSNewsAdmin.String()] = true
+		m[permissions.CMSAdmin.String()] = true
 		break
 	case permissions.CMSPageCreator:
-		m[permissions.CMSPageAdmin.GetString()] = true
+		m[permissions.CMSPageAdmin.String()] = true
 	case permissions.CMSPageAdmin:
-		m[permissions.CMSAdmin.GetString()] = true
+		m[permissions.CMSAdmin.String()] = true
 		break
 	case permissions.CMSSlideshowCreator:
-		m[permissions.CMSSlideshowAdmin.GetString()] = true
+		m[permissions.CMSSlideshowAdmin.String()] = true
 	case permissions.CMSSlideshowAdmin:
-		m[permissions.CMSAdmin.GetString()] = true
+		m[permissions.CMSAdmin.String()] = true
 		break
 	}
 
-	m[permissions.SuperUser.GetString()] = true
+	m[permissions.SuperUser.String()] = true
 	return
 }
