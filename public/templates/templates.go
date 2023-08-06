@@ -119,26 +119,6 @@ func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Templ
 		"lenA": func(a []string) int {
 			return len(a)
 		},
-		"memberAddPermission": func(id int) bool {
-			u, err := t.User.GetUser(context.Background(), user.User{UserID: id})
-			if err != nil {
-				fmt.Println(err)
-				return false
-			}
-
-			p, err := t.User.GetPermissionsForUser(context.Background(), u)
-			if err != nil {
-				fmt.Println(err)
-				return false
-			}
-
-			for _, perm := range p {
-				if perm == permissions.ManageMembersMembersAdd.GetString() {
-					return true
-				}
-			}
-			return false
-		},
 		"checkPermission": func(id int, p string) bool {
 			m := GetValidPermissions(permissions.Permissions(p))
 
