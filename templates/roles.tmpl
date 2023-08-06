@@ -56,11 +56,30 @@
                         <div class="content">
                             <p class="title">Add role</p>
                             <p>Enter the role's details below.</p>
-                            <form id="addRoleForm" action="/internal/role/add" method="post">
-                                <label for="name">Name</label>
-                                <input type="text" class="input" name="name" id="name">
-                                <label for="description">Description</label>
-                                <textarea class="input" id="description" name="description"></textarea>
+                            <form action="/internal/role/add" method="post">
+                                <div class="field">
+                                    <label class="label" for="name">Name</label>
+                                    <div class="control">
+                                        <input
+                                                id="name"
+                                                class="input"
+                                                type="text"
+                                                name="name"
+                                                placeholder="Name"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="description">Description</label>
+                                    <div class="control">
+                                        <textarea
+                                                id="description"
+                                                class="input"
+                                                name="description"
+                                                placeholder="Description"
+                                        ></textarea>
+                                    </div>
+                                </div>
                                 <button class="button is-info">Add role</button>
                             </form>
                         </div>

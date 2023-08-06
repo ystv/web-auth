@@ -48,12 +48,26 @@ func (s *Store) addRole(ctx context.Context, r1 Role) (Role, error) {
 	return r, nil
 }
 
-func (s *Store) editRole(ctx context.Context, r1 Role) (Role, error) {
-	return Role{}, nil
+func (s *Store) editRole(ctx context.Context, r Role) (Role, error) {
+	stmt, err := s.db.NamedExecContext(ctx, `UPDATE people.roles
+		SET name = :name,
+			description = :description
+		WHERE role_id = :role_id`, r)
+	if err != nil {
+		return Role{}, fmt.Errorf("failed to update role: %w", err)
+	}
+	rows, err := stmt.RowsAffected()
+	if err != nil {
+		return Role{}, fmt.Errorf("failed to update role: %w", err)
+	}
+	if rows < 1 {
+		return Role{}, fmt.Errorf("failed to update role: invalid rows affected: %d", rows)
+	}
+	return r, nil
 }
 
-func (s *Store) deleteRole(ctx context.Context, r1 Role) error {
-	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.roles WHERE role_id = :role_id`, r1)
+func (s *Store) deleteRole(ctx context.Context, r Role) error {
+	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.roles WHERE role_id = :role_id`, r)
 	if err != nil {
 		return fmt.Errorf("failed to delete role: %w", err)
 	}

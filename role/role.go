@@ -2,6 +2,7 @@ package role
 
 import (
 	"context"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -66,7 +67,17 @@ func (s *Store) AddRole(ctx context.Context, r Role) (Role, error) {
 
 // EditRole edits a role
 func (s *Store) EditRole(ctx context.Context, r Role) (Role, error) {
-	return s.editRole(ctx, r)
+	role, err := s.GetRole(ctx, r)
+	if err != nil {
+		return r, fmt.Errorf("failed to get role: %w", err)
+	}
+	if r.Name != role.Name && len(r.Name) > 0 {
+		role.Name = r.Name
+	}
+	if r.Description != role.Description && len(r.Description) > 0 {
+		role.Description = r.Description
+	}
+	return s.editRole(ctx, role)
 }
 
 // DeleteRole deletes a role

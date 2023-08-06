@@ -210,16 +210,59 @@ func (v *Views) RoleAddFunc(c echo.Context) error {
 }
 
 func (v *Views) RoleEditFunc(c echo.Context) error {
-	return nil
+	if c.Request().Method == http.MethodPost {
+		roleID, err := strconv.Atoi(c.Param("roleid"))
+		if err != nil {
+			log.Printf("failed to get roleid for editRole: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get roleid for editRole: %+v", err))
+			}
+		}
+
+		role1, err := v.role.GetRole(c.Request().Context(), role.Role{RoleID: roleID})
+		if err != nil {
+			log.Printf("failed to get role for editRole: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get role for editRole: %+v", err))
+			}
+		}
+
+		err = c.Request().ParseForm()
+		if err != nil {
+			return v.errorHandle(c, fmt.Errorf("failed to parse form for roleEdit: %+v", err))
+		}
+
+		name := c.Request().FormValue("name")
+		description := c.Request().FormValue("description")
+
+		if name != role1.Name && len(name) > 0 {
+			role1.Name = name
+		}
+		if description != role1.Description && len(description) > 0 {
+			role1.Description = description
+		}
+
+		_, err = v.role.EditRole(c.Request().Context(), role1)
+		if err != nil {
+			log.Printf("failed to edit role for editRole: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to edit role for editRole: %+v", err))
+			}
+		}
+
+		return v.roleFunc(c, roleID)
+	} else {
+		return v.errorHandle(c, fmt.Errorf("invalid method used"))
+	}
 }
 
 func (v *Views) RoleDeleteFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		roleID, err := strconv.Atoi(c.Param("roleid"))
 		if err != nil {
-			log.Printf("failed to get roleid for role: %+v", err)
+			log.Printf("failed to get roleid for deleteRole: %+v", err)
 			if !v.conf.Debug {
-				return v.errorHandle(c, fmt.Errorf("failed to get roleid for role: %+v", err))
+				return v.errorHandle(c, fmt.Errorf("failed to get roleid for deleteRole: %+v", err))
 			}
 		}
 
