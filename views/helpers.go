@@ -10,6 +10,7 @@ import (
 	"github.com/ystv/web-auth/user"
 	"gopkg.in/guregu/null.v4"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -192,4 +193,44 @@ func timer(name string) func() {
 	return func() {
 		fmt.Printf("%s took %v\n", name, time.Since(start))
 	}
+}
+
+func minRequirementsMet(password string) (errString string) {
+	var match bool
+	match, err := regexp.MatchString("^.*[a-z].*$", password)
+	if err != nil || !match {
+		errString = "password must contain at least 1 lower case letter"
+	}
+	match, err = regexp.MatchString("^.*[A-Z].*$", password)
+	if err != nil || !match {
+		if len(errString) > 0 {
+			errString += " and password must contain at least 1 upper case letter"
+		} else {
+			errString = "password must contain at least 1 upper case letter"
+		}
+	}
+	match, err = regexp.MatchString("^.*\\d.*$", password)
+	if err != nil || !match {
+		if len(errString) > 0 {
+			errString += " and password must contain at least 1 number"
+		} else {
+			errString = "password must contain at least 1 number"
+		}
+	}
+	match, err = regexp.MatchString("^.*[@$!%*?&|^£;:/.,<>()_=+~§±#{}-].*$", password)
+	if err != nil || !match {
+		if len(errString) > 0 {
+			errString += " and password must contain at least 1 special character"
+		} else {
+			errString = "password must contain at least 1 special character"
+		}
+	}
+	if len(password) <= 8 {
+		if len(errString) > 0 {
+			errString += " and password must be at least 8 characters long"
+		} else {
+			errString = "password must be at least 8 characters long"
+		}
+	}
+	return errString
 }
