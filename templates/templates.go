@@ -19,15 +19,6 @@ import (
 var tmpls embed.FS
 
 type (
-	Repo interface {
-		RenderTemplate(w io.Writer, data interface{}, mainTmpl Template) error
-		RenderTemplatePagination(w io.Writer, data interface{}, mainTmpl Template) error
-		RenderNoNavsTemplate(w io.Writer, data interface{}, mainTmpl Template) error
-		RenderEmail(emailTemplate Template) *template.Template
-		getFuncMaps() template.FuncMap
-		permissionsParser(id int, p string) bool
-	}
-
 	Templater struct {
 		Permission *permission.Store
 		Role       *role.Store
@@ -57,8 +48,6 @@ const (
 	PermissionsTemplate         Template = "permissions.tmpl"
 	PermissionTemplate          Template = "permission.tmpl"
 )
-
-var _ Repo = &Templater{}
 
 func NewTemplate(p *permission.Store, r *role.Store, u *user.Store) *Templater {
 	return &Templater{

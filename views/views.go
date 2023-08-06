@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/permission"
-	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/role"
 	"github.com/ystv/web-auth/templates"
 	"log"
@@ -50,77 +49,6 @@ type (
 		SigningKey        string
 	}
 
-	// Repo defines all view interactions
-	Repo interface {
-		// Error404 is the error handler for 404 errors
-		Error404(c echo.Context) error
-		// Error500 is the error handler for 500 errors
-		Error500(c echo.Context) error
-
-		// IndexFunc is the index function for the root url
-		IndexFunc(c echo.Context) error
-
-		// LoginFunc handles logins
-		LoginFunc(c echo.Context) error
-		// LogoutFunc handles logouts
-		LogoutFunc(c echo.Context) error
-		// SignUpFunc handles signups
-		SignUpFunc(c echo.Context) error
-		ForgotFunc(c echo.Context) error
-		ResetURLFunc(c echo.Context) error
-		ResetUserPasswordFunc(c echo.Context) error
-
-		// InternalFunc is the internal dashboard
-		InternalFunc(c echo.Context) error
-		SettingsFunc(c echo.Context) error
-
-		PermissionsFunc(c echo.Context) error
-		PermissionFunc(c echo.Context) error
-		PermissionAddFunc(c echo.Context) error
-		PermissionEditFunc(c echo.Context) error
-		PermissionDeleteFunc(c echo.Context) error
-		bindPermissionToTemplate(p1 permission.Permission) user.PermissionTemplate
-
-		RolesFunc(c echo.Context) error
-		RoleFunc(c echo.Context) error
-		RoleAddFunc(c echo.Context) error
-		RoleEditFunc(c echo.Context) error
-		RoleDeleteFunc(c echo.Context) error
-		bindRoleToTemplate(r1 role.Role) user.RoleTemplate
-
-		UsersFunc(c echo.Context) error
-		UserFunc(c echo.Context) error
-		UserAddFunc(c echo.Context) error
-		UserEditFunc(c echo.Context) error
-		UserDeleteFunc(c echo.Context) error
-
-		// RequiresLogin ensures the user is logged in
-		RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc
-
-		RequiresMinimumPermission(next echo.HandlerFunc, p permissions.Permissions) echo.HandlerFunc
-		RequiresMinimumPermissionMMP(next echo.HandlerFunc) echo.HandlerFunc
-		RequiresMinimumPermissionMMG(next echo.HandlerFunc) echo.HandlerFunc
-		RequiresMinimumPermissionMMML(next echo.HandlerFunc) echo.HandlerFunc
-		RequiresMinimumPermissionMMAdd(next echo.HandlerFunc) echo.HandlerFunc
-		RequiresMinimumPermissionMMAdmin(next echo.HandlerFunc) echo.HandlerFunc
-		RequiresMinimumPermissionNoHttp(userID int, p permissions.Permissions) bool
-
-		// SetTokenHandler is
-		SetTokenHandler(c echo.Context) error
-		// ValidateToken is
-		ValidateToken(myToken string) (bool, *JWTClaims)
-		// newJWT is
-		newJWT(u user.User) (string, error)
-		// TestAPI is
-		TestAPI(c echo.Context) error
-
-		getData(s *sessions.Session) *Context
-		removeDuplicate(strSlice []permission.Permission) []permission.Permission
-		timer(name string) func()
-
-		errorHandle(c echo.Context, err error) error
-	}
-
 	// Views encapsulates our view dependencies
 	Views struct {
 		conf       *Config
@@ -134,9 +62,6 @@ type (
 		template   *templates.Templater
 	}
 )
-
-// here to verify we are meeting the interface
-var _ Repo = &Views{}
 
 // New initialises connections, templates, and cookies
 func New(conf *Config, host, port string) *Views {

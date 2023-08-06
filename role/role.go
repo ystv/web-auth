@@ -6,21 +6,6 @@ import (
 )
 
 type (
-	// Repo where all user data is stored
-	Repo interface {
-		GetRoles(ctx context.Context) ([]Role, error)
-		GetRole(ctx context.Context, r Role) (Role, error)
-		AddRole(ctx context.Context, r Role) (Role, error)
-		EditRole(ctx context.Context, r Role) (Role, error)
-		DeleteRole(ctx context.Context, r Role) error
-
-		getRoles(ctx context.Context) ([]Role, error)
-		getRole(ctx context.Context, r1 Role) (Role, error)
-		addRole(ctx context.Context, r1 Role) (Role, error)
-		editRole(ctx context.Context, r1 Role) (Role, error)
-		deleteRole(ctx context.Context, r1 Role) error
-	}
-
 	// Store stores the dependencies
 	Store struct {
 		db *sqlx.DB
@@ -45,8 +30,6 @@ type (
 	//	UserID int `db:"user_id" json:"user_id"`
 	//}
 )
-
-var _ Repo = &Store{}
 
 // NewRoleRepo stores our dependency
 func NewRoleRepo(db *sqlx.DB) *Store {

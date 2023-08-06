@@ -11,14 +11,6 @@ import (
 )
 
 type (
-	Repo interface {
-		AddDefaults(defaults Defaults)
-		SendResetEmail(recipient, subject, code string) error
-		CheckSendable(item Mail) error
-		SendMail(item Mail) error
-		SendErrorFatalMail(item Mail) error
-	}
-
 	// Mailer encapsulates the dependency
 	Mailer struct {
 		*mail.SMTPClient
@@ -56,8 +48,6 @@ type (
 		TplData     interface{}
 	}
 )
-
-var _ Repo = &Mailer{}
 
 // NewMailer creates a new SMTP client
 func NewMailer(config Config) (*Mailer, error) {
