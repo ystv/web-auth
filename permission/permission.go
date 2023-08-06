@@ -2,6 +2,7 @@ package permission
 
 import (
 	"context"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -63,7 +64,17 @@ func (s *Store) AddPermission(ctx context.Context, p Permission) (Permission, er
 
 // EditPermission returns all permissions of a user
 func (s *Store) EditPermission(ctx context.Context, p Permission) (Permission, error) {
-	return s.editPermission(ctx, p)
+	permission, err := s.GetPermission(ctx, p)
+	if err != nil {
+		return p, fmt.Errorf("failed to get permission: %w", err)
+	}
+	if p.Name != permission.Name && len(p.Name) > 0 {
+		permission.Name = p.Name
+	}
+	if p.Description != permission.Description && len(p.Description) > 0 {
+		permission.Description = p.Description
+	}
+	return s.editPermission(ctx, permission)
 }
 
 // DeletePermission deletes a permission

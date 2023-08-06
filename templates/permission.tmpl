@@ -12,7 +12,7 @@
         <div class="columns box" style="height: fit-content">
             <div class="column is-2">
                 <div class="buttons" style="display: block">
-                    <a class="button is-warning is-outlined">
+                    <a class="button is-warning is-outlined" onclick="editPermissionModal()">
                         Edit
                     </a>
                     <a class="button is-danger is-outlined" onclick="deletePermissionModal()">
@@ -25,9 +25,57 @@
             </div>
         </div>
     </div>
+    {{template "modals" .}}
 {{end}}
 
 {{define "modals"}}
+    <div id="editPermissionModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title">Are you sure you want to edit this permission?</p>
+                            <p><strong>This action can be undone by changing them back but be careful</strong><br>
+                                Use the fields below to modify your details, to not change a field, either leave it as
+                                is or blank.<br>If you change the SuperUser name then many things will break</p>
+                            <form action="/internal/permission/{{.Permission.PermissionID}}/edit" method="post">
+                                <div class="field">
+                                    <label class="label" for="name">Name</label>
+                                    <div class="control">
+                                        <input
+                                                id="name"
+                                                class="input"
+                                                type="text"
+                                                name="name"
+                                                placeholder="{{.Permission.Name}}"
+                                                value="{{.Permission.Name}}"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="description">Description</label>
+                                    <div class="control">
+                                        <input
+                                                id="description"
+                                                class="input"
+                                                type="text"
+                                                name="description"
+                                                placeholder="{{.Permission.Description}}"
+                                                value="{{.Permission.Description}}"
+                                        />
+                                    </div>
+                                </div>
+                                <button class="button is-danger">Edit permission</button>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
     <div id="deletePermissionModal" class="modal">
         <div class="modal-background"></div>
         <div class="modal-content">
@@ -58,6 +106,10 @@
                 $modal.classList.remove("is-active");
             });
         });
+
+        function editPermissionModal() {
+            document.getElementById("editPermissionModal").classList.add("is-active");
+        }
 
         function deletePermissionModal() {
             document.getElementById("deletePermissionModal").classList.add("is-active");

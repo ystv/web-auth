@@ -47,8 +47,22 @@ func (s *Store) addPermission(ctx context.Context, p1 Permission) (Permission, e
 	return p, nil
 }
 
-func (s *Store) editPermission(ctx context.Context, p1 Permission) (Permission, error) {
-	return Permission{}, nil
+func (s *Store) editPermission(ctx context.Context, p Permission) (Permission, error) {
+	stmt, err := s.db.NamedExecContext(ctx, `UPDATE people.permissions
+		SET name = :name,
+			description = :description
+		WHERE permission_id = :permission_id`, p)
+	if err != nil {
+		return Permission{}, fmt.Errorf("failed to update permission: %w", err)
+	}
+	rows, err := stmt.RowsAffected()
+	if err != nil {
+		return Permission{}, fmt.Errorf("failed to update permission: %w", err)
+	}
+	if rows < 1 {
+		return Permission{}, fmt.Errorf("failed to update permissions: invalid rows affected: %d", rows)
+	}
+	return p, nil
 }
 
 func (s *Store) deletePermission(ctx context.Context, p1 Permission) error {

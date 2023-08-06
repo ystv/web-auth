@@ -66,9 +66,43 @@ func (v *Views) PermissionFunc(c echo.Context) error {
 	if err != nil {
 		log.Printf("failed to get permissionid for permission: %+v", err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return v.errorHandle(c, fmt.Errorf("failed to get permissionid for permission: %+v", err))
 		}
 	}
+
+	permission1, err := v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: permissionID})
+	if err != nil {
+		log.Printf("failed to get permission for permission: %+v", err)
+		if !v.conf.Debug {
+			return v.errorHandle(c, fmt.Errorf("failed to get permission for permission: %+v", err))
+		}
+	}
+
+	permissionTemplate := v.bindPermissionToTemplate(permission1)
+
+	permissionTemplate.Roles, err = v.user.GetRolesForPermission(c.Request().Context(), permission1)
+	if err != nil {
+		log.Printf("failed to get roles for permission: %+v", err)
+		if !v.conf.Debug {
+			return v.errorHandle(c, fmt.Errorf("failed to get roles for permission: %+v", err))
+		}
+	}
+
+	data := PermissionTemplate{
+		Permission: permissionTemplate,
+		UserID:     c1.User.UserID,
+		ActivePage: "permission",
+	}
+
+	return v.template.RenderTemplate(c.Response(), data, templates.PermissionTemplate)
+}
+
+// permissionFunc handles a permission request internal
+func (v *Views) permissionFunc(c echo.Context, permissionID int) error {
+	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+
+	c1 := v.getData(session)
+
 	permission1, err := v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: permissionID})
 	if err != nil {
 		log.Printf("failed to get permission for permission: %+v", err)
@@ -125,7 +159,50 @@ func (v *Views) PermissionAddFunc(c echo.Context) error {
 
 // PermissionEditFunc handles an edit permission request
 func (v *Views) PermissionEditFunc(c echo.Context) error {
-	return nil
+	if c.Request().Method == http.MethodPost {
+		permissionID, err := strconv.Atoi(c.Param("permissionid"))
+		if err != nil {
+			log.Printf("failed to get permissionid for editPermission: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get permissionid for editPermission: %+v", err))
+			}
+		}
+
+		permission1, err := v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: permissionID})
+		if err != nil {
+			log.Printf("failed to get permission for editPermission: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get permission for editPermission: %+v", err))
+			}
+		}
+
+		err = c.Request().ParseForm()
+		if err != nil {
+			return v.errorHandle(c, fmt.Errorf("failed to parse form for permissionEdit: %+v", err))
+		}
+
+		name := c.Request().FormValue("name")
+		description := c.Request().FormValue("description")
+
+		if name != permission1.Name && len(name) > 0 {
+			permission1.Name = name
+		}
+		if description != permission1.Description && len(description) > 0 {
+			permission1.Description = description
+		}
+
+		_, err = v.permission.EditPermission(c.Request().Context(), permission1)
+		if err != nil {
+			log.Printf("failed to edit permission for editPermission: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to edit permission for editPermission: %+v", err))
+			}
+		}
+
+		return v.permissionFunc(c, permissionID)
+	} else {
+		return v.errorHandle(c, fmt.Errorf("invalid method used"))
+	}
 }
 
 // PermissionDeleteFunc handles a delete permission request
