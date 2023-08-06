@@ -45,7 +45,7 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 		// Get user1 and check if it exists
 		user1, err := v.user.GetUser(c.Request().Context(), u)
 		if err != nil {
-			// StrippedUser doesn't exist, we'll pretend they've got an email
+			// User doesn't exist, we'll pretend they've got an email
 			log.Printf("request for reset on unknown email \"%s\"", user1.Email)
 			return v.template.RenderNoNavsTemplate(c.Response(), notification, templates.NotificationTemplate)
 		}
