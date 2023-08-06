@@ -4,14 +4,13 @@ import "github.com/ystv/web-auth/permission/permissions"
 
 func GetValidPermissions(p permissions.Permissions) (m map[string]bool) {
 	m = make(map[string]bool)
-	if p.GetString() == permissions.MenuDisabled.GetString() {
-		m[p.GetString()] = true
-		return
-	}
 
 	m[p.GetString()] = true
 
 	switch p {
+	case permissions.MenuDisabled:
+		m[permissions.MenuDisabled.GetString()] = true
+		return m
 	case permissions.ManageMembersAdmin:
 	case permissions.KeyCardAccess:
 	case permissions.BookingsAdmin:
