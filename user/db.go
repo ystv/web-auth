@@ -77,6 +77,7 @@ func (s *Store) editUser(ctx context.Context, u User) (User, error) {
 			last_login = :last_login,
 			reset_pw = :reset_pw,
 			avatar = :avatar,
+			username = :username,
 			use_gravatar = :use_gravatar,
 			first_name = :first_name,
 			last_name = :last_name,
