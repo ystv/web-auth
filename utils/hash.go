@@ -2,8 +2,13 @@ package utils
 
 import (
 	"encoding/hex"
-
 	whirl "github.com/balacode/zr-whirl"
+	mRand "math/rand"
+)
+
+const (
+	SaltCharacters     = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/."
+	PasswordCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@*()&"
 )
 
 // HashPass hashes a password using a Whirlpool hash.
@@ -19,13 +24,29 @@ func HashPass(password string) string {
 	return next
 }
 
-// func hashPass(pass []byte) ([]byte, error) {
-// 	pass, err := bcrypt.GenerateFromPassword(pass, 10)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return pass, nil
-// }
+func GenerateSalt() string {
+	b := make([]byte, 22)
+	for i := range b {
+		b[i] = SaltCharacters[mRand.Intn(len(SaltCharacters))]
+	}
+	return "$2a$06$" + string(b)
+}
+
+func GeneratePassword() string {
+	b := make([]byte, 12)
+	for i := range b {
+		b[i] = PasswordCharacters[mRand.Intn(len(PasswordCharacters))]
+	}
+	return string(b)
+}
+
+//func hashPass(pass []byte) ([]byte, error) {
+//	pass, err := bcrypt.GenerateFromPassword(pass, 10)
+//	if err != nil {
+//		return nil, err
+//	}
+//	return pass, nil
+//}
 
 // func checkPassHash(hash, pass []byte) error {
 // 	return bcrypt.CompareHashAndPassword(hash, pass)
