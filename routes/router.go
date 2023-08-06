@@ -69,6 +69,7 @@ func (r *Router) loadRoutes() {
 	{
 		internal.GET("", r.views.InternalFunc)
 		internal.Match(validMethods, "/settings", r.views.SettingsFunc)
+		internal.Match(validMethods, "/changepassword", r.views.ChangePasswordFunc)
 
 		if !r.config.Debug {
 			internal.GET("/permissions", r.views.PermissionsFunc, r.views.RequiresMinimumPermissionMMP)
@@ -137,6 +138,7 @@ func (r *Router) loadRoutes() {
 				userID.Match(validMethods, "/edit", r.views.UserEditFunc)
 				userID.Match(validMethods, "/delete", r.views.UserDeleteFunc)
 				userID.Match(validMethods, "/reset", r.views.ResetUserPasswordFunc)
+				userID.Match(validMethods, "/toggle", r.views.UserToggleEnabledFunc)
 				userID.Match(validMethods, "", r.views.UserFunc)
 			}
 		}

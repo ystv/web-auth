@@ -70,12 +70,15 @@ type (
 		ResetURLFunc(c echo.Context) error
 		ResetUserPasswordFunc(c echo.Context) error
 
+		ChangePasswordFunc(c echo.Context) error
+
 		// InternalFunc is the internal dashboard
 		InternalFunc(c echo.Context) error
 		SettingsFunc(c echo.Context) error
 
 		PermissionsFunc(c echo.Context) error
 		PermissionFunc(c echo.Context) error
+		permissionFunc(c echo.Context, permissionID int) error
 		PermissionAddFunc(c echo.Context) error
 		PermissionEditFunc(c echo.Context) error
 		PermissionDeleteFunc(c echo.Context) error
@@ -97,6 +100,7 @@ type (
 		UserFunc(c echo.Context) error
 		UserAddFunc(c echo.Context) error
 		UserEditFunc(c echo.Context) error
+		UserToggleEnabledFunc(c echo.Context) error
 		UserDeleteFunc(c echo.Context) error
 
 		// RequiresLogin ensures the user is logged in

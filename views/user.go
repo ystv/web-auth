@@ -3,8 +3,11 @@ package views
 import (
 	"fmt"
 	"github.com/labstack/echo/v4"
+	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
+	"github.com/ystv/web-auth/utils"
+	"gopkg.in/guregu/null.v4"
 	"log"
 	"math"
 	"net/http"
@@ -84,7 +87,6 @@ func (v *Views) UsersFunc(c echo.Context) error {
 		}
 
 		enabled := c.Request().FormValue("enabled")
-		fmt.Println(enabled, len(enabled))
 		if enabled == "enabled" || enabled == "disabled" {
 			q.Set("enabled", enabled)
 		} else if enabled != "any" {
@@ -92,7 +94,6 @@ func (v *Views) UsersFunc(c echo.Context) error {
 		}
 
 		deleted := c.Request().FormValue("deleted")
-		fmt.Println(deleted, len(deleted))
 		if deleted == "deleted" || deleted == "not_deleted" {
 			q.Set("deleted", deleted)
 		} else if deleted != "any" {
@@ -117,8 +118,6 @@ func (v *Views) UsersFunc(c echo.Context) error {
 			q.Set("search", url.QueryEscape(search))
 		}
 
-		fmt.Println(q.Encode())
-
 		u.RawQuery = q.Encode()
 		return c.Redirect(http.StatusFound, u.String())
 	}
@@ -126,6 +125,12 @@ func (v *Views) UsersFunc(c echo.Context) error {
 	column := c.Request().URL.Query().Get("column")
 	direction := c.Request().URL.Query().Get("direction")
 	search := c.Request().URL.Query().Get("search")
+	if len(search) > 0 {
+		search, err = url.QueryUnescape(search)
+		if err != nil {
+			log.Printf("failed to parse search in users: %+v", err)
+		}
+	}
 	enabled := c.Request().URL.Query().Get("enabled")
 	deleted := c.Request().URL.Query().Get("deleted")
 	var size, page, count int
@@ -261,7 +266,50 @@ func (v *Views) UserFunc(c echo.Context) error {
 		}
 	}
 
-	user2.Permissions = v.removeDuplicate(user2.Permissions)
+	user2.Permissions = removeDuplicate(user2.Permissions)
+
+	user2.Roles, err = v.user.GetRolesForUser(c.Request().Context(), user.User{UserID: user2.UserID})
+	if err != nil {
+		log.Println(err)
+		if !v.conf.Debug {
+			return v.errorHandle(c, err)
+		}
+	}
+
+	data := UserTemplate{
+		User:       user2,
+		UserID:     c1.User.UserID,
+		ActivePage: "user",
+	}
+
+	return v.template.RenderTemplate(c.Response(), data, templates.UserTemplate)
+}
+
+// userFunc handles a users request internal
+func (v *Views) userFunc(c echo.Context, userID int) error {
+	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+
+	c1 := v.getData(session)
+
+	user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
+	if err != nil {
+		log.Printf("failed to get user in user: %+v", err)
+		if !v.conf.Debug {
+			return v.errorHandle(c, err)
+		}
+	}
+
+	user2 := DBUserToDetailedUser(user1, v.user)
+
+	user2.Permissions, err = v.user.GetPermissionsForUser(c.Request().Context(), user.User{UserID: user2.UserID})
+	if err != nil {
+		log.Println(err)
+		if !v.conf.Debug {
+			return v.errorHandle(c, err)
+		}
+	}
+
+	user2.Permissions = removeDuplicate(user2.Permissions)
 
 	user2.Roles, err = v.user.GetRolesForUser(c.Request().Context(), user.User{UserID: user2.UserID})
 	if err != nil {
@@ -380,9 +428,154 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 }
 
 func (v *Views) UserEditFunc(c echo.Context) error {
-	return nil
+	if c.Request().Method == http.MethodPost {
+		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+
+		c1 := v.getData(session)
+
+		userID, err := strconv.Atoi(c.Param("userid"))
+		if err != nil {
+			log.Printf("failed to get userid for toggleUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get userid for toggleUser: %+v", err))
+			}
+		}
+
+		user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
+		if err != nil {
+			log.Printf("failed to get user for toggleUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get user for toggleUser: %+v", err))
+			}
+		}
+
+		err = c.Request().ParseForm()
+		if err != nil {
+			return v.errorHandle(c, fmt.Errorf("failed to parse form for userEdit: %+v", err))
+		}
+
+		firstName := c.Request().FormValue("firstname")
+		nickname := c.Request().FormValue("nickname")
+		lastName := c.Request().FormValue("lastname")
+		username := c.Request().FormValue("username")
+		universityUsername := c.Request().FormValue("universityusername")
+		LDAPUsername := c.Request().FormValue("ldapusername")
+		email := c.Request().FormValue("email")
+		// login type can't be changed yet but the infrastructure is in
+		loginType := c.Request().FormValue("logintype")
+		_ = loginType
+
+		if firstName != user1.Firstname && len(firstName) > 0 {
+			user1.Firstname = firstName
+		}
+		if nickname != user1.Nickname && len(nickname) > 0 {
+			user1.Nickname = nickname
+		}
+		if lastName != user1.Lastname && len(lastName) > 0 {
+			user1.Lastname = lastName
+		}
+		if username != user1.Username && len(username) > 0 {
+			user1.Username = username
+		}
+		if universityUsername != user1.UniversityUsername.String && len(universityUsername) > 0 {
+			user1.UniversityUsername = null.StringFrom(universityUsername)
+		}
+		if LDAPUsername != user1.LDAPUsername.String && len(LDAPUsername) > 0 {
+			user1.LDAPUsername = null.StringFrom(LDAPUsername)
+		}
+		if email != user1.Email && len(email) > 0 {
+			user1.Email = email
+		}
+
+		_, err = v.user.EditUser(c.Request().Context(), user1, c1.User.UserID)
+		if err != nil {
+			log.Printf("failed to edit user for editUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to edit user for editUser: %+v", err))
+			}
+		}
+		return v.userFunc(c, userID)
+	} else {
+		return v.errorHandle(c, fmt.Errorf("invalid method used"))
+	}
+}
+
+func (v *Views) UserToggleEnabledFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+
+		c1 := v.getData(session)
+
+		userID, err := strconv.Atoi(c.Param("userid"))
+		if err != nil {
+			log.Printf("failed to get userid for toggleUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get userid for toggleUser: %+v", err))
+			}
+		}
+
+		user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
+		if err != nil {
+			log.Printf("failed to get user for toggleUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get user for toggleUser: %+v", err))
+			}
+		}
+
+		user1.Enabled = !user1.Enabled
+
+		_, err = v.user.EditUser(c.Request().Context(), user1, c1.User.UserID)
+		if err != nil {
+			log.Printf("failed to edit user for toggleUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to edit user for toggleUser: %+v", err))
+			}
+		}
+		return v.userFunc(c, userID)
+	} else {
+		return v.errorHandle(c, fmt.Errorf("invalid method used"))
+	}
 }
 
 func (v *Views) UserDeleteFunc(c echo.Context) error {
-	return nil
+	if c.Request().Method == http.MethodPost {
+		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+
+		c1 := v.getData(session)
+
+		userID, err := strconv.Atoi(c.Param("userid"))
+		if err != nil {
+			log.Printf("failed to get userid for deleteUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get userid for deleteUser: %+v", err))
+			}
+		}
+
+		user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
+		if err != nil {
+			log.Printf("failed to get user for deleteUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to get user for deleteUser: %+v", err))
+			}
+		}
+
+		err = v.user.RemoveRoleUsers(c.Request().Context(), user1)
+		if err != nil {
+			log.Printf("failed to delete roleUsers for deleteUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to delete roleUsers for deleteUser: %+v", err))
+			}
+		}
+
+		_, err = v.user.DeleteUser(c.Request().Context(), user1, c1.User.UserID)
+		if err != nil {
+			log.Printf("failed to delete user for deleteUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to delete user for deleteUser: %+v", err))
+			}
+		}
+		return v.UsersFunc(c)
+	} else {
+		return v.errorHandle(c, fmt.Errorf("invalid method used"))
+	}
 }
