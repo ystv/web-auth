@@ -92,7 +92,9 @@ func (s *Store) getUsers(ctx context.Context) ([]User, error) {
 	return u, nil
 }
 
-// getUsersSizePage will get users with page size
+// getUsersSizePage will get users with page size.
+// Size is specified by the users page, size of list, from 5 to all items.
+// Page is the page number displayed, this is for the UI users page
 func (s *Store) getUsersSizePage(ctx context.Context, size, page int) ([]User, error) {
 	var u []User
 	// SELECT u.*, COUNT(*) / $1 AS pages
