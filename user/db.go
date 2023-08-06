@@ -54,8 +54,22 @@ func (s *Store) countUsersPastYear(ctx context.Context) (int, error) {
 	return count, nil
 }
 
-// updateUser will update a user record by ID
-func (s *Store) updateUser(ctx context.Context, u1 User) (User, error) {
+// addUser will add a user
+func (s *Store) addUser(ctx context.Context, u1 User) (User, error) {
+	var u User
+	stmt, err := s.db.PrepareNamedContext(ctx, "INSERT INTO people.users (username, university_username, email, first_name, last_name, nickname, login_type, password, salt, reset_pw, enabled, created_at, created_by) VALUES (:username, :university_username, :email, :first_name, :last_name, :nickname, :login_type, :password, :salt, :reset_pw, :enabled, :created_at, :created_by) RETURNING user_id, username, university_username, email, first_name, last_name, nickname, login_type, password, salt, reset_pw, enabled, created_at, created_by")
+	if err != nil {
+		return User{}, fmt.Errorf("failed to add user: %w", err)
+	}
+	err = stmt.Get(&u, u1)
+	if err != nil {
+		return User{}, fmt.Errorf("failed to add user: %w", err)
+	}
+	return u, nil
+}
+
+// editUser will update a user record by ID
+func (s *Store) editUser(ctx context.Context, u User) (User, error) {
 	stmt, err := s.db.NamedExecContext(ctx, `UPDATE people.users
 		SET password = :password,
 			salt = :salt,

@@ -281,7 +281,102 @@ func (v *Views) UserFunc(c echo.Context) error {
 }
 
 func (v *Views) UserAddFunc(c echo.Context) error {
-	return nil
+	if c.Request().Method == http.MethodPost {
+		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+
+		c1 := v.getData(session)
+
+		err := c.Request().ParseForm()
+		if err != nil {
+			return v.errorHandle(c, fmt.Errorf("failed to parse form for userAdd: %+v", err))
+		}
+
+		fmt.Println(c.Request(), "\n\n", c.Request().Form)
+
+		firstName := c.Request().FormValue("firstname")
+		lastName := c.Request().FormValue("lastname")
+		username := c.Request().FormValue("username")
+		universityUsername := c.Request().FormValue("universityusername")
+		email := c.Request().FormValue("email")
+
+		password := utils.GeneratePassword()
+		salt := utils.GenerateSalt()
+		u := user.User{
+			UserID:             0,
+			Username:           username,
+			UniversityUsername: null.StringFrom(universityUsername),
+			LoginType:          "internal",
+			Firstname:          firstName,
+			Nickname:           firstName,
+			Lastname:           lastName,
+			Password:           null.StringFrom(password),
+			Salt:               null.StringFrom(salt),
+			Email:              email,
+			ResetPw:            true,
+			Enabled:            true,
+		}
+
+		_, err = v.user.AddUser(c.Request().Context(), u, c1.User.UserID)
+		if err != nil {
+			log.Printf("failed to add user for addUser: %+v", err)
+			if !v.conf.Debug {
+				return v.errorHandle(c, fmt.Errorf("failed to add user for addUser: %+v", err))
+			}
+		}
+
+		var message struct {
+			Message string `json:"message"`
+			Error   error  `json:"error"`
+		}
+
+		if v.Mailer.Enabled {
+			v.Mailer, err = mail.NewMailer(mail.Config{
+				Host:       v.conf.Mail.Host,
+				Port:       v.conf.Mail.Port,
+				Username:   v.conf.Mail.Username,
+				Password:   v.conf.Mail.Password,
+				DomainName: v.conf.DomainName,
+			})
+			if err != nil {
+				log.Printf("Mailer failed: %+v", err)
+			}
+
+			file := mail.Mail{
+				Subject: "Welcome to YSTV!",
+				Tpl:     v.template.RenderEmail(templates.SignupEmailTemplate),
+				To:      u.Email,
+				From:    "YSTV No-Reply <no-reply@ystv.co.uk>",
+				TplData: struct {
+					Name     string
+					Username string
+					Password string
+				}{
+					Name:     firstName,
+					Username: username,
+					Password: password,
+				},
+			}
+
+			err = v.Mailer.SendMail(file)
+			if err != nil {
+				log.Printf("failed to send email in addUser: %+v", err)
+				return v.errorHandle(c, fmt.Errorf("failed to send email in addUser: %+v", err))
+			}
+
+			message.Message = fmt.Sprintf("Successfully sent user email to: \"%s\"", email)
+		} else {
+			message.Message = fmt.Sprintf("No mailer present\nPlease send the username and password to this email: %s, username: %s, password: %s", email, username, password)
+			message.Error = fmt.Errorf("no mailer present")
+			log.Printf("no Mailer present")
+		}
+		log.Printf("created user: %s", u.Username)
+
+		var status int
+
+		return c.JSON(status, message)
+	} else {
+		return v.errorHandle(c, fmt.Errorf("invalid method used"))
+	}
 }
 
 func (v *Views) UserEditFunc(c echo.Context) error {

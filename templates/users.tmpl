@@ -105,6 +105,8 @@
                 <p class="card-header-title">Users</p>
             </header>
             {{if (checkPermission $.UserID "ManageMembers.Members.Add")}}
+                <p id="message" style="color: green"></p>
+                <p id="error" style="color: red"></p>
                 <div class="card" style="margin-bottom: 0">
                     <div class="column">
                         <div class="field">
@@ -168,22 +170,83 @@
                             <p class="title">Add user</p>
                             <p>Enter the user's details below.</p>
                             <form id="addUserForm">
-                                {{/*
-                                Uni
-                                First
-                                Nick
-                                Last
-                                Email
-
-                                */}}
-
-                                <input type="text" autocomplete="off" class="input"
-                                       onchange="if (document.getElementById('email').value === '' && this.value.length > 0) document.getElementById('email').value = this.value + '@york.ac.uk'; if (document.getElementById('username').value === '' && this.value.length > 0) document.getElementById('username').value = this.value"
-                                       name="university_username" id="university_username" placeholder="abc123">
-                                <input type="text" autocomplete="off" class="input" id="username" name="username">
-                                <input type="email" autocomplete="off" class="input" id="email" name="email">
+                                <div class="field">
+                                    <label class="label" for="firstname">First name</label>
+                                    <div class="control">
+                                        <input
+                                                id="firstname"
+                                                class="input"
+                                                type="text"
+                                                name="firstname"
+                                                placeholder="First name"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="lastname">Last name</label>
+                                    <div class="control">
+                                        <input
+                                                id="lastname"
+                                                class="input"
+                                                type="text"
+                                                name="lastname"
+                                                placeholder="Last name"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="universityusername">University username</label>
+                                    <div class="control">
+                                        <input
+                                                id="universityusername"
+                                                class="input"
+                                                type="text"
+                                                name="universityusername"
+                                                placeholder="abc1234"
+                                                onchange="if (document.getElementById('email').value === '' && this.value.length > 0) document.getElementById('email').value = this.value + '@york.ac.uk'; if (document.getElementById('username').value === '' && this.value.length > 0) document.getElementById('username').value = this.value"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="username">Username</label>
+                                    <div class="control">
+                                        <input
+                                                id="username"
+                                                class="input"
+                                                type="text"
+                                                name="username"
+                                                placeholder="abc123"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="email">Email</label>
+                                    <div class="control">
+                                        <input
+                                                id="email"
+                                                class="input"
+                                                type="email"
+                                                name="email"
+                                                placeholder="abc123@york.ac.uk"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="logintype">Login type (not for change yet)</label>
+                                    <div class="control">
+                                        <input
+                                                id="logintype"
+                                                class="input"
+                                                type="text"
+                                                name="logintype"
+                                                placeholder="internal"
+                                                value="internal"
+                                                disabled
+                                        />
+                                    </div>
+                                </div>
+                                <a class="button is-info" onclick="addUser()">Add user</a>
                             </form>
-                            <a class="button is-info" onclick="addUser()">Add user</a>
                         </div>
                     </div>
                 </article>
@@ -206,7 +269,18 @@
         }
 
         function addUser() {
-
+            $.ajax({
+                url: '/internal/user/add',
+                type: 'post',
+                dataType: 'json',
+                contentType: 'application/x-www-form-urlencoded',
+                data: $('#addUserForm').serialize(),
+                success: function (data) {
+                    document.getElementById("addUserModal").classList.remove("is-active");
+                    $("#message").html(data.message);
+                    $("#error").html(data.error);
+                },
+            })
         }
     </script>
 {{end}}

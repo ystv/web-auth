@@ -28,8 +28,9 @@ type (
 		GetUsersOrderNoSearch(ctx context.Context, size, page int, sortBy, direction, enabled, deleted string) ([]User, error)
 		GetUsersSearchOrder(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, error)
 		VerifyUser(ctx context.Context, u User) (User, bool, error)
-		UpdateUserPassword(ctx context.Context, u User) (User, error)
-		UpdateUser(ctx context.Context, u User, userID int) (User, error)
+		AddUser(ctx context.Context, u User, userID int) (User, error)
+		EditUserPassword(ctx context.Context, u User) (User, error)
+		EditUser(ctx context.Context, u User, userID int) (User, error)
 		SetUserLoggedIn(ctx context.Context, u User) (User, error)
 		DeleteUser(ctx context.Context, u User, userID int) (User, error)
 		GetPermissionsForUser(ctx context.Context, u User) ([]permission.Permission, error)
@@ -53,7 +54,8 @@ type (
 		countUsers24Hours(ctx context.Context) (int, error)
 		countUsersPastYear(ctx context.Context) (int, error)
 
-		updateUser(ctx context.Context, user User) (User, error)
+		addUser(ctx context.Context, user User) (User, error)
+		editUser(ctx context.Context, user User) (User, error)
 		getUser(ctx context.Context, user User) (User, error)
 		getUsers(ctx context.Context, size, page int, enabled, deleted string) ([]User, error)
 		getUsersSearchNoOrder(ctx context.Context, size, page int, search, enabled, deleted string) ([]User, error)
@@ -250,8 +252,24 @@ func (s *Store) VerifyUser(ctx context.Context, u User) (User, bool, error) {
 	return u, false, errors.New("invalid credentials")
 }
 
-// UpdateUserPassword will update the password and set the reset_pw to false
-func (s *Store) UpdateUserPassword(ctx context.Context, u User) (User, error) {
+func (s *Store) AddUser(ctx context.Context, u User, userID int) (User, error) {
+	_, err := s.GetUser(ctx, u)
+	if err == nil {
+		return User{}, fmt.Errorf("failed to add user for addUser: user already exists")
+	}
+	u.Password = null.StringFrom(utils.HashPass(u.Salt.String + u.Password.String))
+	u.ResetPw = true
+	u.CreatedBy = null.IntFrom(int64(userID))
+	u.CreatedAt = null.TimeFrom(time.Now())
+	u, err = s.addUser(ctx, u)
+	if err != nil {
+		return User{}, fmt.Errorf("failed to add user for addUser: %w", err)
+	}
+	return u, nil
+}
+
+// EditUserPassword will update the password and set the reset_pw to false
+func (s *Store) EditUserPassword(ctx context.Context, u User) (User, error) {
 	user, err := s.GetUser(ctx, u)
 	if err != nil {
 		return u, fmt.Errorf("failed to get user: %w", err)
