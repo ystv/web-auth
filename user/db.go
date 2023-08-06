@@ -130,6 +130,8 @@ func (s *Store) getUsersSearch(ctx context.Context, search string) ([]User, erro
 }
 
 // getUsersSearchSizePage will get users search with size and page
+// Size is specified by the users page, size of list, from 5 to all items.
+// Page is the page number displayed, this is for the UI users page
 func (s *Store) getUsersSearchSizePage(ctx context.Context, search string, size, page int) ([]User, error) {
 	var u []User
 	err := s.db.SelectContext(ctx, &u,
@@ -171,6 +173,8 @@ func (s *Store) getUsersOptionsAsc(ctx context.Context, sortBy string) ([]User, 
 }
 
 // getUsersOptionsDescSizePage will get users sorting asc with size and page
+// Size is specified by the users page, size of list, from 5 to all items.
+// Page is the page number displayed, this is for the UI users page
 func (s *Store) getUsersOptionsAscSizePage(ctx context.Context, sortBy string, size, page int) ([]User, error) {
 	var u []User
 	err := s.db.SelectContext(ctx, &u,
@@ -218,6 +222,8 @@ func (s *Store) getUsersSearchOptionsAsc(ctx context.Context, search, sortBy str
 }
 
 // getUsersSearchOptionsAscSizePage will get users search with sorting asc with size and page
+// Size is specified by the users page, size of list, from 5 to all items.
+// Page is the page number displayed, this is for the UI users page
 func (s *Store) getUsersSearchOptionsAscSizePage(ctx context.Context, search, sortBy string, size, page int) ([]User, error) {
 	var u []User
 	err := s.db.SelectContext(ctx, &u,
@@ -265,6 +271,8 @@ func (s *Store) getUsersOptionsDesc(ctx context.Context, sortBy string) ([]User,
 }
 
 // getUsersOptionsDescSizePage will get users sorting desc with size and page
+// Size is specified by the users page, size of list, from 5 to all items.
+// Page is the page number displayed, this is for the UI users page
 func (s *Store) getUsersOptionsDescSizePage(ctx context.Context, sortBy string, size, page int) ([]User, error) {
 	var u []User
 	err := s.db.SelectContext(ctx, &u,
@@ -312,6 +320,8 @@ func (s *Store) getUsersSearchOptionsDesc(ctx context.Context, search, sortBy st
 }
 
 // getUsersSearchOptionsDescSizePage will get users search with sorting desc with size and page
+// Size is specified by the users page, size of list, from 5 to all items.
+// Page is the page number displayed, this is for the UI users page
 func (s *Store) getUsersSearchOptionsDescSizePage(ctx context.Context, search, sortBy string, size, page int) ([]User, error) {
 	var u []User
 	err := s.db.SelectContext(ctx, &u,
