@@ -21,7 +21,7 @@ type (
 		MsgType  string
 		Version  string
 		Callback string
-		User     *user.User
+		User     user.User
 	}
 )
 
@@ -35,7 +35,7 @@ func (v *Views) getData(s *sessions.Session) *Context {
 	c := Context{
 		Version:  v.conf.Version,
 		Callback: "/internal",
-		User:     &u,
+		User:     u,
 	}
 	return &c
 }
