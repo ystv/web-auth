@@ -20,10 +20,6 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 	userID, found := v.cache.Get(url)
 	if !found {
 		return v.errorHandle(c, fmt.Errorf("failed to get url"))
-		//if err != nil {
-		//	fmt.Println(err)
-		//}
-		//return
 	}
 
 	user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID.(int)})
@@ -39,27 +35,23 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 		err = c.Request().ParseForm()
 		if err != nil {
 			return v.errorHandle(c, err)
-			//if err != nil {
-			//	fmt.Println(err)
-			//}
 		}
 
 		password := c.Request().FormValue("password")
 		if password != c.Request().FormValue("confirmpassword") {
-			return v.template.RenderNoNavsTemplate(c.Response(), nil, templates.ResetTemplate)
+			data := struct{ Error string }{Error: "passwords do not match"}
+			return v.template.RenderNoNavsTemplate(c.Response(), data, templates.ResetTemplate)
 		}
 
-		err = c.Request().ParseForm()
-		if err != nil {
-			http.Error(c.Response(), err.Error(), http.StatusBadRequest)
+		errString := minRequirementsMet(password)
+		if len(errString) > 0 {
+			data := struct{ Error string }{Error: errString}
+			return v.template.RenderNoNavsTemplate(c.Response(), data, templates.ResetTemplate)
 		}
-		p := c.Request().Form.Get("password")
-		if p != c.Request().Form.Get("confirmpassword") || p == "" {
-			return v.template.RenderNoNavsTemplate(c.Response(), nil, templates.ResetTemplate)
-		}
+
 		user1.Password = null.StringFrom(password)
 
-		user2, err := v.user.UpdateUserPassword(c.Request().Context(), user1)
+		user2, err := v.user.EditUserPassword(c.Request().Context(), user1)
 		if err != nil {
 			log.Printf("failed to reset user: %+v", err)
 		}
@@ -78,10 +70,6 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 	userID, err := strconv.Atoi(c.Param("userid"))
 	if err != nil {
 		return v.errorHandle(c, err)
-		//if err != nil {
-		//	fmt.Println(err)
-		//}
-		//return
 	}
 
 	user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
@@ -92,15 +80,13 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 
 	user1.ResetPw = true
 
-	_, err = v.user.UpdateUser(c.Request().Context(), user1, c1.User.UserID)
+	_, err = v.user.EditUser(c.Request().Context(), user1, c1.User.UserID)
 	if err != nil {
 		return v.errorHandle(c, err)
 	}
 
 	url := uuid.NewString()
 	v.cache.Set(url, user1.UserID, cache.DefaultExpiration)
-
-	var status int
 
 	var message struct {
 		Message string `json:"message"`
@@ -137,9 +123,6 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 		err = v.Mailer.SendMail(file)
 		if err != nil {
 			return v.errorHandle(c, err)
-			//if err != nil {
-			//	fmt.Println(err)
-			//}
 		}
 
 		log.Printf("request for password reset email: \"%s\"", user1.Email)
@@ -151,5 +134,6 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 		log.Printf("reset email: %s, url: %s, reset link: https://%s/reset/%s", user1.Email, url, v.conf.DomainName, url)
 	}
 	log.Printf("reset for %d (%s) requested by %d (%s)", user1.UserID, user1.Firstname+" "+user1.Lastname, c1.User.UserID, c1.User.Firstname+" "+c1.User.Lastname)
+	var status int
 	return c.JSON(status, message)
 }
