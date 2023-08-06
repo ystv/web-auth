@@ -89,35 +89,33 @@ func (s *Store) editUser(ctx context.Context, u User) (User, error) {
 			updated_at = :updated_at,
 			deleted_by = :deleted_by,
 			deleted_at = :deleted_at
-		WHERE user_id = :user_id;`, u1)
+		WHERE user_id = :user_id;`, u)
 	if err != nil {
-		return User{}, fmt.Errorf("failed to update user: %w", err)
+		return User{}, fmt.Errorf("failed to edit user: %w", err)
 	}
 	rows, err := stmt.RowsAffected()
 	if err != nil {
-		return User{}, fmt.Errorf("failed to update user: %w", err)
+		return User{}, fmt.Errorf("failed to edit user: %w", err)
 	}
 	if rows < 1 {
-		return User{}, fmt.Errorf("failed to update user: invalid rows affected: %d", rows)
-	}
-	return u1, nil
-}
-
-// getUser will get a user using any unique identity fields for a user
-func (s *Store) getUser(ctx context.Context, user User) (User, error) {
-	var u User
-	err := s.db.GetContext(ctx, &u, `SELECT *
-		FROM people.users
-		WHERE (username = $1 AND username != '') OR (email = $2 AND email != '') OR (ldap_username = $3 AND ldap_username != '') OR user_id = $4
-		LIMIT 1;`, user.Username, user.Email, user.LDAPUsername, user.UserID)
-	if err != nil {
-		return u, fmt.Errorf("failed to get user from db: %w", err)
+		return User{}, fmt.Errorf("failed to edit user: invalid rows affected: %d", rows)
 	}
 	return u, nil
 }
 
-// //getUsersSizePage will get users with page size
-// func (s *Store) getUsersSizePage(ctx context.Context, size, page int) ([]User, error) {
+// getUser will get a user using any unique identity fields for a user
+func (s *Store) getUser(ctx context.Context, u1 User) (User, error) {
+	var u User
+	err := s.db.GetContext(ctx, &u, `SELECT *
+		FROM people.users
+		WHERE (username = $1 AND username != '') OR (email = $2 AND email != '') OR (ldap_username = $3 AND ldap_username != '') OR user_id = $4
+		LIMIT 1;`, u1.Username, u1.Email, u1.LDAPUsername, u1.UserID)
+	if err != nil {
+		return u, fmt.Errorf("error at getUser: %w", err)
+	}
+	return u, nil
+}
+
 // getUsers will get users with page size
 func (s *Store) getUsers(ctx context.Context, size, page int, enabled, deleted string) ([]User, error) {
 	var u []User
@@ -135,7 +133,7 @@ func (s *Store) getUsers(ctx context.Context, size, page int, enabled, deleted s
 		%[3]s
 		%[4]s;`, where, enabledSQL, deletedSQL, pageSize))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error at getUsers: %w", err)
 	}
 	return u, nil
 }
@@ -160,7 +158,7 @@ func (s *Store) getUsersSearchNoOrder(ctx context.Context, size, page int, searc
 			%[2]s
 		%[3]s;`, enabledSQL, deletedSQL, pageSize), search)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error at getUsersSearchNoOrder: %w", err)
 	}
 	return u, nil
 }
@@ -194,7 +192,7 @@ func (s *Store) getUsersOrderNoSearch(ctx context.Context, size, page int, sortB
 		    CASE WHEN $1 = 'lastLogin' THEN last_login END %[1]s NULLS %[2]s
 		%[6]s;`, dir, nulls, where, enabledSQL, deletedSQL, pageSize), sortBy)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error at getUsersOrderNoSearch: %w", err)
 	}
 	return u, nil
 }
@@ -231,7 +229,7 @@ func (s *Store) getUsersSearchOrder(ctx context.Context, size, page int, search,
 		    CASE WHEN $2 = 'lastLogin' THEN last_login END %[1]s NULLS %[2]s
 	    %[5]s;`, dir, nulls, enabledSQL, deletedSQL, pageSize), search, sortBy)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error at getUsersSearchOrder: %w", err)
 	}
 	return u, nil
 }
