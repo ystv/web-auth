@@ -128,7 +128,7 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 			log.Printf("reset email: %s, code: %s, reset link: https://%s/reset?code=%s", user1.Email, url, v.conf.DomainName, url)
 		}
 
-		// UserStripped doesn't exist, we'll pretend they've got an email
+		// User doesn't exist, we'll pretend they've got an email
 		err = v.template.RenderNoNavsTemplate(w, notification, templates.NotificationTemplate)
 		//err = v.tpl.ExecuteTemplate(w, "notification.tmpl", notification)
 		if err != nil {
