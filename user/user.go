@@ -232,7 +232,7 @@ func (s *Store) GetUsersSearchOrder(ctx context.Context, size, page int, search,
 // VerifyUser will check that the password is correct with provided
 // credentials and if verified will return the User object
 func (s *Store) VerifyUser(ctx context.Context, u User) (User, bool, error) {
-	user, err := s.getUser(ctx, u)
+	user, err := s.GetUser(ctx, u)
 	if err != nil {
 		return u, false, fmt.Errorf("failed to get user: %w", err)
 	}
@@ -272,22 +272,24 @@ func (s *Store) AddUser(ctx context.Context, u User, userID int) (User, error) {
 func (s *Store) EditUserPassword(ctx context.Context, u User) (User, error) {
 	user, err := s.GetUser(ctx, u)
 	if err != nil {
-		return u, fmt.Errorf("failed to get user: %w", err)
+		return u, fmt.Errorf("failed to get user for editUser: %w", err)
 	}
 	user.Password = null.StringFrom(utils.HashPass(user.Salt.String + u.Password.String))
 	user.ResetPw = false
-	user, err = s.updateUser(ctx, user)
+	user.UpdatedBy = null.IntFrom(int64(user.UserID))
+	user.UpdatedAt = null.TimeFrom(time.Now())
+	user, err = s.editUser(ctx, user)
 	if err != nil {
-		return u, fmt.Errorf("failed to update user: %w", err)
+		return u, fmt.Errorf("failed to edit user for editUserPassword: %w", err)
 	}
 	return user, nil
 }
 
-// UpdateUser will update the user
-func (s *Store) UpdateUser(ctx context.Context, u User, userID int) (User, error) {
+// EditUser will update the user
+func (s *Store) EditUser(ctx context.Context, u User, userID int) (User, error) {
 	user, err := s.GetUser(ctx, u)
 	if err != nil {
-		return u, fmt.Errorf("failed to get user: %w", err)
+		return u, fmt.Errorf("failed to get user for editUser: %w", err)
 	}
 	if u.Username != user.Username && len(u.Username) > 0 {
 		user.Username = u.Username
@@ -327,30 +329,26 @@ func (s *Store) UpdateUser(ctx context.Context, u User, userID int) (User, error
 	}
 	user.UpdatedBy = null.IntFrom(int64(userID))
 	user.UpdatedAt = null.TimeFrom(time.Now())
-	user, err = s.updateUser(ctx, user)
-	if err != nil {
-		return u, fmt.Errorf("failed to update user: %w", err)
-	}
-	return user, nil
+	return s.editUser(ctx, user)
 }
 
 // SetUserLoggedIn will set the last login date to now
 func (s *Store) SetUserLoggedIn(ctx context.Context, u User) (User, error) {
 	u.LastLogin = null.TimeFrom(time.Now())
-	return s.updateUser(ctx, u)
+	return s.editUser(ctx, u)
 }
 
-// DeleteUser will delete a user
+// DeleteUser will soft delete a user
 func (s *Store) DeleteUser(ctx context.Context, u User, userID int) (User, error) {
 	now := null.TimeFrom(time.Now())
 	u.Enabled = false
-	u.Password = null.NewString("", false)
-	u.Salt = null.NewString("", false)
+	u.Password = null.NewString("", true)
+	u.Salt = null.NewString("", true)
 	u.UpdatedBy = null.IntFrom(int64(userID))
 	u.UpdatedAt = now
 	u.DeletedBy = null.IntFrom(int64(userID))
 	u.DeletedAt = now
-	return s.updateUser(ctx, u)
+	return s.editUser(ctx, u)
 }
 
 // GetPermissionsForUser returns all permissions of a user
