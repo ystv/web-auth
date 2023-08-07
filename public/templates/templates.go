@@ -121,7 +121,7 @@ func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Templ
 			return len(a)
 		},
 		"checkPermission": func(id int, p string) bool {
-			m := infraPermission.GetValidPermissions(permissions.Permissions(p))
+			m := infraPermission.SufficientPermissionsFor(permissions.Permissions(p))
 
 			u, err := t.User.GetUser(context.Background(), user.User{UserID: id})
 			if err != nil {
@@ -240,7 +240,7 @@ func (t *Templater) RenderTemplatePagination(w io.Writer, data interface{}, main
 			return false
 		},
 		"checkPermission": func(id int, p string) bool {
-			m := infraPermission.GetValidPermissions(permissions.Permissions(p))
+			m := infraPermission.SufficientPermissionsFor(permissions.Permissions(p))
 
 			u, err := t.User.GetUser(context.Background(), user.User{UserID: id})
 			if err != nil {

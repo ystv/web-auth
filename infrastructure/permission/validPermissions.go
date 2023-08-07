@@ -2,7 +2,8 @@ package permission
 
 import "github.com/ystv/web-auth/permission/permissions"
 
-func GetValidPermissions(p permissions.Permissions) (m map[string]bool) {
+// SufficientPermissionsFor takes a permission for a task and returns that permission and higher permissions that would be acceptable
+func SufficientPermissionsFor(p permissions.Permissions) (m map[string]bool) {
 	m = make(map[string]bool)
 
 	m[p.String()] = true

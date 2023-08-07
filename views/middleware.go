@@ -70,7 +70,7 @@ func (v *Views) RequiresMinimumPermissionNoHttp(userID int, p permissions.Permis
 		return false
 	}
 
-	m := permission.GetValidPermissions(p)
+	m := permission.SufficientPermissionsFor(p)
 
 	for _, perm := range p1 {
 		if m[perm] {
