@@ -11,11 +11,11 @@
         </section>
         <br>
         <div class="columns box" style="height: fit-content">
-            <div class="column is-2">
+            <div class="column is-3">
                 <figure class="avatar">
-                    {{if .User.UseGravatar}}<img src="{{.Gravatar}}" alt="placeholder" width="128px"
-                                                 height="128px"/>{{else}}
-                        <img src="https://placehold.it/128x128" alt="placeholder"/>{{end}}
+                    {{if .User.UseGravatar}}<img src="{{.Gravatar}}" alt="placeholder" width="192px"
+                                                 height="192px"/>{{else}}
+                        <img src="https://placehold.it/192x192" alt="placeholder"/>{{end}}
                 </figure>
                 <div class="buttons">
                     <a class="button is-info is-outlined" onclick="changePasswordModal()">
