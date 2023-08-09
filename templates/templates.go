@@ -256,9 +256,9 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 				perms.WriteString("Permissions: <ol>")
 				for _, p := range r.Permissions {
 					if permissionAdmin {
-						perms.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span><a href='/internal/permission/%[1]d'>%[2]s</a>&emsp;<a class=\"button is-danger is-outlined\" onclick=\"removePermission%[1]dFromRoleModal()\">Remove permission</a></li>", p.PermissionID, p.Name))
+						perms.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span><a href='/internal/permission/%[1]d'>%[2]s</a>&emsp;<a class=\"button is-danger is-outlined\" onclick=\"removePermission%[1]dFromRoleModal()\"><span class=\"mdi mdi-key-minus\"></span>&ensp;Remove permission</a></li>", p.PermissionID, p.Name))
 					} else {
-						perms.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span>%[1]s&emsp;<a class=\"button is-danger is-outlined\" onclick=\"removePermission%[2]dFromRoleModal()\">Remove permission</a><</li>", p.Name, p.PermissionID))
+						perms.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span>%[1]s&emsp;<a class=\"button is-danger is-outlined\" onclick=\"removePermission%[2]dFromRoleModal()\"><span class=\"mdi mdi-key-minus\"></span>&ensp;Remove permission</a><</li>", p.Name, p.PermissionID))
 					}
 					perms.WriteString(fmt.Sprintf("<div id=\"removePermission%[1]dFromRoleModal\" class=\"modal\">\n        <div class=\"modal-background\"></div>\n        <div class=\"modal-content\">\n            <div class=\"box\">\n                <article class=\"media\">\n                    <div class=\"media-content\">\n                        <div class=\"content\">\n                            <p class=\"title\">Are you sure you want to remove \"%[2]s\" from this role?</p>\n                            <p><strong>This can be undone</strong></p>\n                            <form action=\"/internal/role/%[3]d/permission/remove/%[1]d\" method=\"post\">\n                                <button class=\"button is-danger\">Remove permission</button>\n                            </form>\n                        </div>\n                    </div>\n                </article>\n            </div>\n        </div>\n        <button class=\"modal-close is-large\" aria-label=\"close\"></button>\n    </div><script>function removePermission%[1]dFromRoleModal() {\n            document.getElementById(\"removePermission%[1]dFromRoleModal\").classList.add(\"is-active\");\n        }</script>", p.PermissionID, p.Name, r.RoleID))
 				}
@@ -274,9 +274,9 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 						name = fmt.Sprintf("%s %s", u.Firstname, u.Lastname)
 					}
 					if membersList {
-						users.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span><a href='/internal/user/%[1]d'>%[2]s</a>&emsp;<a class=\"button is-danger is-outlined\" onclick=\"removeUser%[1]dFromRoleModal()\">Remove user</a></li>", u.UserID, name))
+						users.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span><a href='/internal/user/%[1]d'>%[2]s</a>&emsp;<a class=\"button is-danger is-outlined\" onclick=\"removeUser%[1]dFromRoleModal()\"><span class=\"mdi mdi-account-minus\"></span>&ensp;Remove user</a></li>", u.UserID, name))
 					} else {
-						users.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span>%[1]s&emsp;<a class=\"button is-danger is-outlined\" onclick=\"removeUser%[2]dFromRoleModal()\">Remove user</a></li>", name, u.UserID))
+						users.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span>%[1]s&emsp;<a class=\"button is-danger is-outlined\" onclick=\"removeUser%[2]dFromRoleModal()\"><span class=\"mdi mdi-account-minus\"></span>&ensp;Remove user</a></li>", name, u.UserID))
 					}
 					users.WriteString(fmt.Sprintf("<div id=\"removeUser%[1]dFromRoleModal\" class=\"modal\">\n        <div class=\"modal-background\"></div>\n        <div class=\"modal-content\">\n            <div class=\"box\">\n                <article class=\"media\">\n                    <div class=\"media-content\">\n                        <div class=\"content\">\n                            <p class=\"title\">Are you sure you want to remove \"%[2]s\" from this role?</p>\n                            <p><strong>This can be undone</strong></p>\n                            <form action=\"/internal/role/%[3]d/user/remove/%[1]d\" method=\"post\">\n                                <button class=\"button is-danger\">Remove user</button>\n                            </form>\n                        </div>\n                    </div>\n                </article>\n            </div>\n        </div>\n        <button class=\"modal-close is-large\" aria-label=\"close\"></button>\n    </div><script>function removeUser%[1]dFromRoleModal() {\n            document.getElementById(\"removeUser%[1]dFromRoleModal\").classList.add(\"is-active\");\n        }</script>", u.UserID, name, r.RoleID))
 				}
@@ -291,7 +291,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 					permissionsToAdd.WriteString(fmt.Sprintf("<option value=\"%d\">%s</option>", p.PermissionID, p.Name))
 				}
 				permissionsToAdd.WriteString("</select></div><br>")
-				permissionsToAdd.WriteString("<button class=\"button is-info\">Add permission</button></form>")
+				permissionsToAdd.WriteString("<button class=\"button is-info\" style=\"margin-top: 10px\"><span class=\"mdi mdi-key-plus\"></span>&ensp;Add permission</button></form>")
 			}
 			if len(usersNotInRole) > 0 {
 				usersToAdd.WriteString("Use the drop down below to add more users to this role.<br>")
