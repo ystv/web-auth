@@ -111,7 +111,8 @@
                             <p class="title">Are you sure you want to edit your details?</p>
                             <p><strong>This action can be undone by changing them back</strong><br>
                                 Use the fields below to modify your details, to not change a field, either leave it as
-                                is or blank.<br>If you wish for any other details to change not in this form, please contact the Computing Team on Slack at #computing.</p>
+                                is or blank.<br>If you wish for any other details to change not in this form, please
+                                contact the Computing Team on Slack at #computing.</p>
                             <form action="/internal/settings" method="post">
                                 <div class="field">
                                     <label class="label" for="firstname">First name</label>
@@ -175,37 +176,37 @@
         </div>
         <button class="modal-close is-large" aria-label="close"></button>
     </div>
-<script>
-    document.querySelectorAll(
-        ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
-    ).forEach(($el) => {
-        const $modal = $el.closest(".modal");
-        $el.addEventListener("click", () => {
-            $modal.classList.remove("is-active");
+    <script>
+        document.querySelectorAll(
+            ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
+        ).forEach(($el) => {
+            const $modal = $el.closest(".modal");
+            $el.addEventListener("click", () => {
+                $modal.classList.remove("is-active");
+            });
         });
-    });
 
-    function changePasswordModal() {
-        document.getElementById("changePasswordModal").classList.add("is-active");
-    }
+        function changePasswordModal() {
+            document.getElementById("changePasswordModal").classList.add("is-active");
+        }
 
-    function editDetailsModal() {
-        document.getElementById("editDetailsModal").classList.add("is-active");
-    }
+        function editDetailsModal() {
+            document.getElementById("editDetailsModal").classList.add("is-active");
+        }
 
-    function changePassword() {
-        $.ajax({
-            url: '/internal/changepassword',
-            type: 'post',
-            dataType: 'json',
-            contentType: 'application/x-www-form-urlencoded',
-            data: $('#changePasswordForm').serialize(),
-            success: function (data) {
-                document.getElementById("changePasswordModal").classList.remove("is-active");
-                $("#message").html(data.message);
-                $("#error").html(data.error);
-            },
-        })
-    }
-</script>
+        function changePassword() {
+            $.ajax({
+                url: '/internal/changepassword',
+                type: 'post',
+                dataType: 'json',
+                contentType: 'application/x-www-form-urlencoded',
+                data: $('#changePasswordForm').serialize(),
+                success: function (data) {
+                    document.getElementById("changePasswordModal").classList.remove("is-active");
+                    $("#message").html(data.message);
+                    $("#error").html(data.error);
+                },
+            })
+        }
+    </script>
 {{end}}
