@@ -253,7 +253,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			membersList := t.permissionsParser(userID, permissions.ManageMembersMembersList.GetString())
 			var output, perms, users, permissionsToAdd, usersToAdd strings.Builder
 			if len(r.Permissions) > 0 {
-				perms.WriteString("Permissions: <ol>")
+				perms.WriteString("Permissions: <div class=\"toolbar\"><ol>")
 				for _, p := range r.Permissions {
 					if permissionAdmin {
 						perms.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span><a href='/internal/permission/%[1]d'>%[2]s</a>&emsp;<a class=\"button is-danger is-outlined\" onclick=\"removePermission%[1]dFromRoleModal()\"><span class=\"mdi mdi-key-minus\"></span>&ensp;Remove permission</a></li>", p.PermissionID, p.Name))
@@ -262,10 +262,10 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 					}
 					perms.WriteString(fmt.Sprintf("<div id=\"removePermission%[1]dFromRoleModal\" class=\"modal\">\n        <div class=\"modal-background\"></div>\n        <div class=\"modal-content\">\n            <div class=\"box\">\n                <article class=\"media\">\n                    <div class=\"media-content\">\n                        <div class=\"content\">\n                            <p class=\"title\">Are you sure you want to remove \"%[2]s\" from this role?</p>\n                            <p><strong>This can be undone</strong></p>\n                            <form action=\"/internal/role/%[3]d/permission/remove/%[1]d\" method=\"post\">\n                                <button class=\"button is-danger\">Remove permission</button>\n                            </form>\n                        </div>\n                    </div>\n                </article>\n            </div>\n        </div>\n        <button class=\"modal-close is-large\" aria-label=\"close\"></button>\n    </div><script>function removePermission%[1]dFromRoleModal() {\n            document.getElementById(\"removePermission%[1]dFromRoleModal\").classList.add(\"is-active\");\n        }</script>", p.PermissionID, p.Name, r.RoleID))
 				}
-				perms.WriteString("</ol><br>")
+				perms.WriteString("</ol></div><br>")
 			}
 			if len(r.Users) > 0 {
-				users.WriteString("<br>Inherited by: <ol>")
+				users.WriteString("<br>Inherited by: <div class=\"toolbar\"><ol>")
 				for _, u := range r.Users {
 					var name string
 					if u.Firstname != u.Nickname && len(u.Nickname) > 0 {
@@ -280,7 +280,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 					}
 					users.WriteString(fmt.Sprintf("<div id=\"removeUser%[1]dFromRoleModal\" class=\"modal\">\n        <div class=\"modal-background\"></div>\n        <div class=\"modal-content\">\n            <div class=\"box\">\n                <article class=\"media\">\n                    <div class=\"media-content\">\n                        <div class=\"content\">\n                            <p class=\"title\">Are you sure you want to remove \"%[2]s\" from this role?</p>\n                            <p><strong>This can be undone</strong></p>\n                            <form action=\"/internal/role/%[3]d/user/remove/%[1]d\" method=\"post\">\n                                <button class=\"button is-danger\">Remove user</button>\n                            </form>\n                        </div>\n                    </div>\n                </article>\n            </div>\n        </div>\n        <button class=\"modal-close is-large\" aria-label=\"close\"></button>\n    </div><script>function removeUser%[1]dFromRoleModal() {\n            document.getElementById(\"removeUser%[1]dFromRoleModal\").classList.add(\"is-active\");\n        }</script>", u.UserID, name, r.RoleID))
 				}
-				users.WriteString("</ol><br>")
+				users.WriteString("</ol></div><br>")
 			}
 			if len(permissionsNotInRole) > 0 {
 				permissionsToAdd.WriteString("Use the drop down below to add more permissions to this role.<br>")
@@ -308,7 +308,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 					usersToAdd.WriteString(fmt.Sprintf("<option value=\"%d\">%s</option>", u.UserID, name))
 				}
 				usersToAdd.WriteString("</select></div><br>")
-				usersToAdd.WriteString("<button class=\"button is-info\">Add user</button></form>")
+				usersToAdd.WriteString("<button class=\"button is-info\" style=\"margin-top: 10px\"><span class=\"mdi mdi-account-plus\"></span>&ensp;Add user</button></form>")
 			}
 			output.WriteString(fmt.Sprintf("<p>Role ID: %d<br>Name: %s<br>Description: %s<br><br>%s%s%s%s</p>", r.RoleID, r.Name, r.Description, perms.String(), permissionsToAdd.String(), users.String(), usersToAdd.String()))
 			return template.HTML(output.String())

@@ -1,5 +1,17 @@
 {{define "title"}}Internal: Role ({{.Role.Name}}){{end}}
 {{define "content"}}
+    <style>
+        .toolbar ol {
+            display:table-row;
+        }
+        .toolbar ol li {
+            margin-bottom: 10px;
+            vertical-align: middle;
+        }
+        .toolbar ol li a {
+            vertical-align: middle;
+        }
+    </style>
     <div class="column is-10">
         <section class="hero is-info welcome is-small">
             <div class="hero-body">
