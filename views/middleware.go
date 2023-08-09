@@ -7,8 +7,6 @@ import (
 	"github.com/ystv/web-auth/user"
 	"log"
 	"net/http"
-
-	"github.com/ystv/web-auth/helpers"
 )
 
 // RequiresLogin is a middleware which will be used for each
@@ -20,13 +18,15 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 			log.Println(err)
 			return v.LoginFunc(c)
 		}
-		user1 := helpers.GetUser(session)
-		user2, err := v.user.GetUser(c.Request().Context(), user1)
+
+		c1 := v.getData(session)
+
+		user2, err := v.user.GetUser(c.Request().Context(), c1.User)
 		if err != nil {
 			log.Println(err)
 			return err
 		}
-		if user2.DeletedBy.Valid || !user1.Enabled {
+		if user2.DeletedBy.Valid || !c1.User.Enabled {
 			session.Values["user"] = &user.User{}
 			session.Options.MaxAge = -1
 			err = session.Save(c.Request(), c.Response())
@@ -36,7 +36,7 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 			return c.Redirect(http.StatusFound, "/")
 		}
-		if !user1.Authenticated {
+		if !c1.User.Authenticated {
 			// Not authenticated
 			return c.Redirect(http.StatusFound, "/")
 		}
@@ -55,9 +55,9 @@ func (v *Views) RequiresMinimumPermission(next echo.HandlerFunc, p permissions.P
 			return v.LoginFunc(c)
 		}
 
-		u := helpers.GetUser(session)
+		c1 := v.getData(session)
 
-		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
+		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 		if err != nil {
 			log.Println(err)
 			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
@@ -88,9 +88,9 @@ func (v *Views) RequiresMinimumPermissionMMP(next echo.HandlerFunc) echo.Handler
 			return v.LoginFunc(c)
 		}
 
-		u := helpers.GetUser(session)
+		c1 := v.getData(session)
 
-		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
+		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 		if err != nil {
 			log.Println(err)
 			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
@@ -121,9 +121,9 @@ func (v *Views) RequiresMinimumPermissionMMG(next echo.HandlerFunc) echo.Handler
 			return v.LoginFunc(c)
 		}
 
-		u := helpers.GetUser(session)
+		c1 := v.getData(session)
 
-		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
+		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 		if err != nil {
 			log.Println(err)
 			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
@@ -154,9 +154,9 @@ func (v *Views) RequiresMinimumPermissionMMML(next echo.HandlerFunc) echo.Handle
 			return v.LoginFunc(c)
 		}
 
-		u := helpers.GetUser(session)
+		c1 := v.getData(session)
 
-		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
+		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 		if err != nil {
 			log.Println(err)
 			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
@@ -187,9 +187,9 @@ func (v *Views) RequiresMinimumPermissionMMAdd(next echo.HandlerFunc) echo.Handl
 			return v.LoginFunc(c)
 		}
 
-		u := helpers.GetUser(session)
+		c1 := v.getData(session)
 
-		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
+		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 		if err != nil {
 			log.Println(err)
 			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
@@ -220,9 +220,9 @@ func (v *Views) RequiresMinimumPermissionMMAdmin(next echo.HandlerFunc) echo.Han
 			return v.LoginFunc(c)
 		}
 
-		u := helpers.GetUser(session)
+		c1 := v.getData(session)
 
-		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
+		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 		if err != nil {
 			log.Println(err)
 			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
