@@ -29,11 +29,17 @@ func main() {
 	if err != nil {
 		local = false
 	} else {
+		global = false
 		local = true
 	}
 
-	if !local && !global {
-		log.Fatal("unable to find env files")
+	signingKey := os.Getenv("WAUTH_SIGNING_KEY")
+	dbHost := os.Getenv("WAUTH_DB_HOST")
+
+	if !local && !global && signingKey == "" && dbHost == "" {
+		log.Fatal("unable to find env files and no env variables have been supplied")
+	} else if !local && !global {
+		log.Println("using env variables")
 	} else if !local {
 		log.Println("using global env file")
 	} else {
@@ -41,11 +47,11 @@ func main() {
 	}
 
 	// Validate the required config is set
-	if os.Getenv("WAUTH_SIGNING_KEY") == "" {
+	if signingKey == "" {
 		log.Fatalf("signing key not set")
 	}
 
-	if os.Getenv("WAUTH_DB_HOST") == "" {
+	if dbHost == "" {
 		log.Fatalf("database host not set")
 	}
 
@@ -54,12 +60,11 @@ func main() {
 		sessionCookieName = "session"
 	}
 
-	host := os.Getenv("WAUTH_DB_HOST")
 	dbPort := os.Getenv("WAUTH_DB_PORT")
 
 	dbConnectionString := fmt.Sprintf(
 		"host=%s port=%s user=%s dbname=%s sslmode=%s password=%s",
-		host,
+		dbHost,
 		dbPort,
 		os.Getenv("WAUTH_DB_USER"),
 		os.Getenv("WAUTH_DB_NAME"),
@@ -107,11 +112,11 @@ func main() {
 		Security: views.SecurityConfig{
 			EncryptionKey:     os.Getenv("WAUTH_ENCRYPTION_KEY"),
 			AuthenticationKey: os.Getenv("WAUTH_AUTHENTICATION_KEY"),
-			SigningKey:        os.Getenv("WAUTH_SIGNING_KEY"),
+			SigningKey:        signingKey,
 		},
 	}
 
-	v := views.New(conf, host, dbPort)
+	v := views.New(conf, dbHost, dbPort)
 
 	router1 := router.New(&router.NewRouter{
 		Config: conf,
