@@ -63,11 +63,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		username := c.Request().FormValue("username")
 		password := c.Request().FormValue("password")
 		var u user.User
-		//err = decoder.Decode(&u, r.PostForm)
-		//if err != nil {
-		//	log.Printf("decode fail: %v", err)
-		//	return
-		//}
+
 		// Since we let users enter either an email or username, it's easier
 		// to just let it both for the query
 		u.Username = username

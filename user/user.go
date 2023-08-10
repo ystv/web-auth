@@ -15,7 +15,7 @@ import (
 )
 
 type (
-	// Repo where all user data is stored
+	// Repo where all user functions is stored
 	Repo interface {
 		CountUsers(ctx context.Context) (int, error)
 		CountUsersActive(ctx context.Context) (int, error)
@@ -178,9 +178,10 @@ type (
 	}
 )
 
+// here to verify we are meeting the interface
 var _ Repo = &Store{}
 
-// NewUserRepo stores our dependency
+// NewUserRepo stores the dependency
 func NewUserRepo(db *sqlx.DB) *Store {
 	return &Store{
 		db: db,

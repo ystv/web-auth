@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"github.com/labstack/echo/v4"
+	"github.com/ystv/web-auth/api"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/role"
@@ -130,15 +131,15 @@ type (
 
 	// Views encapsulates our view dependencies
 	Views struct {
+		cache      *cache.Cache
 		conf       *Config
-		permission *permission.Store
-		role       *role.Store
-		user       *user.Store
 		cookie     *sessions.CookieStore
 		Mailer     *mail.Mailer
-		cache      *cache.Cache
-		validate   *validator.Validate
+		permission *permission.Store
+		role       *role.Store
 		template   *templates.Templater
+		user       *user.Store
+		validate   *validator.Validate
 	}
 )
 

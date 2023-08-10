@@ -7,7 +7,7 @@ import (
 )
 
 type (
-	// Repo where all user data is stored
+	// Repo where all permission functions is stored
 	Repo interface {
 		GetPermissions(ctx context.Context) ([]Permission, error)
 		GetPermission(ctx context.Context, p Permission) (Permission, error)
@@ -38,6 +38,7 @@ type (
 	}
 )
 
+// here to verify we are meeting the interface
 var _ Repo = &Store{}
 
 // NewPermissionRepo stores our dependency

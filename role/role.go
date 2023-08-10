@@ -7,7 +7,7 @@ import (
 )
 
 type (
-	// Repo where all user data is stored
+	// Repo where all role functions is stored
 	Repo interface {
 		GetRoles(ctx context.Context) ([]Role, error)
 		GetRole(ctx context.Context, r Role) (Role, error)
@@ -41,6 +41,7 @@ type (
 	}
 )
 
+// here to verify we are meeting the interface
 var _ Repo = &Store{}
 
 // NewRoleRepo stores our dependency
