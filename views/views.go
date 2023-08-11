@@ -131,6 +131,7 @@ type (
 
 	// Views encapsulates our view dependencies
 	Views struct {
+		api        *api.Store
 		cache      *cache.Cache
 		conf       *Config
 		cookie     *sessions.CookieStore

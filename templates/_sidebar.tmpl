@@ -5,10 +5,10 @@
         <p class="menu-label">General</p>
         <ul class="menu-list">
             <li><a {{if eq $page "dashboard"}}class="is-active"{{end}} href="/internal">Dashboard</a></li>
-            {{if (memberAddPermission .UserID)}}
-                <li><a {{if eq $page "useradd"}}class="is-active"{{end}} href="/internal/useradd">Add User</a></li>
-            {{else if (checkPermission .UserID "ManageMembers.Members.List")}}
+            {{if (checkPermission .UserID "ManageMembers.Members.List")}}
                 <li><a {{if eq $page "users"}}class="is-active"{{end}} href="/internal/users">Users</a></li>
+            {{else if (checkPermission .UserID "ManageMembers.Members.Add")}}
+                <li><a {{if eq $page "useradd"}}class="is-active"{{end}} href="/internal/user/add">Add User</a></li>
             {{end}}
             {{if (checkPermission .UserID "ManageMembers.Groups")}}
                 <li><a {{if eq $page "roles"}}class="is-active"{{end}} href="/internal/roles">Roles</a></li>
@@ -20,6 +20,7 @@
         </ul>
         <p class="menu-label">API Interactions</p>
         <ul class="menu-list">
+            <li><a {{if eq $page "apiManage"}}class="is-active"{{end}} href="/api/manage">Manage API tokens</a></li>
             <li><a {{if eq $page "apiGet"}}class="is-active"{{end}} href="/api/get_token">Get API token</a></li>
             <li><a {{if eq $page "apiTest"}}class="is-active"{{end}} href="/api/test">Test API</a></li>
         </ul>
