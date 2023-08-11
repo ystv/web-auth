@@ -57,6 +57,7 @@ const (
 	ResetPasswordEmailTemplate  Template = "resetPasswordEmail.tmpl"
 	PermissionsTemplate         Template = "permissions.tmpl"
 	PermissionTemplate          Template = "permission.tmpl"
+	ManageAPITemplate           Template = "manageAPI.tmpl"
 )
 
 var _ Repo = &Templater{}

@@ -146,7 +146,6 @@ func (r *Router) loadRoutes() {
 
 	api := r.router.Group("/api")
 	{
-		api.GET("/set_token", r.views.SetTokenHandler)
 		api.GET("/test", r.views.TestAPI)
 		api.GET("/health", func(c echo.Context) error {
 			marshal, err := json.Marshal(struct {
@@ -166,6 +165,19 @@ func (r *Router) loadRoutes() {
 			c.Response().Header().Set("Content-Type", "application/json")
 			return c.JSON(http.StatusOK, marshal)
 		})
+		loginAPI := api.Group("/")
+		if !r.config.Debug {
+			loginAPI.Use(r.views.RequiresLogin)
+		}
+		{
+			loginAPI.Match(validMethods, "set_token", r.views.SetTokenHandler)
+			manage := loginAPI.Group("manage")
+			{
+				manage.Match(validMethods, "/add", r.views.TokenAddFunc)
+				manage.Match(validMethods, "/delete", r.views.TokenDeleteFunc)
+				manage.Match(validMethods, "", r.views.ManageAPIFunc)
+			}
+		}
 	}
 
 	base := r.router.Group("/")

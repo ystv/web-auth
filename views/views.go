@@ -1,6 +1,7 @@
 package views
 
 import (
+	"context"
 	"encoding/gob"
 	"encoding/hex"
 	"github.com/labstack/echo/v4"
@@ -116,6 +117,9 @@ type (
 		RequiresMinimumPermissionMMAdmin(next echo.HandlerFunc) echo.HandlerFunc
 		RequiresMinimumPermissionNoHttp(userID int, p permissions.Permissions) bool
 
+		ManageAPIFunc(c echo.Context) error
+		TokenAddFunc(c echo.Context) error
+		TokenDeleteFunc(c echo.Context) error
 		// SetTokenHandler is
 		SetTokenHandler(c echo.Context) error
 		// ValidateToken is
@@ -166,6 +170,7 @@ func New(conf *Config, host, port string) *Views {
 	v.permission = permission.NewPermissionRepo(dbStore)
 	v.role = role.NewRoleRepo(dbStore)
 	v.user = user.NewUserRepo(dbStore)
+	v.api = api.NewAPIRepo(dbStore)
 
 	v.template = templates.NewTemplate(v.permission, v.role, v.user)
 
@@ -218,6 +223,16 @@ func New(conf *Config, host, port string) *Views {
 
 	// Struct validator
 	v.validate = validator.New()
+
+	go func() {
+		for {
+			err = v.api.DeleteOldToken(context.Background())
+			if err != nil {
+				log.Printf("failed to delete old token func: %+v", err)
+			}
+			time.Sleep(30 * time.Second)
+		}
+	}()
 
 	return v
 }
