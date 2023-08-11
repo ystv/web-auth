@@ -86,9 +86,7 @@ func main() {
 	}
 
 	if debug {
-		fmt.Println()
-		log.Println("running in debug mode, do not use in production")
-		fmt.Println()
+		log.Println("------running in debug mode, do not use in production------")
 	}
 
 	port := os.Getenv("WAUTH_PORT")
