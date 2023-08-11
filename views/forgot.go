@@ -89,7 +89,7 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 			log.Printf("reset email: %s, code: %s, reset link: https://%s/reset?code=%s", user1.Email, url, v.conf.DomainName, url)
 		}
 
-		// StrippedUser doesn't exist, we'll pretend they've got an email
+		// User doesn't exist, we'll pretend they've got an email
 		return v.template.RenderNoNavsTemplate(c.Response().Writer, notification, templates.NotificationTemplate)
 	}
 	return nil
