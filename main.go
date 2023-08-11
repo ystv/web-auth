@@ -175,6 +175,17 @@ func main() {
 				},
 			}
 
+			v.Mailer, err = mail.NewMailer(mail.Config{
+				Host:       conf.Mail.Host,
+				Port:       conf.Mail.Port,
+				Username:   conf.Mail.Username,
+				Password:   conf.Mail.Password,
+				DomainName: conf.DomainName,
+			})
+			if err != nil {
+				log.Printf("Mailer failed: %+v", err)
+			}
+
 			err = v.Mailer.SendMail(stopped)
 			if err != nil {
 				fmt.Println(err)
@@ -189,6 +200,16 @@ func main() {
 
 	err = router1.Start()
 	if err != nil {
+		v.Mailer, err = mail.NewMailer(mail.Config{
+			Host:       conf.Mail.Host,
+			Port:       conf.Mail.Port,
+			Username:   conf.Mail.Username,
+			Password:   conf.Mail.Password,
+			DomainName: conf.DomainName,
+		})
+		if err != nil {
+			log.Printf("Mailer failed: %+v", err)
+		}
 		err1 := v.Mailer.SendErrorFatalMail(mail.Mail{
 			UseDefaults: true,
 			TplData: struct {
