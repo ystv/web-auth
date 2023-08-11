@@ -14,11 +14,42 @@
                 <div class="tile is-parent">
                     <article class="tile is-child box">
                         <p class="title">Welcome to YSTV</p>
-                        <p class="subtitle">Please use the links on the left to use our services</p>
+                        <p class="subtitle">Please use the links on the left to use our services<br>
+                            <input type="date" style="max-width: 200px" id="dateSelector"></p>
                     </article>
                 </div>
             </div>
         </section>
+        <script>
+            let objectDate = new Date();
+            let day = objectDate.getDate();
+            let month = objectDate.getMonth() + 1;
+            let year = objectDate.getFullYear();
+            const options = {
+                type: "date",
+                minDate: month + "/" + day + "/" + year,
+                startDate: month + "/" + day + "/" + year
+            }
+            // Initialize all input of date type.
+            const calendars = bulmaCalendar.attach('[type="date"]', options);
+
+            // Loop on each calendar initialized
+            calendars.forEach(calendar => {
+                // Add listener to select event
+                calendar.on('select', date => {
+                    console.log(date);
+                });
+            });
+
+            // To access to bulmaCalendar instance of an element
+            const element = document.querySelector('#dateSelector');
+            if (element) {
+                // bulmaCalendar instance is available as element.bulmaCalendar
+                element.bulmaCalendar.on('select', datepicker => {
+                    console.log(datepicker.data.value());
+                });
+            }
+        </script>
         {{if (checkPermission .UserID "ManageMembers.Members.List")}}
             <section class="info-tiles">
                 <div class="tile is-ancestor has-text-centered">
