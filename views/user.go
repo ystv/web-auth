@@ -339,8 +339,6 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 			return v.errorHandle(c, fmt.Errorf("failed to parse form for userAdd: %+v", err))
 		}
 
-		fmt.Println(c.Request(), "\n\n", c.Request().Form)
-
 		firstName := c.Request().FormValue("firstname")
 		lastName := c.Request().FormValue("lastname")
 		username := c.Request().FormValue("username")
