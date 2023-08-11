@@ -43,7 +43,7 @@ func (v *Views) PermissionsFunc(c echo.Context) error {
 	if err != nil {
 		log.Printf("failed to get permissions for permissions: %+v", err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return v.errorHandle(c, fmt.Errorf("failed to get permissions for permissions: %+v", err))
 		}
 	}
 
