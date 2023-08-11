@@ -38,10 +38,11 @@ type (
 
 	// SMTPConfig stores the SMTP Mailer configuration
 	SMTPConfig struct {
-		Host     string
-		Username string
-		Password string
-		Port     int
+		Host          string
+		Username      string
+		Password      string
+		Port          int
+		DefaultMailTo string
 	}
 
 	// SecurityConfig stores the security configuration
@@ -180,6 +181,12 @@ func New(conf *Config, host, port string) *Views {
 		log.Printf("mailer failed: %+v", err)
 	} else {
 		log.Printf("connected to mailer: %s:%d", conf.Mail.Host, conf.Mail.Port)
+		v.Mailer.KeepAlive = true
+
+		v.Mailer.AddDefaults(mail.Defaults{
+			DefaultTo:   conf.Mail.DefaultMailTo,
+			DefaultFrom: "YSTV Web Auth <wauth@ystv.co.uk>",
+		})
 	}
 
 	// Initialising cache

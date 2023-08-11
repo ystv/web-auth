@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/ystv/web-auth/infrastructure/mail"
-
 	"github.com/joho/godotenv"
+	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/routes"
 	"github.com/ystv/web-auth/views"
+	"html/template"
 	"log"
 	"os"
+	"os/signal"
 	"strconv"
 )
 
@@ -102,10 +103,11 @@ func main() {
 		LogoutEndpoint:    os.Getenv("WAUTH_LOGOUT_ENDPOINT"),
 		SessionCookieName: sessionCookieName,
 		Mail: views.SMTPConfig{
-			Host:     os.Getenv("WAUTH_MAIL_HOST"),
-			Username: os.Getenv("WAUTH_MAIL_USER"),
-			Password: os.Getenv("WAUTH_MAIL_PASS"),
-			Port:     mailPort,
+			Host:          os.Getenv("WAUTH_MAIL_HOST"),
+			Username:      os.Getenv("WAUTH_MAIL_USER"),
+			Password:      os.Getenv("WAUTH_MAIL_PASS"),
+			Port:          mailPort,
+			DefaultMailTo: os.Getenv("WAUTH_MAIL_DEFAULT_TO"),
 		},
 		Security: views.SecurityConfig{
 			EncryptionKey:     os.Getenv("WAUTH_ENCRYPTION_KEY"),
@@ -121,11 +123,81 @@ func main() {
 		Views:  v,
 	})
 
+	startingTemplate := template.New("Startup email")
+	startingTemplate = template.Must(startingTemplate.Parse("<html><body>YSTV Web Auth starting{{if .Debug}} in debug mode!<br><b>Do not run in production! Authentication is disabled!</b>{{else}}!{{end}}<br><br><br><br>If you don't get another email then this has started correctly.<br><br>Version: {{.Version}}</body></html>"))
+
+	subject := "YSTV Web Auth is starting"
+
+	if conf.Debug {
+		subject += " in debug mode"
+		log.Println("Debug Mode - Disabled auth - do not run in production!")
+	}
+
+	subject += "!"
+
+	starting := mail.Mail{
+		Subject:     subject,
+		UseDefaults: true,
+		Tpl:         startingTemplate,
+		TplData: struct {
+			Debug   bool
+			Version string
+		}{
+			Debug:   conf.Debug,
+			Version: Version,
+		},
+	}
+
+	err = v.Mailer.SendMail(starting)
+	if err != nil {
+		log.Printf("Unable to send email: %+v", err)
+	}
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		for sig := range c {
+			exitingTemplate := template.New("Exiting Template")
+			exitingTemplate = template.Must(exitingTemplate.Parse("<body>YSTV Web Auth has been stopped!<br><br>{{if .Debug}}Exit signal: {{.Sig}}<br><br>{{end}}<br><br>Version: {{.Version}}</body>"))
+
+			stopped := mail.Mail{
+				Subject:     "YSTV Web Auth has been stopped!",
+				UseDefaults: true,
+				Tpl:         exitingTemplate,
+				TplData: struct {
+					Debug   bool
+					Sig     os.Signal
+					Version string
+				}{
+					Debug:   conf.Debug,
+					Sig:     sig,
+					Version: Version,
+				},
+			}
+
+			err = v.Mailer.SendMail(stopped)
+			if err != nil {
+				fmt.Println(err)
+			}
+			err = v.Mailer.Close()
+			if err != nil {
+				fmt.Println(err)
+			}
+			os.Exit(0)
+		}
+	}()
+
 	err = router1.Start()
 	if err != nil {
 		err1 := v.Mailer.SendErrorFatalMail(mail.Mail{
-			Error:       fmt.Errorf("the web server couldn't be started: %s... exiting", err),
 			UseDefaults: true,
+			TplData: struct {
+				Error   error
+				Version string
+			}{
+				Error:   fmt.Errorf("the web server couldn't be started: %w... exiting", err),
+				Version: Version,
+			},
 		})
 		if err1 != nil {
 			fmt.Println(err1)

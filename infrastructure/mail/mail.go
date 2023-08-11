@@ -50,7 +50,6 @@ type (
 		Cc          []string
 		Bcc         []string
 		From        string
-		Error       error
 		UseDefaults bool
 		Tpl         *template.Template
 		TplData     interface{}
@@ -99,7 +98,13 @@ func (m *Mailer) SendResetEmail(recipient, subject, code string) error {
 
 // CheckSendable verifies that the email can be sent
 func (m *Mailer) CheckSendable(item Mail) error {
-	if item.To == "" {
+	if item.UseDefaults {
+		if m.Defaults.DefaultTo == "" {
+			if item.To == "" {
+				return fmt.Errorf("field UseDefaults was used and there were no defaults and to field set")
+			}
+		}
+	} else if item.To == "" {
 		return fmt.Errorf("no To field is set")
 	}
 	return nil
@@ -115,10 +120,17 @@ func (m *Mailer) SendMail(item Mail) error {
 		to, from string
 		cc, bcc  []string
 	)
-	to = item.To
-	cc = item.Cc
-	bcc = item.Bcc
-	from = item.From
+	if item.UseDefaults {
+		to = m.Defaults.DefaultTo
+		cc = m.Defaults.DefaultCC
+		bcc = m.Defaults.DefaultBCC
+		from = m.Defaults.DefaultFrom
+	} else {
+		to = item.To
+		cc = item.Cc
+		bcc = item.Bcc
+		from = item.From
+	}
 	body := bytes.Buffer{}
 	err = item.Tpl.Execute(&body, item.TplData)
 	if err != nil {
@@ -161,14 +173,14 @@ func (m *Mailer) SendErrorFatalMail(item Mail) error {
 		from = item.From
 	}
 	errorTemplate := template.New("Fatal Error Template")
-	errorTemplate = template.Must(errorTemplate.Parse("<body><p style=\"color: red;\">A <b>FATAL ERROR</b> OCCURRED!<br><br><code>{{.}}</code></p><br><br>We apologise for the inconvenience.</body>"))
+	errorTemplate = template.Must(errorTemplate.Parse("<body><p style=\"color: red;\">A <b>FATAL ERROR</b> OCCURRED!<br><br><code>{{.Error}}</code></p><br><br>We apologise for the inconvenience.<br><br>Version: {{.Version}}</body>"))
 	body := bytes.Buffer{}
-	err = errorTemplate.Execute(&body, item.Error)
+	err = errorTemplate.Execute(&body, item.TplData)
 	if err != nil {
 		return fmt.Errorf("failed to exec tpl: %w", err)
 	}
 	email := mail.NewMSG()
-	email.SetFrom(from).AddTo(to).SetSubject("FATAL ERROR - YSTV STV")
+	email.SetFrom(from).AddTo(to).SetSubject("FATAL ERROR - YSTV Web Auth")
 	if len(cc) != 0 {
 		email.AddCc(cc...)
 	}
