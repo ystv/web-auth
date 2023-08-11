@@ -12,26 +12,6 @@ func SufficientPermissionsFor(p permissions.Permissions) (m map[string]bool) {
 	case permissions.MenuDisabled:
 		m[permissions.MenuDisabled.String()] = true
 		return m
-	case permissions.ManageMembersAdmin:
-	case permissions.KeyCardAccess:
-	case permissions.BookingsAdmin:
-	case permissions.CalendarAdmin:
-	case permissions.CMSAdmin:
-	case permissions.Cobra:
-	case permissions.Director:
-	case permissions.EditNetStats:
-	case permissions.EmailEveryone:
-	case permissions.EquipmentAdmin:
-	case permissions.HiresAdmin:
-	case permissions.Inform:
-	case permissions.KeyListManage:
-	case permissions.MailingListAdmin:
-	case permissions.OfficerReports:
-	case permissions.Streamer:
-	case permissions.TechieTodo:
-	case permissions.VideoStats:
-	case permissions.WatchAdmin:
-		break
 	case permissions.ManageMembersMembersList:
 	case permissions.ManageMembersMembersAdd:
 		m[permissions.ManageMembersMembersAdmin.String()] = true
