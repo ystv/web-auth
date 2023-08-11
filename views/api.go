@@ -307,7 +307,7 @@ func (v *Views) ValidateToken(token string) (bool, *JWTClaims) {
 		}
 	}
 
-	_, _, err = v.user.VerifyUser(context.Background(), user.User{UserID: claims.UserID})
+	_, err = v.user.GetUserValid(context.Background(), user.User{UserID: claims.UserID})
 	if err != nil {
 		return false, nil
 	}

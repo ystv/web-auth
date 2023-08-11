@@ -23,6 +23,7 @@ type (
 		CountUsersPastYear(ctx context.Context) (int, error)
 
 		GetUser(ctx context.Context, u User) (User, error)
+		GetUserValid(ctx context.Context, u User) (User, error)
 		GetUsers(ctx context.Context, size, page int, enabled, deleted string) ([]User, error)
 		GetUsersSearchNoOrder(ctx context.Context, size, page int, search, enabled, deleted string) ([]User, error)
 		GetUsersOrderNoSearch(ctx context.Context, size, page int, sortBy, direction, enabled, deleted string) ([]User, error)
@@ -211,6 +212,25 @@ func (s *Store) CountUsersPastYear(ctx context.Context) (int, error) {
 // GetUser returns a user using any unique identity fields
 func (s *Store) GetUser(ctx context.Context, u User) (User, error) {
 	return s.getUser(ctx, u)
+}
+
+// GetUserValid returns a user using any unique identity fields which is enabled and not deleted
+func (s *Store) GetUserValid(ctx context.Context, u User) (User, error) {
+	user, err := s.GetUser(ctx, u)
+	if err != nil {
+		return u, fmt.Errorf("failed to get user: %w", err)
+	}
+	if !user.Enabled {
+		return u, errors.New("user not enabled, contact Computing Team for help")
+	}
+	if user.DeletedBy.Valid {
+		return u, errors.New("user has been deleted, contact Computing Team for help")
+	}
+	if user.ResetPw {
+		u.UserID = user.UserID
+		return u, errors.New("password reset required")
+	}
+	return user, nil
 }
 
 // GetUsers returns a group of users, used for administration with size and page
