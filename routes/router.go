@@ -142,6 +142,17 @@ func (r *Router) loadRoutes() {
 				userID.Match(validMethods, "", r.views.UserFunc)
 			}
 		}
+
+		api := internal.Group("/api")
+		{
+			api.Match(validMethods, "/set_token", r.views.SetTokenHandler)
+			manage := api.Group("/manage")
+			{
+				manage.Match(validMethods, "/add", r.views.TokenAddFunc)
+				manage.Match(validMethods, "/:tokenid/delete", r.views.TokenDeleteFunc)
+				manage.Match(validMethods, "", r.views.ManageAPIFunc)
+			}
+		}
 	}
 
 	api := r.router.Group("/api")
@@ -171,12 +182,6 @@ func (r *Router) loadRoutes() {
 		}
 		{
 			loginAPI.Match(validMethods, "set_token", r.views.SetTokenHandler)
-			manage := loginAPI.Group("manage")
-			{
-				manage.Match(validMethods, "/add", r.views.TokenAddFunc)
-				manage.Match(validMethods, "/delete", r.views.TokenDeleteFunc)
-				manage.Match(validMethods, "", r.views.ManageAPIFunc)
-			}
 		}
 	}
 
