@@ -163,7 +163,7 @@ func DBUserToDetailedUser(dbUser user.User, store *user.Store) user.DetailedUser
 	}
 	if dbUser.UseGravatar {
 		u.UseGravatar = true
-		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace("liam.burnand@bswdi.co.uk"))))
+		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace(dbUser.Email))))
 		u.Avatar = fmt.Sprintf("https://www.gravatar.com/avatar/%s", hex.EncodeToString(hash[:]))
 	} else {
 		u.UseGravatar = false

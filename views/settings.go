@@ -81,7 +81,7 @@ func (v *Views) SettingsFunc(c echo.Context) error {
 	var gravatar string
 
 	if c1.User.UseGravatar {
-		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace("liam.burnand@bswdi.co.uk"))))
+		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace(c1.User.Email))))
 		gravatar = fmt.Sprintf("https://www.gravatar.com/avatar/%s", hex.EncodeToString(hash[:]))
 	}
 
