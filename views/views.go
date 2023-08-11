@@ -32,7 +32,7 @@ type (
 		Security          SecurityConfig
 	}
 
-	// SMTPConfig stores the SMTP mailer configuration
+	// SMTPConfig stores the SMTP Mailer configuration
 	SMTPConfig struct {
 		Host     string
 		Username string
@@ -113,6 +113,8 @@ func New(conf Config) *Views {
 	})
 	if err != nil {
 		log.Printf("mailer failed: %+v", err)
+	} else {
+		log.Printf("connected to mailer: %s", conf.Mail.Host)
 	}
 
 	// Initialising cache
@@ -139,9 +141,6 @@ func New(conf Config) *Views {
 
 	// So we can use our struct in the cookie
 	gob.Register(user.User{})
-
-	//// Loading templates
-	//v.tpl = template.Must(template.ParseFS(templates, "*.tmpl"))
 
 	v.conf = conf
 
