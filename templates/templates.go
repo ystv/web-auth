@@ -194,26 +194,6 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 		"lenU": func(a []user.User) int {
 			return len(a)
 		},
-		"memberAddPermission": func(id int) bool {
-			u, err := t.User.GetUser(context.Background(), user.User{UserID: id})
-			if err != nil {
-				log.Printf("failed to get user for template(getFuncMaps(memberAddPermission)): %+v", err)
-				return false
-			}
-
-			p, err := t.User.GetPermissionsForUser(context.Background(), u)
-			if err != nil {
-				log.Printf("failed to get permissions for user for template(getFuncMaps(memberAddPermission)): %+v", err)
-				return false
-			}
-
-			for _, perm := range p {
-				if perm.Name == permissions.ManageMembersMembersAdd.GetString() {
-					return true
-				}
-			}
-			return false
-		},
 		"checkPermission": func(id int, p string) bool {
 			return t.permissionsParser(id, p)
 		},
