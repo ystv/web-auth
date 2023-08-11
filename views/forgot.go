@@ -56,7 +56,7 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 		// Get user1 and check if it exists
 		user1, err := v.user.GetUser(r.Context(), u)
 		if err != nil {
-			// UserStripped doesn't exist, we'll pretend they've got an email
+			// User doesn't exist, we'll pretend they've got an email
 			log.Printf("request for reset on unknown email \"%s\"", user1.Email)
 			err = v.template.RenderNoNavsTemplate(w, notification, templates.NotificationTemplate)
 			if err != nil {
