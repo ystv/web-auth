@@ -102,7 +102,33 @@ func (v *Views) TokenAddFunc(c echo.Context) error {
 }
 
 func (v *Views) TokenDeleteFunc(c echo.Context) error {
-	return nil
+	if c.Request().Method == http.MethodPost {
+		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+
+		c1 := v.getData(session)
+
+		tokenID := c.Param("tokenid")
+		if len(tokenID) != 36 {
+			return v.errorHandle(c, fmt.Errorf("failed to parse tokenid for tokenDelete: tokenid is the incorrect length"))
+		}
+
+		token1, err := v.api.GetToken(c.Request().Context(), api.Token{TokenID: tokenID})
+		if err != nil {
+			return v.errorHandle(c, fmt.Errorf("failed to get token in tokenDelete: %w", err))
+		}
+
+		if token1.UserID != c1.User.UserID {
+			return v.errorHandle(c, fmt.Errorf("failed to get token in tokenDelete: unauthorized"))
+		}
+
+		err = v.api.DeleteToken(c.Request().Context(), token1)
+		if err != nil {
+			return v.errorHandle(c, fmt.Errorf("failed to delete token in tokenDelete: %w", err))
+		}
+		return v.ManageAPIFunc(c)
+	} else {
+		return v.errorHandle(c, fmt.Errorf("invalid method used"))
+	}
 }
 
 // SetTokenHandler sets a valid JWT in a cookie instead of returning a string
