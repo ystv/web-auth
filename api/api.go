@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"github.com/jmoiron/sqlx"
+	"gopkg.in/guregu/null.v4"
 )
 
 type (
@@ -26,11 +27,11 @@ type (
 	}
 
 	Token struct {
-		TokenID     string `db:"token_id" json:"tokenID"`
-		Name        string `db:"name" json:"name,omitempty"`
-		Description string `db:"description" json:"description,omitempty"`
-		Expiry      int64  `db:"expiry" json:"expiry"`
-		UserID      int    `db:"user_id" json:"userID"`
+		TokenID     string    `db:"token_id" json:"tokenID"`
+		Name        string    `db:"name" json:"name,omitempty"`
+		Description string    `db:"description" json:"description,omitempty"`
+		Expiry      null.Time `db:"expiry" json:"expiry"`
+		UserID      int       `db:"user_id" json:"userID"`
 	}
 )
 

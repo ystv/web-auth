@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"gopkg.in/guregu/null.v4"
 	"time"
 )
 
@@ -56,7 +57,7 @@ func (s *Store) deleteToken(ctx context.Context, t Token) error {
 
 // deleteOldToken will delete all expired tokens
 func (s *Store) deleteOldToken(ctx context.Context) error {
-	_, err := s.db.ExecContext(ctx, `DELETE FROM web_auth.api_tokens WHERE expiry <= $1`, time.Now().UnixMicro())
+	_, err := s.db.ExecContext(ctx, `DELETE FROM web_auth.api_tokens WHERE expiry <= $1`, null.TimeFrom(time.Now()))
 	if err != nil {
 		return fmt.Errorf("failed to delete old token: %w", err)
 	}
