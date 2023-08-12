@@ -118,6 +118,7 @@ type (
 		RequiresMinimumPermissionNoHttp(userID int, p permissions.Permissions) bool
 
 		ManageAPIFunc(c echo.Context) error
+		manageAPIFunc(c echo.Context, addedJWT string) error
 		TokenAddFunc(c echo.Context) error
 		TokenDeleteFunc(c echo.Context) error
 		// SetTokenHandler is

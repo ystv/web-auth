@@ -9,6 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/api"
 	"github.com/ystv/web-auth/templates"
+	"gopkg.in/guregu/null.v4"
 	"log"
 	"net/http"
 	"strings"
@@ -30,9 +31,10 @@ type (
 		Message    string `json:"message"`
 	}
 
-	ManageTemplate struct {
+	ManageAPITemplate struct {
 		Tokens     []api.Token
 		UserID     int
+		AddedJWT   string
 		ActivePage string
 	}
 )
@@ -50,9 +52,32 @@ func (v *Views) ManageAPIFunc(c echo.Context) error {
 		}
 	}
 
-	data := ManageTemplate{
+	data := ManageAPITemplate{
 		Tokens:     tokens,
 		UserID:     c1.User.UserID,
+		ActivePage: "apiManage",
+	}
+
+	return v.template.RenderTemplate(c.Response(), data, templates.ManageAPITemplate)
+}
+
+func (v *Views) manageAPIFunc(c echo.Context, addedJWT string) error {
+	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+
+	c1 := v.getData(session)
+
+	tokens, err := v.api.GetTokens(c.Request().Context(), c1.User.UserID)
+	if err != nil {
+		log.Printf("failed to get tokens for manageAPI: %+v", err)
+		if !v.conf.Debug {
+			return v.errorHandle(c, fmt.Errorf("failed to get tokens for manageAPI: %+v", err))
+		}
+	}
+
+	data := ManageAPITemplate{
+		Tokens:     tokens,
+		UserID:     c1.User.UserID,
+		AddedJWT:   addedJWT,
 		ActivePage: "apiManage",
 	}
 
@@ -78,24 +103,39 @@ func (v *Views) TokenAddFunc(c echo.Context) error {
 
 		id := uuid.NewString()
 
+		parse, err := time.Parse("02/01/2006", expiry)
+		if err != nil {
+			return v.errorHandle(c, fmt.Errorf("failed to parse expiry: %w", err))
+		}
+
+		diff := time.Now().Add(2 * time.Hour * 24).Compare(parse)
+		if diff != -1 {
+			return v.errorHandle(c, fmt.Errorf("expiry date must be more than 2 days away"))
+		}
+
 		t := api.Token{
 			TokenID:     id,
 			Name:        name,
 			Description: description,
-			Expiry:      0,
+			Expiry:      null.TimeFrom(parse),
 			UserID:      c1.User.UserID,
 		}
 
-		t1, err := v.api.GetToken(c.Request().Context(), api.Token{TokenID: id})
+		t1, err := v.api.GetToken(c.Request().Context(), t)
 		if err == nil && len(t1.TokenID) > 0 {
 			return v.errorHandle(c, fmt.Errorf("token with id \"%s\" already exists", id))
+		}
+
+		addedJWT, err := v.newJWTCustom(c1.User, parse, id)
+		if err != nil {
+			return v.errorHandle(c, fmt.Errorf("failed to generate jwt for tokenAdd: %w", err))
 		}
 
 		_, err = v.api.AddToken(c.Request().Context(), t)
 		if err != nil {
 			return v.errorHandle(c, fmt.Errorf("error adding token for addToken: %w", err))
 		}
-		return v.ManageAPIFunc(c)
+		return v.manageAPIFunc(c, addedJWT)
 	} else {
 		return v.errorHandle(c, fmt.Errorf("invalid method used"))
 	}
@@ -196,9 +236,8 @@ func (v *Views) newJWT(u user.User) (string, error) {
 	return tokenString, nil
 }
 
-func (v *Views) newJWTCustom(u user.User, expiryMicroSec int64) (string, error) {
-	expirationTime := time.UnixMicro(expiryMicroSec)
-	compare := expirationTime.Compare(time.Now().AddDate(1, 0, 0))
+func (v *Views) newJWTCustom(u user.User, expiry time.Time, tokenID string) (string, error) {
+	compare := expiry.Compare(time.Now().AddDate(1, 0, 0))
 	if compare == 1 {
 		return "", fmt.Errorf("expiration date is more than a year away, can only have a maximum of 1 year")
 	}
@@ -211,14 +250,13 @@ func (v *Views) newJWTCustom(u user.User, expiryMicroSec int64) (string, error) 
 	for _, p := range p1 {
 		p2 = append(p2, p.Name)
 	}
-	uuid4 := uuid.NewString()
 	claims := &JWTClaims{
 		UserID:      u.UserID,
 		Permissions: p2,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ID:        uuid4,
+			ID:        tokenID,
 			IssuedAt:  &jwt.NumericDate{Time: time.Now()},
-			ExpiresAt: &jwt.NumericDate{Time: expirationTime},
+			ExpiresAt: &jwt.NumericDate{Time: expiry},
 		},
 	}
 
