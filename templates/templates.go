@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"github.com/ystv/web-auth/api"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/role"
@@ -197,6 +198,23 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 		},
 		"checkPermission": func(id int, p string) bool {
 			return t.permissionsParser(id, p)
+		},
+		"parseHTMLManageAPI": func(tokens []api.Token) template.HTML {
+			var output, tokenBuilder strings.Builder
+			if len(tokens) > 0 {
+				tokenBuilder.WriteString("Current tokens: <div class=\"toolbar\"><ol>")
+				for _, token := range tokens {
+					if len(token.Description) > 0 {
+						tokenBuilder.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span>%[1]s - %[2]s&emsp;<a class=\"button is-danger is-outlined\" onclick=\"removeToken%[3]sFromAPIModal()\"><span class=\"mdi mdi-key-minus\"></span>&ensp;Remove token</a></li>", token.Name, token.Description, strings.ReplaceAll(token.TokenID, "-", "")))
+					} else {
+						tokenBuilder.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span>%[1]s&emsp;<a class=\"button is-danger is-outlined\" onclick=\"removeToken%[2]sFromAPIModal()\"><span class=\"mdi mdi-key-minus\"></span>&ensp;Remove token</a></li>", token.Name, strings.ReplaceAll(token.TokenID, "-", "")))
+					}
+					tokenBuilder.WriteString(fmt.Sprintf("<div id=\"removeToken%[1]sFromAPIModal\" class=\"modal\">\n        <div class=\"modal-background\"></div>\n        <div class=\"modal-content\">\n            <div class=\"box\">\n                <article class=\"media\">\n                    <div class=\"media-content\">\n                        <div class=\"content\">\n                            <p class=\"title\">Are you sure you want to remove \"%[2]s\" token?</p>\n                            <p><strong>This cannot be undone</strong></p>\n                            <form action=\"/internal/api/manage/%[3]s/delete\" method=\"post\">\n                                <button class=\"button is-danger\">Remove token</button>\n                            </form>\n                        </div>\n                    </div>\n                </article>\n            </div>\n        </div>\n        <button class=\"modal-close is-large\" aria-label=\"close\"></button>\n    </div><script>function removeToken%[1]sFromAPIModal() {\n            document.getElementById(\"removeToken%[1]sFromAPIModal\").classList.add(\"is-active\");\n        }</script>", strings.ReplaceAll(token.TokenID, "-", ""), token.Name, token.TokenID))
+				}
+				tokenBuilder.WriteString("</ol></div>")
+			}
+			output.WriteString(fmt.Sprintf("<p>%s</p>", tokenBuilder.String()))
+			return template.HTML(output.String())
 		},
 		"parseHTMLPermissions": func(perms []permission.Permission) template.HTML {
 			var output strings.Builder
