@@ -226,7 +226,7 @@ func (v *Views) newJWT(u user.User) (string, error) {
 
 	// Declare the token with the algorithm used for signing,
 	// and the claims.
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 	// Create the JWT string
 	tokenString, err := token.SignedString([]byte(v.conf.Security.SigningKey))
 	if err != nil {
@@ -262,7 +262,7 @@ func (v *Views) newJWTCustom(u user.User, expiry time.Time, tokenID string) (str
 
 	// Declare the token with the algorithm used for signing,
 	// and the claims.
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 	// Create the JWT string
 	tokenString, err := token.SignedString([]byte(v.conf.Security.SigningKey))
 	if err != nil {
