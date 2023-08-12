@@ -175,6 +175,7 @@ func main() {
 				},
 			}
 
+			_ = v.Mailer.Close()
 			v.Mailer, err = mail.NewMailer(mail.Config{
 				Host:       conf.Mail.Host,
 				Port:       conf.Mail.Port,
@@ -186,31 +187,39 @@ func main() {
 				log.Printf("Mailer failed: %+v", err)
 			}
 
+			v.Mailer.AddDefaults(mail.Defaults{
+				DefaultTo:   conf.Mail.DefaultMailTo,
+				DefaultFrom: "YSTV Web Auth <wauth@ystv.co.uk>",
+			})
+
 			err = v.Mailer.SendMail(stopped)
 			if err != nil {
-				fmt.Println(err)
+				log.Printf("send fatal email error: %+v", err)
 			}
-			err = v.Mailer.Close()
-			if err != nil {
-				fmt.Println(err)
-			}
+			_ = v.Mailer.Close()
 			os.Exit(0)
 		}
 	}()
 
 	err = router1.Start()
 	if err != nil {
-		v.Mailer, err = mail.NewMailer(mail.Config{
+		_ = v.Mailer.Close()
+		var err1 error
+		v.Mailer, err1 = mail.NewMailer(mail.Config{
 			Host:       conf.Mail.Host,
 			Port:       conf.Mail.Port,
 			Username:   conf.Mail.Username,
 			Password:   conf.Mail.Password,
 			DomainName: conf.DomainName,
 		})
-		if err != nil {
-			log.Printf("Mailer failed: %+v", err)
+		if err1 != nil {
+			log.Printf("Mailer failed: %+v", err1)
 		}
-		err1 := v.Mailer.SendErrorFatalMail(mail.Mail{
+		v.Mailer.AddDefaults(mail.Defaults{
+			DefaultTo:   conf.Mail.DefaultMailTo,
+			DefaultFrom: "YSTV Web Auth <wauth@ystv.co.uk>",
+		})
+		err1 = v.Mailer.SendErrorFatalMail(mail.Mail{
 			UseDefaults: true,
 			TplData: struct {
 				Error   error
@@ -221,8 +230,9 @@ func main() {
 			},
 		})
 		if err1 != nil {
-			fmt.Println(err1)
+			log.Printf("send fatal email error: %+v", err1)
 		}
+		_ = v.Mailer.Close()
 		log.Fatalf("The web server couldn't be started!\n\n%s\n\nExiting!", err)
 	}
 }
