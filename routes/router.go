@@ -12,22 +12,28 @@ import (
 	"net/http"
 )
 
+// embeddedFiles are the storage of static files in the executable
+//
 //go:embed public/static/*
 var embeddedFiles embed.FS
 
 type (
+	// Router is the main space for the config
 	Router struct {
 		config *views.Config
 		port   string
 		views  *views.Views
 		router *echo.Echo
 	}
+
+	// NewRouter is what initialises the router
 	NewRouter struct {
 		Config *views.Config
 		Views  *views.Views
 	}
 )
 
+// New initialises everything needed
 func New(conf *NewRouter) *Router {
 	r := &Router{
 		config: conf.Config,
@@ -45,11 +51,13 @@ func New(conf *NewRouter) *Router {
 	return r
 }
 
+// Start starts the web server
 func (r *Router) Start() error {
 	r.router.Logger.Error(r.router.Start(r.config.Port))
 	return fmt.Errorf("failed to start router on port %s", r.config.Port)
 }
 
+// loadRoutes loads all the potential rouutes a user could take
 func (r *Router) loadRoutes() {
 	r.router.RouteNotFound("/*", r.views.Error404)
 
@@ -196,6 +204,7 @@ func (r *Router) loadRoutes() {
 	}
 }
 
+// getFileSystem gets files from the operating system, in a certain folder that is
 func getFileSystem() http.FileSystem {
 	fsys, err := fs.Sub(embeddedFiles, "public/static")
 	if err != nil {

@@ -127,6 +127,7 @@ type (
 		Deleted   bool
 	}
 
+	// DetailedUser is the user object in full for the front end
 	DetailedUser struct {
 		UserID             int                     `json:"id"`
 		Username           string                  `json:"username"`
@@ -153,6 +154,7 @@ type (
 		Roles              []role.Role             `json:"roles"`
 	}
 
+	// RoleTemplate is for the front end of role
 	RoleTemplate struct {
 		RoleID      int
 		Name        string
@@ -161,6 +163,7 @@ type (
 		Users       []User
 	}
 
+	// PermissionTemplate is for the front end of permission
 	PermissionTemplate struct {
 		PermissionID int
 		Name         string
@@ -168,11 +171,13 @@ type (
 		Roles        []role.Role
 	}
 
+	// RolePermission symbolises a link between a role.Role and permission.Permission
 	RolePermission struct {
 		RoleID       int `db:"role_id" json:"roleID"`
 		PermissionID int `db:"permission_id" json:"permissionID"`
 	}
 
+	// RoleUser symbolises a link between a role.Role and User
 	RoleUser struct {
 		RoleID int `db:"role_id" json:"roleID"`
 		UserID int `db:"user_id" json:"userID"`
@@ -238,14 +243,17 @@ func (s *Store) GetUsers(ctx context.Context, size, page int, enabled, deleted s
 	return s.getUsers(ctx, size, page, enabled, deleted)
 }
 
+// GetUsersSearchNoOrder returns all the users that match a search query with no ordering
 func (s *Store) GetUsersSearchNoOrder(ctx context.Context, size, page int, search, enabled, deleted string) ([]User, error) {
 	return s.getUsersSearchNoOrder(ctx, size, page, search, enabled, deleted)
 }
 
+// GetUsersOrderNoSearch returns all the users that are ordered but not searched
 func (s *Store) GetUsersOrderNoSearch(ctx context.Context, size, page int, sortBy, direction, enabled, deleted string) ([]User, error) {
 	return s.getUsersOrderNoSearch(ctx, size, page, sortBy, direction, enabled, deleted)
 }
 
+// GetUsersSearchOrder returns all the users that match a search query and are ordered
 func (s *Store) GetUsersSearchOrder(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, error) {
 	return s.getUsersSearchOrder(ctx, size, page, search, sortBy, direction, enabled, deleted)
 }
@@ -273,6 +281,7 @@ func (s *Store) VerifyUser(ctx context.Context, u User) (User, bool, error) {
 	return u, false, errors.New("invalid credentials")
 }
 
+// AddUser adds a new User
 func (s *Store) AddUser(ctx context.Context, u User, userID int) (User, error) {
 	_, err := s.GetUser(ctx, u)
 	if err == nil {
@@ -382,22 +391,27 @@ func (s *Store) GetRolesForUser(ctx context.Context, u User) ([]role.Role, error
 	return s.getRolesForUser(ctx, u)
 }
 
+// GetUsersForRole returns all the Users that are linked to a role.Role
 func (s *Store) GetUsersForRole(ctx context.Context, r role.Role) ([]User, error) {
 	return s.getUsersForRole(ctx, r)
 }
 
+// GetRoleUser returns a single link between a role.Role and User
 func (s *Store) GetRoleUser(ctx context.Context, ru RoleUser) (RoleUser, error) {
 	return s.getRoleUser(ctx, ru)
 }
 
+// GetUsersNotInRole returns all the users not linked to a role.Role
 func (s *Store) GetUsersNotInRole(ctx context.Context, r role.Role) ([]User, error) {
 	return s.getUsersNotInRole(ctx, r)
 }
 
+// AddRoleUser adds a link between a role.Role and User
 func (s *Store) AddRoleUser(ctx context.Context, ru RoleUser) (RoleUser, error) {
 	return s.addRoleUser(ctx, ru)
 }
 
+// RemoveRoleUser removes a link between a role.Role and User
 func (s *Store) RemoveRoleUser(ctx context.Context, ru RoleUser) error {
 	return s.removeRoleUser(ctx, ru)
 }
@@ -421,14 +435,17 @@ func (s *Store) GetRolePermission(ctx context.Context, rp RolePermission) (RoleP
 	return s.getRolePermission(ctx, rp)
 }
 
+// GetPermissionsNotInRole returns all the permission.Permission not in a role.Role
 func (s *Store) GetPermissionsNotInRole(ctx context.Context, r role.Role) ([]permission.Permission, error) {
 	return s.getPermissionsNotInRole(ctx, r)
 }
 
+// AddRolePermission creates a link between a role.Role and permission.Permission
 func (s *Store) AddRolePermission(ctx context.Context, rp RolePermission) (RolePermission, error) {
 	return s.addRolePermission(ctx, rp)
 }
 
+// RemoveRolePermission removes a link between a role.Role and permission.Permission
 func (s *Store) RemoveRolePermission(ctx context.Context, rp RolePermission) error {
 	return s.removeRolePermission(ctx, rp)
 }

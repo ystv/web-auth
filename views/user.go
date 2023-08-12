@@ -28,6 +28,7 @@ type (
 		Sort       Sort
 	}
 
+	// Sort is the parameters for how to sort a users request
 	Sort struct {
 		Pages      int
 		Size       int
@@ -39,6 +40,7 @@ type (
 		Deleted    string
 	}
 
+	// UserTemplate is for the user front end
 	UserTemplate struct {
 		User       user.DetailedUser
 		UserID     int
@@ -328,6 +330,7 @@ func (v *Views) userFunc(c echo.Context, userID int) error {
 	return v.template.RenderTemplate(c.Response(), data, templates.UserTemplate)
 }
 
+// UserAddFunc handles an add user request
 func (v *Views) UserAddFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
@@ -425,6 +428,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 	}
 }
 
+// UserEditFunc handles an edit user request
 func (v *Views) UserEditFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
@@ -498,6 +502,7 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 	}
 }
 
+// UserToggleEnabledFunc handles an toggle enable user request
 func (v *Views) UserToggleEnabledFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
@@ -535,6 +540,7 @@ func (v *Views) UserToggleEnabledFunc(c echo.Context) error {
 	}
 }
 
+// UserDeleteFunc handles an delete user request
 func (v *Views) UserDeleteFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)

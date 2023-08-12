@@ -238,6 +238,7 @@ func New(conf *Config, host, port string) *Views {
 	return v
 }
 
+// errorHandle is for handling errors and presenting them to the user in a nice format
 func (v *Views) errorHandle(c echo.Context, err error) error {
 	data := struct {
 		Error string

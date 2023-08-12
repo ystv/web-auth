@@ -13,12 +13,14 @@ import (
 )
 
 type (
+	// RolesTemplate is for the roles front end
 	RolesTemplate struct {
 		Roles      []role.Role
 		UserID     int
 		ActivePage string
 	}
 
+	// RoleTemplate is for the role front end
 	RoleTemplate struct {
 		Role                 user.RoleTemplate
 		UserID               int
@@ -28,6 +30,7 @@ type (
 	}
 )
 
+// bindRoleToTemplate converts from role.Role to user.RoleTemplate
 func (v *Views) bindRoleToTemplate(r1 role.Role) user.RoleTemplate {
 	var r user.RoleTemplate
 	r.RoleID = r1.RoleID
@@ -59,6 +62,7 @@ func (v *Views) RolesFunc(c echo.Context) error {
 	return v.template.RenderTemplate(c.Response(), data, templates.RolesTemplate)
 }
 
+// RoleFunc handles a role request
 func (v *Views) RoleFunc(c echo.Context) error {
 	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 
@@ -125,6 +129,7 @@ func (v *Views) RoleFunc(c echo.Context) error {
 	return v.template.RenderTemplate(c.Response(), data, templates.RoleTemplate)
 }
 
+// roleFunc handles a role request internal
 func (v *Views) roleFunc(c echo.Context, roleID int) error {
 	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 
@@ -183,6 +188,7 @@ func (v *Views) roleFunc(c echo.Context, roleID int) error {
 	return v.template.RenderTemplate(c.Response(), data, templates.RoleTemplate)
 }
 
+// RoleAddFunc handles a role add request
 func (v *Views) RoleAddFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		err := c.Request().ParseForm()
@@ -209,6 +215,7 @@ func (v *Views) RoleAddFunc(c echo.Context) error {
 	}
 }
 
+// RoleEditFunc handles a role edit request
 func (v *Views) RoleEditFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		roleID, err := strconv.Atoi(c.Param("roleid"))
@@ -256,6 +263,7 @@ func (v *Views) RoleEditFunc(c echo.Context) error {
 	}
 }
 
+// RoleDeleteFunc handles a role delete request
 func (v *Views) RoleDeleteFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		roleID, err := strconv.Atoi(c.Param("roleid"))
@@ -303,6 +311,7 @@ func (v *Views) RoleDeleteFunc(c echo.Context) error {
 	}
 }
 
+// RoleAddPermissionFunc handles a rolePermission add request
 func (v *Views) RoleAddPermissionFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		err := c.Request().ParseForm()
@@ -369,6 +378,7 @@ func (v *Views) RoleAddPermissionFunc(c echo.Context) error {
 	}
 }
 
+// RoleRemovePermissionFunc handles a rolePermission remove request
 func (v *Views) RoleRemovePermissionFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		roleID, err := strconv.Atoi(c.Param("roleid"))
@@ -429,6 +439,7 @@ func (v *Views) RoleRemovePermissionFunc(c echo.Context) error {
 	}
 }
 
+// RoleAddUserFunc handles a roleUser add request
 func (v *Views) RoleAddUserFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		err := c.Request().ParseForm()
@@ -495,6 +506,7 @@ func (v *Views) RoleAddUserFunc(c echo.Context) error {
 	}
 }
 
+// RoleRemoveUserFunc handles a roleUser remove request
 func (v *Views) RoleRemoveUserFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		roleID, err := strconv.Atoi(c.Param("roleid"))

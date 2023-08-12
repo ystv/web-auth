@@ -20,6 +20,7 @@ func (s *Store) getRoles(ctx context.Context) ([]Role, error) {
 	return r, nil
 }
 
+// getRole returns a specific Role
 func (s *Store) getRole(ctx context.Context, r1 Role) (Role, error) {
 	var r Role
 	err := s.db.GetContext(ctx, &r, `SELECT r.role_id, r.name, r.description, COUNT(DISTINCT rm.user_id) AS users, COUNT(DISTINCT rp.permission_id) AS permissions
@@ -35,6 +36,7 @@ func (s *Store) getRole(ctx context.Context, r1 Role) (Role, error) {
 	return r, nil
 }
 
+// addRole adds a new Role
 func (s *Store) addRole(ctx context.Context, r1 Role) (Role, error) {
 	var r Role
 	stmt, err := s.db.PrepareNamedContext(ctx, "INSERT INTO people.roles (name, description) VALUES (:name, :description) RETURNING role_id, name, description")
@@ -48,6 +50,7 @@ func (s *Store) addRole(ctx context.Context, r1 Role) (Role, error) {
 	return r, nil
 }
 
+// editRole erits an existing Role
 func (s *Store) editRole(ctx context.Context, r Role) (Role, error) {
 	stmt, err := s.db.NamedExecContext(ctx, `UPDATE people.roles
 		SET name = :name,
@@ -66,6 +69,7 @@ func (s *Store) editRole(ctx context.Context, r Role) (Role, error) {
 	return r, nil
 }
 
+// deleteRole deletes a specific Role
 func (s *Store) deleteRole(ctx context.Context, r Role) error {
 	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.roles WHERE role_id = :role_id`, r)
 	if err != nil {
@@ -74,6 +78,7 @@ func (s *Store) deleteRole(ctx context.Context, r Role) error {
 	return nil
 }
 
+// deleteRolePermission deletes a link between a Role and a Permission
 func (s *Store) deleteRolePermission(ctx context.Context, r Role) error {
 	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.role_permissions WHERE role_id = :role_id`, r)
 	if err != nil {
@@ -82,6 +87,7 @@ func (s *Store) deleteRolePermission(ctx context.Context, r Role) error {
 	return nil
 }
 
+// deleteRoleUser deletes a link between a Role and a User
 func (s *Store) deleteRoleUser(ctx context.Context, r Role) error {
 	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.role_members WHERE role_id = :role_id`, r)
 	if err != nil {

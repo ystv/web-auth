@@ -11,6 +11,7 @@ import (
 )
 
 type (
+	// Repo is used for navigating a package
 	Repo interface {
 		AddDefaults(defaults Defaults)
 		SendResetEmail(recipient, subject, code string) error
@@ -27,6 +28,7 @@ type (
 		DomainName string
 	}
 
+	// Defaults is the default values for the mailer if none are explicitly mentioned
 	Defaults struct {
 		DefaultTo   string
 		DefaultCC   []string
@@ -56,6 +58,7 @@ type (
 	}
 )
 
+// here to verify we are meeting the interface
 var _ Repo = &Mailer{}
 
 // NewMailer creates a new SMTP client

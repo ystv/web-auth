@@ -26,6 +26,7 @@ type (
 	}
 )
 
+// getData gets the data for the user session
 func (v *Views) getData(s *sessions.Session) *Context {
 	val := s.Values["user"]
 	var u user.User
@@ -74,6 +75,7 @@ func DBToTemplateType(dbUsers []user.User) []user.StrippedUser {
 	return tplUsers
 }
 
+// DBUserToDetailedUser handles all the little details for the users front end
 func DBUserToDetailedUser(dbUser user.User, store *user.Store) user.DetailedUser {
 	var u user.DetailedUser
 	var err error
@@ -176,6 +178,7 @@ func DBUserToDetailedUser(dbUser user.User, store *user.Store) user.DetailedUser
 	return u
 }
 
+// removeDuplicates removes all duplicate permissions
 func removeDuplicate(strSlice []permission.Permission) []permission.Permission {
 	allKeys := make(map[int]bool)
 	var list []permission.Permission
@@ -188,6 +191,7 @@ func removeDuplicate(strSlice []permission.Permission) []permission.Permission {
 	return list
 }
 
+// minRequirementsMet tests if the password meets the minimum requirements
 func minRequirementsMet(password string) (errString string) {
 	var match bool
 	match, err := regexp.MatchString("^.*[a-z].*$", password)

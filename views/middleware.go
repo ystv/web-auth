@@ -242,6 +242,7 @@ func (v *Views) RequiresMinimumPermissionMMAdmin(next echo.HandlerFunc) echo.Han
 	}
 }
 
+// RequiresMinimumPermissionNoHttp handles requests not put through directly by a http endpoint
 func (v *Views) RequiresMinimumPermissionNoHttp(userID int, p permissions.Permissions) bool {
 	u, err := v.user.GetUser(context.Background(), user.User{UserID: userID})
 	if err != nil {
@@ -266,14 +267,15 @@ func (v *Views) RequiresMinimumPermissionNoHttp(userID int, p permissions.Permis
 	return false
 }
 
+// GetValidPermissions gets all permissions that can perform a function
 func GetValidPermissions(p permissions.Permissions) (m map[string]bool) {
 	m = make(map[string]bool)
-	if p.GetString() == permissions.MenuDisabled.GetString() {
-		m[p.GetString()] = true
+	if p.String() == permissions.MenuDisabled.String() {
+		m[p.String()] = true
 		return
 	}
 
-	m[p.GetString()] = true
+	m[p.String()] = true
 
 	switch p {
 	case permissions.ManageMembersAdmin:
@@ -298,61 +300,61 @@ func GetValidPermissions(p permissions.Permissions) (m map[string]bool) {
 		break
 	case permissions.ManageMembersMembersList:
 	case permissions.ManageMembersMembersAdd:
-		m[permissions.ManageMembersMembersAdmin.GetString()] = true
+		m[permissions.ManageMembersMembersAdmin.String()] = true
 	case permissions.ManageMembersPermissions:
 	case permissions.ManageMembersMicsKeyList:
 	case permissions.ManageMembersMiscUnpaidList:
 	case permissions.ManageMembersOfficers:
 	case permissions.ManageMembersGroup:
 	case permissions.ManageMembersMembersAdmin:
-		m[permissions.ManageMembersAdmin.GetString()] = true
+		m[permissions.ManageMembersAdmin.String()] = true
 		break
 	case permissions.EmailAccess:
 	case permissions.EmailAlumni:
 	case permissions.EmailOfficers:
-		m[permissions.EmailEveryone.GetString()] = true
+		m[permissions.EmailEveryone.String()] = true
 		break
 	case permissions.CalendarSocialCreator:
-		m[permissions.CalendarSocialAdmin.GetString()] = true
+		m[permissions.CalendarSocialAdmin.String()] = true
 	case permissions.CalendarSocialAdmin:
-		m[permissions.CalendarAdmin.GetString()] = true
+		m[permissions.CalendarAdmin.String()] = true
 		break
 	case permissions.CalendarShowCreator:
-		m[permissions.CalendarShowAdmin.GetString()] = true
+		m[permissions.CalendarShowAdmin.String()] = true
 	case permissions.CalendarShowAdmin:
-		m[permissions.CalendarAdmin.GetString()] = true
+		m[permissions.CalendarAdmin.String()] = true
 		break
 	case permissions.CalendarMeetingCreator:
-		m[permissions.CalendarMeetingAdmin.GetString()] = true
+		m[permissions.CalendarMeetingAdmin.String()] = true
 	case permissions.CalendarMeetingAdmin:
-		m[permissions.CalendarAdmin.GetString()] = true
+		m[permissions.CalendarAdmin.String()] = true
 		break
 	case permissions.CMSNewsItemCreator:
-		m[permissions.CMSNewsItemAdmin.GetString()] = true
+		m[permissions.CMSNewsItemAdmin.String()] = true
 	case permissions.CMSNewsItemAdmin:
-		m[permissions.CMSNewsAdmin.GetString()] = true
+		m[permissions.CMSNewsAdmin.String()] = true
 	case permissions.CMSEndboardAdmin:
 	case permissions.CMSView:
 	case permissions.CMSPermalinkAdmin:
 	case permissions.CMSNewsAdmin:
-		m[permissions.CMSAdmin.GetString()] = true
+		m[permissions.CMSAdmin.String()] = true
 		break
 	case permissions.CMSNewsCreator:
-		m[permissions.CMSNewsAdmin.GetString()] = true
-		m[permissions.CMSAdmin.GetString()] = true
+		m[permissions.CMSNewsAdmin.String()] = true
+		m[permissions.CMSAdmin.String()] = true
 		break
 	case permissions.CMSPageCreator:
-		m[permissions.CMSPageAdmin.GetString()] = true
+		m[permissions.CMSPageAdmin.String()] = true
 	case permissions.CMSPageAdmin:
-		m[permissions.CMSAdmin.GetString()] = true
+		m[permissions.CMSAdmin.String()] = true
 		break
 	case permissions.CMSSlideshowCreator:
-		m[permissions.CMSSlideshowAdmin.GetString()] = true
+		m[permissions.CMSSlideshowAdmin.String()] = true
 	case permissions.CMSSlideshowAdmin:
-		m[permissions.CMSAdmin.GetString()] = true
+		m[permissions.CMSAdmin.String()] = true
 		break
 	}
 
-	m[permissions.SuperUser.GetString()] = true
+	m[permissions.SuperUser.String()] = true
 	return
 }

@@ -24,6 +24,7 @@ func HashPass(password string) string {
 	return next
 }
 
+// GenerateSalt generates a salt for the password to be salted against
 func GenerateSalt() string {
 	b := make([]byte, 22)
 	for i := range b {
@@ -32,6 +33,7 @@ func GenerateSalt() string {
 	return "$2a$06$" + string(b)
 }
 
+// GeneratePassword generates a random password for a user to change
 func GeneratePassword() string {
 	b := make([]byte, 12)
 	for i := range b {

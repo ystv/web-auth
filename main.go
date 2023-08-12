@@ -153,6 +153,7 @@ func main() {
 		log.Printf("Unable to send email: %+v", err)
 	}
 
+	// The following section is for detecting crashes ot interrupts or sigterm
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {

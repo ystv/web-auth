@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// ChangePasswordFunc handles the password change from a user
 func (v *Views) ChangePasswordFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)

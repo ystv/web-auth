@@ -31,6 +31,7 @@ type (
 		Message    string `json:"message"`
 	}
 
+	// ManageAPITemplate returns the data to the front end
 	ManageAPITemplate struct {
 		Tokens     []api.Token
 		UserID     int
@@ -39,6 +40,7 @@ type (
 	}
 )
 
+// ManageAPIFunc is the main home page for API management
 func (v *Views) ManageAPIFunc(c echo.Context) error {
 	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 
@@ -61,6 +63,7 @@ func (v *Views) ManageAPIFunc(c echo.Context) error {
 	return v.template.RenderTemplate(c.Response(), data, templates.ManageAPITemplate)
 }
 
+// ManageAPIFunc is the main home page for API management internal
 func (v *Views) manageAPIFunc(c echo.Context, addedJWT string) error {
 	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 
@@ -84,6 +87,7 @@ func (v *Views) manageAPIFunc(c echo.Context, addedJWT string) error {
 	return v.template.RenderTemplate(c.Response(), data, templates.ManageAPITemplate)
 }
 
+// TokenAddFunc adds a token to be used by the user
 func (v *Views) TokenAddFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
@@ -143,6 +147,7 @@ func (v *Views) TokenAddFunc(c echo.Context) error {
 	}
 }
 
+// TokenDeleteFunc deletes a token
 func (v *Views) TokenDeleteFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
@@ -206,6 +211,7 @@ func (v *Views) SetTokenHandler(c echo.Context) error {
 	return nil
 }
 
+// newJWT generates a new jwt token
 func (v *Views) newJWT(u user.User) (string, error) {
 	expirationTime := time.Now().Add(5 * time.Minute)
 	perms, err := v.user.GetPermissionsForUser(context.Background(), u)
@@ -238,6 +244,7 @@ func (v *Views) newJWT(u user.User) (string, error) {
 	return tokenString, nil
 }
 
+// newJWTCustom generates a new jwt token for the user
 func (v *Views) newJWTCustom(u user.User, expiry time.Time, tokenID string) (string, error) {
 	compare := expiry.Compare(time.Now().AddDate(1, 0, 0))
 	if compare == 1 {

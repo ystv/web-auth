@@ -15,6 +15,7 @@ import (
 )
 
 type (
+	// SettingsTemplate is for the settings front end
 	SettingsTemplate struct {
 		User       user.User
 		UserID     int

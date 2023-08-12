@@ -235,6 +235,8 @@ func (s *Store) getUsersSearchOrder(ctx context.Context, size, page int, search,
 	return u, nil
 }
 
+// parseDirection parses the string for asc/desc and returns the SQL equivalent for it
+// No parameter is outputted into SQL for prevention of SQL injections
 func (s *Store) parseDirection(direction string) (string, string, error) {
 	var dir, nulls string
 	if direction == "asc" {
@@ -249,6 +251,8 @@ func (s *Store) parseDirection(direction string) (string, string, error) {
 	return dir, nulls, nil
 }
 
+// parseEnabled parses the string for users enabled and returns the SQL equivalent for it
+// No parameter is outputted into SQL for prevention of SQL injections
 func (s *Store) parseEnabled(enabled string, includeAND bool) string {
 	if enabled == "enabled" {
 		if includeAND {
@@ -266,6 +270,8 @@ func (s *Store) parseEnabled(enabled string, includeAND bool) string {
 	return ``
 }
 
+// parseDeleted parses the string for user deleted and returns the SQL equivalent for it
+// No parameter is outputted into SQL for prevention of SQL injections
 func (s *Store) parseDeleted(deleted string, includeAND bool) string {
 	if deleted == "deleted" {
 		if includeAND {
@@ -283,6 +289,8 @@ func (s *Store) parseDeleted(deleted string, includeAND bool) string {
 	return ``
 }
 
+// parsePageSize parses the page and size for pagination and returns the SQL equivalent for it
+// No parameter is outputted into SQL without conditioning for prevention of SQL injections
 func (s *Store) parsePageSize(page, size int) string {
 	if page < 1 || size < 5 || size > 100 {
 		return ``
@@ -344,6 +352,7 @@ func (s *Store) getRoleUser(ctx context.Context, ru1 RoleUser) (RoleUser, error)
 	return ru, nil
 }
 
+// getUsersNotInRole returns all the users not currently in the role.Role to be added
 func (s *Store) getUsersNotInRole(ctx context.Context, r role.Role) ([]User, error) {
 	var u []User
 	err := s.db.SelectContext(ctx, &u, `SELECT DISTINCT u.*
@@ -360,6 +369,7 @@ func (s *Store) getUsersNotInRole(ctx context.Context, r role.Role) ([]User, err
 	return u, nil
 }
 
+// addRoleUser creates a link between a role.Role and User
 func (s *Store) addRoleUser(ctx context.Context, ru1 RoleUser) (RoleUser, error) {
 	var ru RoleUser
 	stmt, err := s.db.PrepareNamedContext(ctx, "INSERT INTO people.role_members (role_id, user_id) VALUES (:role_id, :user_id) RETURNING role_id, user_id")
@@ -373,6 +383,7 @@ func (s *Store) addRoleUser(ctx context.Context, ru1 RoleUser) (RoleUser, error)
 	return ru, nil
 }
 
+// removeRoleUser removes a link between a role.Role and User
 func (s *Store) removeRoleUser(ctx context.Context, ru RoleUser) error {
 	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.role_members WHERE role_id = :role_id AND user_id = :user_id`, ru)
 	if err != nil {
@@ -381,6 +392,7 @@ func (s *Store) removeRoleUser(ctx context.Context, ru RoleUser) error {
 	return nil
 }
 
+// removeRoleUser removes all links between role.Role and a User
 func (s *Store) removeRoleUsers(ctx context.Context, u User) error {
 	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.role_members WHERE user_id = :user_id`, u)
 	if err != nil {
@@ -428,6 +440,7 @@ func (s *Store) getRolePermission(ctx context.Context, rp1 RolePermission) (Role
 	return rp, nil
 }
 
+// getPermissionsNotInRole returns all the permissions not currently in the role.Role to be added
 func (s *Store) getPermissionsNotInRole(ctx context.Context, r role.Role) ([]permission.Permission, error) {
 	var p []permission.Permission
 	err := s.db.SelectContext(ctx, &p, `SELECT DISTINCT p.*
@@ -444,6 +457,7 @@ func (s *Store) getPermissionsNotInRole(ctx context.Context, r role.Role) ([]per
 	return p, nil
 }
 
+// addRolePermission creates a link between a role.Role and permission.Permission
 func (s *Store) addRolePermission(ctx context.Context, rp1 RolePermission) (RolePermission, error) {
 	var rp RolePermission
 	stmt, err := s.db.PrepareNamedContext(ctx, "INSERT INTO people.role_permissions (role_id, permission_id) VALUES (:role_id, :permission_id) RETURNING role_id, permission_id")
@@ -457,6 +471,7 @@ func (s *Store) addRolePermission(ctx context.Context, rp1 RolePermission) (Role
 	return rp, nil
 }
 
+// removeRolePermission removes a link between a role.Role and permission.Permission
 func (s *Store) removeRolePermission(ctx context.Context, rp RolePermission) error {
 	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.role_permissions WHERE role_id = :role_id AND permission_id = :permission_id`, rp)
 	if err != nil {

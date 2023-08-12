@@ -15,6 +15,7 @@ import (
 	"github.com/ystv/web-auth/user"
 )
 
+// LoginTemplate passes relevant information to the front end
 type LoginTemplate struct {
 	Version string
 	Message string
