@@ -25,10 +25,10 @@
         <br>
         <div class="columns box" style="height: fit-content">
             <div class="column">
-                {{if .AddedJWT}}<p style="color: green">Successfully added the token!<br
+                {{if .AddedJWT}}<label style="color: green">Successfully added the token!<br
                     >Copy this token text as this is the only time this is visible and cannot be recovered!<br>
                     <textarea disabled class="input" wrap="hard">{{.AddedJWT}}</textarea><br>
-                    <a class="button is-info" onclick="copyJWT()"><span class="mdi mdi-content-copy"></span>&ensp;Click to copy</a></p><br>
+                    <a class="button is-info" onclick="copyJWT()"><span class="mdi mdi-content-copy"></span>&ensp;Click to copy</a></label><br><br>
                 <script>
                     function copyJWT() {
                         navigator.clipboard.writeText("{{.AddedJWT}}");
@@ -82,7 +82,7 @@
                                     </div>
                                 </div>
                                 <div class="field">
-                                    <label class="label" for="name">Name</label>
+                                    <label class="label" for="name">Name (at least 3 characters)</label>
                                     <div class="control">
                                         <input
                                                 id="name"

@@ -99,7 +99,9 @@ func (v *Views) TokenAddFunc(c echo.Context) error {
 		description := c.Request().FormValue("description")
 		expiry := c.Request().FormValue("expiry")
 
-		_ = expiry
+		if len(name) < 2 {
+			return v.errorHandle(c, fmt.Errorf("token name too short"))
+		}
 
 		id := uuid.NewString()
 
