@@ -291,6 +291,7 @@ func (v *Views) TestAPI(c echo.Context) error {
 		token := c.Request().Header.Get("Authorization")
 		splitToken := strings.Split(token, "Bearer ")
 		if len(splitToken) <= 1 {
+			log.Println("invalid bearer token")
 			return &echo.HTTPError{
 				Code:     http.StatusBadRequest,
 				Message:  fmt.Sprintf("inalid bearer token provided"),
@@ -300,12 +301,14 @@ func (v *Views) TestAPI(c echo.Context) error {
 		token = splitToken[1]
 
 		if token == "" {
+			log.Println("no bearer token provided")
 			http.Error(c.Response(), "no bearer token provided", http.StatusBadRequest)
 			return fmt.Errorf("no bearer token provided")
 		}
 
-		IsTokenValid, claims := v.ValidateToken(token)
-		if !IsTokenValid {
+		valid, claims, err := v.ValidateToken(token)
+		log.Printf("valid: %t - claims: %+v - error: %+v", valid, claims, err)
+		if !valid {
 			status := statusStruct{
 				StatusCode: http.StatusBadRequest,
 				Message:    "invalid token",
@@ -313,6 +316,7 @@ func (v *Views) TestAPI(c echo.Context) error {
 			c.Response().WriteHeader(http.StatusBadRequest)
 			err := json.NewEncoder(c.Response()).Encode(status)
 			if err != nil {
+				log.Printf("error encoding: %+v", err)
 				http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
 			}
 			return err
@@ -327,26 +331,26 @@ func (v *Views) TestAPI(c echo.Context) error {
 			Message:    "valid token",
 		}
 
-		err := json.NewEncoder(c.Response()).Encode(status)
-		if err != nil {
-			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
-		}
+		log.Println(status)
+
+		return json.NewEncoder(c.Response()).Encode(status)
+	} else {
+		log.Printf("invalid method: %s", c.Request().Method)
 	}
 	return nil
 }
 
 // ValidateToken will validate the token
-func (v *Views) ValidateToken(token string) (bool, *JWTClaims) {
+func (v *Views) ValidateToken(token string) (bool, *JWTClaims, error) {
 	parsedToken, err := jwt.ParseWithClaims(token, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(v.conf.Security.SigningKey), nil
 	})
-
 	if err != nil {
-		return false, nil
+		return false, nil, fmt.Errorf("failed to parse token: %w", err)
 	}
 
 	if !parsedToken.Valid {
-		return false, nil
+		return false, nil, fmt.Errorf("failed to validate token: invalid token")
 	}
 
 	claims := parsedToken.Claims.(*JWTClaims)
@@ -354,13 +358,13 @@ func (v *Views) ValidateToken(token string) (bool, *JWTClaims) {
 	if len(claims.ID) > 0 {
 		_, err = v.api.GetToken(context.Background(), api.Token{TokenID: claims.ID})
 		if err != nil {
-			return false, nil
+			return false, nil, fmt.Errorf("failed to get token: %w", err)
 		}
 	}
 
 	_, err = v.user.GetUserValid(context.Background(), user.User{UserID: claims.UserID})
 	if err != nil {
-		return false, nil
+		return false, nil, fmt.Errorf("failed to get valid user: %w", err)
 	}
-	return parsedToken.Valid, claims
+	return parsedToken.Valid, claims, nil
 }

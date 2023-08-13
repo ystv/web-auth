@@ -124,7 +124,7 @@ type (
 		// SetTokenHandler is
 		SetTokenHandler(c echo.Context) error
 		// ValidateToken is
-		ValidateToken(myToken string) (bool, *JWTClaims)
+		ValidateToken(myToken string) (bool, *JWTClaims, error)
 		// newJWT is
 		newJWT(u user.User) (string, error)
 		// TestAPI is
