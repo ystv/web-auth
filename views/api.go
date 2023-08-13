@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/api"
+	//"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/templates"
 	"gopkg.in/guregu/null.v4"
 	"log"
@@ -33,8 +34,9 @@ type (
 
 	// ManageAPITemplate returns the data to the front end
 	ManageAPITemplate struct {
-		Tokens     []api.Token
-		UserID     int
+		Tokens []api.Token
+		UserID int
+		//ValidPermissions []permission.Permission
 		AddedJWT   string
 		ActivePage string
 	}
@@ -86,6 +88,8 @@ func (v *Views) manageAPIFunc(c echo.Context, addedJWT string) error {
 
 	return v.template.RenderTemplate(c.Response(), data, templates.ManageAPITemplate)
 }
+
+//func (v *Views) getPossiblePermissions(currentPermissions []permission.Permission) map[string]string
 
 // TokenAddFunc adds a token to be used by the user
 func (v *Views) TokenAddFunc(c echo.Context) error {
