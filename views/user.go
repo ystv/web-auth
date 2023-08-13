@@ -320,7 +320,7 @@ func (v *Views) UserFunc(w http.ResponseWriter, r *http.Request) {
 	var gravatar string
 
 	if user1.UseGravatar {
-		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace("liam.burnand@bswdi.co.uk"))))
+		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace(user1.Email))))
 		gravatar = fmt.Sprintf("https://www.gravatar.com/avatar/%s", hex.EncodeToString(hash[:]))
 	}
 
