@@ -7,7 +7,7 @@ import (
 )
 
 func (v *Views) Error404(w http.ResponseWriter, _ *http.Request) {
-	err := v.template.RenderNoNavsTemplate(w, nil, templates.Error404Template)
+	err := v.template.RenderNoNavsTemplate(w, nil, templates.NotFound404Template)
 	if err != nil {
 		fmt.Println(err)
 	}

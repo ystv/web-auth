@@ -19,6 +19,7 @@ type (
 		RoleID      int    `db:"role_id" json:"id"`
 		Name        string `db:"name" json:"name" schema:"name"`
 		Description string `db:"description" json:"description" schema:"description"`
+		Users       int    `db:"users" json:"users"`
 	}
 
 	RolePermission struct {

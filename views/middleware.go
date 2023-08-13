@@ -1,8 +1,11 @@
 package views
 
 import (
-	"github.com/ystv/web-auth/permission"
+	"context"
+	"github.com/ystv/web-auth/infrastructure/permission"
+	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/public/templates"
+	"github.com/ystv/web-auth/user"
 	"log"
 	"net/http"
 
@@ -28,9 +31,9 @@ func (v *Views) RequiresLogin(h http.Handler) http.HandlerFunc {
 	}
 }
 
-// RequiresPermission is a middleware that will
+// RequiresMinimumPermission is a middleware that will
 // ensure that the user has the given permission.
-func (v *Views) RequiresPermission(h http.Handler, p permission.Permission) http.HandlerFunc {
+func (v *Views) RequiresMinimumPermission(h http.Handler, p permissions.Permissions) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, err := v.cookie.Get(r, v.conf.SessionCookieName)
 		if err != nil {
@@ -41,23 +44,39 @@ func (v *Views) RequiresPermission(h http.Handler, p permission.Permission) http
 
 		u := helpers.GetUser(session)
 
-		perms, err := v.user.GetPermissionsForUser(r.Context(), u)
-		if err != nil {
-			log.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		if v.RequiresMinimumPermissionNoHttp(u.UserID, p) {
+			h.ServeHTTP(w, r)
 			return
 		}
 
-		for _, perm := range perms {
-			if perm.Name == p.Name {
-				h.ServeHTTP(w, r)
-				return
-			}
-		}
-		err = v.template.RenderNoNavsTemplate(w, nil, templates.ForbiddenTemplate)
+		err = v.template.RenderNoNavsTemplate(w, nil, templates.Forbidden500Template)
 		if err != nil {
 			log.Println(err)
 		}
 		w.WriteHeader(http.StatusForbidden)
 	}
+}
+
+func (v *Views) RequiresMinimumPermissionNoHttp(userID int, p permissions.Permissions) bool {
+	u, err := v.user.GetUser(context.Background(), user.User{UserID: userID})
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+
+	p1, err := v.user.GetPermissionsForUser(context.Background(), u)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+
+	m := permission.SufficientPermissionsFor(p)
+
+	for _, perm := range p1 {
+		if m[perm] {
+			return true
+		}
+	}
+
+	return false
 }

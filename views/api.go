@@ -4,12 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/golang-jwt/jwt/v5"
 	"log"
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/golang-jwt/jwt/v4"
 
 	"github.com/ystv/web-auth/helpers"
 	"github.com/ystv/web-auth/user"
@@ -67,13 +66,13 @@ func (v *Views) newJWT(u user.User) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to get user permissions: %w", err)
 	}
-	var perm1 []string
-	for _, perm := range perms {
-		perm1 = append(perm1, perm.Name)
-	}
+	//var perm1 []string
+	//for _, perm := range perms {
+	//	perm1 = append(perm1, perm)
+	//}
 	claims := &JWTClaims{
 		UserID:      u.UserID,
-		Permissions: perm1,
+		Permissions: v.removeDuplicate(perms),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: &jwt.NumericDate{Time: expirationTime},
 		},

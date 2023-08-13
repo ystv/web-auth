@@ -12,6 +12,15 @@ import (
 	"net/http"
 )
 
+type (
+	// Notification template for messages
+	Notification struct {
+		Title   string
+		Type    string
+		Message string
+	}
+)
+
 var notification = Notification{
 	Title:   "Reset code sent",
 	Type:    "",
@@ -23,16 +32,13 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 	var err error
 	switch r.Method {
 	case "GET":
-		//fmt.Println("DEBUG - FORGOT GET")
 		err = v.template.RenderNoNavsTemplate(w, nil, templates.ForgotTemplate)
-		//err = v.tpl.ExecuteTemplate(w, "forgot.tmpl", nil)
 		if err != nil {
 			err = fmt.Errorf("failed to exec tmpl: %w", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		return
 	case "POST":
-		//fmt.Println("DEBUG - FORGOT POST")
 		err = r.ParseForm()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -41,7 +47,6 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 
 		if u.Email == "" {
 			err = v.template.RenderNoNavsTemplate(w, nil, templates.ForgotTemplate)
-			//err = v.tpl.ExecuteTemplate(w, "forgot.tmpl", nil)
 			if err != nil {
 				err = fmt.Errorf("failed to exec tmpl: %w", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -54,7 +59,6 @@ func (v *Views) ForgotFunc(w http.ResponseWriter, r *http.Request) {
 			// User doesn't exist, we'll pretend they've got an email
 			log.Printf("request for reset on unknown email \"%s\"", user1.Email)
 			err = v.template.RenderNoNavsTemplate(w, notification, templates.NotificationTemplate)
-			//err = v.tpl.ExecuteTemplate(w, "notification.tmpl", notification)
 			if err != nil {
 				err = fmt.Errorf("failed to exec template: %w", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
