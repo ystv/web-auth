@@ -361,7 +361,7 @@ func (s *Store) getUsersNotInRole(ctx context.Context, r role.Role) ([]User, err
         (SELECT u.user_id
 		FROM people.users u
 		LEFT JOIN people.role_members ru on u.user_id = ru.user_id
-		WHERE ru.role_id = $1) AND deleted_by IS NOT NULL
+		WHERE ru.role_id = $1) AND deleted_by IS NULL
 		ORDER BY first_name, last_name`, r.RoleID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users not in role: %w", err)
