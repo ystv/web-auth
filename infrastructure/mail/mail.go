@@ -13,7 +13,6 @@ import (
 type (
 	Repo interface {
 		AddDefaults(defaults Defaults)
-		SendResetEmail(recipient, subject, code string) error
 		CheckSendable(item Mail) error
 		SendMail(item Mail) error
 		SendErrorFatalMail(item Mail) error
@@ -86,15 +85,6 @@ func (m *Mailer) AddDefaults(defaults Defaults) {
 	m.Defaults.DefaultCC = defaults.DefaultCC
 	m.Defaults.DefaultBCC = defaults.DefaultBCC
 	m.Defaults.DefaultFrom = defaults.DefaultFrom
-}
-
-// SendResetEmail sends a plaintext email
-func (m *Mailer) SendResetEmail(recipient, subject, code string) error {
-	body := fmt.Sprintf(`<html><body><a href=https://auth.%s/reset?code=%s>Reset password</a> <p>(Link valid for 1 hour)</p></body></html>`, m.DomainName, code)
-	email := mail.NewMSG()
-	email.SetFrom("YSTV Security <no-reply@ystv.co.uk>").AddTo(recipient).SetSubject(subject)
-	email.SetBody(mail.TextHTML, body)
-	return email.Send(m.SMTPClient)
 }
 
 // CheckSendable verifies that the email can be sent
