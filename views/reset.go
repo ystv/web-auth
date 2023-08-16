@@ -109,16 +109,13 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 
 	// Valid request, send email with reset code
 	if v.Mailer.Enabled {
-		v.Mailer, err = mail.NewMailer(mail.Config{
+		v.Mailer = mail.NewMailer(mail.Config{
 			Host:       v.conf.Mail.Host,
 			Port:       v.conf.Mail.Port,
 			Username:   v.conf.Mail.Username,
 			Password:   v.conf.Mail.Password,
 			DomainName: v.conf.DomainName,
 		})
-		if err != nil {
-			log.Printf("Mailer failed: %+v", err)
-		}
 
 		file := mail.Mail{
 			Subject: "YSTV Security - Reset Password",
