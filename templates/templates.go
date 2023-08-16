@@ -183,7 +183,13 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 		"parsePermissionsIntoHTML": func(perms []permission.Permission) template.HTML {
 			var output strings.Builder
 			for _, p := range perms {
-				output.WriteString(fmt.Sprintf("<tr><th>%d</th><td>%s</td><td>%s</td><td>%d</td><td><a href='/internal/permission/%d'>View</a></td></tr>", p.PermissionID, p.Name, p.Description, p.Roles, p.PermissionID))
+				output.WriteString("<tr>")
+				output.WriteString(fmt.Sprintf("<th>%d</th>", p.PermissionID))
+				output.WriteString(fmt.Sprintf("<td>%s</td>", p.Name))
+				output.WriteString(fmt.Sprintf("<td>%s</td>", p.Description))
+				output.WriteString(fmt.Sprintf("<td>%d</td>", p.Roles))
+				output.WriteString(fmt.Sprintf("<td><a href='/internal/permission/%d'>View</a></td>", p.PermissionID))
+				output.WriteString("</tr>")
 			}
 			return template.HTML(output.String())
 		},
@@ -194,20 +200,36 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 				roles.WriteString("Inherited by: <ol>")
 				for _, r := range p.Roles {
 					if roleAdmin {
-						roles.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span><a href='/internal/role/%d'>%s</a></li>", r.RoleID, r.Name))
+						roles.WriteString("<li style='list-style-type: none;'><span class='tab'></span>")
+						roles.WriteString(fmt.Sprintf("<a href='/internal/role/%d'>%s</a>", r.RoleID, r.Name))
+						roles.WriteString("</li>")
 					} else {
-						roles.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span>%s</li>", r.Name))
+						roles.WriteString("<li style='list-style-type: none;'><span class='tab'></span>")
+						roles.WriteString(fmt.Sprintf("%s", r.Name))
+						roles.WriteString("</li>")
 					}
 				}
 				roles.WriteString("</ol>")
 			}
-			output.WriteString(fmt.Sprintf("<p>Permission ID: %d<br>Name: %s<br>Description: %s<br><br>%s</p>", p.PermissionID, p.Name, p.Description, roles.String()))
+			output.WriteString("<p>")
+			output.WriteString(fmt.Sprintf("Permission ID: %d<br>", p.PermissionID))
+			output.WriteString(fmt.Sprintf("Name: %s<br>", p.Name))
+			output.WriteString(fmt.Sprintf("Description: %s<br><br>", p.Description))
+			output.WriteString(fmt.Sprintf("%s", roles.String()))
+			output.WriteString("</p>")
 			return template.HTML(output.String())
 		},
 		"parseRolesIntoHTML": func(roles []role.Role) template.HTML {
 			var output strings.Builder
 			for _, r := range roles {
-				output.WriteString(fmt.Sprintf("<tr><th>%d</th><td>%s</td><td>%s</td><td>%d</td><td>%d</td><td><a href='/internal/role/%d'>View</a></td></tr>", r.RoleID, r.Name, r.Description, r.Users, r.Permissions, r.RoleID))
+				output.WriteString("<tr>")
+				output.WriteString(fmt.Sprintf("<th>%d</th>", r.RoleID))
+				output.WriteString(fmt.Sprintf("<td>%s</td>", r.Name))
+				output.WriteString(fmt.Sprintf("<td>%s</td>", r.Description))
+				output.WriteString(fmt.Sprintf("<td>%d</td>", r.Users))
+				output.WriteString(fmt.Sprintf("<td>%d</td>", r.Permissions))
+				output.WriteString(fmt.Sprintf("<td><a href='/internal/role/%d'>View</a></td>", r.RoleID))
+				output.WriteString("</tr>")
 			}
 			return template.HTML(output.String())
 		},
@@ -219,9 +241,13 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 				perms.WriteString("Permissions: <ol>")
 				for _, p := range r.Permissions {
 					if permissionAdmin {
-						perms.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span><a href='/internal/permission/%d'>%s</a></li>", p.PermissionID, p.Name))
+						perms.WriteString("<li style='list-style-type: none;'><span class='tab'></span>")
+						perms.WriteString(fmt.Sprintf("<a href='/internal/permission/%d'>%s</a>", p.PermissionID, p.Name))
+						perms.WriteString("</li>")
 					} else {
-						perms.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span>%s</li>", p.Name))
+						perms.WriteString("<li style='list-style-type: none;'><span class='tab'></span>")
+						perms.WriteString(fmt.Sprintf("%s", p.Name))
+						perms.WriteString("</li>")
 					}
 				}
 				perms.WriteString("</ol><br>")
@@ -230,21 +256,31 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 				users.WriteString("Inherited by: <ol>")
 				for _, u := range r.Users {
 					if membersList {
-						users.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span><a href='/internal/user/%d'>%s</a></li>", u.UserID, u.Firstname+" "+u.Lastname))
+						users.WriteString("<li style='list-style-type: none;'><span class='tab'></span>")
+						users.WriteString(fmt.Sprintf("<a href='/internal/user/%d'>%s</a>", u.UserID, u.Firstname+" "+u.Lastname))
+						users.WriteString("</li>")
 					} else {
-						users.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span>%s</li>", u.Firstname+" "+u.Lastname))
+						users.WriteString("<li style='list-style-type: none;'><span class='tab'></span>")
+						users.WriteString(fmt.Sprintf("%s", u.Firstname+" "+u.Lastname))
+						users.WriteString("</li>")
 					}
 				}
 				users.WriteString("</ol>")
 			}
-			output.WriteString(fmt.Sprintf("<p>Role ID: %d<br>Name: %s<br>Description: %s<br><br>%s%s</p>", r.RoleID, r.Name, r.Description, perms.String(), users.String()))
+			output.WriteString("<p>")
+			output.WriteString(fmt.Sprintf("Role ID: %d<br>", r.RoleID))
+			output.WriteString(fmt.Sprintf("Name: %s<br>", r.Name))
+			output.WriteString(fmt.Sprintf("Description: %s<br><br>", r.Description))
+			output.WriteString(perms.String())
+			output.WriteString(users.String())
+			output.WriteString("</p>")
 			return template.HTML(output.String())
 		},
 		"parseUsersIntoHTML": func(tmplUsers []user.StrippedUser, userID int) template.HTML {
 			memberAdmin := t.permissionsParser(userID, permissions.ManageMembersMembersAdmin.String())
-			var output strings.Builder
+			var output, ifView strings.Builder
 			for _, tmplUser := range tmplUsers {
-				var enabled, deleted, ifView string
+				var enabled, deleted string
 				if tmplUser.Enabled {
 					enabled = "Enabled"
 				} else {
@@ -256,9 +292,20 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 					deleted = "-"
 				}
 				if memberAdmin {
-					ifView = fmt.Sprintf("<td><a href=\"/internal/user/%d\">View</a></td>", tmplUser.UserID)
+					ifView.WriteString("<td>")
+					ifView.WriteString(fmt.Sprintf("<a href=\"/internal/user/%d\">View</a>", tmplUser.UserID))
+					ifView.WriteString("</td>")
 				}
-				output.WriteString(fmt.Sprintf("<tr><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>%s</tr>", tmplUser.UserID, tmplUser.Name, tmplUser.Username, tmplUser.Email, enabled, deleted, tmplUser.LastLogin, ifView))
+				output.WriteString("<tr>")
+				output.WriteString(fmt.Sprintf("<td>%d</td>", tmplUser.UserID))
+				output.WriteString(fmt.Sprintf("<td>%s</td>", tmplUser.Name))
+				output.WriteString(fmt.Sprintf("<td>%s</td>", tmplUser.Username))
+				output.WriteString(fmt.Sprintf("<td>%s</td>", tmplUser.Email))
+				output.WriteString(fmt.Sprintf("<td>%s</td>", enabled))
+				output.WriteString(fmt.Sprintf("<td>%s</td>", deleted))
+				output.WriteString(fmt.Sprintf("<td>%s</td>", tmplUser.LastLogin))
+				output.WriteString(ifView.String())
+				output.WriteString("</tr>")
 			}
 			return template.HTML(output.String())
 		},
@@ -271,9 +318,13 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 				perms.WriteString("Permissions: <ol>")
 				for _, p := range u.Permissions {
 					if permissionAdmin {
-						perms.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span><a href='/internal/permission/%d'>%s</a></li>", p.PermissionID, p.Name))
+						perms.WriteString("<li style='list-style-type: none;'><span class='tab'></span>")
+						perms.WriteString(fmt.Sprintf("<a href='/internal/permission/%d'>%s</a>", p.PermissionID, p.Name))
+						perms.WriteString("</li>")
 					} else {
-						perms.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span>%s</li>", p.Name))
+						perms.WriteString("<li style='list-style-type: none;'><span class='tab'></span>")
+						perms.WriteString(fmt.Sprintf("%s", p.Name))
+						perms.WriteString("</li>")
 					}
 				}
 				perms.WriteString("</ol><br>")
@@ -282,9 +333,13 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 				roles.WriteString("Roles: <ol>")
 				for _, r := range u.Roles {
 					if roleAdmin {
-						roles.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span><a href='/internal/role/%d'>%s</a></li>", r.RoleID, r.Name))
+						roles.WriteString("<li style='list-style-type: none;'><span class='tab'></span>")
+						roles.WriteString(fmt.Sprintf("<a href='/internal/role/%d'>%s</a>", r.RoleID, r.Name))
+						roles.WriteString("</li>")
 					} else {
-						roles.WriteString(fmt.Sprintf("<li style='list-style-type: none;'><span class='tab'></span>%s</li>", r.Name))
+						roles.WriteString("<li style='list-style-type: none;'><span class='tab'></span>")
+						roles.WriteString(fmt.Sprintf("%s", r.Name))
+						roles.WriteString("</li>")
 					}
 				}
 				roles.WriteString("</ol><br>")
@@ -338,7 +393,25 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			} else if u.DeletedAt.Valid {
 				deleted = fmt.Sprintf("Deleted by UNKNOWN at %s<br>", u.DeletedAt.String)
 			}
-			output.WriteString(fmt.Sprintf("<p>%sUser ID: %d<br>First name: %s<br>Nickname: %s<br>Last name: %s<br>Username: %s<br>Email: %s<br><br>Enabled: %s<br>Login type: %s<br>%sAvartar source: %s<br><br>%s%s%s%s%s%s</p>", deleted, u.UserID, u.Firstname, u.Nickname, u.Lastname, u.Username, u.Email, enabled, u.LoginType, ldap, avatar, perms.String(), roles.String(), lastLogin, created, updated, deletedBy))
+			output.WriteString("<p>")
+			output.WriteString(deleted)
+			output.WriteString(fmt.Sprintf("User ID: %d<br>", u.UserID))
+			output.WriteString(fmt.Sprintf("First name: %s<br>", u.Firstname))
+			output.WriteString(fmt.Sprintf("Nickname: %s<br>", u.Nickname))
+			output.WriteString(fmt.Sprintf("Last name: %s<br>", u.Lastname))
+			output.WriteString(fmt.Sprintf("Username: %s<br>", u.Username))
+			output.WriteString(fmt.Sprintf("Email: %s<br><br>", u.Email))
+			output.WriteString(fmt.Sprintf("Enabled: %s<br>", enabled))
+			output.WriteString(fmt.Sprintf("Login type: %s<br>", u.LoginType))
+			output.WriteString(ldap)
+			output.WriteString(fmt.Sprintf("Avatar source: %s<br><br>", avatar))
+			output.WriteString(perms.String())
+			output.WriteString(roles.String())
+			output.WriteString(lastLogin)
+			output.WriteString(created)
+			output.WriteString(updated)
+			output.WriteString(deletedBy)
+			output.WriteString("</p>")
 			return template.HTML(output.String())
 		},
 	}
