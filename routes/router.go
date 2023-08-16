@@ -17,10 +17,10 @@ var embeddedFiles embed.FS
 
 type (
 	Router struct {
-		config *views.Config
-		port   string
-		views  *views.Views
-		router *echo.Echo
+		config  *views.Config
+		address string
+		views   *views.Views
+		router  *echo.Echo
 	}
 	NewRouter struct {
 		Config *views.Config
@@ -46,8 +46,8 @@ func New(conf *NewRouter) *Router {
 }
 
 func (r *Router) Start() error {
-	r.router.Logger.Error(r.router.Start(r.config.Port))
-	return fmt.Errorf("failed to start router on port %s", r.config.Port)
+	r.router.Logger.Error(r.router.Start(r.config.Address))
+	return fmt.Errorf("failed to start router on address %s", r.config.Address)
 }
 
 func (r *Router) loadRoutes() {

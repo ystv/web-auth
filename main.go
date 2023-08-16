@@ -85,13 +85,13 @@ func main() {
 		fmt.Println()
 	}
 
-	port := os.Getenv("WAUTH_PORT")
+	address := os.Getenv("WAUTH_ADDRESS")
 
 	// Generate config
 	conf := &views.Config{
 		Version:           Version,
 		Debug:             debug,
-		Port:              port,
+		Address:           address,
 		DatabaseURL:       dbConnectionString,
 		BaseDomainName:    os.Getenv("WAUTH_BASE_DOMAIN_NAME"),
 		DomainName:        os.Getenv("WAUTH_DOMAIN_NAME"),

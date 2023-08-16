@@ -25,7 +25,7 @@ type (
 	Config struct {
 		Version           string
 		Debug             bool
-		Port              string
+		Address           string
 		DatabaseURL       string
 		BaseDomainName    string
 		DomainName        string
