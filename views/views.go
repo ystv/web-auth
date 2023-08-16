@@ -105,7 +105,7 @@ type (
 
 		SetTokenHandler(c echo.Context) error
 		ValidateToken(myToken string) (bool, *JWTClaims)
-		TestAPI(c echo.Context) error
+		TestAPITokenFunc(c echo.Context) error
 	}
 
 	// Views encapsulates our view dependencies

@@ -92,8 +92,8 @@ func (v *Views) newJWT(u user.User) (string, error) {
 	return tokenString, nil
 }
 
-// TestAPI returns a JSON object with a valid JWT
-func (v *Views) TestAPI(c echo.Context) error {
+// TestAPITokenFunc returns a JSON object with a valid JWT
+func (v *Views) TestAPITokenFunc(c echo.Context) error {
 	if c.Request().Method == "GET" {
 		token := c.Request().Header.Get("Authorization")
 		splitToken := strings.Split(token, "Bearer ")
