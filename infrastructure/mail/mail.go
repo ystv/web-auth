@@ -137,7 +137,7 @@ func (m *Mailer) SendErrorFatalMail(item Mail) error {
 		return fmt.Errorf("failed to exec tpl: %w", err)
 	}
 	email := mail.NewMSG()
-	email.SetFrom(from).AddTo(to).SetSubject("FATAL ERROR - YSTV STV")
+	email.SetFrom(from).AddTo(to).SetSubject("FATAL ERROR - YSTV Web Auth")
 	if len(cc) != 0 {
 		email.AddCc(cc...)
 	}
