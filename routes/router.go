@@ -71,13 +71,13 @@ func (r *Router) loadRoutes() {
 		internal.Match(validMethods, "/settings", r.views.SettingsFunc)
 
 		if !r.config.Debug {
-			internal.GET("/permissions", r.views.PermissionsFunc, r.views.RequiresMinimumPermissionMMP)
+			internal.GET("/permissions", r.views.PermissionsFunc, r.views.RequiresMMP)
 		} else {
 			internal.GET("/permissions", r.views.PermissionsFunc)
 		}
 		permission := internal.Group("/permission")
 		if !r.config.Debug {
-			permission.Use(r.views.RequiresMinimumPermissionMMP)
+			permission.Use(r.views.RequiresMMP)
 		}
 		{
 			permission.Match(validMethods, "/add", r.views.PermissionAddFunc)
@@ -90,14 +90,14 @@ func (r *Router) loadRoutes() {
 		}
 
 		if !r.config.Debug {
-			internal.GET("/roles", r.views.RolesFunc, r.views.RequiresMinimumPermissionMMG)
+			internal.GET("/roles", r.views.RolesFunc, r.views.RequiresMMG)
 		} else {
 			internal.GET("/roles", r.views.RolesFunc)
 		}
 
 		role := internal.Group("/role")
 		if !r.config.Debug {
-			role.Use(r.views.RequiresMinimumPermissionMMG)
+			role.Use(r.views.RequiresMMG)
 		}
 		{
 			role.Match(validMethods, "/add", r.views.RoleAddFunc)
@@ -110,8 +110,8 @@ func (r *Router) loadRoutes() {
 		}
 
 		if !r.config.Debug {
-			internal.Match(validMethods, "/users", r.views.UsersFunc, r.views.RequiresMinimumPermissionMMML)
-			internal.Match(validMethods, "/user/add", r.views.UserAddFunc, r.views.RequiresMinimumPermissionMMAdd)
+			internal.Match(validMethods, "/users", r.views.UsersFunc, r.views.RequiresMMML)
+			internal.Match(validMethods, "/user/add", r.views.UserAddFunc, r.views.RequiresMMAdd)
 		} else {
 			internal.Match(validMethods, "/users", r.views.UsersFunc)
 			internal.Match(validMethods, "/user/add", r.views.UserAddFunc)
@@ -119,7 +119,7 @@ func (r *Router) loadRoutes() {
 
 		user := internal.Group("/user")
 		if !r.config.Debug {
-			user.Use(r.views.RequiresMinimumPermissionMMAdmin)
+			user.Use(r.views.RequiresMMAdmin)
 		}
 		{
 			userID := user.Group("/:userid")

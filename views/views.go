@@ -98,11 +98,11 @@ type (
 		RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc
 
 		RequiresMinimumPermission(next echo.HandlerFunc, p permissions.Permissions) echo.HandlerFunc
-		RequiresMinimumPermissionMMP(next echo.HandlerFunc) echo.HandlerFunc
-		RequiresMinimumPermissionMMG(next echo.HandlerFunc) echo.HandlerFunc
-		RequiresMinimumPermissionMMML(next echo.HandlerFunc) echo.HandlerFunc
-		RequiresMinimumPermissionMMAdd(next echo.HandlerFunc) echo.HandlerFunc
-		RequiresMinimumPermissionMMAdmin(next echo.HandlerFunc) echo.HandlerFunc
+		RequiresMMP(next echo.HandlerFunc) echo.HandlerFunc
+		RequiresMMG(next echo.HandlerFunc) echo.HandlerFunc
+		RequiresMMML(next echo.HandlerFunc) echo.HandlerFunc
+		RequiresMMAdd(next echo.HandlerFunc) echo.HandlerFunc
+		RequiresMMAdmin(next echo.HandlerFunc) echo.HandlerFunc
 		RequiresMinimumPermissionNoHttp(userID int, p permissions.Permissions) bool
 
 		// SetTokenHandler is
