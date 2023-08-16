@@ -105,13 +105,9 @@ type (
 		RequiresManageMembersMembersAdmin(next echo.HandlerFunc) echo.HandlerFunc
 		RequiresMinimumPermissionNoHttp(userID int, p permissions.Permissions) bool
 
-		// SetTokenHandler is
 		SetTokenHandler(c echo.Context) error
-		// ValidateToken is
 		ValidateToken(myToken string) (bool, *JWTClaims)
-		// newJWT is
 		newJWT(u user.User) (string, error)
-		// TestAPI is
 		TestAPI(c echo.Context) error
 
 		getData(s *sessions.Session) *Context
