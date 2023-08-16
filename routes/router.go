@@ -71,13 +71,13 @@ func (r *Router) loadRoutes() {
 		internal.Match(validMethods, "/settings", r.views.SettingsFunc)
 
 		if !r.config.Debug {
-			internal.GET("/permissions", r.views.PermissionsFunc, r.views.RequiresMinimumPermissionManageMembersPermissions)
+			internal.GET("/permissions", r.views.PermissionsFunc, r.views.RequiresManageMembersPermissions)
 		} else {
 			internal.GET("/permissions", r.views.PermissionsFunc)
 		}
 		permission := internal.Group("/permission")
 		if !r.config.Debug {
-			permission.Use(r.views.RequiresMinimumPermissionManageMembersPermissions)
+			permission.Use(r.views.RequiresManageMembersPermissions)
 		}
 		{
 			permission.Match(validMethods, "/add", r.views.PermissionAddFunc)
@@ -90,14 +90,14 @@ func (r *Router) loadRoutes() {
 		}
 
 		if !r.config.Debug {
-			internal.GET("/roles", r.views.RolesFunc, r.views.RequiresMinimumPermissionManageMembersGroup)
+			internal.GET("/roles", r.views.RolesFunc, r.views.RequiresManageMembersGroup)
 		} else {
 			internal.GET("/roles", r.views.RolesFunc)
 		}
 
 		role := internal.Group("/role")
 		if !r.config.Debug {
-			role.Use(r.views.RequiresMinimumPermissionManageMembersGroup)
+			role.Use(r.views.RequiresManageMembersGroup)
 		}
 		{
 			role.Match(validMethods, "/add", r.views.RoleAddFunc)
@@ -110,8 +110,8 @@ func (r *Router) loadRoutes() {
 		}
 
 		if !r.config.Debug {
-			internal.Match(validMethods, "/users", r.views.UsersFunc, r.views.RequiresMinimumPermissionManageMembersMembersList)
-			internal.Match(validMethods, "/user/add", r.views.UserAddFunc, r.views.RequiresMinimumPermissionManageMembersMembersAdd)
+			internal.Match(validMethods, "/users", r.views.UsersFunc, r.views.RequiresManageMembersMembersList)
+			internal.Match(validMethods, "/user/add", r.views.UserAddFunc, r.views.RequiresManageMembersMembersAdd)
 		} else {
 			internal.Match(validMethods, "/users", r.views.UsersFunc)
 			internal.Match(validMethods, "/user/add", r.views.UserAddFunc)
@@ -119,7 +119,7 @@ func (r *Router) loadRoutes() {
 
 		user := internal.Group("/user")
 		if !r.config.Debug {
-			user.Use(r.views.RequiresMinimumPermissionManageMembersMembersAdmin)
+			user.Use(r.views.RequiresManageMembersMembersAdmin)
 		}
 		{
 			userID := user.Group("/:userid")
