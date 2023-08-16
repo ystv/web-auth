@@ -78,9 +78,9 @@ func (v *Views) RequiresMinimumPermission(next echo.HandlerFunc, p permissions.P
 	}
 }
 
-// RequiresMinimumPermissionMMP is a middleware that will
+// RequiresMinimumPermissionManageMembersPermissions is a middleware that will
 // ensure that the user has ManageMembersPermissions.
-func (v *Views) RequiresMinimumPermissionMMP(next echo.HandlerFunc) echo.HandlerFunc {
+func (v *Views) RequiresMinimumPermissionManageMembersPermissions(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 		if err != nil {
@@ -111,9 +111,9 @@ func (v *Views) RequiresMinimumPermissionMMP(next echo.HandlerFunc) echo.Handler
 	}
 }
 
-// RequiresMinimumPermissionMMG is a middleware that will
+// RequiresMinimumPermissionManageMembersGroup is a middleware that will
 // ensure that the user has ManageMembersGroup.
-func (v *Views) RequiresMinimumPermissionMMG(next echo.HandlerFunc) echo.HandlerFunc {
+func (v *Views) RequiresMinimumPermissionManageMembersGroup(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 		if err != nil {
@@ -144,9 +144,9 @@ func (v *Views) RequiresMinimumPermissionMMG(next echo.HandlerFunc) echo.Handler
 	}
 }
 
-// RequiresMinimumPermissionMMML is a middleware that will
+// RequiresMinimumPermissionManageMembersMembersList is a middleware that will
 // ensure that the user has ManageMembersMembersList.
-func (v *Views) RequiresMinimumPermissionMMML(next echo.HandlerFunc) echo.HandlerFunc {
+func (v *Views) RequiresMinimumPermissionManageMembersMembersList(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 		if err != nil {
@@ -177,9 +177,9 @@ func (v *Views) RequiresMinimumPermissionMMML(next echo.HandlerFunc) echo.Handle
 	}
 }
 
-// RequiresMinimumPermissionMMAdd is a middleware that will
+// RequiresMinimumPermissionManageMembersMembersAdd is a middleware that will
 // ensure that the user has ManageMembersMembersAdd.
-func (v *Views) RequiresMinimumPermissionMMAdd(next echo.HandlerFunc) echo.HandlerFunc {
+func (v *Views) RequiresMinimumPermissionManageMembersMembersAdd(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 		if err != nil {
@@ -210,9 +210,9 @@ func (v *Views) RequiresMinimumPermissionMMAdd(next echo.HandlerFunc) echo.Handl
 	}
 }
 
-// RequiresMinimumPermissionMMAdmin is a middleware that will
+// RequiresMinimumPermissionManageMembersMembersAdmin is a middleware that will
 // ensure that the user has ManageMembersMembersAdmin.
-func (v *Views) RequiresMinimumPermissionMMAdmin(next echo.HandlerFunc) echo.HandlerFunc {
+func (v *Views) RequiresMinimumPermissionManageMembersMembersAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 		if err != nil {
