@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	permission1 "github.com/ystv/web-auth/infrastructure/permission"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/role"
@@ -193,37 +194,17 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 		"lenU": func(a []user.User) int {
 			return len(a)
 		},
-		"memberAddPermission": func(id int) bool {
-			u, err := t.User.GetUser(context.Background(), user.User{UserID: id})
-			if err != nil {
-				log.Printf("failed to get user for template(getFuncMaps(memberAddPermission)): %+v", err)
-				return false
-			}
-
-			p, err := t.User.GetPermissionsForUser(context.Background(), u)
-			if err != nil {
-				log.Printf("failed to get permissions for user for template(getFuncMaps(memberAddPermission)): %+v", err)
-				return false
-			}
-
-			for _, perm := range p {
-				if perm.Name == permissions.ManageMembersMembersAdd.String() {
-					return true
-				}
-			}
-			return false
-		},
 		"checkPermission": func(id int, p string) bool {
 			return t.permissionsParser(id, p)
 		},
-		"parseHTMLPermissions": func(perms []permission.Permission) template.HTML {
+		"parsePermissionsIntoHTML": func(perms []permission.Permission) template.HTML {
 			var output strings.Builder
 			for _, p := range perms {
 				output.WriteString(fmt.Sprintf("<tr><th>%d</th><td>%s</td><td>%s</td><td>%d</td><td><a href='/internal/permission/%d'>View</a></td></tr>", p.PermissionID, p.Name, p.Description, p.Roles, p.PermissionID))
 			}
 			return template.HTML(output.String())
 		},
-		"parseHTMLPermission": func(p user.PermissionTemplate, userID int) template.HTML {
+		"parsePermissionIntoHTML": func(p user.PermissionTemplate, userID int) template.HTML {
 			roleAdmin := t.permissionsParser(userID, permissions.ManageMembersGroup.String())
 			var output, roles strings.Builder
 			if len(p.Roles) > 0 {
@@ -240,14 +221,14 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			output.WriteString(fmt.Sprintf("<p>Permission ID: %d<br>Name: %s<br>Description: %s<br><br>%s</p>", p.PermissionID, p.Name, p.Description, roles.String()))
 			return template.HTML(output.String())
 		},
-		"parseHTMLRoles": func(roles []role.Role) template.HTML {
+		"parseRolesIntoHTML": func(roles []role.Role) template.HTML {
 			var output strings.Builder
 			for _, r := range roles {
 				output.WriteString(fmt.Sprintf("<tr><th>%d</th><td>%s</td><td>%s</td><td>%d</td><td>%d</td><td><a href='/internal/role/%d'>View</a></td></tr>", r.RoleID, r.Name, r.Description, r.Users, r.Permissions, r.RoleID))
 			}
 			return template.HTML(output.String())
 		},
-		"parseHTMLRole": func(r user.RoleTemplate, userID int) template.HTML {
+		"parseRoleIntoHTML": func(r user.RoleTemplate, userID int) template.HTML {
 			permissionAdmin := t.permissionsParser(userID, permissions.ManageMembersPermissions.String())
 			membersList := t.permissionsParser(userID, permissions.ManageMembersMembersList.String())
 			var output, perms, users strings.Builder
@@ -276,8 +257,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			output.WriteString(fmt.Sprintf("<p>Role ID: %d<br>Name: %s<br>Description: %s<br><br>%s%s</p>", r.RoleID, r.Name, r.Description, perms.String(), users.String()))
 			return template.HTML(output.String())
 		},
-		"parseHTMLUsers": func(tmplUsers []user.StrippedUser, userID int) template.HTML {
-			//defer t.timer("tmplUser")()
+		"parseUsersIntoHTML": func(tmplUsers []user.StrippedUser, userID int) template.HTML {
 			memberAdmin := t.permissionsParser(userID, permissions.ManageMembersMembersAdmin.String())
 			var output strings.Builder
 			for _, tmplUser := range tmplUsers {
@@ -299,7 +279,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			}
 			return template.HTML(output.String())
 		},
-		"parseHTMLUser": func(u user.DetailedUser, userID int) template.HTML {
+		"parseUserIntoHTML": func(u user.DetailedUser, userID int) template.HTML {
 			permissionAdmin := t.permissionsParser(userID, permissions.ManageMembersPermissions.String())
 			roleAdmin := t.permissionsParser(userID, permissions.ManageMembersGroup.String())
 			var output, perms, roles strings.Builder
@@ -397,7 +377,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 }
 
 func (t *Templater) permissionsParser(id int, p string) bool {
-	m := GetValidPermissions(permissions.Permissions(p))
+	m := permission1.SufficientPermissionsFor(permissions.Permissions(p))
 
 	u, err := t.User.GetUser(context.Background(), user.User{UserID: id})
 	if err != nil {
@@ -417,95 +397,4 @@ func (t *Templater) permissionsParser(id int, p string) bool {
 		}
 	}
 	return false
-}
-
-func GetValidPermissions(p permissions.Permissions) (m map[string]bool) {
-	m = make(map[string]bool)
-	if p.String() == permissions.MenuDisabled.String() {
-		m[p.String()] = true
-		return
-	}
-
-	m[p.String()] = true
-
-	switch p {
-	case permissions.ManageMembersAdmin:
-	case permissions.KeyCardAccess:
-	case permissions.BookingsAdmin:
-	case permissions.CalendarAdmin:
-	case permissions.CMSAdmin:
-	case permissions.Cobra:
-	case permissions.Director:
-	case permissions.EditNetStats:
-	case permissions.EmailEveryone:
-	case permissions.EquipmentAdmin:
-	case permissions.HiresAdmin:
-	case permissions.Inform:
-	case permissions.KeyListManage:
-	case permissions.MailingListAdmin:
-	case permissions.OfficerReports:
-	case permissions.Streamer:
-	case permissions.TechieTodo:
-	case permissions.VideoStats:
-	case permissions.WatchAdmin:
-		break
-	case permissions.ManageMembersMembersList:
-	case permissions.ManageMembersMembersAdd:
-		m[permissions.ManageMembersMembersAdmin.String()] = true
-	case permissions.ManageMembersPermissions:
-	case permissions.ManageMembersMicsKeyList:
-	case permissions.ManageMembersMiscUnpaidList:
-	case permissions.ManageMembersOfficers:
-	case permissions.ManageMembersGroup:
-	case permissions.ManageMembersMembersAdmin:
-		m[permissions.ManageMembersAdmin.String()] = true
-		break
-	case permissions.EmailAccess:
-	case permissions.EmailAlumni:
-	case permissions.EmailOfficers:
-		m[permissions.EmailEveryone.String()] = true
-		break
-	case permissions.CalendarSocialCreator:
-		m[permissions.CalendarSocialAdmin.String()] = true
-	case permissions.CalendarSocialAdmin:
-		m[permissions.CalendarAdmin.String()] = true
-		break
-	case permissions.CalendarShowCreator:
-		m[permissions.CalendarShowAdmin.String()] = true
-	case permissions.CalendarShowAdmin:
-		m[permissions.CalendarAdmin.String()] = true
-		break
-	case permissions.CalendarMeetingCreator:
-		m[permissions.CalendarMeetingAdmin.String()] = true
-	case permissions.CalendarMeetingAdmin:
-		m[permissions.CalendarAdmin.String()] = true
-		break
-	case permissions.CMSNewsItemCreator:
-		m[permissions.CMSNewsItemAdmin.String()] = true
-	case permissions.CMSNewsItemAdmin:
-		m[permissions.CMSNewsAdmin.String()] = true
-	case permissions.CMSEndboardAdmin:
-	case permissions.CMSView:
-	case permissions.CMSPermalinkAdmin:
-	case permissions.CMSNewsAdmin:
-		m[permissions.CMSAdmin.String()] = true
-		break
-	case permissions.CMSNewsCreator:
-		m[permissions.CMSNewsAdmin.String()] = true
-		m[permissions.CMSAdmin.String()] = true
-		break
-	case permissions.CMSPageCreator:
-		m[permissions.CMSPageAdmin.String()] = true
-	case permissions.CMSPageAdmin:
-		m[permissions.CMSAdmin.String()] = true
-		break
-	case permissions.CMSSlideshowCreator:
-		m[permissions.CMSSlideshowAdmin.String()] = true
-	case permissions.CMSSlideshowAdmin:
-		m[permissions.CMSAdmin.String()] = true
-		break
-	}
-
-	m[permissions.SuperUser.String()] = true
-	return
 }
