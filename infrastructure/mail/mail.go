@@ -17,7 +17,6 @@ type (
 		CheckSendable(item Mail) error
 		SendMail(item Mail) error
 		SendErrorFatalMail(item Mail) error
-		parseHeader(item Mail) (to, from string, cc, bcc []string)
 	}
 
 	// Mailer encapsulates the dependency

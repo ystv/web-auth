@@ -13,12 +13,6 @@ type (
 		AddPermission(ctx context.Context, p1 Permission) (Permission, error)
 		EditPermission(ctx context.Context, p1 Permission) (Permission, error)
 		DeletePermission(ctx context.Context, p1 Permission) error
-
-		getPermissions(ctx context.Context) ([]Permission, error)
-		getPermission(ctx context.Context, p1 Permission) (Permission, error)
-		addPermission(ctx context.Context, p1 Permission) (Permission, error)
-		editPermission(ctx context.Context, p1 Permission) (Permission, error)
-		deletePermission(ctx context.Context, p1 Permission) error
 	}
 
 	// Store stores the dependencies

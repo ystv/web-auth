@@ -25,8 +25,6 @@ type (
 		RenderTemplatePagination(w io.Writer, data interface{}, mainTmpl Template) error
 		RenderNoNavsTemplate(w io.Writer, data interface{}, mainTmpl Template) error
 		RenderEmail(emailTemplate Template) *template.Template
-		getFuncMaps() template.FuncMap
-		permissionsParser(id int, p string) bool
 	}
 
 	Templater struct {

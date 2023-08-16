@@ -79,14 +79,12 @@ type (
 		PermissionAddFunc(c echo.Context) error
 		PermissionEditFunc(c echo.Context) error
 		PermissionDeleteFunc(c echo.Context) error
-		bindPermissionToTemplate(p1 permission.Permission) user.PermissionTemplate
 
 		RolesFunc(c echo.Context) error
 		RoleFunc(c echo.Context) error
 		RoleAddFunc(c echo.Context) error
 		RoleEditFunc(c echo.Context) error
 		RoleDeleteFunc(c echo.Context) error
-		bindRoleToTemplate(r1 role.Role) user.RoleTemplate
 
 		UsersFunc(c echo.Context) error
 		UserFunc(c echo.Context) error
@@ -107,14 +105,7 @@ type (
 
 		SetTokenHandler(c echo.Context) error
 		ValidateToken(myToken string) (bool, *JWTClaims)
-		newJWT(u user.User) (string, error)
 		TestAPI(c echo.Context) error
-
-		getData(s *sessions.Session) *Context
-		removeDuplicate(strSlice []permission.Permission) []permission.Permission
-		timer(name string) func()
-
-		errorHandle(c echo.Context, err error) error
 	}
 
 	// Views encapsulates our view dependencies

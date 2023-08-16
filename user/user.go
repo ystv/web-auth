@@ -41,30 +41,6 @@ type (
 		GetUsersForRole(ctx context.Context, r role.Role) ([]User, error)
 		GetPermissionsForRole(ctx context.Context, r role.Role) ([]permission.Permission, error)
 		GetRolesForPermission(ctx context.Context, p permission.Permission) ([]role.Role, error)
-		newUser(ctx context.Context, u User) error
-
-		countUsers(ctx context.Context) (int, error)
-		countUsersActive(ctx context.Context) (int, error)
-		countUsers24Hours(ctx context.Context) (int, error)
-		countUsersPastYear(ctx context.Context) (int, error)
-		updateUser(ctx context.Context, user User) error
-		getUser(ctx context.Context, user User) (User, error)
-		getUsers(ctx context.Context) ([]User, error)
-		getUsersSizePage(ctx context.Context, size, page int) ([]User, error)
-		getUsersSearch(ctx context.Context, search string) ([]User, error)
-		getUsersSearchSizePage(ctx context.Context, search string, size, page int) ([]User, error)
-		getUsersOptionsAsc(ctx context.Context, sortBy string) ([]User, error)
-		getUsersOptionsAscSizePage(ctx context.Context, sortBy string, size, page int) ([]User, error)
-		getUsersSearchOptionsAsc(ctx context.Context, search, sortBy string) ([]User, error)
-		getUsersSearchOptionsAscSizePage(ctx context.Context, search, sortBy string, size, page int) ([]User, error)
-		getUsersOptionsDesc(ctx context.Context, sortBy string) ([]User, error)
-		getUsersOptionsDescSizePage(ctx context.Context, sortBy string, size, page int) ([]User, error)
-		getUsersSearchOptionsDesc(ctx context.Context, search, sortBy string) ([]User, error)
-		getUsersSearchOptionsDescSizePage(ctx context.Context, search, sortBy string, size, page int) ([]User, error)
-		getRolesForUser(ctx context.Context, u User) ([]role.Role, error)
-		getUsersForRole(ctx context.Context, r role.Role) ([]User, error)
-		getPermissionsForRole(ctx context.Context, r role.Role) ([]permission.Permission, error)
-		getRolesForPermission(ctx context.Context, p permission.Permission) ([]role.Role, error)
 	}
 
 	// Store stores the dependencies
