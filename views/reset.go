@@ -119,7 +119,7 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 
 		file := mail.Mail{
 			Subject: "YSTV Security - Reset Password",
-			Tpl:     v.template.RenderEmail(templates.ResetPasswordEmailTemplate),
+			Tpl:     v.template.RenderEmail(templates.ResetEmailTemplate),
 			To:      user1.Email,
 			From:    "YSTV Security <no-reply@ystv.co.uk>",
 			TplData: struct {
