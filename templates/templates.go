@@ -312,12 +312,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 				if len(u.CreatedBy.Firstname) == 0 && len(u.CreatedBy.Nickname) == 0 && len(u.CreatedBy.Lastname) == 0 {
 					created = fmt.Sprintf("Created by UNKNOWN(%d) at %s<br>", u.CreatedBy.UserID, u.CreatedAt.String)
 				} else {
-					var name string
-					if u.CreatedBy.Firstname != u.CreatedBy.Nickname {
-						name = fmt.Sprintf("%s (%s) %s", u.CreatedBy.Firstname, u.CreatedBy.Nickname, u.CreatedBy.Lastname)
-					} else {
-						name = fmt.Sprintf("%s %s", u.CreatedBy.Firstname, u.CreatedBy.Lastname)
-					}
+					name := t.parseUserName(u.CreatedBy)
 					created = fmt.Sprintf("Created by <a href='/internal/user/%d'>%s</a> at %s<br>", u.CreatedBy.UserID, name, u.CreatedAt.String)
 				}
 			} else if u.CreatedAt.Valid {
@@ -327,12 +322,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 				if len(u.UpdatedBy.Firstname) == 0 && len(u.UpdatedBy.Nickname) == 0 && len(u.UpdatedBy.Lastname) == 0 {
 					updated = fmt.Sprintf("Updated by UNKNOWN(%d) at %s<br>", u.UpdatedBy.UserID, u.UpdatedAt.String)
 				} else {
-					var name string
-					if u.UpdatedBy.Firstname != u.UpdatedBy.Nickname {
-						name = fmt.Sprintf("%s (%s) %s", u.UpdatedBy.Firstname, u.UpdatedBy.Nickname, u.UpdatedBy.Lastname)
-					} else {
-						name = fmt.Sprintf("%s %s", u.UpdatedBy.Firstname, u.UpdatedBy.Lastname)
-					}
+					name := t.parseUserName(u.UpdatedBy)
 					updated = fmt.Sprintf("Updated by <a href='/internal/user/%d'>%s</a> at %s<br>", u.UpdatedBy.UserID, name, u.UpdatedAt.String)
 				}
 			} else if u.UpdatedAt.Valid {
@@ -342,12 +332,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 				if len(u.DeletedBy.Firstname) == 0 && len(u.DeletedBy.Nickname) == 0 && len(u.DeletedBy.Lastname) == 0 {
 					deleted = fmt.Sprintf("Deleted by UNKNOWN(%d) at %s<br>", u.DeletedBy.UserID, u.DeletedAt.String)
 				} else {
-					var name string
-					if u.DeletedBy.Firstname != u.DeletedBy.Nickname {
-						name = fmt.Sprintf("%s (%s) %s", u.DeletedBy.Firstname, u.DeletedBy.Nickname, u.DeletedBy.Lastname)
-					} else {
-						name = fmt.Sprintf("%s %s", u.DeletedBy.Firstname, u.DeletedBy.Lastname)
-					}
+					name := t.parseUserName(u.DeletedBy)
 					deleted = fmt.Sprintf("Deleted by <a href='/internal/user/%d'>%s</a> at %s<br>", u.DeletedBy.UserID, name, u.DeletedAt.String)
 				}
 			} else if u.DeletedAt.Valid {
@@ -357,6 +342,15 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			return template.HTML(output.String())
 		},
 	}
+}
+
+func (t *Templater) parseUserName(u user.User) (name string) {
+	if u.Firstname != u.Nickname {
+		name = fmt.Sprintf("%s (%s) %s", u.Firstname, u.Nickname, u.Lastname)
+	} else {
+		name = fmt.Sprintf("%s %s", u.Firstname, u.Lastname)
+	}
+	return name
 }
 
 func (t *Templater) permissionsParser(id int, p string) bool {
