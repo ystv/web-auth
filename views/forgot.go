@@ -42,10 +42,10 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 		if u.Email == "" {
 			return v.template.RenderNoNavsTemplate(c.Response(), nil, templates.ForgotTemplate)
 		}
-		// Get user1 and check if it exists
+		// Get user and check if it exists
 		user1, err := v.user.GetUser(c.Request().Context(), u)
 		if err != nil {
-			// StrippedUser doesn't exist, we'll pretend they've got an email
+			// User doesn't exist, we'll pretend they've got an email
 			log.Printf("request for reset on unknown email \"%s\"", user1.Email)
 			return v.template.RenderNoNavsTemplate(c.Response(), notification, templates.NotificationTemplate)
 		}
@@ -89,7 +89,7 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 			log.Printf("reset email: %s, code: %s, reset link: https://%s/reset?code=%s", user1.Email, url, v.conf.DomainName, url)
 		}
 
-		// StrippedUser doesn't exist, we'll pretend they've got an email
+		// User doesn't exist, we'll pretend they've got an email
 		return v.template.RenderNoNavsTemplate(c.Response().Writer, notification, templates.NotificationTemplate)
 	}
 	return nil

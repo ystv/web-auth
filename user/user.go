@@ -257,6 +257,7 @@ func (s *Store) GetUsersSortedSearchSizePage(ctx context.Context, column, direct
 
 // VerifyUser will check that the password is correct with provided
 // credentials and if verified will return the User object
+// returned is the user object, bool of if the password is forced to be changed and any errors encountered
 func (s *Store) VerifyUser(ctx context.Context, u User) (User, bool, error) {
 	user, err := s.getUser(ctx, u)
 	if err != nil {

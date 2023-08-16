@@ -3,6 +3,7 @@ package views
 import (
 	"context"
 	"github.com/labstack/echo/v4"
+	"github.com/ystv/web-auth/infrastructure/permission"
 	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/user"
 	"log"
@@ -64,7 +65,7 @@ func (v *Views) RequiresMinimumPermission(next echo.HandlerFunc, p permissions.P
 			return v.LoginFunc(c)
 		}
 
-		acceptedPerms := GetValidPermissions(p)
+		acceptedPerms := permission.SufficientPermissionsFor(p)
 
 		for _, perm := range perms {
 			if acceptedPerms[perm.Name] {
@@ -97,7 +98,7 @@ func (v *Views) RequiresMinimumPermissionMMP(next echo.HandlerFunc) echo.Handler
 			return v.LoginFunc(c)
 		}
 
-		acceptedPerms := GetValidPermissions(permissions.ManageMembersPermissions)
+		acceptedPerms := permission.SufficientPermissionsFor(permissions.ManageMembersPermissions)
 
 		for _, perm := range perms {
 			if acceptedPerms[perm.Name] {
@@ -130,7 +131,7 @@ func (v *Views) RequiresMinimumPermissionMMG(next echo.HandlerFunc) echo.Handler
 			return v.LoginFunc(c)
 		}
 
-		acceptedPerms := GetValidPermissions(permissions.ManageMembersGroup)
+		acceptedPerms := permission.SufficientPermissionsFor(permissions.ManageMembersGroup)
 
 		for _, perm := range perms {
 			if acceptedPerms[perm.Name] {
@@ -163,7 +164,7 @@ func (v *Views) RequiresMinimumPermissionMMML(next echo.HandlerFunc) echo.Handle
 			return v.LoginFunc(c)
 		}
 
-		acceptedPerms := GetValidPermissions(permissions.ManageMembersMembersList)
+		acceptedPerms := permission.SufficientPermissionsFor(permissions.ManageMembersMembersList)
 
 		for _, perm := range perms {
 			if acceptedPerms[perm.Name] {
@@ -196,7 +197,7 @@ func (v *Views) RequiresMinimumPermissionMMAdd(next echo.HandlerFunc) echo.Handl
 			return v.LoginFunc(c)
 		}
 
-		acceptedPerms := GetValidPermissions(permissions.ManageMembersMembersAdd)
+		acceptedPerms := permission.SufficientPermissionsFor(permissions.ManageMembersMembersAdd)
 
 		for _, perm := range perms {
 			if acceptedPerms[perm.Name] {
@@ -229,7 +230,7 @@ func (v *Views) RequiresMinimumPermissionMMAdmin(next echo.HandlerFunc) echo.Han
 			return v.LoginFunc(c)
 		}
 
-		acceptedPerms := GetValidPermissions(permissions.ManageMembersMembersAdmin)
+		acceptedPerms := permission.SufficientPermissionsFor(permissions.ManageMembersMembersAdmin)
 
 		for _, perm := range perms {
 			if acceptedPerms[perm.Name] {
@@ -255,7 +256,7 @@ func (v *Views) RequiresMinimumPermissionNoHttp(userID int, p permissions.Permis
 		return false
 	}
 
-	m := GetValidPermissions(p)
+	m := permission.SufficientPermissionsFor(p)
 
 	for _, perm := range p1 {
 		if m[perm.Name] {
@@ -264,95 +265,4 @@ func (v *Views) RequiresMinimumPermissionNoHttp(userID int, p permissions.Permis
 	}
 
 	return false
-}
-
-func GetValidPermissions(p permissions.Permissions) (m map[string]bool) {
-	m = make(map[string]bool)
-	if p.GetString() == permissions.MenuDisabled.GetString() {
-		m[p.GetString()] = true
-		return
-	}
-
-	m[p.GetString()] = true
-
-	switch p {
-	case permissions.ManageMembersAdmin:
-	case permissions.KeyCardAccess:
-	case permissions.BookingsAdmin:
-	case permissions.CalendarAdmin:
-	case permissions.CMSAdmin:
-	case permissions.Cobra:
-	case permissions.Director:
-	case permissions.EditNetStats:
-	case permissions.EmailEveryone:
-	case permissions.EquipmentAdmin:
-	case permissions.HiresAdmin:
-	case permissions.Inform:
-	case permissions.KeyListManage:
-	case permissions.MailingListAdmin:
-	case permissions.OfficerReports:
-	case permissions.Streamer:
-	case permissions.TechieTodo:
-	case permissions.VideoStats:
-	case permissions.WatchAdmin:
-		break
-	case permissions.ManageMembersMembersList:
-	case permissions.ManageMembersMembersAdd:
-		m[permissions.ManageMembersMembersAdmin.GetString()] = true
-	case permissions.ManageMembersPermissions:
-	case permissions.ManageMembersMicsKeyList:
-	case permissions.ManageMembersMiscUnpaidList:
-	case permissions.ManageMembersOfficers:
-	case permissions.ManageMembersGroup:
-	case permissions.ManageMembersMembersAdmin:
-		m[permissions.ManageMembersAdmin.GetString()] = true
-		break
-	case permissions.EmailAccess:
-	case permissions.EmailAlumni:
-	case permissions.EmailOfficers:
-		m[permissions.EmailEveryone.GetString()] = true
-		break
-	case permissions.CalendarSocialCreator:
-		m[permissions.CalendarSocialAdmin.GetString()] = true
-	case permissions.CalendarSocialAdmin:
-		m[permissions.CalendarAdmin.GetString()] = true
-		break
-	case permissions.CalendarShowCreator:
-		m[permissions.CalendarShowAdmin.GetString()] = true
-	case permissions.CalendarShowAdmin:
-		m[permissions.CalendarAdmin.GetString()] = true
-		break
-	case permissions.CalendarMeetingCreator:
-		m[permissions.CalendarMeetingAdmin.GetString()] = true
-	case permissions.CalendarMeetingAdmin:
-		m[permissions.CalendarAdmin.GetString()] = true
-		break
-	case permissions.CMSNewsItemCreator:
-		m[permissions.CMSNewsItemAdmin.GetString()] = true
-	case permissions.CMSNewsItemAdmin:
-		m[permissions.CMSNewsAdmin.GetString()] = true
-	case permissions.CMSEndboardAdmin:
-	case permissions.CMSView:
-	case permissions.CMSPermalinkAdmin:
-	case permissions.CMSNewsAdmin:
-		m[permissions.CMSAdmin.GetString()] = true
-		break
-	case permissions.CMSNewsCreator:
-		m[permissions.CMSNewsAdmin.GetString()] = true
-		m[permissions.CMSAdmin.GetString()] = true
-		break
-	case permissions.CMSPageCreator:
-		m[permissions.CMSPageAdmin.GetString()] = true
-	case permissions.CMSPageAdmin:
-		m[permissions.CMSAdmin.GetString()] = true
-		break
-	case permissions.CMSSlideshowCreator:
-		m[permissions.CMSSlideshowAdmin.GetString()] = true
-	case permissions.CMSSlideshowAdmin:
-		m[permissions.CMSAdmin.GetString()] = true
-		break
-	}
-
-	m[permissions.SuperUser.GetString()] = true
-	return
 }

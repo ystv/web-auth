@@ -17,11 +17,14 @@ import (
 type (
 	// Context is a struct that is applied to the templates.
 	Context struct {
-		Message  string
-		MsgType  string
-		Version  string
+		// Message is used for sending a message back to the user trying to log in, might decide to move later as it may not be needed
+		Message string
+		// MsgType is the bulma.io class used to indicate what should be displayed
+		MsgType string
+		// Callback is the address to redirect the user to
 		Callback string
-		User     *user.User
+		// User is the stored logged-in user
+		User user.User
 	}
 )
 
@@ -33,9 +36,8 @@ func (v *Views) getData(s *sessions.Session) *Context {
 		u = user.User{Authenticated: false}
 	}
 	c := Context{
-		Version:  v.conf.Version,
 		Callback: "/internal",
-		User:     &u,
+		User:     u,
 	}
 	return &c
 }

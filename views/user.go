@@ -275,7 +275,6 @@ func (v *Views) UserFunc(c echo.Context) error {
 
 	userID, err := strconv.Atoi(c.Param("userid"))
 	if err != nil {
-		//http.Error(c.Response(), err.Error(), http.StatusBadRequest)
 		return v.errorHandle(c, err)
 	}
 	user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})

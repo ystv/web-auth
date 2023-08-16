@@ -5,7 +5,7 @@
         <p class="menu-label">General</p>
         <ul class="menu-list">
             <li><a {{if eq $page "dashboard"}}class="is-active"{{end}} href="/internal">Dashboard</a></li>
-            {{if (memberAddPermission .UserID)}}
+            {{if (checkPermission .UserID "ManageMembers.Members.Add")}}
                 <li><a {{if eq $page "useradd"}}class="is-active"{{end}} href="/internal/useradd">Add User</a></li>
             {{else if (checkPermission .UserID "ManageMembers.Members.List")}}
                 <li><a {{if eq $page "users"}}class="is-active"{{end}} href="/internal/users">Users</a></li>
