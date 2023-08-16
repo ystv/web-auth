@@ -62,109 +62,101 @@ func (r *Router) loadRoutes() {
 	validMethods := []string{http.MethodGet, http.MethodPost}
 
 	internal := r.router.Group("/internal")
-
+	// internal is all the methods behind the login
 	if !r.router.Debug {
 		internal.Use(r.views.RequiresLogin)
 	}
-	{
-		internal.GET("", r.views.InternalFunc)
-		internal.Match(validMethods, "/settings", r.views.SettingsFunc)
+	internal.GET("", r.views.InternalFunc)
+	internal.Match(validMethods, "/settings", r.views.SettingsFunc)
 
-		if !r.config.Debug {
-			internal.GET("/permissions", r.views.PermissionsFunc, r.views.RequiresManageMembersPermissions)
-		} else {
-			internal.GET("/permissions", r.views.PermissionsFunc)
-		}
-		permission := internal.Group("/permission")
-		if !r.config.Debug {
-			permission.Use(r.views.RequiresManageMembersPermissions)
-		}
-		{
-			permission.Match(validMethods, "/add", r.views.PermissionAddFunc)
-			permissionID := permission.Group("/:permissionid")
-			{
-				permissionID.Match(validMethods, "/edit", r.views.PermissionEditFunc)
-				permissionID.Match(validMethods, "/delete", r.views.PermissionDeleteFunc)
-				permissionID.Match(validMethods, "", r.views.PermissionFunc)
-			}
-		}
-
-		if !r.config.Debug {
-			internal.GET("/roles", r.views.RolesFunc, r.views.RequiresManageMembersGroup)
-		} else {
-			internal.GET("/roles", r.views.RolesFunc)
-		}
-
-		role := internal.Group("/role")
-		if !r.config.Debug {
-			role.Use(r.views.RequiresManageMembersGroup)
-		}
-		{
-			role.Match(validMethods, "/add", r.views.RoleAddFunc)
-			roleID := role.Group("/:roleid")
-			{
-				roleID.Match(validMethods, "/edit", r.views.RoleEditFunc)
-				roleID.Match(validMethods, "/delete", r.views.RoleDeleteFunc)
-				roleID.Match(validMethods, "", r.views.RoleFunc)
-			}
-		}
-
-		if !r.config.Debug {
-			internal.Match(validMethods, "/users", r.views.UsersFunc, r.views.RequiresManageMembersMembersList)
-			internal.Match(validMethods, "/user/add", r.views.UserAddFunc, r.views.RequiresManageMembersMembersAdd)
-		} else {
-			internal.Match(validMethods, "/users", r.views.UsersFunc)
-			internal.Match(validMethods, "/user/add", r.views.UserAddFunc)
-		}
-
-		user := internal.Group("/user")
-		if !r.config.Debug {
-			user.Use(r.views.RequiresManageMembersMembersAdmin)
-		}
-		{
-			userID := user.Group("/:userid")
-			{
-				userID.Match(validMethods, "/edit", r.views.UserEditFunc)
-				userID.Match(validMethods, "/delete", r.views.UserDeleteFunc)
-				userID.Match(validMethods, "/reset", r.views.ResetUserPasswordFunc)
-				userID.Match(validMethods, "", r.views.UserFunc)
-			}
-		}
+	// permissions are for listing the permissions
+	if !r.config.Debug {
+		internal.GET("/permissions", r.views.PermissionsFunc, r.views.RequiresManageMembersPermissions)
+	} else {
+		internal.GET("/permissions", r.views.PermissionsFunc)
 	}
+
+	permission := internal.Group("/permission")
+	// permission is any function to do with a specific permission or new permission
+	if !r.config.Debug {
+		permission.Use(r.views.RequiresManageMembersPermissions)
+	}
+	permission.Match(validMethods, "/add", r.views.PermissionAddFunc)
+	permissionID := permission.Group("/:permissionid")
+	// permissionID is any function to do with a specific permission
+	permissionID.Match(validMethods, "/edit", r.views.PermissionEditFunc)
+	permissionID.Match(validMethods, "/delete", r.views.PermissionDeleteFunc)
+	permissionID.Match(validMethods, "", r.views.PermissionFunc)
+
+	// roles are for listing the roles
+	if !r.config.Debug {
+		internal.GET("/roles", r.views.RolesFunc, r.views.RequiresManageMembersGroup)
+	} else {
+		internal.GET("/roles", r.views.RolesFunc)
+	}
+
+	role := internal.Group("/role")
+	// role is any function to do with a specific role or new role
+	if !r.config.Debug {
+		role.Use(r.views.RequiresManageMembersGroup)
+	}
+	role.Match(validMethods, "/add", r.views.RoleAddFunc)
+	roleID := role.Group("/:roleid")
+	// roleID is any function to do with a specific role
+	roleID.Match(validMethods, "/edit", r.views.RoleEditFunc)
+	roleID.Match(validMethods, "/delete", r.views.RoleDeleteFunc)
+	roleID.Match(validMethods, "", r.views.RoleFunc)
+
+	// this section of users is a bit weird, users is valid for anyone who can list users and user/add can be used by add users permission
+	if !r.config.Debug {
+		internal.Match(validMethods, "/users", r.views.UsersFunc, r.views.RequiresManageMembersMembersList)
+		internal.Match(validMethods, "/user/add", r.views.UserAddFunc, r.views.RequiresManageMembersMembersAdd)
+	} else {
+		internal.Match(validMethods, "/users", r.views.UsersFunc)
+		internal.Match(validMethods, "/user/add", r.views.UserAddFunc)
+	}
+
+	user := internal.Group("/user/:userid")
+	// user is any function to do with a specific user
+	if !r.config.Debug {
+		user.Use(r.views.RequiresManageMembersMembersAdmin)
+	}
+	user.Match(validMethods, "/edit", r.views.UserEditFunc)
+	user.Match(validMethods, "/delete", r.views.UserDeleteFunc)
+	user.Match(validMethods, "/reset", r.views.ResetUserPasswordFunc)
+	user.Match(validMethods, "", r.views.UserFunc)
 
 	api := r.router.Group("/api")
-	{
-		api.GET("/set_token", r.views.SetTokenHandler)
-		api.GET("/test", r.views.TestAPI)
-		api.GET("/health", func(c echo.Context) error {
-			marshal, err := json.Marshal(struct {
-				Status int `json:"status"`
-			}{
-				Status: http.StatusOK,
-			})
-			if err != nil {
-				fmt.Println(err)
-				return &echo.HTTPError{
-					Code:     http.StatusBadRequest,
-					Message:  err.Error(),
-					Internal: err,
-				}
-			}
-
-			c.Response().Header().Set("Content-Type", "application/json")
-			return c.JSON(http.StatusOK, marshal)
+	// api is all the methods that are used by the api interactions
+	api.GET("/set_token", r.views.SetTokenHandler)
+	api.GET("/test", r.views.TestAPI)
+	api.GET("/health", func(c echo.Context) error {
+		marshal, err := json.Marshal(struct {
+			Status int `json:"status"`
+		}{
+			Status: http.StatusOK,
 		})
-	}
+		if err != nil {
+			fmt.Println(err)
+			return &echo.HTTPError{
+				Code:     http.StatusBadRequest,
+				Message:  err.Error(),
+				Internal: err,
+			}
+		}
+
+		c.Response().Header().Set("Content-Type", "application/json")
+		return c.JSON(http.StatusOK, marshal)
+	})
 
 	base := r.router.Group("/")
-	{
-		base.GET("", r.views.IndexFunc)
-		base.Match(validMethods, "login", r.views.LoginFunc)
-		base.Match(validMethods, "logout", r.views.LogoutFunc)
-		base.Match(validMethods, "signup", r.views.SignUpFunc)
-		base.Match(validMethods, "forgot", r.views.ForgotFunc)
-		base.Match(validMethods, "reset/:url", r.views.ResetURLFunc)
-	}
+	// base is the functions that don't require being logged in
+	base.GET("", r.views.IndexFunc)
+	base.Match(validMethods, "login", r.views.LoginFunc)
+	base.Match(validMethods, "logout", r.views.LogoutFunc)
+	base.Match(validMethods, "signup", r.views.SignUpFunc)
+	base.Match(validMethods, "forgot", r.views.ForgotFunc)
+	base.Match(validMethods, "reset/:url", r.views.ResetURLFunc)
 }
 
 func getFileSystem() http.FileSystem {
