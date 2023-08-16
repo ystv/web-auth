@@ -162,7 +162,10 @@ func New(conf *Config, host string) *Views {
 	if len(authKey) == 0 {
 		authKey = securecookie.GenerateRandomKey(64)
 	}
-	encryptionKey, _ := hex.DecodeString(conf.Security.EncryptionKey)
+	encryptionKey, err := hex.DecodeString(conf.Security.EncryptionKey)
+	if err != nil {
+		log.Fatalf("invalid encryption key format: %+v", err)
+	}
 	if len(encryptionKey) == 0 {
 		encryptionKey = securecookie.GenerateRandomKey(32)
 	}
