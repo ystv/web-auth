@@ -15,34 +15,6 @@ import (
 )
 
 type (
-	// Repo where all user data is stored
-	Repo interface {
-		CountUsers(ctx context.Context) (int, error)
-		CountUsersActive(ctx context.Context) (int, error)
-		CountUsers24Hours(ctx context.Context) (int, error)
-		CountUsersPastYear(ctx context.Context) (int, error)
-
-		GetUsers(ctx context.Context) ([]User, error)
-		GetUser(ctx context.Context, u User) (User, error)
-		GetUsersSizePage(ctx context.Context, size, page int) ([]User, error)
-		GetUsersSearch(ctx context.Context, search string) ([]User, error)
-		GetUsersSearchSizePage(ctx context.Context, search string, size, page int) ([]User, error)
-		GetUsersSorted(ctx context.Context, column, direction string) ([]User, error)
-		GetUsersSortedSizePage(ctx context.Context, column, direction string, size, page int) ([]User, error)
-		GetUsersSortedSearch(ctx context.Context, column, direction, search string) ([]User, error)
-		GetUsersSortedSearchSizePage(ctx context.Context, column, direction, search string, size, page int) ([]User, error)
-		VerifyUser(ctx context.Context, u User) (User, bool, error)
-		UpdateUserPassword(ctx context.Context, u User) (User, error)
-		UpdateUser(ctx context.Context, u User, userID int) (User, error)
-		SetUserLoggedIn(ctx context.Context, u User) error
-		DeleteUser(ctx context.Context, u User, userID int) error
-		GetPermissionsForUser(ctx context.Context, u User) ([]permission.Permission, error)
-		GetRolesForUser(ctx context.Context, u User) ([]role.Role, error)
-		GetUsersForRole(ctx context.Context, r role.Role) ([]User, error)
-		GetPermissionsForRole(ctx context.Context, r role.Role) ([]permission.Permission, error)
-		GetRolesForPermission(ctx context.Context, p permission.Permission) ([]role.Role, error)
-	}
-
 	// Store stores the dependencies
 	Store struct {
 		db    *sqlx.DB
@@ -129,10 +101,6 @@ type (
 		Description  string
 		Roles        []role.Role
 	}
-)
-
-var (
-	_ Repo = &Store{}
 )
 
 // NewUserRepo stores our dependency
