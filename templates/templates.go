@@ -174,22 +174,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 		"even": func(a int) bool {
 			return a%2 == 0
 		},
-		"incUInt64": func(a uint64) uint64 {
-			return a + 1
-		},
 		"len": func(a string) int {
-			return len(a)
-		},
-		"lenA": func(a []string) int {
-			return len(a)
-		},
-		"lenP": func(a []permission.Permission) int {
-			return len(a)
-		},
-		"lenR": func(a []role.Role) int {
-			return len(a)
-		},
-		"lenU": func(a []user.User) int {
 			return len(a)
 		},
 		"checkPermission": func(id int, p string) bool {
