@@ -120,8 +120,7 @@ func main() {
 	err = router1.Start()
 	if err != nil {
 		err1 := v.Mailer.SendErrorFatalMail(mail.Mail{
-			Error:       fmt.Errorf("the web server couldn't be started: %s... exiting", err),
-			UseDefaults: true,
+			Error: fmt.Errorf("the web server couldn't be started: %s... exiting", err),
 		})
 		if err1 != nil {
 			fmt.Println(err1)

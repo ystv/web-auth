@@ -16,6 +16,7 @@ type (
 		CheckSendable(item Mail) error
 		SendMail(item Mail) error
 		SendErrorFatalMail(item Mail) error
+		parseHeader(item Mail) (to, from string, cc, bcc []string)
 	}
 
 	// Mailer encapsulates the dependency
@@ -44,15 +45,14 @@ type (
 
 	// Mail represents an email to be sent
 	Mail struct {
-		Subject     string
-		To          string
-		Cc          []string
-		Bcc         []string
-		From        string
-		Error       error
-		UseDefaults bool
-		Tpl         *template.Template
-		TplData     interface{}
+		Subject string
+		To      string
+		Cc      []string
+		Bcc     []string
+		From    string
+		Error   error
+		Tpl     *template.Template
+		TplData interface{}
 	}
 )
 
@@ -101,14 +101,7 @@ func (m *Mailer) SendMail(item Mail) error {
 	if err != nil {
 		return err
 	}
-	var (
-		to, from string
-		cc, bcc  []string
-	)
-	to = item.To
-	cc = item.Cc
-	bcc = item.Bcc
-	from = item.From
+	to, from, cc, bcc := m.parseHeader(item)
 	body := bytes.Buffer{}
 	err = item.Tpl.Execute(&body, item.TplData)
 	if err != nil {
@@ -135,21 +128,7 @@ func (m *Mailer) SendErrorFatalMail(item Mail) error {
 	if err != nil {
 		return err
 	}
-	var (
-		to, from string
-		cc, bcc  []string
-	)
-	if item.UseDefaults {
-		to = m.Defaults.DefaultTo
-		cc = m.Defaults.DefaultCC
-		bcc = m.Defaults.DefaultBCC
-		from = m.Defaults.DefaultFrom
-	} else {
-		to = item.To
-		cc = item.Cc
-		bcc = item.Bcc
-		from = item.From
-	}
+	to, from, cc, bcc := m.parseHeader(item)
 	errorTemplate := template.New("Fatal Error Template")
 	errorTemplate = template.Must(errorTemplate.Parse("<body><p style=\"color: red;\">A <b>FATAL ERROR</b> OCCURRED!<br><br><code>{{.}}</code></p><br><br>We apologise for the inconvenience.</body>"))
 	body := bytes.Buffer{}
@@ -170,4 +149,31 @@ func (m *Mailer) SendErrorFatalMail(item Mail) error {
 		return fmt.Errorf("failed to set mail data: %w", email.Error)
 	}
 	return email.Send(m.SMTPClient)
+}
+
+func (m *Mailer) parseHeader(item Mail) (to, from string, cc, bcc []string) {
+	if len(item.To) > 0 {
+		to = item.To
+	} else {
+		to = m.Defaults.DefaultTo
+	}
+
+	if len(item.Cc) > 0 {
+		cc = item.Cc
+	} else {
+		cc = m.Defaults.DefaultCC
+	}
+
+	if len(item.Bcc) > 0 {
+		bcc = item.Bcc
+	} else {
+		bcc = m.Defaults.DefaultBCC
+	}
+
+	if len(item.From) > 0 {
+		from = item.From
+	} else {
+		from = m.Defaults.DefaultFrom
+	}
+	return
 }
