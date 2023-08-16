@@ -138,17 +138,7 @@ var _ Repo = &Views{}
 func New(conf *Config, host string) *Views {
 	v := &Views{}
 	// Connecting to stores
-	dbStore, err := db.NewStore(conf.DatabaseURL)
-	if err != nil {
-		if conf.Debug {
-			log.Printf("db failed: %+v", err)
-		} else {
-			log.Fatalf("db failed: %+v", err)
-		}
-	} else {
-		log.Printf("connected to db: %s", host)
-	}
-
+	dbStore := db.NewStore(conf.DatabaseURL, host, conf.Debug)
 	v.permission = permission.NewPermissionRepo(dbStore)
 	v.role = role.NewRoleRepo(dbStore)
 	v.user = user.NewUserRepo(dbStore)
@@ -156,18 +146,13 @@ func New(conf *Config, host string) *Views {
 	v.template = templates.NewTemplate(v.permission, v.role, v.user)
 
 	// Connecting to mail
-	v.Mailer, err = mail.NewMailer(mail.Config{
+	v.Mailer = mail.NewMailer(mail.Config{
 		Host:       conf.Mail.Host,
 		Port:       conf.Mail.Port,
 		Username:   conf.Mail.Username,
 		Password:   conf.Mail.Password,
 		DomainName: conf.DomainName,
 	})
-	if err != nil {
-		log.Printf("mailer failed: %+v", err)
-	} else {
-		log.Printf("connected to mailer: %s", conf.Mail.Host)
-	}
 
 	// Initialising cache
 	v.cache = cache.New(1*time.Hour, 1*time.Hour)

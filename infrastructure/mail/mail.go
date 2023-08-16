@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"html/template"
+	"log"
 	"time"
 
 	mail "github.com/xhit/go-simple-mail/v2"
@@ -59,7 +60,7 @@ type (
 var _ Repo = &Mailer{}
 
 // NewMailer creates a new SMTP client
-func NewMailer(config Config) (*Mailer, error) {
+func NewMailer(config Config) *Mailer {
 	smtpServer := mail.SMTPServer{
 		Host:           config.Host,
 		Port:           config.Port,
@@ -74,9 +75,12 @@ func NewMailer(config Config) (*Mailer, error) {
 
 	smtpClient, err := smtpServer.Connect()
 	if err != nil {
-		return &Mailer{nil, Defaults{}, false, config.DomainName}, err
+		log.Printf("mailer failed: %+v", err)
+		return &Mailer{nil, Defaults{}, false, config.DomainName}
+	} else {
+		log.Printf("connected to mailer: %s", config.Host)
+		return &Mailer{smtpClient, Defaults{}, true, config.DomainName}
 	}
-	return &Mailer{smtpClient, Defaults{}, true, config.DomainName}, err
 }
 
 // AddDefaults adds the default recipients
