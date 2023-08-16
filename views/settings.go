@@ -14,7 +14,7 @@ import (
 
 type (
 	SettingsTemplate struct {
-		User       *user.User
+		User       user.User
 		UserID     int
 		LastLogin  string
 		ActivePage string
