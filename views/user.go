@@ -57,11 +57,11 @@ func (v *Views) UsersFunc(c echo.Context) error {
 			return v.errorHandle(c, err)
 		}
 
-		column := c.Request().FormValue("column")
-		direction := c.Request().FormValue("direction")
-		search := c.Request().FormValue("search")
+		column := c.FormValue("column")
+		direction := c.FormValue("direction")
+		search := c.FormValue("search")
 		var size int
-		sizeRaw := c.Request().FormValue("size")
+		sizeRaw := c.FormValue("size")
 		if sizeRaw == "all" {
 			size = 0
 		} else {

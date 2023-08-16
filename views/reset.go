@@ -44,8 +44,8 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 			//}
 		}
 
-		password := c.Request().FormValue("password")
-		if password != c.Request().FormValue("confirmpassword") {
+		password := c.FormValue("password")
+		if password != c.FormValue("confirmpassword") {
 			return v.template.RenderNoNavsTemplate(c.Response(), nil, templates.ResetTemplate)
 		}
 

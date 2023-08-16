@@ -60,8 +60,8 @@ func (v *Views) LoginFunc(c echo.Context) error {
 			log.Printf("parse form fail: %v", err)
 			return v.errorHandle(c, err)
 		}
-		username := c.Request().FormValue("username")
-		password := c.Request().FormValue("password")
+		username := c.FormValue("username")
+		password := c.FormValue("password")
 		var u user.User
 		// Since we let users enter either an email or username, it's easier
 		// to just let it both for the query
