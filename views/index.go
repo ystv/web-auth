@@ -16,7 +16,7 @@ func (v *Views) IndexFunc(c echo.Context) error {
 	context := v.getData(session)
 
 	// Check if there is a callback request
-	callbackURL, err := url.Parse(c.Request().URL.Query().Get("callback"))
+	callbackURL, err := url.Parse(c.QueryParam("callback"))
 	if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) && callbackURL.String() != "" {
 		context.Callback = callbackURL.String()
 	}

@@ -125,15 +125,15 @@ func (v *Views) UsersFunc(c echo.Context) error {
 		return c.Redirect(http.StatusFound, redirect)
 	}
 
-	column := c.Request().URL.Query().Get("column")
-	direction := c.Request().URL.Query().Get("direction")
-	search := c.Request().URL.Query().Get("search")
+	column := c.QueryParam("column")
+	direction := c.QueryParam("direction")
+	search := c.QueryParam("search")
 	var size, page, count int
-	sizeRaw := c.Request().URL.Query().Get("size")
+	sizeRaw := c.QueryParam("size")
 	if sizeRaw == "all" {
 		size = 0
 	} else if len(sizeRaw) != 0 {
-		page, err = strconv.Atoi(c.Request().URL.Query().Get("page"))
+		page, err = strconv.Atoi(c.QueryParam("page"))
 		if err != nil {
 			page = 1
 			log.Println(err)
