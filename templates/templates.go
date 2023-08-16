@@ -68,7 +68,7 @@ func NewTemplate(p *permission.Store, r *role.Store, u *user.Store) *Templater {
 	}
 }
 
-func (t Template) GetString() string {
+func (t Template) String() string {
 	return string(t)
 }
 
@@ -78,7 +78,7 @@ func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Templ
 	t1 := template.New("_base.tmpl")
 	t1.Funcs(t.getFuncMaps())
 
-	t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", mainTmpl.GetString())
+	t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", mainTmpl.String())
 	if err != nil {
 		log.Printf("failed to get templates for template(RenderTemplate): %+v", err)
 		return err
@@ -93,7 +93,7 @@ func (t *Templater) RenderTemplatePagination(w io.Writer, data interface{}, main
 	t1 := template.New("_base.tmpl")
 	t1.Funcs(t.getFuncMaps())
 
-	t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl", mainTmpl.GetString())
+	t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl", mainTmpl.String())
 	if err != nil {
 		log.Printf("failed to get templates for template(RenderTemplatePagination): %+v", err)
 		return err
@@ -118,7 +118,7 @@ func (t *Templater) RenderNoNavsTemplate(w io.Writer, data interface{}, mainTmpl
 }
 
 func (t *Templater) RenderEmail(emailTemplate Template) *template.Template {
-	return template.Must(template.New(emailTemplate.GetString()).ParseFS(tmpls, emailTemplate.GetString()))
+	return template.Must(template.New(emailTemplate.String()).ParseFS(tmpls, emailTemplate.String()))
 }
 
 func (t *Templater) getFuncMaps() template.FuncMap {
@@ -207,7 +207,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			}
 
 			for _, perm := range p {
-				if perm.Name == permissions.ManageMembersMembersAdd.GetString() {
+				if perm.Name == permissions.ManageMembersMembersAdd.String() {
 					return true
 				}
 			}
@@ -224,7 +224,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			return template.HTML(output.String())
 		},
 		"parseHTMLPermission": func(p user.PermissionTemplate, userID int) template.HTML {
-			roleAdmin := t.permissionsParser(userID, permissions.ManageMembersGroup.GetString())
+			roleAdmin := t.permissionsParser(userID, permissions.ManageMembersGroup.String())
 			var output, roles strings.Builder
 			if len(p.Roles) > 0 {
 				roles.WriteString("Inherited by: <ol>")
@@ -248,8 +248,8 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			return template.HTML(output.String())
 		},
 		"parseHTMLRole": func(r user.RoleTemplate, userID int) template.HTML {
-			permissionAdmin := t.permissionsParser(userID, permissions.ManageMembersPermissions.GetString())
-			membersList := t.permissionsParser(userID, permissions.ManageMembersMembersList.GetString())
+			permissionAdmin := t.permissionsParser(userID, permissions.ManageMembersPermissions.String())
+			membersList := t.permissionsParser(userID, permissions.ManageMembersMembersList.String())
 			var output, perms, users strings.Builder
 			if len(r.Permissions) > 0 {
 				perms.WriteString("Permissions: <ol>")
@@ -278,7 +278,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 		},
 		"parseHTMLUsers": func(tmplUsers []user.StrippedUser, userID int) template.HTML {
 			//defer t.timer("tmplUser")()
-			memberAdmin := t.permissionsParser(userID, permissions.ManageMembersMembersAdmin.GetString())
+			memberAdmin := t.permissionsParser(userID, permissions.ManageMembersMembersAdmin.String())
 			var output strings.Builder
 			for _, tmplUser := range tmplUsers {
 				var enabled, deleted, ifView string
@@ -300,8 +300,8 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			return template.HTML(output.String())
 		},
 		"parseHTMLUser": func(u user.DetailedUser, userID int) template.HTML {
-			permissionAdmin := t.permissionsParser(userID, permissions.ManageMembersPermissions.GetString())
-			roleAdmin := t.permissionsParser(userID, permissions.ManageMembersGroup.GetString())
+			permissionAdmin := t.permissionsParser(userID, permissions.ManageMembersPermissions.String())
+			roleAdmin := t.permissionsParser(userID, permissions.ManageMembersGroup.String())
 			var output, perms, roles strings.Builder
 			var deleted, enabled, ldap, avatar, lastLogin, created, updated, deletedBy string
 			if len(u.Permissions) > 0 {
@@ -421,12 +421,12 @@ func (t *Templater) permissionsParser(id int, p string) bool {
 
 func GetValidPermissions(p permissions.Permissions) (m map[string]bool) {
 	m = make(map[string]bool)
-	if p.GetString() == permissions.MenuDisabled.GetString() {
-		m[p.GetString()] = true
+	if p.String() == permissions.MenuDisabled.String() {
+		m[p.String()] = true
 		return
 	}
 
-	m[p.GetString()] = true
+	m[p.String()] = true
 
 	switch p {
 	case permissions.ManageMembersAdmin:
@@ -451,61 +451,61 @@ func GetValidPermissions(p permissions.Permissions) (m map[string]bool) {
 		break
 	case permissions.ManageMembersMembersList:
 	case permissions.ManageMembersMembersAdd:
-		m[permissions.ManageMembersMembersAdmin.GetString()] = true
+		m[permissions.ManageMembersMembersAdmin.String()] = true
 	case permissions.ManageMembersPermissions:
 	case permissions.ManageMembersMicsKeyList:
 	case permissions.ManageMembersMiscUnpaidList:
 	case permissions.ManageMembersOfficers:
 	case permissions.ManageMembersGroup:
 	case permissions.ManageMembersMembersAdmin:
-		m[permissions.ManageMembersAdmin.GetString()] = true
+		m[permissions.ManageMembersAdmin.String()] = true
 		break
 	case permissions.EmailAccess:
 	case permissions.EmailAlumni:
 	case permissions.EmailOfficers:
-		m[permissions.EmailEveryone.GetString()] = true
+		m[permissions.EmailEveryone.String()] = true
 		break
 	case permissions.CalendarSocialCreator:
-		m[permissions.CalendarSocialAdmin.GetString()] = true
+		m[permissions.CalendarSocialAdmin.String()] = true
 	case permissions.CalendarSocialAdmin:
-		m[permissions.CalendarAdmin.GetString()] = true
+		m[permissions.CalendarAdmin.String()] = true
 		break
 	case permissions.CalendarShowCreator:
-		m[permissions.CalendarShowAdmin.GetString()] = true
+		m[permissions.CalendarShowAdmin.String()] = true
 	case permissions.CalendarShowAdmin:
-		m[permissions.CalendarAdmin.GetString()] = true
+		m[permissions.CalendarAdmin.String()] = true
 		break
 	case permissions.CalendarMeetingCreator:
-		m[permissions.CalendarMeetingAdmin.GetString()] = true
+		m[permissions.CalendarMeetingAdmin.String()] = true
 	case permissions.CalendarMeetingAdmin:
-		m[permissions.CalendarAdmin.GetString()] = true
+		m[permissions.CalendarAdmin.String()] = true
 		break
 	case permissions.CMSNewsItemCreator:
-		m[permissions.CMSNewsItemAdmin.GetString()] = true
+		m[permissions.CMSNewsItemAdmin.String()] = true
 	case permissions.CMSNewsItemAdmin:
-		m[permissions.CMSNewsAdmin.GetString()] = true
+		m[permissions.CMSNewsAdmin.String()] = true
 	case permissions.CMSEndboardAdmin:
 	case permissions.CMSView:
 	case permissions.CMSPermalinkAdmin:
 	case permissions.CMSNewsAdmin:
-		m[permissions.CMSAdmin.GetString()] = true
+		m[permissions.CMSAdmin.String()] = true
 		break
 	case permissions.CMSNewsCreator:
-		m[permissions.CMSNewsAdmin.GetString()] = true
-		m[permissions.CMSAdmin.GetString()] = true
+		m[permissions.CMSNewsAdmin.String()] = true
+		m[permissions.CMSAdmin.String()] = true
 		break
 	case permissions.CMSPageCreator:
-		m[permissions.CMSPageAdmin.GetString()] = true
+		m[permissions.CMSPageAdmin.String()] = true
 	case permissions.CMSPageAdmin:
-		m[permissions.CMSAdmin.GetString()] = true
+		m[permissions.CMSAdmin.String()] = true
 		break
 	case permissions.CMSSlideshowCreator:
-		m[permissions.CMSSlideshowAdmin.GetString()] = true
+		m[permissions.CMSSlideshowAdmin.String()] = true
 	case permissions.CMSSlideshowAdmin:
-		m[permissions.CMSAdmin.GetString()] = true
+		m[permissions.CMSAdmin.String()] = true
 		break
 	}
 
-	m[permissions.SuperUser.GetString()] = true
+	m[permissions.SuperUser.String()] = true
 	return
 }
