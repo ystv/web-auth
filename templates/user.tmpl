@@ -4,7 +4,7 @@
         <section class="hero is-info welcome is-small">
             <div class="hero-body">
                 <div class="container">
-                    <h1 class="title">You are currently viewing {{ .User.Firstname }} {{if ne .User.Firstname .User.Nickname}}({{ .User.Nickname }}) {{end}}{{ .User.Lastname }}.</h1>
+                    <h1 class="title">{{ .User.Firstname }} {{if ne .User.Firstname .User.Nickname}}({{ .User.Nickname }}) {{end}}{{ .User.Lastname }}</h1>
                 </div>
             </div>
         </section>
