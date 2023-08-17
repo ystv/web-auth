@@ -12,6 +12,9 @@ import (
 	"strconv"
 )
 
+//go:generate ./node_modules/.bin/mjml -r ./templates/mjml/forgotEmail.mjml -o ./templates/forgotEmail.tmpl
+//go:generate ./node_modules/.bin/mjml -r ./templates/mjml/resetEmail.mjml -o ./templates/resetEmail.tmpl
+
 var Version = "unknown"
 
 func main() {
