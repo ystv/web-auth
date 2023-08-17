@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	middleware2 "github.com/labstack/echo/v4/middleware"
 	"github.com/ystv/web-auth/middleware"
+	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/views"
 	"io/fs"
 	"net/http"
@@ -71,7 +72,8 @@ func (r *Router) loadRoutes() {
 
 	// permissions are for listing the permissions
 	if !r.config.Debug {
-		internal.GET("/permissions", r.views.PermissionsFunc, r.views.RequiresManageMembersPermissions)
+		//internal.GET("/permissions", r.views.PermissionsFunc, r.views.RequiresManageMembersPermissions)
+		internal.GET("/permissions", r.views.PermissionsFunc, r.views.RequirePermission(permissions.ManageMembersPermissions))
 	} else {
 		internal.GET("/permissions", r.views.PermissionsFunc)
 	}
@@ -79,7 +81,7 @@ func (r *Router) loadRoutes() {
 	permission := internal.Group("/permission")
 	// permission is any function to do with a specific permission or new permission
 	if !r.config.Debug {
-		permission.Use(r.views.RequiresManageMembersPermissions)
+		permission.Use(r.views.RequirePermission(permissions.ManageMembersPermissions))
 	}
 	permission.Match(validMethods, "/add", r.views.PermissionAddFunc)
 	permissionID := permission.Group("/:permissionid")
@@ -90,7 +92,7 @@ func (r *Router) loadRoutes() {
 
 	// roles are for listing the roles
 	if !r.config.Debug {
-		internal.GET("/roles", r.views.RolesFunc, r.views.RequiresManageMembersGroup)
+		internal.GET("/roles", r.views.RolesFunc, r.views.RequirePermission(permissions.ManageMembersGroup))
 	} else {
 		internal.GET("/roles", r.views.RolesFunc)
 	}
@@ -98,7 +100,7 @@ func (r *Router) loadRoutes() {
 	role := internal.Group("/role")
 	// role is any function to do with a specific role or new role
 	if !r.config.Debug {
-		role.Use(r.views.RequiresManageMembersGroup)
+		role.Use(r.views.RequirePermission(permissions.ManageMembersGroup))
 	}
 	role.Match(validMethods, "/add", r.views.RoleAddFunc)
 	roleID := role.Group("/:roleid")
@@ -109,8 +111,8 @@ func (r *Router) loadRoutes() {
 
 	// this section of users is a bit weird, users is valid for anyone who can list users and user/add can be used by add users permission
 	if !r.config.Debug {
-		internal.Match(validMethods, "/users", r.views.UsersFunc, r.views.RequiresManageMembersMembersList)
-		internal.Match(validMethods, "/user/add", r.views.UserAddFunc, r.views.RequiresManageMembersMembersAdd)
+		internal.Match(validMethods, "/users", r.views.UsersFunc, r.views.RequirePermission(permissions.ManageMembersMembersList))
+		internal.Match(validMethods, "/user/add", r.views.UserAddFunc, r.views.RequirePermission(permissions.ManageMembersMembersAdd))
 	} else {
 		internal.Match(validMethods, "/users", r.views.UsersFunc)
 		internal.Match(validMethods, "/user/add", r.views.UserAddFunc)
@@ -119,7 +121,7 @@ func (r *Router) loadRoutes() {
 	user := internal.Group("/user/:userid")
 	// user is any function to do with a specific user
 	if !r.config.Debug {
-		user.Use(r.views.RequiresManageMembersMembersAdmin)
+		user.Use(r.views.RequirePermission(permissions.ManageMembersMembersAdmin))
 	}
 	user.Match(validMethods, "/edit", r.views.UserEditFunc)
 	user.Match(validMethods, "/delete", r.views.UserDeleteFunc)

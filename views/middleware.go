@@ -45,201 +45,36 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-// RequiresMinimumPermission is a middleware that will
-// ensure that the user has the given permission.
-func (v *Views) RequiresMinimumPermission(next echo.HandlerFunc, p permissions.Permissions) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-		if err != nil {
-			log.Println(err)
-			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
-			return v.LoginFunc(c)
-		}
-
-		u := helpers.GetUser(session)
-
-		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
-		if err != nil {
-			log.Println(err)
-			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
-			return v.LoginFunc(c)
-		}
-
-		acceptedPerms := permission.SufficientPermissionsFor(p)
-
-		for _, perm := range perms {
-			if acceptedPerms[perm.Name] {
-				return next(c)
+func (v *Views) RequirePermission(p permissions.Permissions) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+			if err != nil {
+				log.Println(err)
+				http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
+				return v.LoginFunc(c)
 			}
-		}
 
-		c.Response().WriteHeader(http.StatusForbidden)
-		return v.Error500(c)
-	}
-}
+			u := helpers.GetUser(session)
 
-// RequiresManageMembersPermissions is a middleware that will
-// ensure that the user has ManageMembersPermissions.
-func (v *Views) RequiresManageMembersPermissions(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-		if err != nil {
-			log.Println(err)
-			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
-			return v.LoginFunc(c)
-		}
-
-		u := helpers.GetUser(session)
-
-		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
-		if err != nil {
-			log.Println(err)
-			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
-			return v.LoginFunc(c)
-		}
-
-		acceptedPerms := permission.SufficientPermissionsFor(permissions.ManageMembersPermissions)
-
-		for _, perm := range perms {
-			if acceptedPerms[perm.Name] {
-				return next(c)
+			perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
+			if err != nil {
+				log.Println(err)
+				http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
+				return v.LoginFunc(c)
 			}
-		}
 
-		c.Response().WriteHeader(http.StatusForbidden)
-		return v.Error500(c)
-	}
-}
+			acceptedPerms := permission.SufficientPermissionsFor(p)
 
-// RequiresManageMembersGroup is a middleware that will
-// ensure that the user has ManageMembersGroup.
-func (v *Views) RequiresManageMembersGroup(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-		if err != nil {
-			log.Println(err)
-			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
-			return v.LoginFunc(c)
-		}
-
-		u := helpers.GetUser(session)
-
-		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
-		if err != nil {
-			log.Println(err)
-			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
-			return v.LoginFunc(c)
-		}
-
-		acceptedPerms := permission.SufficientPermissionsFor(permissions.ManageMembersGroup)
-
-		for _, perm := range perms {
-			if acceptedPerms[perm.Name] {
-				return next(c)
+			for _, perm := range perms {
+				if acceptedPerms[perm.Name] {
+					return next(c)
+				}
 			}
+
+			c.Response().WriteHeader(http.StatusForbidden)
+			return v.Error500(c)
 		}
-
-		c.Response().WriteHeader(http.StatusForbidden)
-		return v.Error500(c)
-	}
-}
-
-// RequiresManageMembersMembersList is a middleware that will
-// ensure that the user has ManageMembersMembersList.
-func (v *Views) RequiresManageMembersMembersList(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-		if err != nil {
-			log.Println(err)
-			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
-			return v.LoginFunc(c)
-		}
-
-		u := helpers.GetUser(session)
-
-		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
-		if err != nil {
-			log.Println(err)
-			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
-			return v.LoginFunc(c)
-		}
-
-		acceptedPerms := permission.SufficientPermissionsFor(permissions.ManageMembersMembersList)
-
-		for _, perm := range perms {
-			if acceptedPerms[perm.Name] {
-				return next(c)
-			}
-		}
-
-		c.Response().WriteHeader(http.StatusForbidden)
-		return v.Error500(c)
-	}
-}
-
-// RequiresManageMembersMembersAdd is a middleware that will
-// ensure that the user has ManageMembersMembersAdd.
-func (v *Views) RequiresManageMembersMembersAdd(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-		if err != nil {
-			log.Println(err)
-			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
-			return v.LoginFunc(c)
-		}
-
-		u := helpers.GetUser(session)
-
-		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
-		if err != nil {
-			log.Println(err)
-			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
-			return v.LoginFunc(c)
-		}
-
-		acceptedPerms := permission.SufficientPermissionsFor(permissions.ManageMembersMembersAdd)
-
-		for _, perm := range perms {
-			if acceptedPerms[perm.Name] {
-				return next(c)
-			}
-		}
-
-		c.Response().WriteHeader(http.StatusForbidden)
-		return v.Error500(c)
-	}
-}
-
-// RequiresManageMembersMembersAdmin is a middleware that will
-// ensure that the user has ManageMembersMembersAdmin.
-func (v *Views) RequiresManageMembersMembersAdmin(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-		if err != nil {
-			log.Println(err)
-			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
-			return v.LoginFunc(c)
-		}
-
-		u := helpers.GetUser(session)
-
-		perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
-		if err != nil {
-			log.Println(err)
-			http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
-			return v.LoginFunc(c)
-		}
-
-		acceptedPerms := permission.SufficientPermissionsFor(permissions.ManageMembersMembersAdmin)
-
-		for _, perm := range perms {
-			if acceptedPerms[perm.Name] {
-				return next(c)
-			}
-		}
-
-		c.Response().WriteHeader(http.StatusForbidden)
-		return v.Error500(c)
 	}
 }
 
