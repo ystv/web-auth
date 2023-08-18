@@ -1,6 +1,7 @@
 package views
 
 import (
+	"errors"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/schema"
@@ -30,19 +31,19 @@ func (v *Views) SignUpFunc(c echo.Context) error {
 		// Parsing form to struct
 		err := c.Request().ParseForm()
 		if err != nil {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse form for signup: %w", err))
 		}
 		uSignup := UserSignup{}
 		err = decoder.Decode(&uSignup, c.Request().PostForm)
 		if err != nil {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to get form values for signup: %w", err))
 		}
 		uSignup.Email += "@york.ac.uk"
 		err = v.validate.Struct(uSignup)
 		if err != nil {
-			if _, ok := err.(*validator.ValidationErrors); ok {
-				err = fmt.Errorf("failed to validate: %w", err)
-				return v.errorHandle(c, err)
+			var validationErrors *validator.ValidationErrors
+			if errors.As(err, &validationErrors) {
+				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to validate: %w", err))
 			}
 			issues := ""
 			for _, err := range err.(validator.ValidationErrors) {

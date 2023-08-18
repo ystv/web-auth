@@ -57,8 +57,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		// Parsing form to struct
 		err = c.Request().ParseForm()
 		if err != nil {
-			log.Printf("parse form fail: %v", err)
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to parse form for login: %w", err))
 		}
 		username := c.FormValue("username")
 		password := c.FormValue("password")
@@ -71,7 +70,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		u.Password = null.StringFrom(password)
 
 		callback := "/internal"
-		callbackURL, err := url.Parse(c.QueryParam("callback"))
+		callbackURL, err := url.Parse("callback")
 		if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) && callbackURL.String() != "" {
 			callback = callbackURL.String()
 		}
@@ -81,8 +80,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 			log.Printf("failed login for \"%s\": %v", u.Username, err)
 			err = session.Save(c.Request(), c.Response())
 			if err != nil {
-				//http.Error(w, err.Error(), http.StatusInternalServerError)
-				return v.errorHandle(c, err)
+				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to save session for login: %w", err))
 			}
 
 			if resetPw {
@@ -107,7 +105,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		err = v.user.SetUserLoggedIn(c.Request().Context(), u)
 		if err != nil {
 			err = fmt.Errorf("failed to set user logged in: %w", err)
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to set user logged in for login: %w", err))
 		}
 		u.Authenticated = true
 		// This is a bit of a cheat, just so we can have the last login displayed for internal
@@ -120,8 +118,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 
 		err = session.Save(c.Request(), c.Response())
 		if err != nil {
-			err = fmt.Errorf("failed to save user session: %w", err)
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to save user session for login: %w", err))
 		}
 
 		log.Printf("user \"%s\" is authenticated", u.Username)

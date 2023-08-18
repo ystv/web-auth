@@ -1,6 +1,7 @@
 package views
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/patrickmn/go-cache"
@@ -61,6 +62,11 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 				Password:   v.conf.Mail.Password,
 				DomainName: v.conf.DomainName,
 			})
+			if v.Mailer == nil {
+				log.Printf("no Mailer present")
+				log.Printf("reset email: %s, code: %s, reset link: https://%s/reset?code=%s", user1.Email, url, v.conf.DomainName, url)
+				return v.template.RenderNoNavsTemplate(c.Response().Writer, notification, templates.NotificationTemplate)
+			}
 
 			file := mail.Mail{
 				Subject: "YSTV Security - Reset Password",
@@ -78,7 +84,7 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 
 			err = v.Mailer.SendMail(file)
 			if err != nil {
-				return v.errorHandle(c, err)
+				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to send email for forgot: %w", err))
 			}
 			log.Printf("request for password reset email: \"%s\"", user1.Email)
 		} else {

@@ -54,7 +54,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 	if c.Request().Method == "POST" {
 		err = c.Request().ParseForm()
 		if err != nil {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("unable to parse form for users: %w", err))
 		}
 
 		column := c.FormValue("column")
@@ -69,7 +69,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 			if err != nil {
 				size = 0
 			} else if size <= 0 {
-				return v.errorHandle(c, fmt.Errorf("invalid size, must be positive"))
+				return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid size, must be positive"))
 			} else if size != 5 && size != 10 && size != 25 && size != 50 && size != 75 && size != 100 {
 				size = 25
 			}
@@ -136,27 +136,24 @@ func (v *Views) UsersFunc(c echo.Context) error {
 		page, err = strconv.Atoi(c.QueryParam("page"))
 		if err != nil {
 			page = 1
-			log.Println(err)
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("unable to parse page for users: %w", err))
 		}
 		size, err = strconv.Atoi(sizeRaw)
 		if err != nil {
 			size = 0
 		} else if size <= 0 {
-			err = v.errorHandle(c, fmt.Errorf("invalid size, must be positive"))
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid size, must be positive"))
 		} else if size != 5 && size != 10 && size != 25 && size != 50 && size != 75 && size != 100 {
 			size = 0
 		}
 
 		count, err = v.user.CountUsers(c.Request().Context())
 		if err != nil {
-			log.Println(err)
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get total users for users: %w", err))
 		}
 
 		if count <= size*(page-1) {
-			log.Println("size and page given is not valid")
-			return v.errorHandle(c, fmt.Errorf("size and page given is not valid"))
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("size and page given is not valid"))
 		}
 	}
 
@@ -186,14 +183,14 @@ func (v *Views) UsersFunc(c echo.Context) error {
 				if err != nil {
 					log.Println(err)
 					if !v.conf.Debug {
-						return v.errorHandle(c, err)
+						return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get users for users: %w", err))
 					}
 				}
 				tmp, err := v.user.GetUsersSortedSearch(c.Request().Context(), column, direction, search)
 				if err != nil {
 					log.Println(err)
 					if !v.conf.Debug {
-						return v.errorHandle(c, err)
+						return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get users for users: %w", err))
 					}
 				}
 				count = len(tmp)
@@ -214,7 +211,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 			if err != nil {
 				log.Println(err)
 				if !v.conf.Debug {
-					return v.errorHandle(c, err)
+					return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get users for users: %w", err))
 				}
 			}
 			count = len(tmp)
@@ -232,7 +229,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 	if err != nil {
 		log.Println(err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get users for users: %w", err))
 		}
 	}
 	tplUsers := DBToTemplateType(dbUsers)
@@ -275,13 +272,13 @@ func (v *Views) UserFunc(c echo.Context) error {
 
 	userID, err := strconv.Atoi(c.Param("userid"))
 	if err != nil {
-		return v.errorHandle(c, err)
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse userid for user: %w", err))
 	}
 	user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 	if err != nil {
 		log.Printf("failed to get user in user: %+v", err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user for user: %w", err))
 		}
 	}
 
@@ -291,7 +288,7 @@ func (v *Views) UserFunc(c echo.Context) error {
 	if err != nil {
 		log.Println(err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permissions for user: %w", err))
 		}
 	}
 
@@ -301,7 +298,7 @@ func (v *Views) UserFunc(c echo.Context) error {
 	if err != nil {
 		log.Println(err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get roles for user: %w", err))
 		}
 	}
 

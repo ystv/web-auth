@@ -1,11 +1,13 @@
 package views
 
 import (
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/role"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 	"log"
+	"net/http"
 	"strconv"
 )
 
@@ -39,9 +41,9 @@ func (v *Views) RolesFunc(c echo.Context) error {
 
 	roles, err := v.role.GetRoles(c.Request().Context())
 	if err != nil {
-		log.Println(err)
+		log.Printf("failed to get roles for roles: %+v", err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get roles for roles: %w", err))
 		}
 	}
 
@@ -63,7 +65,7 @@ func (v *Views) RoleFunc(c echo.Context) error {
 	if err != nil {
 		log.Printf("failed to get roleid for role: %+v", err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get roleid for role: %w", err))
 		}
 	}
 
@@ -71,7 +73,7 @@ func (v *Views) RoleFunc(c echo.Context) error {
 	if err != nil {
 		log.Printf("failed to get role for role: %+v", err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get role for role: %w", err))
 		}
 	}
 
@@ -81,7 +83,7 @@ func (v *Views) RoleFunc(c echo.Context) error {
 	if err != nil {
 		log.Printf("failed to get permissions for role: %+v", err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to permissions for role: %w", err))
 		}
 	}
 
@@ -89,7 +91,7 @@ func (v *Views) RoleFunc(c echo.Context) error {
 	if err != nil {
 		log.Printf("failed to get users for role: %+v", err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get users for role: %w", err))
 		}
 	}
 

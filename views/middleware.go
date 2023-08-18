@@ -2,6 +2,7 @@ package views
 
 import (
 	"context"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/infrastructure/permission"
 	"github.com/ystv/web-auth/permission/permissions"
@@ -32,8 +33,7 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 			session.Options.MaxAge = -1
 			err = session.Save(c.Request(), c.Response())
 			if err != nil {
-				//http.Error(w, err.Error(), http.StatusInternalServerError)
-				return v.errorHandle(c, err)
+				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to save session for requiresLogin: %w", err))
 			}
 			return c.Redirect(http.StatusFound, "/")
 		}
@@ -72,8 +72,7 @@ func (v *Views) RequirePermission(p permissions.Permissions) echo.MiddlewareFunc
 				}
 			}
 
-			c.Response().WriteHeader(http.StatusForbidden)
-			return v.Error500(c)
+			return echo.NewHTTPError(http.StatusForbidden, fmt.Errorf("you are not authorised for accessing this"))
 		}
 	}
 }

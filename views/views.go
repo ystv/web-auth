@@ -3,7 +3,6 @@ package views
 import (
 	"encoding/gob"
 	"encoding/hex"
-	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
 	"github.com/ystv/web-auth/templates"
@@ -119,12 +118,12 @@ func New(conf *Config, host string) *Views {
 	return v
 }
 
-func (v *Views) errorHandle(c echo.Context, err error) error {
-	data := struct {
-		Error string
-	}{
-		Error: err.Error(),
-	}
-	log.Println(data.Error)
-	return v.template.RenderNoNavsTemplate(c.Response().Writer, data, templates.ErrorTemplate)
-}
+//func (v *Views) errorHandle(c echo.Context, err error) error {
+//	data := struct {
+//		Error string
+//	}{
+//		Error: err.Error(),
+//	}
+//	log.Println(data.Error)
+//	return v.template.RenderNoNavsTemplate(c.Response().Writer, data, templates.ErrorTemplate)
+//}

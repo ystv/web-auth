@@ -1,9 +1,11 @@
 package views
 
 import (
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/templates"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -36,7 +38,7 @@ func (v *Views) InternalFunc(c echo.Context) error {
 	if err != nil {
 		log.Println(err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get number of users for interal: %w", err))
 		}
 	}
 
@@ -44,7 +46,7 @@ func (v *Views) InternalFunc(c echo.Context) error {
 	if err != nil {
 		log.Println(err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get number of active users for interal: %w", err))
 		}
 	}
 
@@ -52,7 +54,7 @@ func (v *Views) InternalFunc(c echo.Context) error {
 	if err != nil {
 		log.Println(err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get number of users in the past 24 hours for interal: %w", err))
 		}
 	}
 
@@ -60,7 +62,7 @@ func (v *Views) InternalFunc(c echo.Context) error {
 	if err != nil {
 		log.Println(err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get number of users in the past year for interal: %w", err))
 		}
 	}
 

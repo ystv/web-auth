@@ -1,11 +1,13 @@
 package views
 
 import (
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 	"log"
+	"net/http"
 	"strconv"
 )
 
@@ -41,7 +43,7 @@ func (v *Views) PermissionsFunc(c echo.Context) error {
 	if err != nil {
 		log.Printf("failed to get permissions for permissions: %+v", err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permissions for permission: %w", err))
 		}
 	}
 
@@ -64,14 +66,14 @@ func (v *Views) PermissionFunc(c echo.Context) error {
 	if err != nil {
 		log.Printf("failed to get permissionid for permission: %+v", err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to parse permissionid for permission: %w", err))
 		}
 	}
 	permission1, err := v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: permissionID})
 	if err != nil {
 		log.Printf("failed to get permission for permission: %+v", err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permission for permission: %w", err))
 		}
 	}
 

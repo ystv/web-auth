@@ -19,17 +19,13 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 
 	userID, found := v.cache.Get(url)
 	if !found {
-		return v.errorHandle(c, fmt.Errorf("failed to get url"))
-		//if err != nil {
-		//	fmt.Println(err)
-		//}
-		//return
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get url for reset"))
 	}
 
 	user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID.(int)})
 	if err != nil {
 		v.cache.Delete(url)
-		return v.errorHandle(c, fmt.Errorf("url is invalid because this user doesn't exist"))
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("url is invalid, failed to get user : %w", err))
 	}
 
 	switch c.Request().Method {
@@ -38,10 +34,7 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 	case "POST":
 		err = c.Request().ParseForm()
 		if err != nil {
-			return v.errorHandle(c, err)
-			//if err != nil {
-			//	fmt.Println(err)
-			//}
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to parse form for reset: %w", err))
 		}
 
 		password := c.FormValue("password")
@@ -77,24 +70,19 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 
 	userID, err := strconv.Atoi(c.Param("userid"))
 	if err != nil {
-		return v.errorHandle(c, err)
-		//if err != nil {
-		//	fmt.Println(err)
-		//}
-		//return
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to parse userid for reset: %w", err))
 	}
 
 	user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 	if err != nil {
-		log.Println(err)
-		return v.errorHandle(c, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user for reset: %w", err))
 	}
 
 	user1.ResetPw = true
 
 	_, err = v.user.UpdateUser(c.Request().Context(), user1, c1.User.UserID)
 	if err != nil {
-		return v.errorHandle(c, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to update user for reset: %w", err))
 	}
 
 	url := uuid.NewString()
@@ -133,10 +121,7 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 
 		err = v.Mailer.SendMail(file)
 		if err != nil {
-			return v.errorHandle(c, err)
-			//if err != nil {
-			//	fmt.Println(err)
-			//}
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to send email for login: %w", err))
 		}
 
 		log.Printf("request for password reset email: \"%s\"", user1.Email)
