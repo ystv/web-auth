@@ -22,13 +22,13 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 			log.Println(err)
 			return v.LoginFunc(c)
 		}
-		user1 := helpers.GetUser(session)
-		user2, err := v.user.GetUser(c.Request().Context(), user1)
+		userFromSession := helpers.GetUser(session)
+		userFromDB, err := v.user.GetUser(c.Request().Context(), userFromSession)
 		if err != nil {
 			log.Println(err)
 			return err
 		}
-		if user2.DeletedBy.Valid || !user1.Enabled {
+		if userFromDB.DeletedBy.Valid || !userFromSession.Enabled {
 			session.Values["user"] = &user.User{}
 			session.Options.MaxAge = -1
 			err = session.Save(c.Request(), c.Response())
@@ -37,7 +37,7 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 			return c.Redirect(http.StatusFound, "/")
 		}
-		if !user1.Authenticated {
+		if !userFromSession.Authenticated {
 			// Not authenticated
 			return c.Redirect(http.StatusFound, "/")
 		}
