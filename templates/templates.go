@@ -269,8 +269,9 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 		},
 		"parseUsersIntoHTML": func(tmplUsers []user.StrippedUser, userID int) template.HTML {
 			memberAdmin := t.permissionsParser(userID, permissions.ManageMembersMembersAdmin.String())
-			var output, ifView strings.Builder
+			var output strings.Builder
 			for _, tmplUser := range tmplUsers {
+				var ifView strings.Builder
 				var enabled, deleted string
 				if tmplUser.Enabled {
 					enabled = "Enabled"
