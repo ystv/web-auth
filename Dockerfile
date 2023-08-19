@@ -23,10 +23,10 @@ RUN go mod download
 COPY . .
 
 # Initialising NPM environment for MJML
-RUN npm init -y && npm install mjml
+RUN #npm init -y && npm install mjml
 
 # Generate the mjml files to tmpl
-RUN go generate
+RUN #go generate
 
 # Set build variables
 RUN echo -n "-X 'main.Version=$WAUTH_VERSION_ARG" > ./ldflags && \
