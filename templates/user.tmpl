@@ -45,7 +45,7 @@
             </div>
         </div>
     </div>
-    {{if not .User.DeletedBy.Valid}}
+    {{if not .User.DeletedAt.Valid}}
         {{template "modals" .}}
     {{end}}
 {{end}}
