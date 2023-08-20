@@ -35,17 +35,30 @@ func (v *Views) bindPermissionToTemplate(p1 permission.Permission) user.Permissi
 
 // PermissionsFunc handles a permissions request
 func (v *Views) PermissionsFunc(c echo.Context) error {
+	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+
+	c1 := v.getData(session)
+
 	permissions, err := v.permission.GetPermissions(c.Request().Context())
 	if err != nil {
 		log.Printf("failed to get permissions for permissions: %+v", err)
 		if !v.conf.Debug {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permissions for permission: %w", err))
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permissions for permissions: %w", err))
+		}
+	}
+
+	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+	if err != nil {
+		log.Printf("failed to get user permissions for permissions: %+v", err)
+		if !v.conf.Debug {
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for permissions: %+v", err))
 		}
 	}
 
 	data := PermissionsTemplate{
-		Permissions: permissions,
-		ActivePage:  "permissions",
+		Permissions:     permissions,
+		UserPermissions: p1,
+		ActivePage:      "permissions",
 	}
 
 	return v.template.RenderTemplate(c.Response(), data, templates.PermissionsTemplate, templates.RegularType)
