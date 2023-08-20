@@ -410,13 +410,7 @@ func (t *Templater) parseUserName(u user.User) (name string) {
 func (t *Templater) permissionsParser(id int, p string) bool {
 	m := permission1.SufficientPermissionsFor(permissions.Permissions(p))
 
-	u, err := t.User.GetUser(context.Background(), user.User{UserID: id})
-	if err != nil {
-		log.Printf("failed to get user for template(permissionParser): %+v", err)
-		return false
-	}
-
-	p1, err := t.User.GetPermissionsForUser(context.Background(), u)
+	p1, err := t.User.GetPermissionsForUser(context.Background(), user.User{UserID: id})
 	if err != nil {
 		log.Printf("failed to get permission for template(permissionParser): %+v", err)
 		return false
