@@ -54,15 +54,15 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 		v.cache.Set(url, user1.UserID, cache.DefaultExpiration)
 
 		// Valid request, send email with reset code
-		if v.Mailer != nil {
-			v.Mailer = mail.NewMailer(mail.Config{
+		if v.mailer != nil {
+			v.mailer = mail.NewMailer(mail.Config{
 				Host:       v.conf.Mail.Host,
 				Port:       v.conf.Mail.Port,
 				Username:   v.conf.Mail.Username,
 				Password:   v.conf.Mail.Password,
 				DomainName: v.conf.DomainName,
 			})
-			if v.Mailer == nil {
+			if v.mailer == nil {
 				log.Printf("no Mailer present")
 				log.Printf("reset email: %s, code: %s, reset link: https://%s/reset?code=%s", user1.Email, url, v.conf.DomainName, url)
 				return v.template.RenderTemplate(c.Response().Writer, notification, templates.NotificationTemplate, templates.NoNavType)
@@ -82,7 +82,7 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 				},
 			}
 
-			err = v.Mailer.SendMail(file)
+			err = v.mailer.SendMail(file)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to send email for forgot: %w", err))
 			}

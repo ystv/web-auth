@@ -96,8 +96,8 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 	}
 
 	// Valid request, send email with reset code
-	if v.Mailer != nil {
-		v.Mailer = mail.NewMailer(mail.Config{
+	if v.mailer != nil {
+		v.mailer = mail.NewMailer(mail.Config{
 			Host:       v.conf.Mail.Host,
 			Port:       v.conf.Mail.Port,
 			Username:   v.conf.Mail.Username,
@@ -119,7 +119,7 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 			},
 		}
 
-		err = v.Mailer.SendMail(file)
+		err = v.mailer.SendMail(file)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to send email for login: %w", err))
 		}

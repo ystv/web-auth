@@ -54,7 +54,7 @@ type (
 		role       *role.Store
 		user       *user.Store
 		cookie     *sessions.CookieStore
-		Mailer     *mail.Mailer
+		mailer     *mail.Mailer
 		cache      *cache.Cache
 		validate   *validator.Validate
 		template   *templates.Templater
@@ -73,7 +73,7 @@ func New(conf *Config, host string) *Views {
 	v.template = templates.NewTemplate(v.permission, v.role, v.user)
 
 	// Connecting to mail
-	v.Mailer = mail.NewMailer(mail.Config{
+	v.mailer = mail.NewMailer(mail.Config{
 		Host:       conf.Mail.Host,
 		Port:       conf.Mail.Port,
 		Username:   conf.Mail.Username,
