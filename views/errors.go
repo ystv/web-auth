@@ -18,9 +18,11 @@ func (v *Views) CustomHTTPErrorHandler(err error, c echo.Context) {
 	}
 	c.Response().WriteHeader(status)
 	data := struct {
-		Error string
+		Code  int
+		Error interface{}
 	}{
-		Error: err.Error(),
+		Code:  status,
+		Error: he.Message,
 	}
 	err1 := v.template.RenderTemplate(c.Response().Writer, data, templates.ErrorTemplate, templates.NoNavType)
 	if err1 != nil {
