@@ -6,7 +6,6 @@ import (
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
 	"github.com/ystv/web-auth/templates"
-	"log"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -90,10 +89,7 @@ func New(conf *Config, host string) *Views {
 	if len(authKey) == 0 {
 		authKey = securecookie.GenerateRandomKey(64)
 	}
-	encryptionKey, err := hex.DecodeString(conf.Security.EncryptionKey)
-	if err != nil {
-		log.Fatalf("invalid encryption key format: %+v", err)
-	}
+	encryptionKey, _ := hex.DecodeString(conf.Security.EncryptionKey)
 	if len(encryptionKey) == 0 {
 		encryptionKey = securecookie.GenerateRandomKey(32)
 	}
@@ -117,13 +113,3 @@ func New(conf *Config, host string) *Views {
 
 	return v
 }
-
-//func (v *Views) errorHandle(c echo.Context, err error) error {
-//	data := struct {
-//		Error string
-//	}{
-//		Error: err.Error(),
-//	}
-//	log.Println(data.Error)
-//	return v.template.RenderNoNavsTemplate(c.Response().Writer, data, templates.ErrorTemplate)
-//}
