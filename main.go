@@ -5,7 +5,6 @@ import (
 	"github.com/ystv/web-auth/infrastructure/mail"
 
 	"github.com/joho/godotenv"
-	"github.com/ystv/web-auth/routes"
 	"github.com/ystv/web-auth/views"
 	"log"
 	"os"
@@ -115,7 +114,7 @@ func main() {
 
 	v := views.New(conf, host)
 
-	router1 := router.New(&router.NewRouter{
+	router1 := NewRouterFunc(&NewRouter{
 		Config: conf,
 		Views:  v,
 	})

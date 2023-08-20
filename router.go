@@ -1,4 +1,4 @@
-package router
+package main
 
 import (
 	"embed"
@@ -29,7 +29,7 @@ type (
 	}
 )
 
-func New(conf *NewRouter) *Router {
+func NewRouterFunc(conf *NewRouter) *Router {
 	r := &Router{
 		config: conf.Config,
 		router: echo.New(),
