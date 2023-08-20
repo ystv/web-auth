@@ -1,6 +1,7 @@
 package views
 
 import (
+	"errors"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/ystv/web-auth/templates"
@@ -8,6 +9,14 @@ import (
 
 func (v *Views) CustomHTTPErrorHandler(err error, c echo.Context) {
 	log.Print(err)
+	var he *echo.HTTPError
+	var status int
+	if errors.As(err, &he) {
+		status = he.Code
+	} else {
+		status = 500
+	}
+	c.Response().WriteHeader(status)
 	data := struct {
 		Error string
 	}{
