@@ -5,58 +5,21 @@ import (
 	"fmt"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
-	"time"
 )
 
 // countUsers will get the number of total users
-func (s *Store) countUsers(ctx context.Context) (int, error) {
-	var count int
-	err := s.db.GetContext(ctx, &count,
-		`SELECT COUNT(*)
-		FROM people.users;`)
+func (s *Store) countUsersAll(ctx context.Context) (CountUsers, error) {
+	var countUsers CountUsers
+	err := s.db.GetContext(ctx, &countUsers,
+		`SELECT
+		(SELECT COUNT(*) FROM people.users) as total_users,
+		(SELECT COUNT(*) FROM people.users WHERE enabled = true AND deleted_by IS NULL AND deleted_at IS NULL) as active_users,
+		(SELECT COUNT(*) FROM people.users WHERE last_login > TO_TIMESTAMP('2023-08-19 21:52:05', 'YYYY-MM-DD HH24:MI:SS')) as active_users_past_24_hours,
+		(SELECT COUNT(*) FROM people.users WHERE last_login > TO_TIMESTAMP('2022-08-20 21:52:05', 'YYYY-MM-DD HH24:MI:SS')) as active_users_past_year;`)
 	if err != nil {
-		return count, fmt.Errorf("failed to count users from db: %w", err)
+		return countUsers, fmt.Errorf("failed to count users all from db: %w", err)
 	}
-	return count, nil
-}
-
-// countUsersActive will get the number of total active users
-func (s *Store) countUsersActive(ctx context.Context) (int, error) {
-	var count int
-	err := s.db.GetContext(ctx, &count,
-		`SELECT COUNT(*)
-		FROM people.users
-		WHERE enabled = true AND deleted_by IS NULL AND deleted_at IS NULL;`)
-	if err != nil {
-		return count, fmt.Errorf("failed to count users from db: %w", err)
-	}
-	return count, nil
-}
-
-// countUsers24Hours will get the number of users in the last 24 hours
-func (s *Store) countUsers24Hours(ctx context.Context) (int, error) {
-	var count int
-	err := s.db.GetContext(ctx, &count,
-		`SELECT COUNT(*)
-		FROM people.users
-		WHERE last_login > TO_TIMESTAMP($1, 'YYYY-MM-DD HH24:MI:SS');`, time.Now().AddDate(0, 0, -1).Format("2006-01-02 15:04:05"))
-	if err != nil {
-		return count, fmt.Errorf("failed to count users 24 hours from db: %w", err)
-	}
-	return count, nil
-}
-
-// countUsersPastYear will get the number of users in the last 24 hours
-func (s *Store) countUsersPastYear(ctx context.Context) (int, error) {
-	var count int
-	err := s.db.GetContext(ctx, &count,
-		`SELECT COUNT(*)
-		FROM people.users
-		WHERE last_login > TO_TIMESTAMP($1, 'YYYY-MM-DD HH24:MI:SS');`, time.Now().AddDate(-1, 0, 0).Format("2006-01-02 15:04:05"))
-	if err != nil {
-		return count, fmt.Errorf("failed to count users past year from db: %w", err)
-	}
-	return count, nil
+	return countUsers, nil
 }
 
 // updateUser will update a user record by ID

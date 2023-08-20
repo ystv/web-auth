@@ -87,6 +87,13 @@ type (
 		Roles              []role.Role             `json:"roles"`
 	}
 
+	CountUsers struct {
+		TotalUsers             int `db:"total_users" json:"totalUsers"`
+		ActiveUsers            int `db:"active_users" json:"activeUsers"`
+		ActiveUsersPast24Hours int `db:"active_users_past_24_hours" json:"activeUsersPast24Hours"`
+		ActiveUsersPastYear    int `db:"active_users_past_year" json:"activeUsersPastYear"`
+	}
+
 	RoleTemplate struct {
 		RoleID      int
 		Name        string
@@ -110,24 +117,9 @@ func NewUserRepo(db *sqlx.DB) *Store {
 	}
 }
 
-// CountUsers returns the number of users
-func (s *Store) CountUsers(ctx context.Context) (int, error) {
-	return s.countUsers(ctx)
-}
-
-// CountUsersActive returns the number of active users
-func (s *Store) CountUsersActive(ctx context.Context) (int, error) {
-	return s.countUsersActive(ctx)
-}
-
-// CountUsers24Hours returns the number of users who logged in the past 24 hours
-func (s *Store) CountUsers24Hours(ctx context.Context) (int, error) {
-	return s.countUsers24Hours(ctx)
-}
-
-// CountUsersPastYear returns the number of users who logged in the past 24 hours
-func (s *Store) CountUsersPastYear(ctx context.Context) (int, error) {
-	return s.countUsersPastYear(ctx)
+// CountUsersAll returns the number of users, active users, active users in the last 24 hours and past year
+func (s *Store) CountUsersAll(ctx context.Context) (CountUsers, error) {
+	return s.countUsersAll(ctx)
 }
 
 // GetUser returns a user using any unique identity fields
