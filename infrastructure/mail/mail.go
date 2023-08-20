@@ -16,7 +16,6 @@ type (
 	Mailer struct {
 		*mail.SMTPClient
 		Defaults   Defaults
-		Enabled    bool
 		DomainName string
 	}
 
@@ -66,10 +65,10 @@ func NewMailer(config Config) *Mailer {
 	smtpClient, err := smtpServer.Connect()
 	if err != nil {
 		log.Printf("mailer failed: %+v", err)
-		return &Mailer{nil, Defaults{}, false, config.DomainName}
+		return nil
 	} else {
 		log.Printf("connected to mailer: %s", config.Host)
-		return &Mailer{smtpClient, Defaults{}, true, config.DomainName}
+		return &Mailer{smtpClient, Defaults{}, config.DomainName}
 	}
 }
 

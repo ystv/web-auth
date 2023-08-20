@@ -96,7 +96,7 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 	}
 
 	// Valid request, send email with reset code
-	if v.Mailer.Enabled {
+	if v.Mailer != nil {
 		v.Mailer = mail.NewMailer(mail.Config{
 			Host:       v.conf.Mail.Host,
 			Port:       v.conf.Mail.Port,

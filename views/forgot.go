@@ -54,7 +54,7 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 		v.cache.Set(url, user1.UserID, cache.DefaultExpiration)
 
 		// Valid request, send email with reset code
-		if v.Mailer.Enabled {
+		if v.Mailer != nil {
 			v.Mailer = mail.NewMailer(mail.Config{
 				Host:       v.conf.Mail.Host,
 				Port:       v.conf.Mail.Port,
