@@ -58,6 +58,10 @@ func (r *Router) loadRoutes() {
 
 	r.router.HTTPErrorHandler = r.views.CustomHTTPErrorHandler
 
+	r.router.Use(middleware2.GzipWithConfig(middleware2.GzipConfig{
+		Level: 5,
+	}))
+
 	assetHandler := http.FileServer(getFileSystem())
 
 	r.router.GET("/public/*", echo.WrapHandler(http.StripPrefix("/public/", assetHandler)))
