@@ -112,7 +112,7 @@ func main() {
 
 	v := views.New(conf, host)
 
-	router1 := NewRouterFunc(&NewRouter{
+	router1 := NewRouter(&RouterConf{
 		Config: conf,
 		Views:  v,
 	})

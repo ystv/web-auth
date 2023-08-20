@@ -17,20 +17,20 @@ import (
 var embeddedFiles embed.FS
 
 type (
-	Router struct {
+	router struct {
 		config  *views.Config
 		address string
 		views   *views.Views
 		router  *echo.Echo
 	}
-	NewRouter struct {
+	RouterConf struct {
 		Config *views.Config
 		Views  *views.Views
 	}
 )
 
-func NewRouterFunc(conf *NewRouter) *Router {
-	r := &Router{
+func NewRouter(conf *RouterConf) *router {
+	r := &router{
 		config: conf.Config,
 		router: echo.New(),
 		views:  conf.Views,
@@ -46,12 +46,12 @@ func NewRouterFunc(conf *NewRouter) *Router {
 	return r
 }
 
-func (r *Router) Start() error {
+func (r *router) Start() error {
 	r.router.Logger.Error(r.router.Start(r.config.Address))
 	return fmt.Errorf("failed to start router on address %s", r.config.Address)
 }
 
-func (r *Router) loadRoutes() {
+func (r *router) loadRoutes() {
 	r.router.RouteNotFound("/*", r.views.Error404)
 
 	r.router.Use(middleware2.BodyLimit("15M"))
