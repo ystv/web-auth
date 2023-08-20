@@ -3,6 +3,7 @@ package views
 import (
 	"fmt"
 	"github.com/labstack/echo/v4"
+	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 	"log"
@@ -15,14 +16,14 @@ import (
 type (
 	// UsersTemplate represents the context for the user template
 	UsersTemplate struct {
-		Users      []user.StrippedUser
-		UserID     int
-		CurPage    int
-		NextPage   int
-		PrevPage   int
-		LastPage   int
-		ActivePage string
-		Sort       Sort
+		Users           []user.StrippedUser
+		UserPermissions []permission.Permission
+		CurPage         int
+		NextPage        int
+		PrevPage        int
+		LastPage        int
+		ActivePage      string
+		Sort            Sort
 	}
 
 	Sort struct {
@@ -37,9 +38,9 @@ type (
 	}
 
 	UserTemplate struct {
-		User       user.DetailedUser
-		UserID     int
-		ActivePage string
+		User            user.DetailedUser
+		UserPermissions []permission.Permission
+		ActivePage      string
 	}
 )
 
@@ -129,6 +130,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 	direction := c.QueryParam("direction")
 	search := c.QueryParam("search")
 	var size, page, count int
+	var countAll user.CountUsers
 	sizeRaw := c.QueryParam("size")
 	if sizeRaw == "all" {
 		size = 0
@@ -147,10 +149,12 @@ func (v *Views) UsersFunc(c echo.Context) error {
 			size = 0
 		}
 
-		count, err = v.user.CountUsers(c.Request().Context())
+		countAll, err = v.user.CountUsersAll(c.Request().Context())
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get total users for users: %w", err))
 		}
+
+		count = countAll.TotalUsers
 
 		if count <= size*(page-1) {
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("size and page given is not valid"))
@@ -246,10 +250,18 @@ func (v *Views) UsersFunc(c echo.Context) error {
 		page = 25
 	}
 
+	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+	if err != nil {
+		log.Printf("failed to get user permissions for users: %+v", err)
+		if !v.conf.Debug {
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for users: %+v", err))
+		}
+	}
+
 	data := UsersTemplate{
-		Users:      tplUsers,
-		UserID:     c1.User.UserID,
-		ActivePage: "users",
+		Users:           tplUsers,
+		UserPermissions: p1,
+		ActivePage:      "users",
 		Sort: Sort{
 			Pages:      sum,
 			Size:       size,
@@ -302,10 +314,18 @@ func (v *Views) UserFunc(c echo.Context) error {
 		}
 	}
 
+	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+	if err != nil {
+		log.Printf("failed to get user permissions for user: %+v", err)
+		if !v.conf.Debug {
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for user: %+v", err))
+		}
+	}
+
 	data := UserTemplate{
-		User:       user2,
-		UserID:     c1.User.UserID,
-		ActivePage: "user",
+		User:            user2,
+		UserPermissions: p1,
+		ActivePage:      "user",
 	}
 
 	return v.template.RenderTemplate(c.Response(), data, templates.UserTemplate, templates.RegularType)

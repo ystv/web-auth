@@ -13,15 +13,15 @@ import (
 
 type (
 	PermissionsTemplate struct {
-		Permissions []permission.Permission
-		UserID      int
-		ActivePage  string
+		Permissions     []permission.Permission
+		UserPermissions []permission.Permission
+		ActivePage      string
 	}
 
 	PermissionTemplate struct {
-		Permission user.PermissionTemplate
-		UserID     int
-		ActivePage string
+		Permission      user.PermissionTemplate
+		UserPermissions []permission.Permission
+		ActivePage      string
 	}
 )
 
@@ -35,10 +35,6 @@ func (v *Views) bindPermissionToTemplate(p1 permission.Permission) user.Permissi
 
 // PermissionsFunc handles a permissions request
 func (v *Views) PermissionsFunc(c echo.Context) error {
-	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-	c1 := v.getData(session)
-
 	permissions, err := v.permission.GetPermissions(c.Request().Context())
 	if err != nil {
 		log.Printf("failed to get permissions for permissions: %+v", err)
@@ -49,7 +45,6 @@ func (v *Views) PermissionsFunc(c echo.Context) error {
 
 	data := PermissionsTemplate{
 		Permissions: permissions,
-		UserID:      c1.User.UserID,
 		ActivePage:  "permissions",
 	}
 
@@ -69,6 +64,7 @@ func (v *Views) PermissionFunc(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to parse permissionid for permission: %w", err))
 		}
 	}
+
 	permission1, err := v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: permissionID})
 	if err != nil {
 		log.Printf("failed to get permission for permission: %+v", err)
@@ -80,11 +76,25 @@ func (v *Views) PermissionFunc(c echo.Context) error {
 	permissionTemplate := v.bindPermissionToTemplate(permission1)
 
 	permissionTemplate.Roles, err = v.user.GetRolesForPermission(c.Request().Context(), permission1)
+	if err != nil {
+		log.Printf("failed to get roles for permission: %+v", err)
+		if !v.conf.Debug {
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get roles for permission: %w", err))
+		}
+	}
+
+	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+	if err != nil {
+		log.Printf("failed to get user permissions for permission: %+v", err)
+		if !v.conf.Debug {
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for permission: %+v", err))
+		}
+	}
 
 	data := PermissionTemplate{
-		Permission: permissionTemplate,
-		UserID:     c1.User.UserID,
-		ActivePage: "permission",
+		Permission:      permissionTemplate,
+		UserPermissions: p1,
+		ActivePage:      "permission",
 	}
 
 	return v.template.RenderTemplate(c.Response(), data, templates.PermissionTemplate, templates.RegularType)

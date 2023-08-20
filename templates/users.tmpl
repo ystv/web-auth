@@ -104,7 +104,7 @@
             <header class="card-header">
                 <p class="card-header-title">Users</p>
             </header>
-            {{if (checkPermission $.UserID "ManageMembers.Members.Add")}}
+            {{if (checkPermission .UserPermissions "ManageMembers.Members.Add")}}
                 <div class="card" style="margin-bottom: 0">
                     <div class="column">
                         <div class="field">
@@ -125,13 +125,13 @@
                             <th>Enabled</th>
                             <th>Deleted</th>
                             <th>Last login</th>
-                            {{if (checkPermission $.UserID "ManageMembers.Members.Admin")}}
+                            {{if (checkPermission .UserPermissions "ManageMembers.Members.Admin")}}
                                 <th>View</th>
                             {{end}}
                         </tr>
                         </thead>
                         <tbody>
-                        {{parseUsersIntoHTML .Users $.UserID}}
+                        {{parseUsersIntoHTML .Users .UserPermissions}}
                         </tbody>
                         <tfoot>
                         <tr>
@@ -142,7 +142,7 @@
                             <th>Enabled</th>
                             <th>Deleted</th>
                             <th>Last login</th>
-                            {{if (checkPermission $.UserID "ManageMembers.Members.Admin")}}
+                            {{if (checkPermission .UserPermissions "ManageMembers.Members.Admin")}}
                                 <th>View</th>
                             {{end}}
                         </tr>
@@ -152,7 +152,7 @@
             </div>
         </div>
     </div>
-    {{if (checkPermission $.UserID "ManageMembers.Members.Add")}}
+    {{if (checkPermission .UserPermissions "ManageMembers.Members.Add")}}
         {{template "modal" .}}
     {{end}}
 {{end}}

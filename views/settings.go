@@ -6,19 +6,22 @@ import (
 	"fmt"
 	"github.com/dustin/go-humanize"
 	"github.com/labstack/echo/v4"
+	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
+	"log"
+	"net/http"
 	"strings"
 	"time"
 )
 
 type (
 	SettingsTemplate struct {
-		User       user.User
-		UserID     int
-		LastLogin  string
-		ActivePage string
-		Gravatar   string
+		User            user.User
+		UserPermissions []permission.Permission
+		LastLogin       string
+		ActivePage      string
+		Gravatar        string
 	}
 )
 
@@ -39,12 +42,20 @@ func (v *Views) SettingsFunc(c echo.Context) error {
 		gravatar = fmt.Sprintf("https://www.gravatar.com/avatar/%s", hex.EncodeToString(hash[:]))
 	}
 
+	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+	if err != nil {
+		log.Printf("failed to get user permissions for settings: %+v", err)
+		if !v.conf.Debug {
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for settings: %+v", err))
+		}
+	}
+
 	ctx := SettingsTemplate{
-		User:       c1.User,
-		UserID:     c1.User.UserID,
-		LastLogin:  humanize.Time(lastLogin),
-		ActivePage: "settings",
-		Gravatar:   gravatar,
+		User:            c1.User,
+		UserPermissions: p1,
+		LastLogin:       humanize.Time(lastLogin),
+		ActivePage:      "settings",
+		Gravatar:        gravatar,
 	}
 
 	return v.template.RenderTemplate(c.Response(), ctx, templates.SettingsTemplate, templates.RegularType)

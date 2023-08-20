@@ -19,30 +19,30 @@
                 </div>
             </div>
         </section>
-        {{if (checkPermission .UserID "ManageMembers.Members.List")}}
+        {{if (checkPermission .UserPermissions "ManageMembers.Members.List")}}
             <section class="info-tiles">
                 <div class="tile is-ancestor has-text-centered">
                     <div class="tile is-parent">
                         <article class="tile is-child box">
-                            <p class="title">{{.TotalUsers}}</p>
+                            <p class="title">{{.CountAll.TotalUsers}}</p>
                             <p class="subtitle">Total users</p>
                         </article>
                     </div>
                     <div class="tile is-parent">
                         <article class="tile is-child box">
-                            <p class="title">{{.TotalActiveUsers}}</p>
+                            <p class="title">{{.CountAll.ActiveUsers}}</p>
                             <p class="subtitle">Total active users (enabled and not deleted)</p>
                         </article>
                     </div>
                     <div class="tile is-parent">
                         <article class="tile is-child box">
-                            <p class="title">{{.LoginsPast24Hours}}</p>
+                            <p class="title">{{.CountAll.ActiveUsersPast24Hours}}</p>
                             <p class="subtitle">Active users in the past 24 hours</p>
                         </article>
                     </div>
                     <div class="tile is-parent">
                         <article class="tile is-child box">
-                            <p class="title">{{.ActiveUsersPastYear}}</p>
+                            <p class="title">{{.CountAll.ActiveUsersPastYear}}</p>
                             <p class="subtitle">Active users in the past year</p>
                         </article>
                     </div>

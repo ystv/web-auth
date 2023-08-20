@@ -3,6 +3,7 @@ package views
 import (
 	"fmt"
 	"github.com/labstack/echo/v4"
+	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
@@ -13,15 +14,15 @@ import (
 
 type (
 	RolesTemplate struct {
-		Roles      []role.Role
-		UserID     int
-		ActivePage string
+		Roles           []role.Role
+		UserPermissions []permission.Permission
+		ActivePage      string
 	}
 
 	RoleTemplate struct {
-		Role       user.RoleTemplate
-		UserID     int
-		ActivePage string
+		Role            user.RoleTemplate
+		UserPermissions []permission.Permission
+		ActivePage      string
 	}
 )
 
@@ -47,10 +48,18 @@ func (v *Views) RolesFunc(c echo.Context) error {
 		}
 	}
 
+	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+	if err != nil {
+		log.Printf("failed to get user permissions for roles: %+v", err)
+		if !v.conf.Debug {
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for roles: %+v", err))
+		}
+	}
+
 	data := RolesTemplate{
-		Roles:      roles,
-		UserID:     c1.User.UserID,
-		ActivePage: "roles",
+		Roles:           roles,
+		UserPermissions: p1,
+		ActivePage:      "roles",
 	}
 
 	return v.template.RenderTemplate(c.Response(), data, templates.RolesTemplate, templates.RegularType)
@@ -95,10 +104,18 @@ func (v *Views) RoleFunc(c echo.Context) error {
 		}
 	}
 
+	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+	if err != nil {
+		log.Printf("failed to get user permissions for role: %+v", err)
+		if !v.conf.Debug {
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for role: %+v", err))
+		}
+	}
+
 	data := RoleTemplate{
-		Role:       roleTemplate,
-		UserID:     c1.User.UserID,
-		ActivePage: "role",
+		Role:            roleTemplate,
+		UserPermissions: p1,
+		ActivePage:      "role",
 	}
 
 	return v.template.RenderTemplate(c.Response(), data, templates.RoleTemplate, templates.RegularType)

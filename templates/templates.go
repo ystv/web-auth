@@ -1,7 +1,6 @@
 package templates
 
 import (
-	"context"
 	"embed"
 	"fmt"
 	permission1 "github.com/ystv/web-auth/infrastructure/permission"
@@ -157,8 +156,8 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 		"len": func(a string) int {
 			return len(a)
 		},
-		"checkPermission": func(id int, p string) bool {
-			return t.permissionsParser(id, p)
+		"checkPermission": func(perms []permission.Permission, p string) bool {
+			return t.permissionsParser(perms, p)
 		},
 		"parsePermissionsIntoHTML": func(perms []permission.Permission) template.HTML {
 			var output strings.Builder
@@ -173,8 +172,8 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			}
 			return template.HTML(output.String())
 		},
-		"parsePermissionIntoHTML": func(p user.PermissionTemplate, userID int) template.HTML {
-			roleAdmin := t.permissionsParser(userID, permissions.ManageMembersGroup.String())
+		"parsePermissionIntoHTML": func(p user.PermissionTemplate, perms []permission.Permission) template.HTML {
+			roleAdmin := t.permissionsParser(perms, permissions.ManageMembersGroup.String())
 			var output, roles strings.Builder
 			if len(p.Roles) > 0 {
 				roles.WriteString("Inherited by: <ol>")
@@ -213,9 +212,9 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			}
 			return template.HTML(output.String())
 		},
-		"parseRoleIntoHTML": func(r user.RoleTemplate, userID int) template.HTML {
-			permissionAdmin := t.permissionsParser(userID, permissions.ManageMembersPermissions.String())
-			membersList := t.permissionsParser(userID, permissions.ManageMembersMembersList.String())
+		"parseRoleIntoHTML": func(r user.RoleTemplate, p1 []permission.Permission) template.HTML {
+			permissionAdmin := t.permissionsParser(p1, permissions.ManageMembersPermissions.String())
+			membersList := t.permissionsParser(p1, permissions.ManageMembersMembersList.String())
 			var output, perms, users strings.Builder
 			if len(r.Permissions) > 0 {
 				perms.WriteString("Permissions: <ol>")
@@ -256,8 +255,8 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			output.WriteString("</p>")
 			return template.HTML(output.String())
 		},
-		"parseUsersIntoHTML": func(tmplUsers []user.StrippedUser, userID int) template.HTML {
-			memberAdmin := t.permissionsParser(userID, permissions.ManageMembersMembersAdmin.String())
+		"parseUsersIntoHTML": func(tmplUsers []user.StrippedUser, perms []permission.Permission) template.HTML {
+			memberAdmin := t.permissionsParser(perms, permissions.ManageMembersMembersAdmin.String())
 			var output strings.Builder
 			for _, tmplUser := range tmplUsers {
 				var ifView strings.Builder
@@ -290,9 +289,9 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			}
 			return template.HTML(output.String())
 		},
-		"parseUserIntoHTML": func(u user.DetailedUser, userID int) template.HTML {
-			permissionAdmin := t.permissionsParser(userID, permissions.ManageMembersPermissions.String())
-			roleAdmin := t.permissionsParser(userID, permissions.ManageMembersGroup.String())
+		"parseUserIntoHTML": func(u user.DetailedUser, p1 []permission.Permission) template.HTML {
+			permissionAdmin := t.permissionsParser(p1, permissions.ManageMembersPermissions.String())
+			roleAdmin := t.permissionsParser(p1, permissions.ManageMembersGroup.String())
 			var output, perms, roles strings.Builder
 			var deleted, enabled, ldap, avatar, lastLogin, created, updated, deletedBy string
 			if len(u.Permissions) > 0 {
@@ -407,16 +406,10 @@ func (t *Templater) parseUserName(u user.User) (name string) {
 	return name
 }
 
-func (t *Templater) permissionsParser(id int, p string) bool {
+func (t *Templater) permissionsParser(perms []permission.Permission, p string) bool {
 	m := permission1.SufficientPermissionsFor(permissions.Permissions(p))
 
-	p1, err := t.User.GetPermissionsForUser(context.Background(), user.User{UserID: id})
-	if err != nil {
-		log.Printf("failed to get permission for template(permissionParser): %+v", err)
-		return false
-	}
-
-	for _, perm := range p1 {
+	for _, perm := range perms {
 		if m[perm.Name] {
 			return true
 		}
