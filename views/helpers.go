@@ -25,6 +25,8 @@ type (
 		Callback string
 		// User is the stored logged-in user
 		User user.User
+		// Version is the version that is running
+		Version string
 	}
 )
 
@@ -38,6 +40,7 @@ func (v *Views) getData(s *sessions.Session) *Context {
 	c := Context{
 		Callback: "/internal",
 		User:     u,
+		Version:  v.conf.Version,
 	}
 	return &c
 }

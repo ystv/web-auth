@@ -32,7 +32,7 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 	var err error
 	switch c.Request().Method {
 	case "GET":
-		return v.template.RenderNoNavsTemplate(c.Response().Writer, nil, templates.ForgotTemplate)
+		return v.template.RenderTemplate(c.Response().Writer, nil, templates.ForgotTemplate, templates.NoNavType)
 	case "POST":
 		err = c.Request().ParseForm()
 		if err != nil {
@@ -41,14 +41,14 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 		u := user.User{Email: c.Request().Form.Get("email")}
 
 		if u.Email == "" {
-			return v.template.RenderNoNavsTemplate(c.Response(), nil, templates.ForgotTemplate)
+			return v.template.RenderTemplate(c.Response(), nil, templates.ForgotTemplate, templates.NoNavType)
 		}
 		// Get user and check if it exists
 		user1, err := v.user.GetUser(c.Request().Context(), u)
 		if err != nil {
 			// User doesn't exist, we'll pretend they've got an email
 			log.Printf("request for reset on unknown email \"%s\"", user1.Email)
-			return v.template.RenderNoNavsTemplate(c.Response(), notification, templates.NotificationTemplate)
+			return v.template.RenderTemplate(c.Response(), notification, templates.NotificationTemplate, templates.NoNavType)
 		}
 		url := uuid.NewString()
 		v.cache.Set(url, user1.UserID, cache.DefaultExpiration)
@@ -65,7 +65,7 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 			if v.Mailer == nil {
 				log.Printf("no Mailer present")
 				log.Printf("reset email: %s, code: %s, reset link: https://%s/reset?code=%s", user1.Email, url, v.conf.DomainName, url)
-				return v.template.RenderNoNavsTemplate(c.Response().Writer, notification, templates.NotificationTemplate)
+				return v.template.RenderTemplate(c.Response().Writer, notification, templates.NotificationTemplate, templates.NoNavType)
 			}
 
 			file := mail.Mail{
@@ -93,7 +93,7 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 		}
 
 		// User doesn't exist, we'll pretend they've got an email
-		return v.template.RenderNoNavsTemplate(c.Response().Writer, notification, templates.NotificationTemplate)
+		return v.template.RenderTemplate(c.Response().Writer, notification, templates.NotificationTemplate, templates.NoNavType)
 	}
 	return nil
 }

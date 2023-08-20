@@ -47,5 +47,5 @@ func (v *Views) SettingsFunc(c echo.Context) error {
 		Gravatar:   gravatar,
 	}
 
-	return v.template.RenderTemplate(c.Response(), ctx, templates.SettingsTemplate)
+	return v.template.RenderTemplate(c.Response(), ctx, templates.SettingsTemplate, templates.RegularType)
 }

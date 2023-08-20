@@ -76,5 +76,5 @@ func (v *Views) InternalFunc(c echo.Context) error {
 		ActiveUsersPastYear: pastYear,
 		ActivePage:          "dashboard",
 	}
-	return v.template.RenderTemplate(c.Response(), ctx, templates.InternalTemplate)
+	return v.template.RenderTemplate(c.Response(), ctx, templates.InternalTemplate, templates.RegularType)
 }

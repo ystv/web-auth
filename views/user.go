@@ -261,7 +261,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 			Deleted:    "",
 		},
 	}
-	return v.template.RenderTemplatePagination(c.Response(), data, templates.UsersTemplate)
+	return v.template.RenderTemplate(c.Response(), data, templates.UsersTemplate, templates.PaginationType)
 }
 
 // UserFunc handles a users request
@@ -308,7 +308,7 @@ func (v *Views) UserFunc(c echo.Context) error {
 		ActivePage: "user",
 	}
 
-	return v.template.RenderTemplate(c.Response(), data, templates.UserTemplate)
+	return v.template.RenderTemplate(c.Response(), data, templates.UserTemplate, templates.RegularType)
 }
 
 func (v *Views) UserAddFunc(c echo.Context) error {

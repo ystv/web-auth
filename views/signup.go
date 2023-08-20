@@ -50,7 +50,7 @@ func (v *Views) SignUpFunc(c echo.Context) error {
 				issues += " " + err.Error()
 			}
 			log.Println(issues)
-			return v.template.RenderNoNavsTemplate(c.Response(), issues, templates.SignupTemplate)
+			return v.template.RenderTemplate(c.Response(), issues, templates.SignupTemplate, templates.NoNavType)
 		}
 
 		uNormal := user.User{
@@ -59,12 +59,12 @@ func (v *Views) SignUpFunc(c echo.Context) error {
 
 		_, err = v.user.GetUser(c.Request().Context(), uNormal)
 		if err == nil {
-			return v.template.RenderNoNavsTemplate(c.Response(), "Account already exists", templates.SignupTemplate)
+			return v.template.RenderTemplate(c.Response(), "Account already exists", templates.SignupTemplate, templates.NoNavType)
 		}
 		return c.Redirect(http.StatusFound, "/")
 
 	case "GET":
-		return v.template.RenderNoNavsTemplate(c.Response(), "", templates.SignupTemplate)
+		return v.template.RenderTemplate(c.Response(), "", templates.SignupTemplate, templates.NoNavType)
 	}
 	return fmt.Errorf("invalid mthod used")
 }

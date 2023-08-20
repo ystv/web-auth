@@ -46,13 +46,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 			return c.Redirect(http.StatusFound, context.Callback)
 		}
 
-		data := LoginTemplate{
-			Version: v.conf.Version,
-			Message: "",
-			MsgType: "",
-		}
-
-		return v.template.RenderNoNavsTemplate(c.Response(), data, templates.LoginTemplate)
+		return v.template.RenderTemplate(c.Response(), context, templates.LoginTemplate, templates.NoNavType)
 	case "POST":
 		// Parsing form to struct
 		err = c.Request().ParseForm()
@@ -98,7 +92,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 			ctx.Callback = callback
 			ctx.Message = "Invalid username or password"
 			ctx.MsgType = "is-danger"
-			return v.template.RenderNoNavsTemplate(c.Response(), ctx, templates.LoginTemplate)
+			return v.template.RenderTemplate(c.Response(), ctx, templates.LoginTemplate, templates.NoNavType)
 		}
 		prevLogin := u.LastLogin
 		// Update last logged in

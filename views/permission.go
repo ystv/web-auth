@@ -53,7 +53,7 @@ func (v *Views) PermissionsFunc(c echo.Context) error {
 		ActivePage:  "permissions",
 	}
 
-	return v.template.RenderTemplate(c.Response(), data, templates.PermissionsTemplate)
+	return v.template.RenderTemplate(c.Response(), data, templates.PermissionsTemplate, templates.RegularType)
 }
 
 // PermissionFunc handles a permission request
@@ -87,7 +87,7 @@ func (v *Views) PermissionFunc(c echo.Context) error {
 		ActivePage: "permission",
 	}
 
-	return v.template.RenderTemplate(c.Response(), data, templates.PermissionTemplate)
+	return v.template.RenderTemplate(c.Response(), data, templates.PermissionTemplate, templates.RegularType)
 }
 
 // PermissionAddFunc handles an add permission request

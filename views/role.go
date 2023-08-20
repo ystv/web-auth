@@ -53,7 +53,7 @@ func (v *Views) RolesFunc(c echo.Context) error {
 		ActivePage: "roles",
 	}
 
-	return v.template.RenderTemplate(c.Response(), data, templates.RolesTemplate)
+	return v.template.RenderTemplate(c.Response(), data, templates.RolesTemplate, templates.RegularType)
 }
 
 func (v *Views) RoleFunc(c echo.Context) error {
@@ -101,7 +101,7 @@ func (v *Views) RoleFunc(c echo.Context) error {
 		ActivePage: "role",
 	}
 
-	return v.template.RenderTemplate(c.Response(), data, templates.RoleTemplate)
+	return v.template.RenderTemplate(c.Response(), data, templates.RoleTemplate, templates.RegularType)
 }
 
 func (v *Views) RoleAddFunc(c echo.Context) error {

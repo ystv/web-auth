@@ -30,7 +30,7 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 
 	switch c.Request().Method {
 	case "GET":
-		return v.template.RenderNoNavsTemplate(c.Response(), nil, templates.ResetTemplate)
+		return v.template.RenderTemplate(c.Response(), nil, templates.ResetTemplate, templates.NoNavType)
 	case "POST":
 		err = c.Request().ParseForm()
 		if err != nil {
@@ -39,7 +39,7 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 
 		password := c.FormValue("password")
 		if password != c.FormValue("confirmpassword") {
-			return v.template.RenderNoNavsTemplate(c.Response(), nil, templates.ResetTemplate)
+			return v.template.RenderTemplate(c.Response(), nil, templates.ResetTemplate, templates.NoNavType)
 		}
 
 		err = c.Request().ParseForm()
@@ -48,7 +48,7 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 		}
 		p := c.Request().Form.Get("password")
 		if p != c.Request().Form.Get("confirmpassword") || p == "" {
-			return v.template.RenderNoNavsTemplate(c.Response(), nil, templates.ResetTemplate)
+			return v.template.RenderTemplate(c.Response(), nil, templates.ResetTemplate, templates.NoNavType)
 		}
 		user1.Password = null.StringFrom(password)
 
