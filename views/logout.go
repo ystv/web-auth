@@ -21,8 +21,6 @@ func (v *Views) LogoutFunc(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to save session for logout: %w", err))
 	}
-	// TODO Don't call env in this function have an initialiser
-	// then fetch from that store?
 	endpoint := v.conf.LogoutEndpoint
 	if endpoint == "" {
 		endpoint = "/"
