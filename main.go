@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/ystv/web-auth/infrastructure/mail"
-
 	"github.com/joho/godotenv"
 	"github.com/ystv/web-auth/views"
 	"log"
@@ -121,14 +119,14 @@ func main() {
 
 	err = router1.Start()
 	if err != nil {
-		if v.Mailer != nil {
-			err1 := v.Mailer.SendErrorFatalMail(mail.Mail{
-				Error: fmt.Errorf("the web server couldn't be started: %s... exiting", err),
-			})
-			if err1 != nil {
-				fmt.Println(err1)
-			}
-		}
+		//if v.Mailer != nil {
+		//	err1 := v.Mailer.SendErrorFatalMail(mail.Mail{
+		//		Error: fmt.Errorf("the web server couldn't be started: %s... exiting", err),
+		//	})
+		//	if err1 != nil {
+		//		fmt.Println(err1)
+		//	}
+		//}
 		log.Fatalf("The web server couldn't be started!\n\n%s\n\nExiting!", err)
 	}
 }
