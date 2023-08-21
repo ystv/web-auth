@@ -17,36 +17,32 @@ var Version = "unknown"
 func main() {
 	var local, global bool
 	var err error
-	// Load environment
-	err = godotenv.Load(".env")
+	err = godotenv.Load(".env") // Load .env
 	if err != nil {
 		global = false
 	} else {
 		global = true
 	}
-	// Load .env file for production
-	err = godotenv.Overload(".env.local") // Load .env.local for developing
+
+	err = godotenv.Overload(".env.local") // Load .env.local
 	if err != nil {
 		local = false
 	} else {
+		global = false
 		local = true
 	}
 
-	if !local && !global {
-		log.Fatal("unable to find env files")
+	signingKey := os.Getenv("WAUTH_SIGNING_KEY")
+	dbHost := os.Getenv("WAUTH_DB_HOST")
+
+	if !local && !global && signingKey == "" && dbHost == "" {
+		log.Fatal("unable to find env files and no env variables have been supplied")
+	} else if !local && !global {
+		log.Println("using env variables")
 	} else if !local {
 		log.Println("using global env file")
 	} else {
 		log.Println("using local env file")
-	}
-
-	// Validate the required config is set
-	if os.Getenv("WAUTH_SIGNING_KEY") == "" {
-		log.Fatalf("signing key not set")
-	}
-
-	if os.Getenv("WAUTH_DB_HOST") == "" {
-		log.Fatalf("database host not set")
 	}
 
 	sessionCookieName := os.Getenv("WAUTH_SESSION_COOKIE_NAME")
@@ -54,11 +50,9 @@ func main() {
 		sessionCookieName = "session"
 	}
 
-	host := os.Getenv("WAUTH_DB_HOST")
-
 	dbConnectionString := fmt.Sprintf(
 		"host=%s port=%s user=%s dbname=%s sslmode=%s password=%s",
-		host,
+		dbHost,
 		os.Getenv("WAUTH_DB_PORT"),
 		os.Getenv("WAUTH_DB_USER"),
 		os.Getenv("WAUTH_DB_NAME"),
@@ -106,11 +100,11 @@ func main() {
 		Security: views.SecurityConfig{
 			EncryptionKey:     os.Getenv("WAUTH_ENCRYPTION_KEY"),
 			AuthenticationKey: os.Getenv("WAUTH_AUTHENTICATION_KEY"),
-			SigningKey:        os.Getenv("WAUTH_SIGNING_KEY"),
+			SigningKey:        signingKey,
 		},
 	}
 
-	v := views.New(conf, host)
+	v := views.New(conf, dbHost)
 
 	router1 := NewRouter(&RouterConf{
 		Config: conf,
