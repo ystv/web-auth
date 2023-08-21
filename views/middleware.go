@@ -9,8 +9,6 @@ import (
 	"github.com/ystv/web-auth/user"
 	"log"
 	"net/http"
-
-	"github.com/ystv/web-auth/helpers"
 )
 
 // RequiresLogin is a middleware which will be used for each
@@ -20,15 +18,18 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 		if err != nil {
 			log.Println(err)
-			return v.LoginFunc(c)
+			return c.Redirect(http.StatusFound, "/")
 		}
-		userFromSession := helpers.GetUser(session)
-		userFromDB, err := v.user.GetUser(c.Request().Context(), userFromSession)
+		c1 := v.getData(session)
+		if !c1.User.Authenticated {
+			return c.Redirect(http.StatusFound, "/")
+		}
+		userFromDB, err := v.user.GetUser(c.Request().Context(), c1.User)
 		if err != nil {
 			log.Println(err)
-			return err
+			return c.Redirect(http.StatusFound, "/")
 		}
-		if userFromDB.DeletedBy.Valid || !userFromSession.Enabled {
+		if userFromDB.DeletedBy.Valid || !c1.User.Enabled {
 			session.Values["user"] = &user.User{}
 			session.Options.MaxAge = -1
 			err = session.Save(c.Request(), c.Response())
@@ -37,7 +38,7 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 			return c.Redirect(http.StatusFound, "/")
 		}
-		if !userFromSession.Authenticated {
+		if !c1.User.Authenticated {
 			// Not authenticated
 			return c.Redirect(http.StatusFound, "/")
 		}
@@ -55,9 +56,9 @@ func (v *Views) RequirePermission(p permissions.Permissions) echo.MiddlewareFunc
 				return v.LoginFunc(c)
 			}
 
-			u := helpers.GetUser(session)
+			c1 := v.getData(session)
 
-			perms, err := v.user.GetPermissionsForUser(c.Request().Context(), u)
+			perms, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 			if err != nil {
 				log.Println(err)
 				http.Error(c.Response(), err.Error(), http.StatusInternalServerError)

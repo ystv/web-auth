@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ystv/web-auth/helpers"
 	"github.com/ystv/web-auth/user"
 )
 
@@ -32,9 +31,9 @@ type (
 // SetTokenHandler sets a valid JWT in a cookie instead of returning a string
 func (v *Views) SetTokenHandler(c echo.Context) error {
 	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-	u := helpers.GetUser(session)
+	c1 := v.getData(session)
 
-	tokenString, err := v.newJWT(u)
+	tokenString, err := v.newJWT(c1.User)
 	if err != nil {
 		err = fmt.Errorf("failed to set cookie: %w", err)
 		http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
