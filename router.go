@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/labstack/echo/v4"
-	"github.com/ystv/web-auth/middleware"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/views"
 	"io/fs"
@@ -38,7 +38,7 @@ func NewRouter(conf *RouterConf) *Router {
 
 	r.router.Debug = r.config.Debug
 
-	middleware.New(r.router, r.config.DomainName)
+	r.middleware()
 
 	r.loadRoutes()
 
@@ -48,6 +48,27 @@ func NewRouter(conf *RouterConf) *Router {
 func (r *Router) Start() error {
 	r.router.Logger.Error(r.router.Start(r.config.Address))
 	return fmt.Errorf("failed to start router on address %s", r.config.Address)
+}
+
+// middleware initialises web server middleware
+func (r *Router) middleware() {
+	config := middleware.CORSConfig{
+		AllowCredentials: true,
+		Skipper:          middleware.DefaultSkipper,
+		AllowOrigins: []string{
+			"https://" + r.config.DomainName,
+		},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAccessControlAllowCredentials, echo.HeaderAccessControlAllowOrigin, echo.HeaderAuthorization},
+		AllowMethods: []string{http.MethodGet, http.MethodPost},
+	}
+
+	r.router.Pre(middleware.RemoveTrailingSlash())
+	r.router.Use(middleware.Recover())
+	r.router.Use(middleware.CORSWithConfig(config))
+	r.router.Use(middleware.BodyLimit("15M"))
+	r.router.Use(middleware.GzipWithConfig(middleware.GzipConfig{
+		Level: 5,
+	}))
 }
 
 func (r *Router) loadRoutes() {
