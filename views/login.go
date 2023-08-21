@@ -100,7 +100,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		u.LastLogin = prevLogin
 		session.Values["user"] = u
 
-		if c.Request().Form.Get("remember") != "on" {
+		if c.FormValue("remember") != "on" {
 			session.Options.MaxAge = 86400 * 31
 		}
 

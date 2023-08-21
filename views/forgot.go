@@ -33,7 +33,7 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 	case "GET":
 		return v.template.RenderTemplate(c.Response().Writer, nil, templates.ForgotTemplate, templates.NoNavType)
 	case "POST":
-		u := user.User{Email: c.Request().Form.Get("email")}
+		u := user.User{Email: c.FormValue("email")}
 
 		if u.Email == "" {
 			return v.template.RenderTemplate(c.Response(), nil, templates.ForgotTemplate, templates.NoNavType)
