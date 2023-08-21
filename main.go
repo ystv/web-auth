@@ -63,10 +63,7 @@ func main() {
 
 	log.Printf("web-auth version: %s\n", Version)
 
-	mailPort, err := strconv.Atoi(os.Getenv("WAUTH_MAIL_PORT"))
-	if err != nil {
-		log.Fatalf("failed to get port for mailer: %v", err)
-	}
+	mailPort, _ := strconv.Atoi(os.Getenv("WAUTH_MAIL_PORT"))
 
 	debug, err := strconv.ParseBool(os.Getenv("WAUTH_DEBUG"))
 	if err != nil {
