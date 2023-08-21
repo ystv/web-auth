@@ -286,7 +286,7 @@ func (v *Views) UserFunc(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse userid for user: %w", err))
 	}
-	user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
+	userFromDB, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 	if err != nil {
 		log.Printf("failed to get user in user: %+v", err)
 		if !v.conf.Debug {
@@ -294,9 +294,9 @@ func (v *Views) UserFunc(c echo.Context) error {
 		}
 	}
 
-	user2 := DBUserToDetailedUser(user1, v.user)
+	detailedUser := DBUserToDetailedUser(userFromDB, v.user)
 
-	user2.Permissions, err = v.user.GetPermissionsForUser(c.Request().Context(), user.User{UserID: user2.UserID})
+	detailedUser.Permissions, err = v.user.GetPermissionsForUser(c.Request().Context(), user.User{UserID: detailedUser.UserID})
 	if err != nil {
 		log.Println(err)
 		if !v.conf.Debug {
@@ -304,9 +304,9 @@ func (v *Views) UserFunc(c echo.Context) error {
 		}
 	}
 
-	user2.Permissions = v.removeDuplicate(user2.Permissions)
+	detailedUser.Permissions = v.removeDuplicate(detailedUser.Permissions)
 
-	user2.Roles, err = v.user.GetRolesForUser(c.Request().Context(), user.User{UserID: user2.UserID})
+	detailedUser.Roles, err = v.user.GetRolesForUser(c.Request().Context(), user.User{UserID: detailedUser.UserID})
 	if err != nil {
 		log.Println(err)
 		if !v.conf.Debug {
@@ -323,7 +323,7 @@ func (v *Views) UserFunc(c echo.Context) error {
 	}
 
 	data := UserTemplate{
-		User:            user2,
+		User:            detailedUser,
 		UserPermissions: p1,
 		ActivePage:      "user",
 	}

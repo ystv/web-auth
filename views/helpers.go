@@ -49,27 +49,27 @@ func (v *Views) getData(s *sessions.Session) *Context {
 func DBToTemplateType(dbUsers []user.User) []user.StrippedUser {
 	var tplUsers []user.StrippedUser
 	for _, dbUser := range dbUsers {
-		var user1 user.StrippedUser
-		user1.UserID = dbUser.UserID
-		user1.Username = dbUser.Username
+		var strippedUser user.StrippedUser
+		strippedUser.UserID = dbUser.UserID
+		strippedUser.Username = dbUser.Username
 		if dbUser.Firstname != dbUser.Nickname {
-			user1.Name = fmt.Sprintf("%s (%s) %s", dbUser.Firstname, dbUser.Nickname, dbUser.Lastname)
+			strippedUser.Name = fmt.Sprintf("%s (%s) %s", dbUser.Firstname, dbUser.Nickname, dbUser.Lastname)
 		} else {
-			user1.Name = fmt.Sprintf("%s %s", dbUser.Firstname, dbUser.Lastname)
+			strippedUser.Name = fmt.Sprintf("%s %s", dbUser.Firstname, dbUser.Lastname)
 		}
-		user1.Email = dbUser.Email
-		user1.Enabled = dbUser.Enabled
+		strippedUser.Email = dbUser.Email
+		strippedUser.Enabled = dbUser.Enabled
 		if dbUser.DeletedAt.Valid || dbUser.DeletedBy.Valid {
-			user1.Deleted = true
+			strippedUser.Deleted = true
 		} else {
-			user1.Deleted = false
+			strippedUser.Deleted = false
 		}
 		if dbUser.LastLogin.Valid {
-			user1.LastLogin = dbUser.LastLogin.Time.Format("2006-01-02 15:04:05")
+			strippedUser.LastLogin = dbUser.LastLogin.Time.Format("2006-01-02 15:04:05")
 		} else {
-			user1.LastLogin = "-"
+			strippedUser.LastLogin = "-"
 		}
-		tplUsers = append(tplUsers, user1)
+		tplUsers = append(tplUsers, strippedUser)
 	}
 	return tplUsers
 }

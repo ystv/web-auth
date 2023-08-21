@@ -22,7 +22,7 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get url for reset"))
 	}
 
-	user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID.(int)})
+	originalUser, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID.(int)})
 	if err != nil {
 		v.cache.Delete(url)
 		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("url is invalid, failed to get user : %w", err))
@@ -50,14 +50,14 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 		if p != c.Request().Form.Get("confirmpassword") || p == "" {
 			return v.template.RenderTemplate(c.Response(), nil, templates.ResetTemplate, templates.NoNavType)
 		}
-		user1.Password = null.StringFrom(password)
+		originalUser.Password = null.StringFrom(password)
 
-		user2, err := v.user.UpdateUserPassword(c.Request().Context(), user1)
+		updatedUser, err := v.user.UpdateUserPassword(c.Request().Context(), originalUser)
 		if err != nil {
 			log.Printf("failed to reset user: %+v", err)
 		}
 		v.cache.Delete(url)
-		log.Printf("updated user: %s", user2.Username)
+		log.Printf("updated user: %s", updatedUser.Username)
 		return c.Redirect(http.StatusFound, "/")
 	}
 	return nil
@@ -73,20 +73,20 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to parse userid for reset: %w", err))
 	}
 
-	user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
+	userFromDB, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user for reset: %w", err))
 	}
 
-	user1.ResetPw = true
+	userFromDB.ResetPw = true
 
-	_, err = v.user.UpdateUser(c.Request().Context(), user1, c1.User.UserID)
+	_, err = v.user.UpdateUser(c.Request().Context(), userFromDB, c1.User.UserID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to update user for reset: %w", err))
 	}
 
 	url := uuid.NewString()
-	v.cache.Set(url, user1.UserID, cache.DefaultExpiration)
+	v.cache.Set(url, userFromDB.UserID, cache.DefaultExpiration)
 
 	var status int
 
@@ -108,13 +108,13 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 		file := mail.Mail{
 			Subject: "YSTV Security - Reset Password",
 			Tpl:     v.template.RenderEmail(templates.ResetEmailTemplate),
-			To:      user1.Email,
+			To:      userFromDB.Email,
 			From:    "YSTV Security <no-reply@ystv.co.uk>",
 			TplData: struct {
 				Email string
 				URL   string
 			}{
-				Email: user1.Email,
+				Email: userFromDB.Email,
 				URL:   fmt.Sprintf("https://%s/reset/%s", v.conf.DomainName, url),
 			},
 		}
@@ -124,14 +124,14 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to send email for login: %w", err))
 		}
 
-		log.Printf("request for password reset email: \"%s\"", user1.Email)
-		message.Message = fmt.Sprintf("Reset email sent to: \"%s\"", user1.Email)
+		log.Printf("request for password reset email: \"%s\"", userFromDB.Email)
+		message.Message = fmt.Sprintf("Reset email sent to: \"%s\"", userFromDB.Email)
 	} else {
-		message.Message = fmt.Sprintf("No mailer present\nPlease forward the link to this email: %s, reset link: https://%s/reset/%s", user1.Email, v.conf.DomainName, url)
+		message.Message = fmt.Sprintf("No mailer present\nPlease forward the link to this email: %s, reset link: https://%s/reset/%s", userFromDB.Email, v.conf.DomainName, url)
 		message.Error = fmt.Errorf("no mailer present")
 		log.Printf("no Mailer present")
-		log.Printf("reset email: %s, url: %s, reset link: https://%s/reset/%s", user1.Email, url, v.conf.DomainName, url)
+		log.Printf("reset email: %s, url: %s, reset link: https://%s/reset/%s", userFromDB.Email, url, v.conf.DomainName, url)
 	}
-	log.Printf("reset for %d (%s) requested by %d (%s)", user1.UserID, user1.Firstname+" "+user1.Lastname, c1.User.UserID, c1.User.Firstname+" "+c1.User.Lastname)
+	log.Printf("reset for %d (%s) requested by %d (%s)", userFromDB.UserID, userFromDB.Firstname+" "+userFromDB.Lastname, c1.User.UserID, c1.User.Firstname+" "+c1.User.Lastname)
 	return c.JSON(status, message)
 }

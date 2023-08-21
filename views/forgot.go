@@ -44,14 +44,14 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 			return v.template.RenderTemplate(c.Response(), nil, templates.ForgotTemplate, templates.NoNavType)
 		}
 		// Get user and check if it exists
-		user1, err := v.user.GetUser(c.Request().Context(), u)
+		userFromDB, err := v.user.GetUser(c.Request().Context(), u)
 		if err != nil {
 			// User doesn't exist, we'll pretend they've got an email
-			log.Printf("request for reset on unknown email \"%s\"", user1.Email)
+			log.Printf("request for reset on unknown email \"%s\"", userFromDB.Email)
 			return v.template.RenderTemplate(c.Response(), notification, templates.NotificationTemplate, templates.NoNavType)
 		}
 		url := uuid.NewString()
-		v.cache.Set(url, user1.UserID, cache.DefaultExpiration)
+		v.cache.Set(url, userFromDB.UserID, cache.DefaultExpiration)
 
 		// Valid request, send email with reset code
 		if v.mailer != nil {
@@ -64,20 +64,20 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 			})
 			if v.mailer == nil {
 				log.Printf("no Mailer present")
-				log.Printf("reset email: %s, code: %s, reset link: https://%s/reset?code=%s", user1.Email, url, v.conf.DomainName, url)
+				log.Printf("reset email: %s, code: %s, reset link: https://%s/reset?code=%s", userFromDB.Email, url, v.conf.DomainName, url)
 				return v.template.RenderTemplate(c.Response().Writer, notification, templates.NotificationTemplate, templates.NoNavType)
 			}
 
 			file := mail.Mail{
 				Subject: "YSTV Security - Reset Password",
 				Tpl:     v.template.RenderEmail(templates.ForgotEmailTemplate),
-				To:      user1.Email,
+				To:      userFromDB.Email,
 				From:    "YSTV Security <no-reply@ystv.co.uk>",
 				TplData: struct {
 					Email string
 					URL   string
 				}{
-					Email: user1.Email,
+					Email: userFromDB.Email,
 					URL:   "https://" + v.conf.DomainName + "/forgot/" + url,
 				},
 			}
@@ -86,10 +86,10 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to send email for forgot: %w", err))
 			}
-			log.Printf("request for password reset email: \"%s\"", user1.Email)
+			log.Printf("request for password reset email: \"%s\"", userFromDB.Email)
 		} else {
 			log.Printf("no Mailer present")
-			log.Printf("reset email: %s, code: %s, reset link: https://%s/reset?code=%s", user1.Email, url, v.conf.DomainName, url)
+			log.Printf("reset email: %s, code: %s, reset link: https://%s/reset?code=%s", userFromDB.Email, url, v.conf.DomainName, url)
 		}
 
 		// User doesn't exist, we'll pretend they've got an email
