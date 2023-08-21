@@ -70,7 +70,6 @@ func main() {
 
 	debug, err := strconv.ParseBool(os.Getenv("WAUTH_DEBUG"))
 	if err != nil {
-		log.Printf("failed to get WAUTH_DEBUG, defaulting to false: %v", err)
 		debug = false
 	}
 
