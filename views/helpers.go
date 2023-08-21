@@ -31,7 +31,6 @@ type (
 
 func (v *Views) getData(s *sessions.Session) *Context {
 	val := s.Values["user"]
-	var u user.User
 	u, ok := val.(user.User)
 	if !ok {
 		u = user.User{Authenticated: false}
