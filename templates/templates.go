@@ -85,8 +85,6 @@ func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Templ
 		return fmt.Errorf("unable to parse template, invalid type: %d", templateType)
 	}
 
-	t1.Funcs(t.getFuncMaps())
-
 	if err != nil {
 		log.Printf("failed to get templates for template(RenderTemplate): %+v", err)
 		return err
