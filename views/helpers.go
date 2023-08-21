@@ -11,7 +11,6 @@ import (
 	"gopkg.in/guregu/null.v4"
 	"log"
 	"strings"
-	"time"
 )
 
 type (
@@ -182,11 +181,4 @@ func (v *Views) removeDuplicate(strSlice []permission.Permission) []permission.P
 		}
 	}
 	return list
-}
-
-func (v *Views) timer(name string) func() {
-	start := time.Now()
-	return func() {
-		fmt.Printf("%s took %v\n", name, time.Since(start))
-	}
 }
