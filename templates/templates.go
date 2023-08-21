@@ -101,40 +101,6 @@ func (t *Templater) RenderEmail(emailTemplate Template) *template.Template {
 
 func (t *Templater) getFuncMaps() template.FuncMap {
 	return template.FuncMap{
-		"formatDuration": func(d time.Duration) string {
-			days := int64(d.Hours()) / 24
-			hours := int64(d.Hours()) % 24
-			minutes := int64(d.Minutes()) % 60
-			seconds := int64(d.Seconds()) % 60
-
-			segments := []struct {
-				name  string
-				value int64
-			}{
-				{"Day", days},
-				{"Hour", hours},
-				{"Min", minutes},
-				{"Sec", seconds},
-			}
-
-			var parts []string
-
-			for _, s := range segments {
-				if s.value == 0 {
-					continue
-				}
-				plural := ""
-				if s.value != 1 {
-					plural = "s"
-				}
-
-				parts = append(parts, fmt.Sprintf("%d %s%s", s.value, s.name, plural))
-			}
-			return strings.Join(parts, " ")
-		},
-		"formatTime": func(fmt string, t time.Time) string {
-			return t.Format(fmt)
-		},
 		"now": func() time.Time {
 			return time.Now()
 		},
