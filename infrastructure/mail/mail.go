@@ -87,7 +87,7 @@ func (m *Mailer) SendMail(item Mail) error {
 	if err != nil {
 		return err
 	}
-	to, from, cc, bcc := m.parseHeader(item)
+	to, from, cc, bcc := m.setEmailHeader(item)
 	body := bytes.Buffer{}
 	err = item.Tpl.Execute(&body, item.TplData)
 	if err != nil {
@@ -108,7 +108,7 @@ func (m *Mailer) SendMail(item Mail) error {
 	return email.Send(m.SMTPClient)
 }
 
-func (m *Mailer) parseHeader(item Mail) (to, from string, cc, bcc []string) {
+func (m *Mailer) setEmailHeader(item Mail) (to, from string, cc, bcc []string) {
 	if len(item.To) > 0 {
 		to = item.To
 	} else {
