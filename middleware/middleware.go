@@ -22,4 +22,8 @@ func New(e *echo.Echo, domainName string) {
 	e.Pre(echoMw.RemoveTrailingSlash())
 	e.Use(echoMw.Recover())
 	e.Use(echoMw.CORSWithConfig(config))
+	e.Use(echoMw.BodyLimit("15M"))
+	e.Use(echoMw.GzipWithConfig(echoMw.GzipConfig{
+		Level: 5,
+	}))
 }

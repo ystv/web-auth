@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/labstack/echo/v4"
-	echoMw "github.com/labstack/echo/v4/middleware"
 	"github.com/ystv/web-auth/middleware"
 	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/views"
@@ -54,13 +53,8 @@ func (r *Router) Start() error {
 func (r *Router) loadRoutes() {
 	r.router.RouteNotFound("/*", r.views.Error404)
 
-	r.router.Use(echoMw.BodyLimit("15M"))
-
+	// This needs to be here because of the function
 	r.router.HTTPErrorHandler = r.views.CustomHTTPErrorHandler
-
-	r.router.Use(echoMw.GzipWithConfig(echoMw.GzipConfig{
-		Level: 5,
-	}))
 
 	assetHandler := http.FileServer(getFileSystem())
 
