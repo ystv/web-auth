@@ -153,9 +153,6 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 		"even": func(a int) bool {
 			return a%2 == 0
 		},
-		"len": func(a string) int {
-			return len(a)
-		},
 		"checkPermission": func(perms []permission.Permission, p string) bool {
 			return t.permissionsParser(perms, p)
 		},
