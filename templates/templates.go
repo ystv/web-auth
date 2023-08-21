@@ -74,13 +74,11 @@ func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Templ
 
 	switch templateType {
 	case NoNavType:
-		t1 = template.New("_baseNoNavs.tmpl")
-		t1.Funcs(t.getFuncMaps())
-		t1, err = t1.ParseFS(tmpls, "_baseNoNavs.tmpl", "_head.tmpl", "_footer.tmpl", string(mainTmpl))
+		t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_bodyNoNavs.tmpl", "_head.tmpl", "_footer.tmpl", mainTmpl.String())
 	case PaginationType:
-		t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl", mainTmpl.String())
+		t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl", mainTmpl.String())
 	case RegularType:
-		t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", mainTmpl.String())
+		t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", mainTmpl.String())
 	default:
 		return fmt.Errorf("unable to parse template, invalid type: %d", templateType)
 	}
