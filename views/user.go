@@ -53,11 +53,6 @@ func (v *Views) UsersFunc(c echo.Context) error {
 	var err error
 
 	if c.Request().Method == "POST" {
-		err = c.Request().ParseForm()
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("unable to parse form for users: %w", err))
-		}
-
 		column := c.FormValue("column")
 		direction := c.FormValue("direction")
 		search := c.FormValue("search")

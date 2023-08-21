@@ -32,24 +32,11 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 	case "GET":
 		return v.template.RenderTemplate(c.Response(), nil, templates.ResetTemplate, templates.NoNavType)
 	case "POST":
-		err = c.Request().ParseForm()
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to parse form for reset: %w", err))
-		}
-
 		password := c.FormValue("password")
 		if password != c.FormValue("confirmpassword") {
 			return v.template.RenderTemplate(c.Response(), nil, templates.ResetTemplate, templates.NoNavType)
 		}
 
-		err = c.Request().ParseForm()
-		if err != nil {
-			http.Error(c.Response(), err.Error(), http.StatusBadRequest)
-		}
-		p := c.Request().Form.Get("password")
-		if p != c.Request().Form.Get("confirmpassword") || p == "" {
-			return v.template.RenderTemplate(c.Response(), nil, templates.ResetTemplate, templates.NoNavType)
-		}
 		originalUser.Password = null.StringFrom(password)
 
 		updatedUser, err := v.user.UpdateUserPassword(c.Request().Context(), originalUser)

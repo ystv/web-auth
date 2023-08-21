@@ -29,15 +29,10 @@ var notification = Notification{
 
 // ForgotFunc handles sending a reset email
 func (v *Views) ForgotFunc(c echo.Context) error {
-	var err error
 	switch c.Request().Method {
 	case "GET":
 		return v.template.RenderTemplate(c.Response().Writer, nil, templates.ForgotTemplate, templates.NoNavType)
 	case "POST":
-		err = c.Request().ParseForm()
-		if err != nil {
-			http.Error(c.Response(), err.Error(), http.StatusBadRequest)
-		}
 		u := user.User{Email: c.Request().Form.Get("email")}
 
 		if u.Email == "" {

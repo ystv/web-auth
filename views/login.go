@@ -24,8 +24,6 @@ type LoginTemplate struct {
 // LoginFunc implements the login functionality, will
 // add a cookie to the cookie store for managing authentication
 func (v *Views) LoginFunc(c echo.Context) error {
-	var err error
-
 	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 	// We're ignoring the error here since sometimes the cookies keys change, and then we
 	// can overwrite it instead
@@ -49,10 +47,6 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		return v.template.RenderTemplate(c.Response(), context, templates.LoginTemplate, templates.NoNavType)
 	case "POST":
 		// Parsing form to struct
-		err = c.Request().ParseForm()
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to parse form for login: %w", err))
-		}
 		username := c.FormValue("username")
 		password := c.FormValue("password")
 		var u user.User

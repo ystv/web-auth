@@ -25,16 +25,10 @@ type UserSignup struct {
 
 // SignUpFunc will enable new users to sign up to our service
 func (v *Views) SignUpFunc(c echo.Context) error {
-	//return nil
 	switch c.Request().Method {
 	case "POST":
-		// Parsing form to struct
-		err := c.Request().ParseForm()
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse form for signup: %w", err))
-		}
 		uSignup := UserSignup{}
-		err = decoder.Decode(&uSignup, c.Request().PostForm)
+		err := decoder.Decode(&uSignup, c.Request().PostForm)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to get form values for signup: %w", err))
 		}
