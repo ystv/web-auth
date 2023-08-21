@@ -236,7 +236,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get users for users: %w", err))
 		}
 	}
-	tplUsers := DBToTemplateType(dbUsers)
+	tplUsers := DBUsersToUsersTemplateFormat(dbUsers)
 
 	var sum int
 
@@ -294,7 +294,7 @@ func (v *Views) UserFunc(c echo.Context) error {
 		}
 	}
 
-	detailedUser := DBUserToDetailedUser(userFromDB, v.user)
+	detailedUser := DBUserToUserTemplateFormat(userFromDB, v.user)
 
 	detailedUser.Permissions, err = v.user.GetPermissionsForUser(c.Request().Context(), user.User{UserID: detailedUser.UserID})
 	if err != nil {

@@ -43,8 +43,8 @@ func (v *Views) getData(s *sessions.Session) *Context {
 	return &c
 }
 
-// DBToTemplateType converts from the DB layer type to the user template type
-func DBToTemplateType(dbUsers []user.User) []user.StrippedUser {
+// DBUsersToUsersTemplateFormat converts from the DB layer type to the user template type
+func DBUsersToUsersTemplateFormat(dbUsers []user.User) []user.StrippedUser {
 	var tplUsers []user.StrippedUser
 	for _, dbUser := range dbUsers {
 		var strippedUser user.StrippedUser
@@ -72,7 +72,7 @@ func DBToTemplateType(dbUsers []user.User) []user.StrippedUser {
 	return tplUsers
 }
 
-func DBUserToDetailedUser(dbUser user.User, store *user.Store) user.DetailedUser {
+func DBUserToUserTemplateFormat(dbUser user.User, store *user.Store) user.DetailedUser {
 	var u user.DetailedUser
 	var err error
 	u.UserID = dbUser.UserID
