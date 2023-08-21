@@ -33,6 +33,7 @@ type (
 		Username   string
 		Password   string
 		DomainName string
+		Defaults   Defaults
 	}
 
 	// Mail represents an email to be sent
@@ -68,16 +69,8 @@ func NewMailer(config Config) *Mailer {
 		return nil
 	} else {
 		log.Printf("connected to mailer: %s", config.Host)
-		return &Mailer{smtpClient, Defaults{}, config.DomainName}
+		return &Mailer{smtpClient, config.Defaults, config.DomainName}
 	}
-}
-
-// AddDefaults adds the default recipients
-func (m *Mailer) AddDefaults(defaults Defaults) {
-	m.Defaults.DefaultTo = defaults.DefaultTo
-	m.Defaults.DefaultCC = defaults.DefaultCC
-	m.Defaults.DefaultBCC = defaults.DefaultBCC
-	m.Defaults.DefaultFrom = defaults.DefaultFrom
 }
 
 // CheckSendable verifies that the email can be sent
