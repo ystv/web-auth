@@ -92,7 +92,7 @@ func (v *Views) newJWT(u user.User) (string, error) {
 	return tokenString, nil
 }
 
-// TestAPITokenFunc returns a JSON object with a valid JWT
+// TestAPITokenFunc returns a JSON object if the JWT in the Authorization header is valid.
 func (v *Views) TestAPITokenFunc(c echo.Context) error {
 	if c.Request().Method == "GET" {
 		token := c.Request().Header.Get("Authorization")
