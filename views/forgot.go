@@ -73,7 +73,7 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 					URL   string
 				}{
 					Email: userFromDB.Email,
-					URL:   "https://" + v.conf.DomainName + "/forgot/" + url,
+					URL:   "https://" + v.conf.DomainName + "/reset/" + url,
 				},
 			}
 
@@ -87,7 +87,7 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 			log.Printf("request for password reset email: \"%s\"", userFromDB.Email)
 		} else {
 			log.Printf("no Mailer present")
-			log.Printf("reset email: %s, code: %s, reset link: https://%s/reset?code=%s", userFromDB.Email, url, v.conf.DomainName, url)
+			log.Printf("reset email: %s, code: %s, reset link: https://%s/reset/%s", userFromDB.Email, url, v.conf.DomainName, url)
 		}
 
 		// User doesn't exist, we'll pretend they've got an email
