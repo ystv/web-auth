@@ -108,35 +108,6 @@ func (m *Mailer) SendMail(item Mail) error {
 	return email.Send(m.SMTPClient)
 }
 
-// SendErrorFatalMail sends a standard template error fatal email
-func (m *Mailer) SendErrorFatalMail(item Mail) error {
-	err := m.CheckSendable(item)
-	if err != nil {
-		return err
-	}
-	to, from, cc, bcc := m.parseHeader(item)
-	errorTemplate := template.New("Fatal Error Template")
-	errorTemplate = template.Must(errorTemplate.Parse("<body><p style=\"color: red;\">A <b>FATAL ERROR</b> OCCURRED!<br><br><code>{{.}}</code></p><br><br>We apologise for the inconvenience.</body>"))
-	body := bytes.Buffer{}
-	err = errorTemplate.Execute(&body, item.Error)
-	if err != nil {
-		return fmt.Errorf("failed to exec tpl: %w", err)
-	}
-	email := mail.NewMSG()
-	email.SetFrom(from).AddTo(to).SetSubject("FATAL ERROR - YSTV Web Auth")
-	if len(cc) != 0 {
-		email.AddCc(cc...)
-	}
-	if len(bcc) != 0 {
-		email.AddBcc(bcc...)
-	}
-	email.SetBody(mail.TextHTML, body.String())
-	if email.Error != nil {
-		return fmt.Errorf("failed to set mail data: %w", email.Error)
-	}
-	return email.Send(m.SMTPClient)
-}
-
 func (m *Mailer) parseHeader(item Mail) (to, from string, cc, bcc []string) {
 	if len(item.To) > 0 {
 		to = item.To
