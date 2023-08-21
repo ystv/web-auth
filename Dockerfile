@@ -10,23 +10,11 @@ ARG WAUTH_VERSION_ARG
 COPY go.mod .
 COPY go.sum .
 
-# Running upgrades
-RUN apk update && apk upgrade
-
-# Install NPM for MJML
-RUN apk add --update npm
-
 # Download dependencies
 RUN go mod download
 
 # Copy source
 COPY . .
-
-# Initialising NPM environment for MJML
-RUN #npm init -y && npm install mjml
-
-# Generate the mjml files to tmpl
-RUN #go generate
 
 # Set build variables
 RUN echo -n "-X 'main.Version=$WAUTH_VERSION_ARG" > ./ldflags && \
