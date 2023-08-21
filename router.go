@@ -8,7 +8,6 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/views"
-	"io/fs"
 	"net/http"
 )
 
@@ -77,7 +76,7 @@ func (r *Router) loadRoutes() {
 	// This needs to be here because of the function
 	r.router.HTTPErrorHandler = r.views.CustomHTTPErrorHandler
 
-	assetHandler := http.FileServer(getFileSystem())
+	assetHandler := http.FileServer(http.FS(echo.MustSubFS(embeddedFiles, "public/static")))
 
 	r.router.GET("/public/*", echo.WrapHandler(http.StripPrefix("/public/", assetHandler)))
 
@@ -180,13 +179,4 @@ func (r *Router) loadRoutes() {
 	base.Match(validMethods, "signup", r.views.SignUpFunc)
 	base.Match(validMethods, "forgot", r.views.ForgotFunc)
 	base.Match(validMethods, "reset/:url", r.views.ResetURLFunc)
-}
-
-func getFileSystem() http.FileSystem {
-	fsys, err := fs.Sub(embeddedFiles, "public/static")
-	if err != nil {
-		panic(err)
-	}
-
-	return http.FS(fsys)
 }
