@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/labstack/echo/v4"
-	middleware2 "github.com/labstack/echo/v4/middleware"
+	echoMw "github.com/labstack/echo/v4/middleware"
 	"github.com/ystv/web-auth/middleware"
 	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/views"
@@ -54,11 +54,11 @@ func (r *Router) Start() error {
 func (r *Router) loadRoutes() {
 	r.router.RouteNotFound("/*", r.views.Error404)
 
-	r.router.Use(middleware2.BodyLimit("15M"))
+	r.router.Use(echoMw.BodyLimit("15M"))
 
 	r.router.HTTPErrorHandler = r.views.CustomHTTPErrorHandler
 
-	r.router.Use(middleware2.GzipWithConfig(middleware2.GzipConfig{
+	r.router.Use(echoMw.GzipWithConfig(echoMw.GzipConfig{
 		Level: 5,
 	}))
 
