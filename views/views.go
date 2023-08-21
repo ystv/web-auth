@@ -13,7 +13,6 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/patrickmn/go-cache"
 	"github.com/ystv/web-auth/infrastructure/db"
-	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/user"
 )
 
@@ -54,7 +53,6 @@ type (
 		role       *role.Store
 		user       *user.Store
 		cookie     *sessions.CookieStore
-		mailer     *mail.Mailer
 		cache      *cache.Cache
 		validate   *validator.Validate
 		template   *templates.Templater
@@ -71,15 +69,6 @@ func New(conf *Config, host string) *Views {
 	v.user = user.NewUserRepo(dbStore)
 
 	v.template = templates.NewTemplate(v.permission, v.role, v.user)
-
-	// Connecting to mail
-	v.mailer = mail.NewMailer(mail.Config{
-		Host:       conf.Mail.Host,
-		Port:       conf.Mail.Port,
-		Username:   conf.Mail.Username,
-		Password:   conf.Mail.Password,
-		DomainName: conf.DomainName,
-	})
 
 	// Initialising cache
 	v.cache = cache.New(1*time.Hour, 1*time.Hour)

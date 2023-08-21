@@ -48,21 +48,16 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 		url := uuid.NewString()
 		v.cache.Set(url, userFromDB.UserID, cache.DefaultExpiration)
 
-		// Valid request, send email with reset code
-		if v.mailer != nil {
-			v.mailer = mail.NewMailer(mail.Config{
-				Host:       v.conf.Mail.Host,
-				Port:       v.conf.Mail.Port,
-				Username:   v.conf.Mail.Username,
-				Password:   v.conf.Mail.Password,
-				DomainName: v.conf.DomainName,
-			})
-			if v.mailer == nil {
-				log.Printf("no Mailer present")
-				log.Printf("reset email: %s, code: %s, reset link: https://%s/reset?code=%s", userFromDB.Email, url, v.conf.DomainName, url)
-				return v.template.RenderTemplate(c.Response().Writer, notification, templates.NotificationTemplate, templates.NoNavType)
-			}
+		mailer := mail.NewMailer(mail.Config{
+			Host:       v.conf.Mail.Host,
+			Port:       v.conf.Mail.Port,
+			Username:   v.conf.Mail.Username,
+			Password:   v.conf.Mail.Password,
+			DomainName: v.conf.DomainName,
+		})
 
+		// Valid request, send email with reset code
+		if mailer != nil {
 			emailTemplate, err := v.template.RenderEmail(templates.ForgotEmailTemplate)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to render email for forgot: %w", err))
@@ -82,10 +77,13 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 				},
 			}
 
-			err = v.mailer.SendMail(file)
+			err = mailer.SendMail(file)
 			if err != nil {
+				log.Printf("failed to send mail for forgot: %+v", err)
 				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to send email for forgot: %w", err))
 			}
+			_ = mailer.Close()
+
 			log.Printf("request for password reset email: \"%s\"", userFromDB.Email)
 		} else {
 			log.Printf("no Mailer present")
