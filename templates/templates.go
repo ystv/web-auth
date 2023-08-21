@@ -91,8 +91,8 @@ func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Templ
 	return t1.Execute(w, data)
 }
 
-func (t *Templater) RenderEmail(emailTemplate Template) *template.Template {
-	return template.Must(template.New(emailTemplate.String()).ParseFS(tmpls, emailTemplate.String()))
+func (t *Templater) RenderEmail(emailTemplate Template) (*template.Template, error) {
+	return template.New(emailTemplate.String()).ParseFS(tmpls, emailTemplate.String())
 }
 
 func (t *Templater) getFuncMaps() template.FuncMap {

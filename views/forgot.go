@@ -63,9 +63,14 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 				return v.template.RenderTemplate(c.Response().Writer, notification, templates.NotificationTemplate, templates.NoNavType)
 			}
 
+			emailTemplate, err := v.template.RenderEmail(templates.ForgotEmailTemplate)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to render email for forgot: %w", err))
+			}
+
 			file := mail.Mail{
 				Subject: "YSTV Security - Reset Password",
-				Tpl:     v.template.RenderEmail(templates.ForgotEmailTemplate),
+				Tpl:     emailTemplate,
 				To:      userFromDB.Email,
 				From:    "YSTV Security <no-reply@ystv.co.uk>",
 				TplData: struct {

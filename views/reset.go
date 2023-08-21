@@ -92,9 +92,14 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 			DomainName: v.conf.DomainName,
 		})
 
+		emailTemplate, err := v.template.RenderEmail(templates.ResetEmailTemplate)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to render email for reset: %w", err))
+		}
+
 		file := mail.Mail{
 			Subject: "YSTV Security - Reset Password",
-			Tpl:     v.template.RenderEmail(templates.ResetEmailTemplate),
+			Tpl:     emailTemplate,
 			To:      userFromDB.Email,
 			From:    "YSTV Security <no-reply@ystv.co.uk>",
 			TplData: struct {
