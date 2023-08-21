@@ -28,7 +28,6 @@ func main() {
 	if err != nil {
 		local = false
 	} else {
-		global = false
 		local = true
 	}
 
@@ -39,6 +38,8 @@ func main() {
 		log.Fatal("unable to find env files and no env variables have been supplied")
 	} else if !local && !global {
 		log.Println("using env variables")
+	} else if local && global {
+		log.Println("using global and local env files")
 	} else if !local {
 		log.Println("using global env file")
 	} else {
