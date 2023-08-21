@@ -106,12 +106,12 @@ func main() {
 
 	v := views.New(conf, dbHost)
 
-	router1 := NewRouter(&RouterConf{
+	router := NewRouter(&RouterConf{
 		Config: conf,
 		Views:  v,
 	})
 
-	err = router1.Start()
+	err = router.Start()
 	if err != nil {
 		log.Fatalf("The web server couldn't be started!\n\n%s\n\nExiting!", err)
 	}
