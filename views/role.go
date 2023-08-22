@@ -38,7 +38,7 @@ func (v *Views) bindRoleToTemplate(r1 role.Role) user.RoleTemplate {
 func (v *Views) RolesFunc(c echo.Context) error {
 	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 
-	c1 := v.getData(session)
+	c1 := v.getSessionData(session)
 
 	roles, err := v.role.GetRoles(c.Request().Context())
 	if err != nil {
@@ -68,7 +68,7 @@ func (v *Views) RolesFunc(c echo.Context) error {
 func (v *Views) RoleFunc(c echo.Context) error {
 	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 
-	c1 := v.getData(session)
+	c1 := v.getSessionData(session)
 
 	roleID, err := strconv.Atoi(c.Param("roleid"))
 	if err != nil {

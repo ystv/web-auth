@@ -20,7 +20,7 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 			log.Println(err)
 			return c.Redirect(http.StatusFound, "/")
 		}
-		c1 := v.getData(session)
+		c1 := v.getSessionData(session)
 		if !c1.User.Authenticated {
 			return c.Redirect(http.StatusFound, "/")
 		}
@@ -60,7 +60,7 @@ func (v *Views) RequiresLoginJSON(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 			return c.JSON(http.StatusInternalServerError, data)
 		}
-		c1 := v.getData(session)
+		c1 := v.getSessionData(session)
 		if !c1.User.Authenticated {
 			data := struct {
 				Error string `json:"error"`
@@ -111,7 +111,7 @@ func (v *Views) RequirePermission(p permissions.Permissions) echo.MiddlewareFunc
 				return fmt.Errorf("failed to get session for requirePermission: %w", err)
 			}
 
-			c1 := v.getData(session)
+			c1 := v.getSessionData(session)
 
 			perms, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 			if err != nil {

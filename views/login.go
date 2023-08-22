@@ -31,7 +31,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 	switch c.Request().Method {
 	case "GET":
 		// Data for our HTML template
-		context := v.getData(session)
+		context := v.getSessionData(session)
 
 		// Check if there is a callback request
 		callbackURL, err := url.Parse(c.QueryParam("callback"))
@@ -72,7 +72,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 			}
 
 			if resetPw {
-				ctx := v.getData(session)
+				ctx := v.getSessionData(session)
 				ctx.Callback = callback
 				ctx.Message = "Password reset required"
 				ctx.MsgType = "is-danger"
@@ -82,7 +82,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 
 				return c.Redirect(http.StatusFound, fmt.Sprintf("https://%s/forgot/%s", v.conf.DomainName, url1))
 			}
-			ctx := v.getData(session)
+			ctx := v.getSessionData(session)
 			ctx.Callback = callback
 			ctx.Message = "Invalid username or password"
 			ctx.MsgType = "is-danger"

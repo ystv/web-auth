@@ -13,7 +13,7 @@ func (v *Views) IndexFunc(c echo.Context) error {
 	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 
 	// Data for our HTML template
-	context := v.getData(session)
+	context := v.getSessionData(session)
 
 	// Check if there is a callback request
 	callbackURL, err := url.Parse(c.QueryParam("callback"))

@@ -29,7 +29,7 @@ type (
 	}
 )
 
-func (v *Views) getData(s *sessions.Session) *Context {
+func (v *Views) getSessionData(s *sessions.Session) *Context {
 	val := s.Values["user"]
 	u, ok := val.(user.User)
 	if !ok {
