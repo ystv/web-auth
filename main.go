@@ -18,18 +18,10 @@ func main() {
 	var local, global bool
 	var err error
 	err = godotenv.Load(".env") // Load .env
-	if err != nil {
-		global = false
-	} else {
-		global = true
-	}
+	global = err == nil
 
 	err = godotenv.Overload(".env.local") // Load .env.local
-	if err != nil {
-		local = false
-	} else {
-		local = true
-	}
+	local = err == nil
 
 	signingKey := os.Getenv("WAUTH_SIGNING_KEY")
 	dbHost := os.Getenv("WAUTH_DB_HOST")
