@@ -73,7 +73,6 @@ func (r *Router) middleware() {
 func (r *Router) loadRoutes() {
 	r.router.RouteNotFound("/*", r.views.Error404)
 
-	// This needs to be here because of the function
 	r.router.HTTPErrorHandler = r.views.CustomHTTPErrorHandler
 
 	assetHandler := http.FileServer(http.FS(echo.MustSubFS(embeddedFiles, "public/static")))
