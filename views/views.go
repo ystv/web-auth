@@ -33,10 +33,11 @@ type (
 
 	// SMTPConfig stores the SMTP Mailer configuration
 	SMTPConfig struct {
-		Host     string
-		Username string
-		Password string
-		Port     int
+		Host       string
+		Username   string
+		Password   string
+		Port       int
+		DomainName string
 	}
 
 	// SecurityConfig stores the security configuration

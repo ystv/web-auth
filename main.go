@@ -78,6 +78,8 @@ func main() {
 
 	address := os.Getenv("WAUTH_ADDRESS")
 
+	domainName := os.Getenv("WAUTH_DOMAIN_NAME")
+
 	// Generate config
 	conf := &views.Config{
 		Version:           Version,
@@ -85,14 +87,15 @@ func main() {
 		Address:           address,
 		DatabaseURL:       dbConnectionString,
 		BaseDomainName:    os.Getenv("WAUTH_BASE_DOMAIN_NAME"),
-		DomainName:        os.Getenv("WAUTH_DOMAIN_NAME"),
+		DomainName:        domainName,
 		LogoutEndpoint:    os.Getenv("WAUTH_LOGOUT_ENDPOINT"),
 		SessionCookieName: sessionCookieName,
 		Mail: views.SMTPConfig{
-			Host:     os.Getenv("WAUTH_MAIL_HOST"),
-			Username: os.Getenv("WAUTH_MAIL_USER"),
-			Password: os.Getenv("WAUTH_MAIL_PASS"),
-			Port:     mailPort,
+			Host:       os.Getenv("WAUTH_MAIL_HOST"),
+			Username:   os.Getenv("WAUTH_MAIL_USER"),
+			Password:   os.Getenv("WAUTH_MAIL_PASS"),
+			Port:       mailPort,
+			DomainName: domainName,
 		},
 		Security: views.SecurityConfig{
 			EncryptionKey:     os.Getenv("WAUTH_ENCRYPTION_KEY"),

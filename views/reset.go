@@ -87,7 +87,7 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 		Port:       v.conf.Mail.Port,
 		Username:   v.conf.Mail.Username,
 		Password:   v.conf.Mail.Password,
-		DomainName: v.conf.DomainName,
+		DomainName: v.conf.Mail.DomainName,
 	})
 
 	// Valid request, send email with reset code
