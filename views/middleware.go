@@ -108,18 +108,14 @@ func (v *Views) RequirePermission(p permissions.Permissions) echo.MiddlewareFunc
 		return func(c echo.Context) error {
 			session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 			if err != nil {
-				log.Println(err)
-				http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
-				return v.LoginFunc(c)
+				return fmt.Errorf("failed to get session for requirePermission: %w", err)
 			}
 
 			c1 := v.getData(session)
 
 			perms, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 			if err != nil {
-				log.Println(err)
-				http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
-				return v.LoginFunc(c)
+				return fmt.Errorf("failed to get permissions for requirePermission: %w", err)
 			}
 
 			acceptedPerms := permission.SufficientPermissionsFor(p)
