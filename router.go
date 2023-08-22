@@ -150,7 +150,7 @@ func (r *Router) loadRoutes() {
 
 	api := r.router.Group("/api")
 	// api is all the methods that are used by the api interactions
-	api.GET("/set_token", r.views.SetTokenHandler)
+	api.GET("/set_token", r.views.SetTokenHandler, r.views.RequiresLoginJSON)
 	api.GET("/test", r.views.TestAPITokenFunc)
 	api.GET("/health", func(c echo.Context) error {
 		marshal, err := json.Marshal(struct {
