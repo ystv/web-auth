@@ -116,18 +116,18 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 			message.Message = fmt.Sprintf("Please forward the link to this email: %s, reset link: https://%s/reset/%s", userFromDB.Email, v.conf.DomainName, url)
 			message.Error = fmt.Errorf("failed to send mail: %w", err)
 			log.Printf("failed to send mail: %+v", err)
-			log.Printf("reset email: %s, url: %s, reset link: https://%s/reset/%s", userFromDB.Email, url, v.conf.DomainName, url)
+			log.Printf("password reset requested for email: %s by user: %d", userFromDB.Email, c1.User.UserID)
 			return c.JSON(http.StatusInternalServerError, message)
 		}
 		_ = mailer.Close()
 
-		log.Printf("request for password reset email: \"%s\"", userFromDB.Email)
+		log.Printf("password reset requested for email: %s by user: %d", userFromDB.Email, c1.User.UserID)
 		message.Message = fmt.Sprintf("Reset email sent to: \"%s\"", userFromDB.Email)
 	} else {
 		message.Message = fmt.Sprintf("No mailer present\nPlease forward the link to this email: %s, reset link: https://%s/reset/%s", userFromDB.Email, v.conf.DomainName, url)
 		message.Error = fmt.Errorf("no mailer present")
 		log.Printf("no Mailer present")
-		log.Printf("reset email: %s, url: %s, reset link: https://%s/reset/%s", userFromDB.Email, url, v.conf.DomainName, url)
+		log.Printf("password reset requested for email: %s by user: %d", userFromDB.Email, c1.User.UserID)
 	}
 	log.Printf("reset for %d (%s) requested by %d (%s)", userFromDB.UserID, userFromDB.Firstname+" "+userFromDB.Lastname, c1.User.UserID, c1.User.Firstname+" "+c1.User.Lastname)
 	return c.JSON(status, message)
