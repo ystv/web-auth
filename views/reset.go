@@ -92,7 +92,7 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 
 	// Valid request, send email with reset code
 	if mailer != nil {
-		emailTemplate, err := v.template.RenderEmail(templates.ResetEmailTemplate)
+		emailTemplate, err := v.template.GetEmailTemplate(templates.ResetEmailTemplate)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to render email for reset: %w", err))
 		}

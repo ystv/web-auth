@@ -58,7 +58,7 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 
 		// Valid request, send email with reset code
 		if mailer != nil {
-			emailTemplate, err := v.template.RenderEmail(templates.ForgotEmailTemplate)
+			emailTemplate, err := v.template.GetEmailTemplate(templates.ForgotEmailTemplate)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to render email for forgot: %w", err))
 			}
