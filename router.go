@@ -175,7 +175,7 @@ func (r *Router) loadRoutes() {
 	// base is the functions that don't require being logged in
 	base.GET("", r.views.IndexFunc)
 	base.Match(validMethods, "login", r.views.LoginFunc)
-	base.Match(validMethods, "logout", r.views.LogoutFunc)
+	base.Match(validMethods, "logout", r.views.LogoutFunc, r.views.RequiresLogin)
 	base.Match(validMethods, "signup", r.views.SignUpFunc)
 	base.Match(validMethods, "forgot", r.views.ForgotFunc)
 	base.Match(validMethods, "reset/:url", r.views.ResetURLFunc)
