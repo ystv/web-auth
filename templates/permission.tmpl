@@ -23,7 +23,25 @@
                 </div>
             </div>
             <div class="column">
-                {{parsePermissionIntoHTML .Permission .UserPermissions}}
+                {{$roleAdmin := checkPermission .UserPermissions "ManageMembers.Group"}}
+                {{with .Permission}}
+                    <p>Permission ID: {{.PermissionID}}<br>
+                    Name: {{.Name}}<br>
+                    Description: {{.Description}}{{if gt (len .Roles) 0}}<br><br>
+                        Inherited by: <ol>
+                        {{range .Roles}}
+                            <li style='list-style-type: none;'><span class='tab'></span>
+                                {{if $roleAdmin}}
+                                    <a href="/internal/role/{{.RoleID}}">{{.Name}}</a>
+                                {{else}}
+                                    {{.Name}}
+                                {{end}}
+                            </li>
+                        {{end}}
+                        </ol>
+                    {{end}}
+                    </p>
+                {{end}}
             </div>
         </div>
     </div>

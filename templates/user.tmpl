@@ -41,7 +41,74 @@
             <div class="column">
                 <p id="message" style="color: green"></p>
                 <p id="error" style="color: red"></p>
-                {{parseUserIntoHTML .User .UserPermissions}}
+                {{$roleAdmin := checkPermission .UserPermissions "ManageMembers.Group"}}
+                {{$permissionAdmin := checkPermission .UserPermissions "ManageMembers.Permission"}}
+                {{with .User}}
+                    <p>
+                    {{if ne .DeletedBy.UserID -1}}
+                        Deleted by {{if and (and (eq (len .DeletedBy.Firstname) 0) (eq (len .DeletedBy.Nickname) 0)) (eq (len .DeletedBy.Lastname) 0)}}
+                            UNKNOWN({{.DeletedBy.UserID}}){{else}}<a href="/internal/user/{{.DeletedBy.UserID}}">{{formatUserName .DeletedBy}}</a>
+                        {{end}} at {{.DeletedAt.String}}<br>
+                    {{else if .DeletedAt.Valid}}
+                        Deleted by UNKNOWN at {{.DeletedAt.String}}<br>
+                    {{end}}
+                    User ID: {{.UserID}}<br>
+                    First name: {{.Firstname}}<br>
+                    Nickname: {{.Nickname}}<br>
+                    Last name: {{.Lastname}}<br>
+                    Username: {{.Username}}<br>
+                    Email: {{.Email}}<br>
+                    Enabled: {{.Enabled}}<br>
+                    Login type: {{.LoginType}}<br>
+                    {{if .LDAPUsername.Valid}}
+                        LDAP (Active Directory) username: {{.LDAPUsername.String}}<br>
+                    {{end}}
+                    Avatar source: {{if .UseGravatar}}Using gravatar{{else}}Using local file{{end}}<br>
+                    {{if gt (len .Permissions) 0}}
+                    Permissions: <ol>
+                        {{range .Permissions}}
+                            <li style='list-style-type: none;'><span class='tab'></span>
+                                {{if $permissionAdmin}}
+                                    <a href="/internal/permission/{{.PermissionID}}">{{.Name}}</a>
+                                {{else}}
+                                    {{.Name}}
+                                {{end}}
+                            </li>
+                        {{end}}
+                    </ol><br>
+                    {{end}}
+                    {{if gt (len .Roles) 0}}
+                    Roles: <ol>
+                        {{range .Roles}}
+                            <li style='list-style-type: none;'><span class='tab'></span>
+                                {{if $roleAdmin}}
+                                    <a href="/internal/role/{{.RoleID}}">{{.Name}}</a>
+                                {{else}}
+                                    {{.Name}}
+                                {{end}}
+                            </li>
+                        {{end}}
+                    </ol><br>
+                    {{end}}
+                    {{if .LastLogin.Valid}}
+                        Last login at {{.LastLogin.String}}<br>
+                    {{end}}
+                    {{if ne .CreatedBy.UserID -1}}
+                        Created by {{if and (and (eq (len .CreatedBy.Firstname) 0) (eq (len .CreatedBy.Nickname) 0)) (eq (len .CreatedBy.Lastname) 0)}}
+                            UNKNOWN({{.CreatedBy.UserID}}){{else}}<a href="/internal/user/{{.CreatedBy.UserID}}">{{formatUserName .CreatedBy}}</a>
+                        {{end}} at {{.CreatedAt.String}}<br>
+                    {{else if .CreatedAt.Valid}}
+                        Created by UNKNOWN at {{.CreatedAt.String}}<br>
+                    {{end}}
+                    {{if ne .UpdatedBy.UserID -1}}
+                        Updated by {{if and (and (eq (len .UpdatedBy.Firstname) 0) (eq (len .UpdatedBy.Nickname) 0)) (eq (len .UpdatedBy.Lastname) 0)}}
+                            UNKNOWN({{.UpdatedBy.UserID}}){{else}}<a href="/internal/user/{{.UpdatedBy.UserID}}">{{formatUserName .UpdatedBy}}</a>
+                        {{end}} at {{.UpdatedAt.String}}<br>
+                    {{else if .UpdatedBy.Valid}}
+                        Updated by UNKNOWN at {{.UpdatedAt.String}}<br>
+                    {{end}}
+                    </p>
+                {{end}}
             </div>
         </div>
     </div>

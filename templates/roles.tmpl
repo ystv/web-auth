@@ -26,7 +26,16 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {{parseRolesIntoHTML .Roles}}
+                        {{range .Roles}}
+                            <tr>
+                                <th>{{.RoleID}}</th>
+                                <td>{{.Name}}</td>
+                                <td>{{.Description}}</td>
+                                <td>{{.Users}}</td>
+                                <td>{{.Permissions}}</td>
+                                <td><a href="/internal/role/{{.RoleID}}">View</a></td>
+                            </tr>
+                        {{end}}
                         </tbody>
                         <tfoot>
                         <tr>

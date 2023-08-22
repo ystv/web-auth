@@ -104,6 +104,7 @@
             <header class="card-header">
                 <p class="card-header-title">Users</p>
             </header>
+            {{$userAdmin := checkPermission $.UserPermissions "ManageMembers.Members.Admin"}}
             {{if (checkPermission .UserPermissions "ManageMembers.Members.Add")}}
                 <div class="card" style="margin-bottom: 0">
                     <div class="column">
@@ -125,13 +126,26 @@
                             <th>Enabled</th>
                             <th>Deleted</th>
                             <th>Last login</th>
-                            {{if (checkPermission .UserPermissions "ManageMembers.Members.Admin")}}
+                            {{if $userAdmin}}
                                 <th>View</th>
                             {{end}}
                         </tr>
                         </thead>
                         <tbody>
-                        {{parseUsersIntoHTML .Users .UserPermissions}}
+                        {{range .Users}}
+                            <tr>
+                                <td>{{.UserID}}</td>
+                                <td>{{.Name}}</td>
+                                <td>{{.Username}}</td>
+                                <td>{{.Email}}</td>
+                                <td>{{if .Enabled}}Enabled{{else}}Disabled{{end}}</td>
+                                <td>{{if .Deleted}}Deleted{{else}}-{{end}}</td>
+                                <td>{{.LastLogin}}</td>
+                                {{if $userAdmin}}
+                                    <td><a href="/internal/user/{{.UserID}}">View</a></td>
+                                {{end}}
+                            </tr>
+                        {{end}}
                         </tbody>
                         <tfoot>
                         <tr>
@@ -142,7 +156,7 @@
                             <th>Enabled</th>
                             <th>Deleted</th>
                             <th>Last login</th>
-                            {{if (checkPermission .UserPermissions "ManageMembers.Members.Admin")}}
+                            {{if $userAdmin}}
                                 <th>View</th>
                             {{end}}
                         </tr>
