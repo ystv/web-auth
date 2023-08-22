@@ -46,7 +46,7 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-// RequiresLoginJSON is a middleware which will be used for each
+// RequiresLoginJSON is a middleware which is used for each
 // httpHandler to check if there is any active session and returns json if not
 func (v *Views) RequiresLoginJSON(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
