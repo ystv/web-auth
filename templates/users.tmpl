@@ -247,8 +247,8 @@
                                         />
                                     </div>
                                 </div>
-                                <a class="button is-info" onclick="addUser()"><i class="fa-solid fa-user-plus"></i>&ensp;
-                                    Add User</a>
+                                <button class="button is-info" onclick="addUser()" id="addUserButton"><i class="fa-solid fa-user-plus"></i>&ensp;
+                                    Add User</button>
                             </form>
                         </div>
                     </div>
@@ -272,6 +272,7 @@
         }
 
         function addUser() {
+            document.getElementById("addUserButton").disabled = true;
             $.ajax({
                 url: '/internal/user/add',
                 type: 'post',
@@ -279,9 +280,15 @@
                 contentType: 'application/x-www-form-urlencoded',
                 data: $('#addUserForm').serialize(),
                 success: function (data) {
-                    document.getElementById("addUserModal").classList.remove("is-active");
                     $("#message").html(data.message);
                     $("#error").html(data.error);
+                    document.getElementById("firstname").value = "";
+                    document.getElementById("lastname").value = "";
+                    document.getElementById("universityusername").value = "";
+                    document.getElementById("username").value = "";
+                    document.getElementById("email").value = "";
+                    document.getElementById("addUserButton").disabled = false;
+                    document.getElementById("addUserModal").classList.remove("is-active");
                 },
             })
         }
