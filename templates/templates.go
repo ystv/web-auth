@@ -64,6 +64,7 @@ const (
 	PermissionsTemplate         Template = "permissions.tmpl"
 	PermissionTemplate          Template = "permission.tmpl"
 	ManageAPITemplate           Template = "manageAPI.tmpl"
+	UserAddTemplate             Template = "userAdd.tmpl"
 )
 
 // here to verify we are meeting the interface

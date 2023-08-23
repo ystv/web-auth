@@ -332,11 +332,21 @@ func (v *Views) userFunc(c echo.Context, userID int) error {
 
 // UserAddFunc handles an add user request
 func (v *Views) UserAddFunc(c echo.Context) error {
-	if c.Request().Method == http.MethodPost {
-		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 
-		c1 := v.getData(session)
+	c1 := v.getData(session)
 
+	if c.Request().Method == http.MethodGet {
+		data := struct {
+			UserID     int
+			ActivePage string
+		}{
+			UserID:     c1.User.UserID,
+			ActivePage: "useradd",
+		}
+
+		return v.template.RenderTemplate(c.Response(), data, templates.UserAddTemplate)
+	} else if c.Request().Method == http.MethodPost {
 		err := c.Request().ParseForm()
 		if err != nil {
 			return v.errorHandle(c, fmt.Errorf("failed to parse form for userAdd: %+v", err))
