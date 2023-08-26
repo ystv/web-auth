@@ -47,6 +47,16 @@ func main() {
 		log.Println("using local env file")
 	}
 
+	debug, err := strconv.ParseBool(os.Getenv("WAUTH_DEBUG"))
+	if err != nil {
+		log.Printf("failed to get WAUTH_DEBUG, defaulting to false: %v", err)
+		debug = false
+	}
+
+	if debug {
+		log.SetFlags(log.Llongfile)
+	}
+
 	// Validate the required config is set
 	if signingKey == "" {
 		log.Fatalf("signing key not set")
@@ -78,12 +88,6 @@ func main() {
 	mailPort, err := strconv.Atoi(os.Getenv("WAUTH_MAIL_PORT"))
 	if err != nil {
 		log.Fatalf("failed to get port for mailer: %v", err)
-	}
-
-	debug, err := strconv.ParseBool(os.Getenv("WAUTH_DEBUG"))
-	if err != nil {
-		log.Printf("failed to get WAUTH_DEBUG, defaulting to false: %v", err)
-		debug = false
 	}
 
 	if debug {
