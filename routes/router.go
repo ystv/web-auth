@@ -57,7 +57,7 @@ func (r *Router) Start() error {
 	return fmt.Errorf("failed to start router on port %s", r.config.Port)
 }
 
-// loadRoutes loads all the potential rouutes a user could take
+// loadRoutes loads all the potential routes a user could take
 func (r *Router) loadRoutes() {
 	r.router.RouteNotFound("/*", r.views.Error404)
 
