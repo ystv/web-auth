@@ -1,8 +1,16 @@
 package views
 
 import (
-	"github.com/gorilla/sessions"
+	"context"
+	"crypto/md5"
+	"encoding/hex"
+	"fmt"
+	"github.com/labstack/echo/v4"
+	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/user"
+	"gopkg.in/guregu/null.v4"
+	"log"
+	"strings"
 )
 
 type (
@@ -16,12 +24,18 @@ type (
 		Callback string
 		// User is the stored logged-in user
 		User user.User
+		// Version is the version that is running
+		Version string
 	}
 )
 
-func (v *Views) getData(s *sessions.Session) *Context {
-	val := s.Values["user"]
-	u := user.User{}
+func (v *Views) getSessionData(eC echo.Context) *Context {
+	session, err := v.cookie.Get(eC.Request(), v.conf.SessionCookieName)
+	if err != nil {
+		log.Printf("error getting session: %+v", err)
+		return nil
+	}
+	val := session.Values["user"]
 	u, ok := val.(user.User)
 	if !ok {
 		u = user.User{Authenticated: false}
@@ -29,56 +43,144 @@ func (v *Views) getData(s *sessions.Session) *Context {
 	c := Context{
 		Callback: "/internal",
 		User:     u,
+		Version:  v.conf.Version,
 	}
 	return &c
 }
 
-// DBToTemplateType converts from the DB layer type to the user template type
-func DBToTemplateType(dbUser *[]user.User) []UserStripped {
-	var tplUsers []UserStripped
-	for i := range *dbUser {
-		user1 := UserStripped{}
-		user1.UserID = (*dbUser)[i].UserID
-		user1.Username = (*dbUser)[i].Username
-		user1.Nickname = (*dbUser)[i].Nickname
-		user1.Name = (*dbUser)[i].Firstname + " " + (*dbUser)[i].Lastname
-		user1.Email = (*dbUser)[i].Email
-		user1.Avatar = (*dbUser)[i].Avatar
-		user1.UseGravatar = (*dbUser)[i].UseGravatar
-		if (*dbUser)[i].LastLogin.Valid {
-			user1.LastLogin = (*dbUser)[i].LastLogin.Time.Format("2006-01-02 15:04:05")
+// DBUsersToUsersTemplateFormat converts from the DB layer type to the user template type
+func DBUsersToUsersTemplateFormat(dbUsers []user.User) []user.StrippedUser {
+	var tplUsers []user.StrippedUser
+	for _, dbUser := range dbUsers {
+		var strippedUser user.StrippedUser
+		strippedUser.UserID = dbUser.UserID
+		strippedUser.Username = dbUser.Username
+		if dbUser.Firstname != dbUser.Nickname {
+			strippedUser.Name = fmt.Sprintf("%s (%s) %s", dbUser.Firstname, dbUser.Nickname, dbUser.Lastname)
 		} else {
-			user1.LastLogin = "-"
+			strippedUser.Name = fmt.Sprintf("%s %s", dbUser.Firstname, dbUser.Lastname)
 		}
-		tplUsers = append(tplUsers, user1)
+		strippedUser.Email = dbUser.Email
+		strippedUser.Enabled = dbUser.Enabled
+		if dbUser.DeletedAt.Valid || dbUser.DeletedBy.Valid {
+			strippedUser.Deleted = true
+		} else {
+			strippedUser.Deleted = false
+		}
+		if dbUser.LastLogin.Valid {
+			strippedUser.LastLogin = dbUser.LastLogin.Time.Format("2006-01-02 15:04:05")
+		} else {
+			strippedUser.LastLogin = "-"
+		}
+		tplUsers = append(tplUsers, strippedUser)
 	}
 	return tplUsers
 }
 
-//// DBToTemplateTypeSingle converts from the DB layer type to the user template type single
-//func DBToTemplateTypeSingle(dbUser user.UserStripped) UserStripped {
-//	var tplUsers UserStripped
-//	tplUsers.UserID = dbUser.UserID
-//	tplUsers.Username = dbUser.Username
-//	tplUsers.Nickname = dbUser.Nickname
-//	tplUsers.Name = dbUser.Firstname + " " + dbUser.Lastname
-//	tplUsers.Email = dbUser.Email
-//	tplUsers.Avatar = dbUser.Avatar
-//	tplUsers.UseGravatar = dbUser.UseGravatar
-//	if dbUser.LastLogin.Valid {
-//		tplUsers.LastLogin = dbUser.LastLogin.Time.Format("2006-01-02 15:04:05")
-//	} else {
-//		tplUsers.LastLogin = "-"
-//	}
-//	return tplUsers
-//}
+func DBUserToUserTemplateFormat(dbUser user.User, store *user.Store) user.DetailedUser {
+	var u user.DetailedUser
+	var err error
+	u.UserID = dbUser.UserID
+	u.Username = dbUser.Username
+	u.UniversityUsername = dbUser.UniversityUsername
+	u.LDAPUsername = dbUser.LDAPUsername
+	u.LoginType = dbUser.LoginType
+	u.Nickname = dbUser.Nickname
+	u.Firstname = dbUser.Firstname
+	u.Lastname = dbUser.Lastname
+	u.Email = dbUser.Email
+	u.LastLogin = null.NewString(dbUser.LastLogin.Time.Format("2006-01-02 15:04:05"), dbUser.LastLogin.Valid)
+	u.ResetPw = dbUser.ResetPw
+	u.Enabled = dbUser.Enabled
+	u.CreatedAt = null.StringFrom(dbUser.CreatedAt.Time.Format("2006-01-02 15:04:05"))
+	if dbUser.CreatedBy.Valid {
+		u.CreatedBy, err = store.GetUser(context.Background(), user.User{UserID: int(dbUser.CreatedBy.Int64)})
+		if err != nil {
+			log.Println(err)
+			u.CreatedBy = user.User{
+				UserID:    int(dbUser.CreatedBy.Int64),
+				Firstname: "",
+				Nickname:  "",
+				Lastname:  "",
+			}
+		}
+	} else {
+		u.CreatedBy = user.User{
+			UserID:    -1,
+			Firstname: "",
+			Nickname:  "",
+			Lastname:  "",
+		}
+	}
+	if dbUser.UpdatedAt.Valid {
+		u.UpdatedAt = null.StringFrom(dbUser.UpdatedAt.Time.Format("2006-01-02 15:04:05"))
+	} else {
+		u.UpdatedAt = null.NewString("", false)
+	}
+	if dbUser.UpdatedBy.Valid {
+		u.UpdatedBy, err = store.GetUser(context.Background(), user.User{UserID: int(dbUser.UpdatedBy.Int64)})
+		if err != nil {
+			log.Println(err)
+			u.UpdatedBy = user.User{
+				UserID:    int(dbUser.UpdatedBy.Int64),
+				Firstname: "",
+				Nickname:  "",
+				Lastname:  "",
+			}
+		}
+	} else {
+		u.UpdatedBy = user.User{
+			UserID:    -1,
+			Firstname: "",
+			Nickname:  "",
+			Lastname:  "",
+		}
+	}
+	if dbUser.DeletedAt.Valid {
+		u.DeletedAt = null.StringFrom(dbUser.DeletedAt.Time.Format("2006-01-02 15:04:05"))
+	} else {
+		u.DeletedAt = null.NewString("", false)
+	}
+	if dbUser.DeletedBy.Valid {
+		u.DeletedBy, err = store.GetUser(context.Background(), user.User{UserID: int(dbUser.DeletedBy.Int64)})
+		if err != nil {
+			log.Println(err)
+			u.DeletedBy = user.User{
+				UserID:    int(dbUser.DeletedBy.Int64),
+				Firstname: "",
+				Nickname:  "",
+				Lastname:  "",
+			}
+		}
+	} else {
+		u.DeletedBy = user.User{
+			UserID:    -1,
+			Firstname: "",
+			Nickname:  "",
+			Lastname:  "",
+		}
+	}
+	if dbUser.UseGravatar {
+		u.UseGravatar = true
+		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace(u.Email))))
+		u.Avatar = fmt.Sprintf("https://www.gravatar.com/avatar/%s", hex.EncodeToString(hash[:]))
+	} else {
+		u.UseGravatar = false
+		if len(dbUser.Avatar) == 0 {
+			u.Avatar = "https://placehold.it/128x128"
+		} else {
+			u.Avatar = fmt.Sprintf("/avatar/%s", dbUser.Avatar)
+		}
+	}
+	return u
+}
 
-func (v *Views) removeDuplicate(strSlice []string) []string {
-	allKeys := make(map[string]bool)
-	var list []string
+func (v *Views) removeDuplicate(strSlice []permission.Permission) []permission.Permission {
+	allKeys := make(map[int]bool)
+	var list []permission.Permission
 	for _, item := range strSlice {
-		if _, value := allKeys[item]; !value {
-			allKeys[item] = true
+		if _, value := allKeys[item.PermissionID]; !value {
+			allKeys[item.PermissionID] = true
 			list = append(list, item)
 		}
 	}

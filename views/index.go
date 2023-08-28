@@ -2,29 +2,27 @@ package views
 
 import (
 	"fmt"
+	"github.com/labstack/echo/v4"
 	"net/http"
 	"net/url"
 	"strings"
 )
 
 // IndexFunc handles the index page.
-func (v *Views) IndexFunc(w http.ResponseWriter, r *http.Request) {
-	session, _ := v.cookie.Get(r, v.conf.SessionCookieName)
-
+func (v *Views) IndexFunc(c echo.Context) error {
 	// Data for our HTML template
-	context := v.getData(session)
+	c1 := v.getSessionData(c)
 
 	// Check if there is a callback request
-	callbackURL, err := url.Parse(r.URL.Query().Get("callback"))
+	callbackURL, err := url.Parse(c.QueryParam("callback"))
 	if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) && callbackURL.String() != "" {
-		context.Callback = callbackURL.String()
+		c1.Callback = callbackURL.String()
 	}
 
 	// Check if authenticated
-	if context.User.Authenticated {
-		http.Redirect(w, r, context.Callback, http.StatusFound)
-		return
+	if c1.User.Authenticated {
+		return c.Redirect(http.StatusFound, c1.Callback)
 	}
-	loginCallback := fmt.Sprintf("login?callback=%s", context.Callback)
-	http.Redirect(w, r, loginCallback, http.StatusFound)
+	loginCallback := fmt.Sprintf("login?callback=%s", c1.Callback)
+	return c.Redirect(http.StatusFound, loginCallback)
 }

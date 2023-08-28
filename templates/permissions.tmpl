@@ -1,36 +1,46 @@
 {{define "title"}}Internal: Permissions{{end}}
 {{define "content"}}
-    <div class="column is-10">
+    <div class="column is-10" style="min-height: 88vh">
         <div class="card events-card">
             <header class="card-header">
                 <p class="card-header-title">Permissions</p>
             </header>
+            <div class="card" style="margin-bottom: 0">
+                <div class="column">
+                        <div class="field">
+                            <a onclick="" class="button is-info">Add Permission</a>
+                        </div>
+                </div>
+            </div>
             <div class="card-table">
                 <div class="content">
                     <table class="table is-fullwidth is-hoverable" style="max-height: 90%">
                         <thead>
                         <tr>
-{{/*                            <th>Permission ID</th>*/}}
+                            <th>Permission ID</th>
                             <th>Name</th>
                             <th>Description</th>
+                            <th>Roles</th>
                             <th>Actions</th>
                         </tr>
                         </thead>
                         <tbody>
-                        {{ range $permission := .Permissions }}
+                        {{range .Permissions}}
                             <tr>
-{{/*                                <th>{{ $permission.PermissionID }}</th>*/}}
-                                <td>{{ $permission.Name }}</td>
-                                <td>{{ $permission.Description }}</td>
-                                <td><a href="./permission/{{ $permission.PermissionID }}">View</a></td>
+                                <th>{{.PermissionID}}</th>
+                                <td>{{.Name}}</td>
+                                <td>{{.Description}}</td>
+                                <td>{{.Roles}}</td>
+                                <td><a href="/internal/permission/{{.PermissionID}}">View</a></td>
                             </tr>
-                        {{ end }}
+                        {{end}}
                         </tbody>
                         <tfoot>
                         <tr>
-{{/*                            <th>Permission ID</th>*/}}
+                            <th>Permission ID</th>
                             <th>Name</th>
                             <th>Description</th>
+                            <th>Roles</th>
                             <th>Actions</th>
                         </tr>
                         </tfoot>

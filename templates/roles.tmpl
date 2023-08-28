@@ -1,39 +1,49 @@
 {{define "title"}}Internal: Roles{{end}}
 {{define "content"}}
-    <div class="column is-10">
+    <div class="column is-10" style="min-height: 88vh">
         <div class="card events-card">
             <header class="card-header">
                 <p class="card-header-title">Roles</p>
             </header>
+            <div class="card" style="margin-bottom: 0">
+                <div class="column">
+                    <div class="field">
+                        <a onclick="addRoleModal()" class="button is-info">Add Role</a>
+                    </div>
+                </div>
+            </div>
             <div class="card-table">
                 <div class="content">
                     <table class="table is-fullwidth is-hoverable">
                         <thead>
                         <tr>
-{{/*                            <th>Role ID</th>*/}}
+                            <th>Role ID</th>
                             <th>Name</th>
                             <th>Description</th>
                             <th>Users</th>
+                            <th>Permissions</th>
                             <th>Actions</th>
                         </tr>
                         </thead>
                         <tbody>
-                        {{ range $role := .Roles }}
+                        {{range .Roles}}
                             <tr>
-{{/*                                <th>{{ $role.RoleID }}</th>*/}}
-                                <td>{{ $role.Name }}</td>
-                                <td>{{ $role.Description }}</td>
-                                <td>{{ $role.Users }}</td>
-                                <td><a href="./role/{{ $role.RoleID }}">View</a></td>
+                                <th>{{.RoleID}}</th>
+                                <td>{{.Name}}</td>
+                                <td>{{.Description}}</td>
+                                <td>{{.Users}}</td>
+                                <td>{{.Permissions}}</td>
+                                <td><a href="/internal/role/{{.RoleID}}">View</a></td>
                             </tr>
-                        {{ end }}
+                        {{end}}
                         </tbody>
                         <tfoot>
                         <tr>
-{{/*                            <th>Role ID</th>*/}}
+                            <th>Role ID</th>
                             <th>Name</th>
                             <th>Description</th>
                             <th>Users</th>
+                            <th>Permissions</th>
                             <th>Actions</th>
                         </tr>
                         </tfoot>
@@ -42,4 +52,5 @@
             </div>
         </div>
     </div>
+
 {{end}}

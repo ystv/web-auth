@@ -1,14 +1,14 @@
 {{define "title"}}Internal: Users{{end}}
 {{define "content"}}
-    {{template "pagination" .}}
-    <div class="column is-10">
+    {{template "_pagination" .}}
+    <div class="column is-10" style="min-height: 88vh">
         <div class="card">
             <form method="post" action="">
                 <div class="column">
                     <div class="register" style="padding-top: 0">
                         <div class="field">
                             <p class="card-header-title" style="padding: 0 0 12px 0">Search</p>
-                            <label for="column">Enter the text to search</label>
+                            <label for="search">Enter the text to search</label>
                             <div class="control has-icons-left">
                                 <input
                                         id="search"
@@ -34,6 +34,26 @@
                                     <option value="username"{{if eq .Sort.Column "username"}} selected{{end}}>Username</option>
                                     <option value="email"{{if eq .Sort.Column "email"}} selected{{end}}>Email</option>
                                     <option value="lastLogin"{{if eq .Sort.Column "lastLogin"}} selected{{end}}>Last Login</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="enabled">Enabled?</label>
+                            <div class="control has-icons-left">
+                                <select id="enabled" name="enabled">
+                                    <option value="any"{{if not .Sort.Enabled}} selected{{end}}>Any</option>
+                                    <option value="enabled"{{if eq .Sort.Enabled "enabled"}} selected{{end}}>Enabled</option>
+                                    <option value="disabled"{{if eq .Sort.Enabled "diabled"}} selected{{end}}>Disabled</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="deleted">Deleted?</label>
+                            <div class="control has-icons-left">
+                                <select id="deleted" name="deleted">
+                                    <option value="any"{{if not .Sort.Deleted}} selected{{end}}>Any</option>
+                                    <option value="not_deleted"{{if eq .Sort.Deleted "not_deleted"}} selected{{end}}>Not Deleted</option>
+                                    <option value="deleted"{{if eq .Sort.Deleted "deleted"}} selected{{end}}>Deleted</option>
                                 </select>
                             </div>
                         </div>
@@ -64,7 +84,7 @@
                         <div class="field">
                             <p class="control">
                                 <input
-                                        class="button is-link"
+                                        class="button is-info"
                                         type="submit"
                                         value="Submit"
                                 />
@@ -84,6 +104,16 @@
             <header class="card-header">
                 <p class="card-header-title">Users</p>
             </header>
+            {{$userAdmin := checkPermission $.UserPermissions "ManageMembers.Members.Admin"}}
+            {{if (checkPermission .UserPermissions "ManageMembers.Members.Add")}}
+                <div class="card" style="margin-bottom: 0">
+                    <div class="column">
+                        <div class="field">
+                            <a onclick="addUserModal()" class="button is-info">Add User</a>
+                        </div>
+                    </div>
+                </div>
+            {{end}}
             <div class="card-table">
                 <div class="content">
                     <table class="table is-fullwidth is-hoverable">
@@ -91,40 +121,43 @@
                         <tr>
                             <th>User ID</th>
                             <th>Name</th>
-                            <th>Nickname</th>
                             <th>Username</th>
                             <th>Email</th>
+                            <th>Enabled</th>
+                            <th>Deleted</th>
                             <th>Last login</th>
-                            {{if (checkPermission $.UserID "ManageMembers.Members.Admin")}}
-                                <th>Actions</th>
+                            {{if $userAdmin}}
+                                <th>View</th>
                             {{end}}
                         </tr>
                         </thead>
                         <tbody>
-                        {{ range $user := .Users }}
+                        {{range .Users}}
                             <tr>
-                                <th>{{ $user.UserID }}</th>
-                                <td>{{ $user.Name }}</td>
-                                <td>{{ $user.Nickname }}</td>
-                                <td>{{ $user.Username }}</td>
-                                <td>{{ $user.Email }}</td>
-                                <td>{{ $user.LastLogin }}</td>
-                                {{if (checkPermission $.UserID "ManageMembers.Members.Admin")}}
-                                    <td><a href="./user/{{ $user.UserID }}">View</a></td>
+                                <td>{{.UserID}}</td>
+                                <td>{{.Name}}</td>
+                                <td>{{.Username}}</td>
+                                <td>{{.Email}}</td>
+                                <td>{{if .Enabled}}Enabled{{else}}Disabled{{end}}</td>
+                                <td>{{if .Deleted}}Deleted{{else}}-{{end}}</td>
+                                <td>{{.LastLogin}}</td>
+                                {{if $userAdmin}}
+                                    <td><a href="/internal/user/{{.UserID}}">View</a></td>
                                 {{end}}
                             </tr>
-                        {{ end }}
+                        {{end}}
                         </tbody>
                         <tfoot>
                         <tr>
                             <th>User ID</th>
                             <th>Name</th>
-                            <th>Nickname</th>
                             <th>Username</th>
                             <th>Email</th>
+                            <th>Enabled</th>
+                            <th>Deleted</th>
                             <th>Last login</th>
-                            {{if (checkPermission $.UserID "ManageMembers.Members.Admin")}}
-                                <th>Actions</th>
+                            {{if $userAdmin}}
+                                <th>View</th>
                             {{end}}
                         </tr>
                         </tfoot>
@@ -133,4 +166,61 @@
             </div>
         </div>
     </div>
+    {{if (checkPermission .UserPermissions "ManageMembers.Members.Add")}}
+        {{template "modal" .}}
+    {{end}}
+{{end}}
+
+{{define "modal"}}
+    <div id="addUserModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title">Add user</p>
+                            <p>Enter the user's details below.</p>
+                            <form id="addUserForm">
+                                {{/*
+                                Uni
+                                First
+                                Nick
+                                Last
+                                Email
+
+                                */}}
+
+                                <input type="text" autocomplete="off" class="input"
+                                       onchange="if (document.getElementById('email').value === '' && this.value.length > 0) document.getElementById('email').value = this.value + '@york.ac.uk'; if (document.getElementById('username').value === '' && this.value.length > 0) document.getElementById('username').value = this.value"
+                                       name="university_username" id="university_username" placeholder="abc123">
+                                <input type="text" autocomplete="off" class="input" id="username" name="username">
+                                <input type="email" autocomplete="off" class="input" id="email" name="email">
+                            </form>
+                            <a class="button is-info" onclick="addUser()">Add user</a>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <script>
+        document.querySelectorAll(
+            ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
+        ).forEach(($el) => {
+            const $modal = $el.closest(".modal");
+            $el.addEventListener("click", () => {
+                $modal.classList.remove("is-active");
+            });
+        });
+
+        function addUserModal() {
+            document.getElementById("addUserModal").classList.add("is-active");
+        }
+
+        function addUser() {
+            // unimplemented for now
+        }
+    </script>
 {{end}}
