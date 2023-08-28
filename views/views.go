@@ -84,11 +84,6 @@ func New(conf *Config, host string) *Views {
 		Password:   conf.Mail.Password,
 		DomainName: conf.Mail.DomainName,
 	})
-	if err != nil {
-		log.Printf("mailer failed: %+v", err)
-	} else {
-		log.Printf("connected to mailer: %s:%d", conf.Mail.Host, conf.Mail.Port)
-	}
 
 	// Initialising cache
 	v.cache = cache.New(1*time.Hour, 1*time.Hour)
