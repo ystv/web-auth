@@ -144,15 +144,8 @@ func (s *Store) GetUsersSearchNoOrder(ctx context.Context, size, page int, searc
 	return s.getUsersSearchNoOrder(ctx, size, page, search, enabled, deleted)
 }
 
-// GetUsersSortedSizePage returns a group of users, used for administration with sorting with size and page
-func (s *Store) GetUsersSortedSizePage(ctx context.Context, column, direction string, size, page int) ([]User, error) {
-	switch direction {
-	case "asc":
-		return s.getUsersOptionsAscSizePage(ctx, column, size, page)
-	case "desc":
-		return s.getUsersOptionsDescSizePage(ctx, column, size, page)
-	}
-	return nil, fmt.Errorf("error in db sorting size page")
+func (s *Store) GetUsersOrderNoSearch(ctx context.Context, size, page int, column, direction, enabled, deleted string) ([]User, error) {
+	return s.getUsersOrderNoSearch(ctx, size, page, column, direction, enabled, deleted)
 }
 
 func (s *Store) GetUsersSearchOrder(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, error) {
