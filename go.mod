@@ -1,15 +1,15 @@
 module github.com/ystv/web-auth
 
-go 1.20
+go 1.21
 
 require (
-	github.com/Clarilab/gocloaksession v1.13.0
+	github.com/Clarilab/gocloaksession v1.13.1
 	github.com/Nerzal/gocloak/v8 v8.6.0
 	github.com/balacode/zr-whirl v1.0.2
 	github.com/dustin/go-humanize v1.0.1
-	github.com/go-playground/validator/v10 v10.14.1
+	github.com/go-playground/validator/v10 v10.15.1
 	github.com/golang-jwt/jwt/v5 v5.0.0
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/gorilla/schema v1.2.0
 	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/sessions v1.2.1
@@ -17,7 +17,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/xhit/go-simple-mail/v2 v2.15.0
+	github.com/xhit/go-simple-mail/v2 v2.16.0
 	gopkg.in/guregu/null.v4 v4.0.0
 )
 
@@ -42,9 +42,9 @@ require (
 	github.com/toorop/go-dkim v0.0.0-20201103131630-e1cd1a0a5208 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	golang.org/x/crypto v0.11.0 // indirect
-	golang.org/x/net v0.12.0 // indirect
-	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/crypto v0.12.0 // indirect
+	golang.org/x/net v0.14.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/text v0.12.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 )
