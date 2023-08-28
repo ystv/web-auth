@@ -58,11 +58,11 @@ func (v *Views) UsersFunc(c echo.Context) error {
 
 		q := u.Query()
 
-		column := c.QueryParam("column")
-		direction := c.QueryParam("direction")
-		search := c.QueryParam("search")
-		enabled := c.QueryParam("enabled")
-		deleted := c.QueryParam("deleted")
+		column := c.FormValue("column")
+		direction := c.FormValue("direction")
+		search := c.FormValue("search")
+		enabled := c.FormValue("enabled")
+		deleted := c.FormValue("deleted")
 		var size int
 		sizeRaw := c.FormValue("size")
 		if sizeRaw == "all" {
