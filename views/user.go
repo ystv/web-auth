@@ -108,8 +108,6 @@ func (v *Views) UsersFunc(c echo.Context) error {
 			q.Set("search", url.QueryEscape(search))
 		}
 
-		fmt.Println(q.Encode())
-
 		u.RawQuery = q.Encode()
 		return c.Redirect(http.StatusFound, u.String())
 	}
