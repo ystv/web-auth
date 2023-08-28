@@ -26,9 +26,9 @@ func (s *Store) getRole(ctx context.Context, r1 Role) (Role, error) {
 		FROM people.roles r
 		LEFT JOIN people.role_members rm ON r.role_id = rm.role_id
 		LEFT JOIN people.role_permissions rp ON r.role_id = rp.role_id
-		WHERE r.role_id = $1
+		WHERE r.role_id = $1 OR (r.name = $2 AND r.name != '')
 		GROUP BY r.role_id, r.name, r.description
-		LIMIT 1;`, r1.RoleID)
+		LIMIT 1;`, r1.RoleID, r1.Name)
 	if err != nil {
 		return Role{}, fmt.Errorf("failed to get role: %w", err)
 	}
@@ -36,7 +36,16 @@ func (s *Store) getRole(ctx context.Context, r1 Role) (Role, error) {
 }
 
 func (s *Store) addRole(ctx context.Context, r1 Role) (Role, error) {
-	panic("addRole not implemented")
+	var r Role
+	stmt, err := s.db.PrepareNamedContext(ctx, "INSERT INTO people.roles (name, description) VALUES (:name, :description) RETURNING role_id, name, description")
+	if err != nil {
+		return Role{}, fmt.Errorf("failed to add role: %w", err)
+	}
+	err = stmt.Get(&r, r1)
+	if err != nil {
+		return Role{}, fmt.Errorf("failed to add role: %w", err)
+	}
+	return r, nil
 }
 
 func (s *Store) editRole(ctx context.Context, r1 Role) (Role, error) {

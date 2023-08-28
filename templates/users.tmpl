@@ -25,8 +25,8 @@
                         </div>
                         <p class="card-header-title" style="padding-left: 0">Sort by</p>
                         <div class="field">
-                            <label for="column">Select the column to sort</label>
-                            <div class="control has-icons-left">
+                            <label for="column">Select the column to sort</label><br>
+                            <div class="control has-icons-left select">
                                 <select id="column" name="column">
                                     <option value disabled{{if not .Sort.Column}} selected{{end}}>Please select</option>
                                     <option value="userId"{{if eq .Sort.Column "userId"}} selected{{end}}>User ID</option>
@@ -38,18 +38,18 @@
                             </div>
                         </div>
                         <div class="field">
-                            <label for="enabled">Enabled?</label>
-                            <div class="control has-icons-left">
+                            <label for="enabled">Enabled?</label><br>
+                            <div class="control has-icons-left select">
                                 <select id="enabled" name="enabled">
                                     <option value="any"{{if not .Sort.Enabled}} selected{{end}}>Any</option>
                                     <option value="enabled"{{if eq .Sort.Enabled "enabled"}} selected{{end}}>Enabled</option>
-                                    <option value="disabled"{{if eq .Sort.Enabled "diabled"}} selected{{end}}>Disabled</option>
+                                    <option value="disabled"{{if eq .Sort.Enabled "disabled"}} selected{{end}}>Disabled</option>
                                 </select>
                             </div>
                         </div>
                         <div class="field">
-                            <label for="deleted">Deleted?</label>
-                            <div class="control has-icons-left">
+                            <label for="deleted">Deleted?</label><br>
+                            <div class="control has-icons-left select">
                                 <select id="deleted" name="deleted">
                                     <option value="any"{{if not .Sort.Deleted}} selected{{end}}>Any</option>
                                     <option value="not_deleted"{{if eq .Sort.Deleted "not_deleted"}} selected{{end}}>Not Deleted</option>
@@ -58,8 +58,8 @@
                             </div>
                         </div>
                         <div class="field">
-                            <label for="direction">Ascending or Descending</label>
-                            <div class="control has-icons-left">
+                            <label for="direction">Ascending or Descending</label><br>
+                            <div class="control has-icons-left select">
                                 <select id="direction" name="direction">
                                     <option value disabled{{if not .Sort.Direction}} selected{{end}}>Please select</option>
                                     <option value="asc"{{if eq .Sort.Direction "asc"}} selected{{end}}>Ascending</option>
@@ -68,8 +68,8 @@
                             </div>
                         </div>
                         <div class="field">
-                            <label for="size">Page size</label>
-                            <div class="control has-icons-left">
+                            <label for="size">Page size</label><br>
+                            <div class="control has-icons-left select">
                                 <select id="size" name="size">
                                     <option value="5"{{if eq .Sort.Size 5}} selected{{end}}>5</option>
                                     <option value="10"{{if eq .Sort.Size 10}} selected{{end}}>10</option>

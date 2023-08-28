@@ -35,7 +35,16 @@ func (s *Store) getPermission(ctx context.Context, p1 Permission) (Permission, e
 }
 
 func (s *Store) addPermission(ctx context.Context, p1 Permission) (Permission, error) {
-	panic("addPermission not implemented")
+	var p Permission
+	stmt, err := s.db.PrepareNamedContext(ctx, "INSERT INTO people.permissions (name, description) VALUES (:name, :description) RETURNING permission_id, name, description")
+	if err != nil {
+		return Permission{}, fmt.Errorf("failed to add permission: %w", err)
+	}
+	err = stmt.Get(&p, p1)
+	if err != nil {
+		return Permission{}, fmt.Errorf("failed to add permission: %w", err)
+	}
+	return p, nil
 }
 
 func (s *Store) editPermission(ctx context.Context, p1 Permission) (Permission, error) {
