@@ -19,7 +19,7 @@ func (v *Views) CustomHTTPErrorHandler(err error, c echo.Context) {
 	c.Response().WriteHeader(status)
 	data := struct {
 		Code  int
-		Error interface{}
+		Error any
 	}{
 		Code:  status,
 		Error: he.Message,
