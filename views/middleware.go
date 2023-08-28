@@ -20,7 +20,7 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 			log.Println(err)
 			return c.Redirect(http.StatusFound, "/")
 		}
-		c1 := v.getSessionData(session)
+		c1 := v.getSessionData(c)
 		if !c1.User.Authenticated {
 			return c.Redirect(http.StatusFound, "/")
 		}
@@ -60,7 +60,7 @@ func (v *Views) RequiresLoginJSON(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 			return c.JSON(http.StatusInternalServerError, data)
 		}
-		c1 := v.getSessionData(session)
+		c1 := v.getSessionData(c)
 		if !c1.User.Authenticated {
 			data := struct {
 				Error string `json:"error"`
@@ -106,16 +106,13 @@ func (v *Views) RequiresLoginJSON(next echo.HandlerFunc) echo.HandlerFunc {
 func (v *Views) RequirePermission(p permissions.Permissions) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-			if err != nil {
-				return fmt.Errorf("failed to get session for requirePermission: %w", err)
+			c1 := v.getSessionData(c)
+			if c1 == nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get session data"))
 			}
-
-			c1 := v.getSessionData(session)
-
 			perms, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 			if err != nil {
-				return fmt.Errorf("failed to get permissions for requirePermission: %w", err)
+				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permissions for requirePermission: %w", err))
 			}
 
 			acceptedPerms := permission.SufficientPermissionsFor(p)

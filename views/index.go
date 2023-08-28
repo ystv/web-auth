@@ -10,21 +10,19 @@ import (
 
 // IndexFunc handles the index page.
 func (v *Views) IndexFunc(c echo.Context) error {
-	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
 	// Data for our HTML template
-	context := v.getSessionData(session)
+	c1 := v.getSessionData(c)
 
 	// Check if there is a callback request
 	callbackURL, err := url.Parse(c.QueryParam("callback"))
 	if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) && callbackURL.String() != "" {
-		context.Callback = callbackURL.String()
+		c1.Callback = callbackURL.String()
 	}
 
 	// Check if authenticated
-	if context.User.Authenticated {
-		return c.Redirect(http.StatusFound, context.Callback)
+	if c1.User.Authenticated {
+		return c.Redirect(http.StatusFound, c1.Callback)
 	}
-	loginCallback := fmt.Sprintf("login?callback=%s", context.Callback)
+	loginCallback := fmt.Sprintf("login?callback=%s", c1.Callback)
 	return c.Redirect(http.StatusFound, loginCallback)
 }

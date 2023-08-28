@@ -35,9 +35,7 @@ func (v *Views) bindPermissionToTemplate(p1 permission.Permission) user.Permissi
 
 // PermissionsFunc handles a permissions request
 func (v *Views) PermissionsFunc(c echo.Context) error {
-	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-	c1 := v.getSessionData(session)
+	c1 := v.getSessionData(c)
 
 	permissions, err := v.permission.GetPermissions(c.Request().Context())
 	if err != nil {
@@ -66,9 +64,7 @@ func (v *Views) PermissionsFunc(c echo.Context) error {
 
 // PermissionFunc handles a permission request
 func (v *Views) PermissionFunc(c echo.Context) error {
-	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-	c1 := v.getSessionData(session)
+	c1 := v.getSessionData(c)
 
 	permissionID, err := strconv.Atoi(c.Param("permissionid"))
 	if err != nil {

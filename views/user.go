@@ -46,9 +46,7 @@ type (
 
 // UsersFunc handles a users request
 func (v *Views) UsersFunc(c echo.Context) error {
-	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-	c1 := v.getSessionData(session)
+	c1 := v.getSessionData(c)
 
 	var err error
 
@@ -273,9 +271,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 
 // UserFunc handles a users request
 func (v *Views) UserFunc(c echo.Context) error {
-	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-	c1 := v.getSessionData(session)
+	c1 := v.getSessionData(c)
 
 	userID, err := strconv.Atoi(c.Param("userid"))
 	if err != nil {

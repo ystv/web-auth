@@ -26,9 +26,7 @@ type (
 
 // InternalFunc handles a request to the internal template
 func (v *Views) InternalFunc(c echo.Context) error {
-	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-	c1 := v.getSessionData(session)
+	c1 := v.getSessionData(c)
 	lastLogin := time.Now()
 	if c1.User.LastLogin.Valid {
 		lastLogin = c1.User.LastLogin.Time

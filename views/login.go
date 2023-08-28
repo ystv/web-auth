@@ -26,12 +26,12 @@ type LoginTemplate struct {
 func (v *Views) LoginFunc(c echo.Context) error {
 	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 	// We're ignoring the error here since sometimes the cookies keys change, and then we
-	// can overwrite it instead
+	// can overwrite it instead, it does need to stay as it is written to here
 
 	switch c.Request().Method {
 	case "GET":
 		// Data for our HTML template
-		context := v.getSessionData(session)
+		context := v.getSessionData(c)
 
 		// Check if there is a callback request
 		callbackURL, err := url.Parse(c.QueryParam("callback"))
@@ -72,7 +72,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 			}
 
 			if resetPw {
-				ctx := v.getSessionData(session)
+				ctx := v.getSessionData(c)
 				ctx.Callback = callback
 				ctx.Message = "Password reset required"
 				ctx.MsgType = "is-danger"
@@ -82,7 +82,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 
 				return c.Redirect(http.StatusFound, fmt.Sprintf("https://%s/forgot/%s", v.conf.DomainName, url1))
 			}
-			ctx := v.getSessionData(session)
+			ctx := v.getSessionData(c)
 			ctx.Callback = callback
 			ctx.Message = "Invalid username or password"
 			ctx.MsgType = "is-danger"

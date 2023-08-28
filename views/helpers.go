@@ -5,7 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"github.com/gorilla/sessions"
+	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/user"
 	"gopkg.in/guregu/null.v4"
@@ -29,8 +29,13 @@ type (
 	}
 )
 
-func (v *Views) getSessionData(s *sessions.Session) *Context {
-	val := s.Values["user"]
+func (v *Views) getSessionData(eC echo.Context) *Context {
+	session, err := v.cookie.Get(eC.Request(), v.conf.SessionCookieName)
+	if err != nil {
+		log.Printf("error getting session: %+v", err)
+		return nil
+	}
+	val := session.Values["user"]
 	u, ok := val.(user.User)
 	if !ok {
 		u = user.User{Authenticated: false}
