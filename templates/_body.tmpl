@@ -1,0 +1,19 @@
+{{define "_body"}}
+    {{block "navbar-block" .}}
+        {{template "_navbar" .}}
+    {{end}}
+    <div class="container">
+        <div class="columns">
+            {{block "sidebar-block" .}}
+                {{template "_sidebar" .}}
+            {{end}}
+            {{block "content-block" .}}
+                {{template "content" .}}
+            {{end}}
+        </div>
+    </div>
+    <br>
+    {{block "footer-block" .}}
+        {{template "_footer" .}}
+    {{end}}
+{{end}}

@@ -1,6 +1,6 @@
 {{define "title"}}Settings{{end}}
 {{define "content"}}
-    <div class="column is-10">
+    <div class="column is-10" style="min-height: 88vh">
         <section class="hero is-info welcome is-small">
             <div class="hero-body">
                 <div class="container">
@@ -37,28 +37,7 @@
                         Username: {{.Username}}<br>
                         Email: {{.Email}}<br>
                         Avatar source: {{if .UseGravatar}}Using gravatar{{else}}Using local file{{end}}<br><br></p>
-{{/*                    <p class="subtitle">Use the fields below to modify some of your details.</p>*/}}
                 {{end}}
-{{/*                <form>*/}}
-{{/*                    <div class="field">*/}}
-{{/*                        <label class="label" for="nickname">Nickname</label>*/}}
-{{/*                        <div class="control">*/}}
-{{/*                            <input*/}}
-{{/*                                    id="nickname"*/}}
-{{/*                                    class="input"*/}}
-{{/*                                    type="text"*/}}
-{{/*                                    placeholder="Nickname"*/}}
-{{/*                            />*/}}
-{{/*                        </div>*/}}
-{{/*                    </div>*/}}
-{{/*                    <div class="field">*/}}
-{{/*                        <label class="label" for="email">Email</label>*/}}
-{{/*                        <div class="control">*/}}
-{{/*                            <input class="input" type="email" placeholder="Email" id="email"/>*/}}
-{{/*                        </div>*/}}
-{{/*                    </div>*/}}
-{{/*                    <button class="button is-block is-info">Update</button>*/}}
-{{/*                </form>*/}}
             </div>
         </div>
     </div>
@@ -74,8 +53,6 @@
                     <div class="media-content">
                         <div class="content">
                             <p class="title">Change your password</p>
-                            <p>Please enter your current password then your new password and confirm the new password.</p>
-{{/*                            <form id="changePasswordForm" action="/internal/changepassword" method="post">*/}}
                             <form id="changePasswordForm">
                                 <label for="oldPassword">Enter your old password</label>
                                 <input class="input" type="password" placeholder="Old password" id="oldPassword" name="oldPassword" value="">
@@ -107,7 +84,6 @@
     }
 
     function changePassword() {
-        // document.getElementById("changePasswordForm").submit();
         $.ajax({
             url: '/internal/changepassword',
             type: 'post',

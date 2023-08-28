@@ -3,11 +3,10 @@ package views
 import (
 	"encoding/gob"
 	"encoding/hex"
-	"github.com/labstack/echo/v4"
+	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
 	"github.com/ystv/web-auth/templates"
-	"log"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -15,7 +14,6 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/patrickmn/go-cache"
 	"github.com/ystv/web-auth/infrastructure/db"
-	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/user"
 )
 
@@ -24,7 +22,7 @@ type (
 	Config struct {
 		Version           string
 		Debug             bool
-		Port              string
+		Address           string
 		DatabaseURL       string
 		BaseDomainName    string
 		DomainName        string
@@ -36,10 +34,11 @@ type (
 
 	// SMTPConfig stores the SMTP Mailer configuration
 	SMTPConfig struct {
-		Host     string
-		Username string
-		Password string
-		Port     int
+		Host       string
+		Username   string
+		Password   string
+		Port       int
+		DomainName string
 	}
 
 	// SecurityConfig stores the security configuration
@@ -56,47 +55,35 @@ type (
 		role       *role.Store
 		user       *user.Store
 		cookie     *sessions.CookieStore
-		Mailer     *mail.Mailer
 		cache      *cache.Cache
+		mailer     *mail.MailerInit
 		validate   *validator.Validate
 		template   *templates.Templater
 	}
 )
 
 // New initialises connections, templates, and cookies
-func New(conf *Config, host, port string) *Views {
+func New(conf *Config, host string) *Views {
 	v := &Views{}
 	// Connecting to stores
-	dbStore, err := db.NewStore(conf.DatabaseURL)
-	if err != nil {
-		if conf.Debug {
-			log.Printf("db failed: %+v", err)
-		} else {
-			log.Fatalf("db failed: %+v", err)
-		}
-	} else {
-		log.Printf("connected to db: %s:%s", host, port)
-	}
-
+	dbStore := db.NewStore(conf.DatabaseURL, host, conf.Debug)
 	v.permission = permission.NewPermissionRepo(dbStore)
 	v.role = role.NewRoleRepo(dbStore)
 	v.user = user.NewUserRepo(dbStore)
 
 	v.template = templates.NewTemplate(v.permission, v.role, v.user)
 
-	// Connecting to mail
-	v.Mailer, err = mail.NewMailer(mail.Config{
+	// Initialising cache
+	v.cache = cache.New(1*time.Hour, 1*time.Hour)
+
+	// Initialise mailer
+	v.mailer = mail.NewMailer(mail.Config{
 		Host:       conf.Mail.Host,
 		Port:       conf.Mail.Port,
 		Username:   conf.Mail.Username,
 		Password:   conf.Mail.Password,
-		DomainName: conf.DomainName,
+		DomainName: conf.Mail.DomainName,
 	})
-	if err != nil {
-		log.Printf("mailer failed: %+v", err)
-	} else {
-		log.Printf("connected to mailer: %s:%d", conf.Mail.Host, conf.Mail.Port)
-	}
 
 	// Initialising cache
 	v.cache = cache.New(1*time.Hour, 1*time.Hour)
@@ -129,14 +116,4 @@ func New(conf *Config, host, port string) *Views {
 	v.validate = validator.New()
 
 	return v
-}
-
-func (v *Views) errorHandle(c echo.Context, err error) error {
-	data := struct {
-		Error string
-	}{
-		Error: err.Error(),
-	}
-	log.Println(data.Error)
-	return v.template.RenderNoNavsTemplate(c.Response().Writer, data, templates.ErrorTemplate)
 }

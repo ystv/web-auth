@@ -5,15 +5,15 @@
         <p class="menu-label">General</p>
         <ul class="menu-list">
             <li><a {{if eq $page "dashboard"}}class="is-active"{{end}} href="/internal">Dashboard</a></li>
-            {{if (memberAddPermission .UserID)}}
-                <li><a {{if eq $page "useradd"}}class="is-active"{{end}} href="/internal/useradd">Add User</a></li>
-            {{else if (checkPermission .UserID "ManageMembers.Members.List")}}
+            {{if (checkPermission .UserPermissions "ManageMembers.Members.List")}}
                 <li><a {{if eq $page "users"}}class="is-active"{{end}} href="/internal/users">Users</a></li>
+            {{else if (checkPermission .UserPermissions "ManageMembers.Members.Add")}}
+                <li><a {{if eq $page "useradd"}}class="is-active"{{end}} href="/internal/useradd">Add User</a></li>
             {{end}}
-            {{if (checkPermission .UserID "ManageMembers.Groups")}}
+            {{if (checkPermission .UserPermissions "ManageMembers.Groups")}}
                 <li><a {{if eq $page "roles"}}class="is-active"{{end}} href="/internal/roles">Roles</a></li>
             {{end}}
-            {{if (checkPermission .UserID "ManageMembers.Permissions")}}
+            {{if (checkPermission .UserPermissions "ManageMembers.Permissions")}}
                 <li><a {{if eq $page "permissions"}}class="is-active"{{end}} href="/internal/permissions">Permissions</a></li>
             {{end}}
             <li><a {{if eq $page "settings"}}class="is-active"{{end}} href="/internal/settings">Settings</a></li>
@@ -27,7 +27,7 @@
         <ul class="menu-list">
             <li><a href="https://my.ystv.co.uk">MyTV</a></li>
             <li><a href="https://creator.ystv.co.uk">Creator Studio</a></li>
-            {{if (checkPermission .UserID "COBRA")}}
+            {{if (checkPermission .UserPermissions "COBRA")}}
                 <li><a href="https://cobra.ystv.co.uk">COBRA</a></li>
             {{end}}
         </ul>

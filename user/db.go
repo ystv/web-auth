@@ -49,9 +49,9 @@ func (s *Store) countUsersPastYear(ctx context.Context) (int, error) {
 		FROM people.users
 		WHERE last_login > TO_TIMESTAMP($1, 'YYYY-MM-DD HH24:MI:SS');`, time.Now().AddDate(-1, 0, 0).Format("2006-01-02 15:04:05"))
 	if err != nil {
-		return count, fmt.Errorf("failed to count users past year from db: %w", err)
+		return countUsers, fmt.Errorf("failed to count users all from db: %w", err)
 	}
-	return count, nil
+	return countUsers, nil
 }
 
 // updateUser will update a user record by ID
@@ -191,7 +191,6 @@ func (s *Store) getUsersSearchOrder(ctx context.Context, size, page int, search,
 	deletedSQL := s.parseDeleted(deleted, true)
 	pageSize := s.parsePageSize(page, size)
 	err = s.db.SelectContext(ctx, &u, fmt.Sprintf(`SELECT *
-		FROM people.users
 		WHERE
 		    (CAST(user_id AS TEXT) LIKE '%%' || $1 || '%%'
 			OR LOWER(username) LIKE LOWER('%%' || $1 || '%%')
