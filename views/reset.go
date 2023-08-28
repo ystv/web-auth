@@ -82,13 +82,7 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 		Error   error  `json:"error"`
 	}
 
-	mailer := mail.NewMailer(mail.Config{
-		Host:       v.conf.Mail.Host,
-		Port:       v.conf.Mail.Port,
-		Username:   v.conf.Mail.Username,
-		Password:   v.conf.Mail.Password,
-		DomainName: v.conf.Mail.DomainName,
-	})
+	mailer := v.mailer.ConnectMailer()
 
 	// Valid request, send email with reset code
 	if mailer != nil {

@@ -19,6 +19,12 @@ type (
 		DomainName string
 	}
 
+	MailerInit struct {
+		SMTPServer mail.SMTPServer
+		Defaults   Defaults
+		DomainName string
+	}
+
 	Defaults struct {
 		DefaultTo   string
 		DefaultCC   []string
@@ -50,7 +56,7 @@ type (
 )
 
 // NewMailer creates a new SMTP client
-func NewMailer(config Config) *Mailer {
+func NewMailer(config Config) *MailerInit {
 	smtpServer := mail.SMTPServer{
 		Host:           config.Host,
 		Port:           config.Port,
@@ -63,13 +69,22 @@ func NewMailer(config Config) *Mailer {
 		TLSConfig:      &tls.Config{InsecureSkipVerify: true},
 	}
 
-	smtpClient, err := smtpServer.Connect()
+	return &MailerInit{
+		SMTPServer: smtpServer,
+		Defaults:   config.Defaults,
+		DomainName: config.DomainName,
+	}
+}
+
+// ConnectMailer connects to the mail server
+func (m *MailerInit) ConnectMailer() *Mailer {
+	smtpClient, err := m.SMTPServer.Connect()
 	if err != nil {
 		log.Printf("mailer failed: %+v", err)
 		return nil
 	} else {
-		log.Printf("connected to mailer: %s", config.Host)
-		return &Mailer{smtpClient, config.Defaults, config.DomainName}
+		log.Printf("connected to mailer: %s", m.SMTPServer.Host)
+		return &Mailer{smtpClient, m.Defaults, m.DomainName}
 	}
 }
 

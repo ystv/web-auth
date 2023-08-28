@@ -48,13 +48,7 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 		url := uuid.NewString()
 		v.cache.Set(url, userFromDB.UserID, cache.DefaultExpiration)
 
-		mailer := mail.NewMailer(mail.Config{
-			Host:       v.conf.Mail.Host,
-			Port:       v.conf.Mail.Port,
-			Username:   v.conf.Mail.Username,
-			Password:   v.conf.Mail.Password,
-			DomainName: v.conf.Mail.DomainName,
-		})
+		mailer := v.mailer.ConnectMailer()
 
 		// Valid request, send email with reset code
 		if mailer != nil {

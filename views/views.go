@@ -3,6 +3,7 @@ package views
 import (
 	"encoding/gob"
 	"encoding/hex"
+	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
 	"github.com/ystv/web-auth/templates"
@@ -55,6 +56,7 @@ type (
 		user       *user.Store
 		cookie     *sessions.CookieStore
 		cache      *cache.Cache
+		mailer     *mail.MailerInit
 		validate   *validator.Validate
 		template   *templates.Templater
 	}
@@ -73,6 +75,15 @@ func New(conf *Config, host string) *Views {
 
 	// Initialising cache
 	v.cache = cache.New(1*time.Hour, 1*time.Hour)
+
+	// Initialise mailer
+	v.mailer = mail.NewMailer(mail.Config{
+		Host:       conf.Mail.Host,
+		Port:       conf.Mail.Port,
+		Username:   conf.Mail.Username,
+		Password:   conf.Mail.Password,
+		DomainName: conf.Mail.DomainName,
+	})
 
 	// Initialising session cookie
 	authKey, _ := hex.DecodeString(conf.Security.AuthenticationKey)
