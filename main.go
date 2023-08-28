@@ -57,10 +57,7 @@ func main() {
 
 	mailPort, _ := strconv.Atoi(os.Getenv("WAUTH_MAIL_PORT"))
 
-	debug, err := strconv.ParseBool(os.Getenv("WAUTH_DEBUG"))
-	if err != nil {
-		debug = false
-	}
+	debug, _ := strconv.ParseBool(os.Getenv("WAUTH_DEBUG"))
 
 	if debug {
 		fmt.Println()
