@@ -3,6 +3,7 @@ package views
 import (
 	"fmt"
 	"github.com/labstack/echo/v4"
+	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 	"log"
@@ -15,14 +16,14 @@ import (
 type (
 	// UsersTemplate represents the context for the user template
 	UsersTemplate struct {
-		Users      []user.StrippedUser
-		UserID     int
-		CurPage    int
-		NextPage   int
-		PrevPage   int
-		LastPage   int
-		ActivePage string
-		Sort       Sort
+		Users           []user.StrippedUser
+		UserPermissions []permission.Permission
+		CurPage         int
+		NextPage        int
+		PrevPage        int
+		LastPage        int
+		ActivePage      string
+		Sort            Sort
 	}
 
 	Sort struct {
@@ -37,31 +38,24 @@ type (
 	}
 
 	UserTemplate struct {
-		User       user.DetailedUser
-		UserID     int
-		ActivePage string
+		User            user.DetailedUser
+		UserPermissions []permission.Permission
+		ActivePage      string
 	}
 )
 
 // UsersFunc handles a users request
 func (v *Views) UsersFunc(c echo.Context) error {
-	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-	c1 := v.getData(session)
+	c1 := v.getSessionData(c)
 
 	var err error
 
 	if c.Request().Method == "POST" {
-		err = c.Request().ParseForm()
-		if err != nil {
-			return v.errorHandle(c, err)
-		}
-
-		column := c.Request().FormValue("column")
-		direction := c.Request().FormValue("direction")
-		search := c.Request().FormValue("search")
+		column := c.FormValue("column")
+		direction := c.FormValue("direction")
+		search := c.FormValue("search")
 		var size int
-		sizeRaw := c.Request().FormValue("size")
+		sizeRaw := c.FormValue("size")
 		if sizeRaw == "all" {
 			size = 0
 		} else {
@@ -69,7 +63,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 			if err != nil {
 				size = 0
 			} else if size <= 0 {
-				return v.errorHandle(c, fmt.Errorf("invalid size, must be positive"))
+				return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid size, must be positive"))
 			} else if size != 5 && size != 10 && size != 25 && size != 50 && size != 75 && size != 100 {
 				size = 25
 			}
@@ -125,38 +119,38 @@ func (v *Views) UsersFunc(c echo.Context) error {
 		return c.Redirect(http.StatusFound, redirect)
 	}
 
-	column := c.Request().URL.Query().Get("column")
-	direction := c.Request().URL.Query().Get("direction")
-	search := c.Request().URL.Query().Get("search")
+	column := c.QueryParam("column")
+	direction := c.QueryParam("direction")
+	search := c.QueryParam("search")
 	var size, page, count int
-	sizeRaw := c.Request().URL.Query().Get("size")
+	var countAll user.CountUsers
+	sizeRaw := c.QueryParam("size")
 	if sizeRaw == "all" {
 		size = 0
 	} else if len(sizeRaw) != 0 {
-		page, err = strconv.Atoi(c.Request().URL.Query().Get("page"))
+		page, err = strconv.Atoi(c.QueryParam("page"))
 		if err != nil {
 			page = 1
-			log.Println(err)
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("unable to parse page for users: %w", err))
 		}
 		size, err = strconv.Atoi(sizeRaw)
 		if err != nil {
 			size = 0
 		} else if size <= 0 {
-			err = v.errorHandle(c, fmt.Errorf("invalid size, must be positive"))
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid size, must be positive"))
 		} else if size != 5 && size != 10 && size != 25 && size != 50 && size != 75 && size != 100 {
 			size = 0
 		}
 
-		count, err = v.user.CountUsers(c.Request().Context())
+		countAll, err = v.user.CountUsersAll(c.Request().Context())
 		if err != nil {
-			log.Println(err)
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get total users for users: %w", err))
 		}
 
+		count = countAll.TotalUsers
+
 		if count <= size*(page-1) {
-			log.Println("size and page given is not valid")
-			return v.errorHandle(c, fmt.Errorf("size and page given is not valid"))
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("size and page given is not valid"))
 		}
 	}
 
@@ -186,14 +180,14 @@ func (v *Views) UsersFunc(c echo.Context) error {
 				if err != nil {
 					log.Println(err)
 					if !v.conf.Debug {
-						return v.errorHandle(c, err)
+						return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get users for users: %w", err))
 					}
 				}
 				tmp, err := v.user.GetUsersSortedSearch(c.Request().Context(), column, direction, search)
 				if err != nil {
 					log.Println(err)
 					if !v.conf.Debug {
-						return v.errorHandle(c, err)
+						return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get users for users: %w", err))
 					}
 				}
 				count = len(tmp)
@@ -214,7 +208,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 			if err != nil {
 				log.Println(err)
 				if !v.conf.Debug {
-					return v.errorHandle(c, err)
+					return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get users for users: %w", err))
 				}
 			}
 			count = len(tmp)
@@ -232,10 +226,10 @@ func (v *Views) UsersFunc(c echo.Context) error {
 	if err != nil {
 		log.Println(err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get users for users: %w", err))
 		}
 	}
-	tplUsers := DBToTemplateType(dbUsers)
+	tplUsers := DBUsersToUsersTemplateFormat(dbUsers)
 
 	var sum int
 
@@ -249,10 +243,18 @@ func (v *Views) UsersFunc(c echo.Context) error {
 		page = 25
 	}
 
+	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+	if err != nil {
+		log.Printf("failed to get user permissions for users: %+v", err)
+		if !v.conf.Debug {
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for users: %+v", err))
+		}
+	}
+
 	data := UsersTemplate{
-		Users:      tplUsers,
-		UserID:     c1.User.UserID,
-		ActivePage: "users",
+		Users:           tplUsers,
+		UserPermissions: p1,
+		ActivePage:      "users",
 		Sort: Sort{
 			Pages:      sum,
 			Size:       size,
@@ -264,55 +266,60 @@ func (v *Views) UsersFunc(c echo.Context) error {
 			Deleted:    "",
 		},
 	}
-	return v.template.RenderTemplatePagination(c.Response(), data, templates.UsersTemplate)
+	return v.template.RenderTemplate(c.Response(), data, templates.UsersTemplate, templates.PaginationType)
 }
 
 // UserFunc handles a users request
 func (v *Views) UserFunc(c echo.Context) error {
-	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-	c1 := v.getData(session)
+	c1 := v.getSessionData(c)
 
 	userID, err := strconv.Atoi(c.Param("userid"))
 	if err != nil {
-		//http.Error(c.Response(), err.Error(), http.StatusBadRequest)
-		return v.errorHandle(c, err)
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse userid for user: %w", err))
 	}
-	user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
+	userFromDB, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 	if err != nil {
 		log.Printf("failed to get user in user: %+v", err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user for user: %w", err))
 		}
 	}
 
-	user2 := DBUserToDetailedUser(user1, v.user)
+	detailedUser := DBUserToUserTemplateFormat(userFromDB, v.user)
 
-	user2.Permissions, err = v.user.GetPermissionsForUser(c.Request().Context(), user.User{UserID: user2.UserID})
+	detailedUser.Permissions, err = v.user.GetPermissionsForUser(c.Request().Context(), user.User{UserID: detailedUser.UserID})
 	if err != nil {
 		log.Println(err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permissions for user: %w", err))
 		}
 	}
 
-	user2.Permissions = v.removeDuplicate(user2.Permissions)
+	detailedUser.Permissions = v.removeDuplicate(detailedUser.Permissions)
 
-	user2.Roles, err = v.user.GetRolesForUser(c.Request().Context(), user.User{UserID: user2.UserID})
+	detailedUser.Roles, err = v.user.GetRolesForUser(c.Request().Context(), user.User{UserID: detailedUser.UserID})
 	if err != nil {
 		log.Println(err)
 		if !v.conf.Debug {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get roles for user: %w", err))
+		}
+	}
+
+	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+	if err != nil {
+		log.Printf("failed to get user permissions for user: %+v", err)
+		if !v.conf.Debug {
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for user: %+v", err))
 		}
 	}
 
 	data := UserTemplate{
-		User:       user2,
-		UserID:     c1.User.UserID,
-		ActivePage: "user",
+		User:            detailedUser,
+		UserPermissions: p1,
+		ActivePage:      "user",
 	}
 
-	return v.template.RenderTemplate(c.Response(), data, templates.UserTemplate)
+	return v.template.RenderTemplate(c.Response(), data, templates.UserTemplate, templates.RegularType)
 }
 
 func (v *Views) UserAddFunc(c echo.Context) error {

@@ -19,86 +19,59 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 
 	userID, found := v.cache.Get(url)
 	if !found {
-		return v.errorHandle(c, fmt.Errorf("failed to get url"))
-		//if err != nil {
-		//	fmt.Println(err)
-		//}
-		//return
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get url for reset"))
 	}
 
-	user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID.(int)})
+	originalUser, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID.(int)})
 	if err != nil {
 		v.cache.Delete(url)
-		return v.errorHandle(c, fmt.Errorf("url is invalid because this user doesn't exist"))
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("url is invalid, failed to get user : %w", err))
 	}
 
 	switch c.Request().Method {
 	case "GET":
-		return v.template.RenderNoNavsTemplate(c.Response(), nil, templates.ResetTemplate)
+		return v.template.RenderTemplate(c.Response(), nil, templates.ResetTemplate, templates.NoNavType)
 	case "POST":
-		err = c.Request().ParseForm()
-		if err != nil {
-			return v.errorHandle(c, err)
-			//if err != nil {
-			//	fmt.Println(err)
-			//}
+		password := c.FormValue("password")
+		if password != c.FormValue("confirmpassword") {
+			return v.template.RenderTemplate(c.Response(), nil, templates.ResetTemplate, templates.NoNavType)
 		}
 
-		password := c.Request().FormValue("password")
-		if password != c.Request().FormValue("confirmpassword") {
-			return v.template.RenderNoNavsTemplate(c.Response(), nil, templates.ResetTemplate)
-		}
+		originalUser.Password = null.StringFrom(password)
 
-		err = c.Request().ParseForm()
-		if err != nil {
-			http.Error(c.Response(), err.Error(), http.StatusBadRequest)
-		}
-		p := c.Request().Form.Get("password")
-		if p != c.Request().Form.Get("confirmpassword") || p == "" {
-			return v.template.RenderNoNavsTemplate(c.Response(), nil, templates.ResetTemplate)
-		}
-		user1.Password = null.StringFrom(password)
-
-		user2, err := v.user.UpdateUserPassword(c.Request().Context(), user1)
+		updatedUser, err := v.user.UpdateUserPassword(c.Request().Context(), originalUser)
 		if err != nil {
 			log.Printf("failed to reset user: %+v", err)
 		}
 		v.cache.Delete(url)
-		log.Printf("updated user: %s", user2.Username)
+		log.Printf("updated user: %s", updatedUser.Username)
 		return c.Redirect(http.StatusFound, "/")
 	}
 	return nil
 }
 
 func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
-	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-	c1 := v.getData(session)
+	c1 := v.getSessionData(c)
 
 	userID, err := strconv.Atoi(c.Param("userid"))
 	if err != nil {
-		return v.errorHandle(c, err)
-		//if err != nil {
-		//	fmt.Println(err)
-		//}
-		//return
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to parse userid for reset: %w", err))
 	}
 
-	user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
+	userFromDB, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 	if err != nil {
-		log.Println(err)
-		return v.errorHandle(c, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user for reset: %w", err))
 	}
 
-	user1.ResetPw = true
+	userFromDB.ResetPw = true
 
-	_, err = v.user.UpdateUser(c.Request().Context(), user1, c1.User.UserID)
+	_, err = v.user.UpdateUser(c.Request().Context(), userFromDB, c1.User.UserID)
 	if err != nil {
-		return v.errorHandle(c, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to update user for reset: %w", err))
 	}
 
 	url := uuid.NewString()
-	v.cache.Set(url, user1.UserID, cache.DefaultExpiration)
+	v.cache.Set(url, userFromDB.UserID, cache.DefaultExpiration)
 
 	var status int
 
@@ -107,49 +80,47 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 		Error   error  `json:"error"`
 	}
 
+	mailer := v.mailer.ConnectMailer()
+
 	// Valid request, send email with reset code
-	if v.Mailer.Enabled {
-		v.Mailer, err = mail.NewMailer(mail.Config{
-			Host:       v.conf.Mail.Host,
-			Port:       v.conf.Mail.Port,
-			Username:   v.conf.Mail.Username,
-			Password:   v.conf.Mail.Password,
-			DomainName: v.conf.DomainName,
-		})
+	if mailer != nil {
+		emailTemplate, err := v.template.GetEmailTemplate(templates.ResetEmailTemplate)
 		if err != nil {
-			log.Printf("Mailer failed: %+v", err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to render email for reset: %w", err))
 		}
 
 		file := mail.Mail{
 			Subject: "YSTV Security - Reset Password",
-			Tpl:     v.template.RenderEmail(templates.ResetPasswordEmailTemplate),
-			To:      user1.Email,
+			Tpl:     emailTemplate,
+			To:      userFromDB.Email,
 			From:    "YSTV Security <no-reply@ystv.co.uk>",
 			TplData: struct {
 				Email string
 				URL   string
 			}{
-				Email: user1.Email,
+				Email: userFromDB.Email,
 				URL:   fmt.Sprintf("https://%s/reset/%s", v.conf.DomainName, url),
 			},
 		}
 
-		err = v.Mailer.SendMail(file)
+		err = mailer.SendMail(file)
 		if err != nil {
-			return v.errorHandle(c, err)
-			//if err != nil {
-			//	fmt.Println(err)
-			//}
+			message.Message = fmt.Sprintf("Please forward the link to this email: %s, reset link: https://%s/reset/%s", userFromDB.Email, v.conf.DomainName, url)
+			message.Error = fmt.Errorf("failed to send mail: %w", err)
+			log.Printf("failed to send mail: %+v", err)
+			log.Printf("password reset requested for email: %s by user: %d", userFromDB.Email, c1.User.UserID)
+			return c.JSON(http.StatusInternalServerError, message)
 		}
+		_ = mailer.Close()
 
-		log.Printf("request for password reset email: \"%s\"", user1.Email)
-		message.Message = fmt.Sprintf("Reset email sent to: \"%s\"", user1.Email)
+		log.Printf("password reset requested for email: %s by user: %d", userFromDB.Email, c1.User.UserID)
+		message.Message = fmt.Sprintf("Reset email sent to: \"%s\"", userFromDB.Email)
 	} else {
-		message.Message = fmt.Sprintf("No mailer present\nPlease forward the link to this email: %s, reset link: https://%s/reset/%s", user1.Email, v.conf.DomainName, url)
+		message.Message = fmt.Sprintf("No mailer present\nPlease forward the link to this email: %s, reset link: https://%s/reset/%s", userFromDB.Email, v.conf.DomainName, url)
 		message.Error = fmt.Errorf("no mailer present")
 		log.Printf("no Mailer present")
-		log.Printf("reset email: %s, url: %s, reset link: https://%s/reset/%s", user1.Email, url, v.conf.DomainName, url)
+		log.Printf("password reset requested for email: %s by user: %d", userFromDB.Email, c1.User.UserID)
 	}
-	log.Printf("reset for %d (%s) requested by %d (%s)", user1.UserID, user1.Firstname+" "+user1.Lastname, c1.User.UserID, c1.User.Firstname+" "+c1.User.Lastname)
+	log.Printf("reset for %d (%s) requested by %d (%s)", userFromDB.UserID, userFromDB.Firstname+" "+userFromDB.Lastname, c1.User.UserID, c1.User.Firstname+" "+c1.User.Lastname)
 	return c.JSON(status, message)
 }

@@ -48,9 +48,9 @@ func (s *Store) addPermission(ctx context.Context, p1 Permission) (Permission, e
 }
 
 func (s *Store) editPermission(ctx context.Context, p1 Permission) (Permission, error) {
-	return Permission{}, nil
+	panic("editPermission not implemented")
 }
 
 func (s *Store) deletePermission(ctx context.Context, p1 Permission) error {
-	return nil
+	panic("deletePermission not implemented")
 }

@@ -24,19 +24,17 @@ type LoginTemplate struct {
 // LoginFunc implements the login functionality, will
 // add a cookie to the cookie store for managing authentication
 func (v *Views) LoginFunc(c echo.Context) error {
-	var err error
-
 	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 	// We're ignoring the error here since sometimes the cookies keys change, and then we
-	// can overwrite it instead
+	// can overwrite it instead, it does need to stay as it is written to here
 
 	switch c.Request().Method {
 	case "GET":
 		// Data for our HTML template
-		context := v.getData(session)
+		context := v.getSessionData(c)
 
 		// Check if there is a callback request
-		callbackURL, err := url.Parse(c.Request().URL.Query().Get("callback"))
+		callbackURL, err := url.Parse(c.QueryParam("callback"))
 		if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) && callbackURL.String() != "" {
 			context.Callback = callbackURL.String()
 		}
@@ -46,28 +44,12 @@ func (v *Views) LoginFunc(c echo.Context) error {
 			return c.Redirect(http.StatusFound, context.Callback)
 		}
 
-		data := LoginTemplate{
-			Version: v.conf.Version,
-			Message: "",
-			MsgType: "",
-		}
-
-		return v.template.RenderNoNavsTemplate(c.Response(), data, templates.LoginTemplate)
+		return v.template.RenderTemplate(c.Response(), context, templates.LoginTemplate, templates.NoNavType)
 	case "POST":
 		// Parsing form to struct
-		err = c.Request().ParseForm()
-		if err != nil {
-			log.Printf("parse form fail: %v", err)
-			return v.errorHandle(c, err)
-		}
-		username := c.Request().FormValue("username")
-		password := c.Request().FormValue("password")
+		username := c.FormValue("username")
+		password := c.FormValue("password")
 		var u user.User
-		//err = decoder.Decode(&u, r.PostForm)
-		//if err != nil {
-		//	log.Printf("decode fail: %v", err)
-		//	return
-		//}
 		// Since we let users enter either an email or username, it's easier
 		// to just let it both for the query
 		u.Username = username
@@ -76,7 +58,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		u.Password = null.StringFrom(password)
 
 		callback := "/internal"
-		callbackURL, err := url.Parse(c.Request().URL.Query().Get("callback"))
+		callbackURL, err := url.Parse("callback")
 		if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) && callbackURL.String() != "" {
 			callback = callbackURL.String()
 		}
@@ -86,12 +68,11 @@ func (v *Views) LoginFunc(c echo.Context) error {
 			log.Printf("failed login for \"%s\": %v", u.Username, err)
 			err = session.Save(c.Request(), c.Response())
 			if err != nil {
-				//http.Error(w, err.Error(), http.StatusInternalServerError)
-				return v.errorHandle(c, err)
+				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to save session for login: %w", err))
 			}
 
 			if resetPw {
-				ctx := v.getData(session)
+				ctx := v.getSessionData(c)
 				ctx.Callback = callback
 				ctx.Message = "Password reset required"
 				ctx.MsgType = "is-danger"
@@ -101,32 +82,31 @@ func (v *Views) LoginFunc(c echo.Context) error {
 
 				return c.Redirect(http.StatusFound, fmt.Sprintf("https://%s/forgot/%s", v.conf.DomainName, url1))
 			}
-			ctx := v.getData(session)
+			ctx := v.getSessionData(c)
 			ctx.Callback = callback
 			ctx.Message = "Invalid username or password"
 			ctx.MsgType = "is-danger"
-			return v.template.RenderNoNavsTemplate(c.Response(), ctx, templates.LoginTemplate)
+			return v.template.RenderTemplate(c.Response(), ctx, templates.LoginTemplate, templates.NoNavType)
 		}
 		prevLogin := u.LastLogin
 		// Update last logged in
 		err = v.user.SetUserLoggedIn(c.Request().Context(), u)
 		if err != nil {
 			err = fmt.Errorf("failed to set user logged in: %w", err)
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to set user logged in for login: %w", err))
 		}
 		u.Authenticated = true
 		// This is a bit of a cheat, just so we can have the last login displayed for internal
 		u.LastLogin = prevLogin
 		session.Values["user"] = u
 
-		if c.Request().Form.Get("remember") != "on" {
+		if c.FormValue("remember") != "on" {
 			session.Options.MaxAge = 86400 * 31
 		}
 
 		err = session.Save(c.Request(), c.Response())
 		if err != nil {
-			err = fmt.Errorf("failed to save user session: %w", err)
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to save user session for login: %w", err))
 		}
 
 		log.Printf("user \"%s\" is authenticated", u.Username)

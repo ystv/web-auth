@@ -6,21 +6,6 @@ import (
 )
 
 type (
-	// Repo where all user data is stored
-	Repo interface {
-		GetPermissions(ctx context.Context) ([]Permission, error)
-		GetPermission(ctx context.Context, p Permission) (Permission, error)
-		AddPermission(ctx context.Context, p1 Permission) (Permission, error)
-		EditPermission(ctx context.Context, p1 Permission) (Permission, error)
-		DeletePermission(ctx context.Context, p1 Permission) error
-
-		getPermissions(ctx context.Context) ([]Permission, error)
-		getPermission(ctx context.Context, p1 Permission) (Permission, error)
-		addPermission(ctx context.Context, p1 Permission) (Permission, error)
-		editPermission(ctx context.Context, p1 Permission) (Permission, error)
-		deletePermission(ctx context.Context, p1 Permission) error
-	}
-
 	// Store stores the dependencies
 	Store struct {
 		db *sqlx.DB
@@ -34,8 +19,6 @@ type (
 		Roles        int    `db:"roles" json:"roles"`
 	}
 )
-
-var _ Repo = &Store{}
 
 // NewPermissionRepo stores our dependency
 func NewPermissionRepo(db *sqlx.DB) *Store {

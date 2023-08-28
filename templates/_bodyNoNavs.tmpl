@@ -1,0 +1,8 @@
+{{define "_body"}}
+    {{block "content-block" .}}
+        {{template "content" .}}
+    {{end}}
+    {{block "footer-block" .}}
+        {{template "_footer" .}}
+    {{end}}
+{{end}}

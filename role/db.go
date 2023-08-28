@@ -49,9 +49,9 @@ func (s *Store) addRole(ctx context.Context, r1 Role) (Role, error) {
 }
 
 func (s *Store) editRole(ctx context.Context, r1 Role) (Role, error) {
-	return Role{}, nil
+	panic("editRole not implemented")
 }
 
 func (s *Store) deleteRole(ctx context.Context, r1 Role) error {
-	return nil
+	panic("deleteRole not implemented")
 }

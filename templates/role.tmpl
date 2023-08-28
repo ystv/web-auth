@@ -1,10 +1,10 @@
 {{define "title"}}Internal: Role ({{.Role.Name}}){{end}}
 {{define "content"}}
-    <div class="column is-10">
+    <div class="column is-10" style="min-height: 88vh">
         <section class="hero is-info welcome is-small">
             <div class="hero-body">
                 <div class="container">
-                    <h1 class="title">You are currently viewing ({{.Role.Name}}).</h1>
+                    <h1 class="title">{{.Role.Name}}</h1>
                 </div>
             </div>
         </section>
@@ -21,7 +21,39 @@
                 </div>
             </div>
             <div class="column">
-                {{parseHTMLRole .Role $.UserID}}
+                {{$permissionAdmin := checkPermission .UserPermissions "ManageMembers.Permission"}}
+                {{$userAdmin := checkPermission .UserPermissions "ManageMembers.Members.Admin"}}
+                {{with .Role}}
+                    <p>Role ID: {{.RoleID}}<br>
+                    Name: {{.Name}}<br>
+                    Description: {{.Description}}{{if gt (len .Permissions) 0}}<br><br>
+                    Permissions: <ol>
+                        {{range .Permissions}}
+                            <li style='list-style-type: none;'><span class='tab'></span>
+                                {{if $permissionAdmin}}
+                                    <a href="/internal/permission/{{.PermissionID}}">{{.Name}}</a>
+                                {{else}}
+                                    {{.Name}}
+                                {{end}}
+                            </li>
+                        {{end}}
+                    </ol><br>
+                    {{end}}
+                    {{if gt (len .Users) 0}}
+                        Inherited by: <ol>
+                            {{range .Users}}
+                                <li style='list-style-type: none;'><span class='tab'></span>
+                                    {{if $userAdmin}}
+                                        <a href="/internal/user/{{.UserID}}">{{formatUserName .}}</a>
+                                    {{else}}
+                                        {{formatUserName .}}
+                                    {{end}}
+                                </li>
+                            {{end}}
+                        </ol>
+                    {{end}}
+                    </p>
+                {{end}}
             </div>
         </div>
     </div>
@@ -36,7 +68,7 @@
                     <div class="media-content">
                         <div class="content">
                             <p class="title">Are you sure you want to delete this role?</p>
-                            <p><strong>This can be undone</strong></p>
+                            <p>Be careful! Permissions and users use the role id and will have to set back up manually.</p>
                             <a class="button is-danger" onclick="deleteRole()">Delete role</a>
                         </div>
                     </div>
@@ -60,7 +92,7 @@
         }
 
         function deleteRole() {
-
+            // unimplemented for now
         }
     </script>
 {{end}}

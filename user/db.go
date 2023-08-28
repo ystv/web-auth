@@ -9,54 +9,20 @@ import (
 )
 
 // countUsers will get the number of total users
-func (s *Store) countUsers(ctx context.Context) (int, error) {
-	var count int
-	err := s.db.GetContext(ctx, &count,
-		`SELECT COUNT(*)
-		FROM people.users;`)
+func (s *Store) countUsersAll(ctx context.Context) (CountUsers, error) {
+	var countUsers CountUsers
+	err := s.db.GetContext(ctx, &countUsers,
+		`SELECT
+		(SELECT COUNT(*) FROM people.users) as total_users,
+		(SELECT COUNT(*) FROM people.users WHERE enabled = true AND deleted_by IS NULL AND deleted_at IS NULL) as active_users,
+		(SELECT COUNT(*) FROM people.users WHERE last_login > TO_TIMESTAMP($1, 'YYYY-MM-DD HH24:MI:SS')) as active_users_past_24_hours,
+		(SELECT COUNT(*) FROM people.users WHERE last_login > TO_TIMESTAMP($2, 'YYYY-MM-DD HH24:MI:SS')) as active_users_past_year;`,
+		time.Now().AddDate(0, 0, -1).Format("2006-01-02 15:04:05"),
+		time.Now().AddDate(-1, 0, 0).Format("2006-01-02 15:04:05"))
 	if err != nil {
-		return count, fmt.Errorf("failed to count users from db: %w", err)
+		return countUsers, fmt.Errorf("failed to count users all from db: %w", err)
 	}
-	return count, nil
-}
-
-// countUsersActive will get the number of total active users
-func (s *Store) countUsersActive(ctx context.Context) (int, error) {
-	var count int
-	err := s.db.GetContext(ctx, &count,
-		`SELECT COUNT(*)
-		FROM people.users
-		WHERE enabled = true AND deleted_by IS NULL AND deleted_at IS NULL;`)
-	if err != nil {
-		return count, fmt.Errorf("failed to count users from db: %w", err)
-	}
-	return count, nil
-}
-
-// countUsers24Hours will get the number of users in the last 24 hours
-func (s *Store) countUsers24Hours(ctx context.Context) (int, error) {
-	var count int
-	err := s.db.GetContext(ctx, &count,
-		`SELECT COUNT(*)
-		FROM people.users
-		WHERE last_login > TO_TIMESTAMP($1, 'YYYY-MM-DD HH24:MI:SS');`, time.Now().AddDate(0, 0, -1).Format("2006-01-02 15:04:05"))
-	if err != nil {
-		return count, fmt.Errorf("failed to count users 24 hours from db: %w", err)
-	}
-	return count, nil
-}
-
-// countUsersPastYear will get the number of users in the last 24 hours
-func (s *Store) countUsersPastYear(ctx context.Context) (int, error) {
-	var count int
-	err := s.db.GetContext(ctx, &count,
-		`SELECT COUNT(*)
-		FROM people.users
-		WHERE last_login > TO_TIMESTAMP($1, 'YYYY-MM-DD HH24:MI:SS');`, time.Now().AddDate(-1, 0, 0).Format("2006-01-02 15:04:05"))
-	if err != nil {
-		return count, fmt.Errorf("failed to count users past year from db: %w", err)
-	}
-	return count, nil
+	return countUsers, nil
 }
 
 // updateUser will update a user record by ID
@@ -114,7 +80,9 @@ func (s *Store) getUsers(ctx context.Context) ([]User, error) {
 	return u, nil
 }
 
-// getUsersSizePage will get users with page size
+// getUsersSizePage will get users with page size.
+// Size is specified by the users page, size of list, from 5 to all items.
+// Page is the page number displayed, this is for the UI users page
 func (s *Store) getUsersSizePage(ctx context.Context, size, page int) ([]User, error) {
 	var u []User
 	// SELECT u.*, COUNT(*) / $1 AS pages
@@ -150,6 +118,8 @@ func (s *Store) getUsersSearch(ctx context.Context, search string) ([]User, erro
 }
 
 // getUsersSearchSizePage will get users search with size and page
+// Size is specified by the users page, size of list, from 5 to all items.
+// Page is the page number displayed, this is for the UI users page
 func (s *Store) getUsersSearchSizePage(ctx context.Context, search string, size, page int) ([]User, error) {
 	var u []User
 	err := s.db.SelectContext(ctx, &u,
@@ -191,6 +161,8 @@ func (s *Store) getUsersOptionsAsc(ctx context.Context, sortBy string) ([]User, 
 }
 
 // getUsersOptionsDescSizePage will get users sorting asc with size and page
+// Size is specified by the users page, size of list, from 5 to all items.
+// Page is the page number displayed, this is for the UI users page
 func (s *Store) getUsersOptionsAscSizePage(ctx context.Context, sortBy string, size, page int) ([]User, error) {
 	var u []User
 	err := s.db.SelectContext(ctx, &u,
@@ -238,6 +210,8 @@ func (s *Store) getUsersSearchOptionsAsc(ctx context.Context, search, sortBy str
 }
 
 // getUsersSearchOptionsAscSizePage will get users search with sorting asc with size and page
+// Size is specified by the users page, size of list, from 5 to all items.
+// Page is the page number displayed, this is for the UI users page
 func (s *Store) getUsersSearchOptionsAscSizePage(ctx context.Context, search, sortBy string, size, page int) ([]User, error) {
 	var u []User
 	err := s.db.SelectContext(ctx, &u,
@@ -285,6 +259,8 @@ func (s *Store) getUsersOptionsDesc(ctx context.Context, sortBy string) ([]User,
 }
 
 // getUsersOptionsDescSizePage will get users sorting desc with size and page
+// Size is specified by the users page, size of list, from 5 to all items.
+// Page is the page number displayed, this is for the UI users page
 func (s *Store) getUsersOptionsDescSizePage(ctx context.Context, sortBy string, size, page int) ([]User, error) {
 	var u []User
 	err := s.db.SelectContext(ctx, &u,
@@ -332,6 +308,8 @@ func (s *Store) getUsersSearchOptionsDesc(ctx context.Context, search, sortBy st
 }
 
 // getUsersSearchOptionsDescSizePage will get users search with sorting desc with size and page
+// Size is specified by the users page, size of list, from 5 to all items.
+// Page is the page number displayed, this is for the UI users page
 func (s *Store) getUsersSearchOptionsDescSizePage(ctx context.Context, search, sortBy string, size, page int) ([]User, error) {
 	var u []User
 	err := s.db.SelectContext(ctx, &u,
