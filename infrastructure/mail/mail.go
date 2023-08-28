@@ -12,13 +12,14 @@ import (
 )
 
 type (
-	// Mailer encapsulates the dependency
+	// Mailer is the struct that is used to send mail, can only be used once connected to mailer
 	Mailer struct {
 		*mail.SMTPClient
 		Defaults   Defaults
 		DomainName string
 	}
 
+	// MailerInit is the config store for the mailer, can be initialised once then connected multiple times
 	MailerInit struct {
 		SMTPServer mail.SMTPServer
 		Defaults   Defaults
