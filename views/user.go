@@ -53,16 +53,16 @@ func (v *Views) UsersFunc(c echo.Context) error {
 	if c.Request().Method == "POST" {
 		u, err := url.Parse("/internal/users")
 		if err != nil {
-			return v.errorHandle(c, fmt.Errorf("invlaid url: %w", err))
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid url: %w", err))
 		}
 
 		q := u.Query()
-    
+
 		column := c.QueryParam("column")
-    direction := c.QueryParam("direction")
-    search := c.QueryParam("search")
-    enabled := c.QueryParam("enabled")
-    deleted := c.QueryParam("deleted")
+		direction := c.QueryParam("direction")
+		search := c.QueryParam("search")
+		enabled := c.QueryParam("enabled")
+		deleted := c.QueryParam("deleted")
 		var size int
 		sizeRaw := c.FormValue("size")
 		if sizeRaw == "all" {
@@ -78,20 +78,16 @@ func (v *Views) UsersFunc(c echo.Context) error {
 			}
 		}
 
-		enabled := c.Request().FormValue("enabled")
-		fmt.Println(enabled, len(enabled))
 		if enabled == "enabled" || enabled == "disabled" {
 			q.Set("enabled", enabled)
 		} else if enabled != "any" {
-			return v.errorHandle(c, fmt.Errorf("enabled must be set to either \"any\", \"enabled\" or \"disabled\""))
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("enabled must be set to either \"any\", \"enabled\" or \"disabled\""))
 		}
 
-		deleted := c.Request().FormValue("deleted")
-		fmt.Println(deleted, len(deleted))
 		if deleted == "deleted" || deleted == "not_deleted" {
 			q.Set("deleted", deleted)
 		} else if deleted != "any" {
-			return v.errorHandle(c, fmt.Errorf("deleted must be set to either \"any\", \"deleted\" or \"not_deleted\""))
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("deleted must be set to either \"any\", \"deleted\" or \"not_deleted\""))
 		}
 
 		if column == "userId" || column == "name" || column == "username" || column == "email" || column == "lastLogin" {

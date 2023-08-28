@@ -112,27 +112,21 @@ func (v *Views) PermissionFunc(c echo.Context) error {
 // PermissionAddFunc handles an add permission request
 func (v *Views) PermissionAddFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
-		err := c.Request().ParseForm()
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-
 		name := c.Request().FormValue("name")
 		description := c.Request().FormValue("description")
 
 		p1, err := v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: 0, Name: name})
 		if err == nil && p1.PermissionID > 0 {
-			return v.errorHandle(c, fmt.Errorf("permission with name \"%s\" already exists", name))
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("permission with name \"%s\" already exists", name))
 		}
 
 		_, err = v.permission.AddPermission(c.Request().Context(), permission.Permission{PermissionID: -1, Name: name, Description: description})
 		if err != nil {
-			return v.errorHandle(c, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to add permission for permissionadd: %w", err))
 		}
 		return v.PermissionsFunc(c)
 	} else {
-		return v.errorHandle(c, fmt.Errorf("invalid method used"))
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("invalid method used"))
 	}
 }
 
@@ -148,7 +142,7 @@ func (v *Views) PermissionDeleteFunc(c echo.Context) error {
 		if err != nil {
 			log.Printf("failed to get permissionid for permission: %+v", err)
 			if !v.conf.Debug {
-				return v.errorHandle(c, fmt.Errorf("failed to get permissionid for permission: %+v", err))
+				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permissionid for permission: %+v", err))
 			}
 		}
 
@@ -156,7 +150,7 @@ func (v *Views) PermissionDeleteFunc(c echo.Context) error {
 		if err != nil {
 			log.Printf("failed to get permission for deletePermission: %+v", err)
 			if !v.conf.Debug {
-				return v.errorHandle(c, fmt.Errorf("failed to get permission for deletePermission: %+v", err))
+				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permission for deletePermission: %+v", err))
 			}
 		}
 
@@ -164,7 +158,7 @@ func (v *Views) PermissionDeleteFunc(c echo.Context) error {
 		if err != nil {
 			log.Printf("failed to get roles for deletePermission: %+v", err)
 			if !v.conf.Debug {
-				return v.errorHandle(c, fmt.Errorf("failed to get roles for deletePermission: %+v", err))
+				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get roles for deletePermission: %+v", err))
 			}
 		}
 
@@ -173,7 +167,7 @@ func (v *Views) PermissionDeleteFunc(c echo.Context) error {
 			if err != nil {
 				log.Printf("failed to delete rolePermission for deletePermission: %+v", err)
 				if !v.conf.Debug {
-					return v.errorHandle(c, fmt.Errorf("failed to delete rolePermission for deletePermission: %+v", err))
+					return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to delete rolePermission for deletePermission: %+v", err))
 				}
 			}
 		}
@@ -182,11 +176,11 @@ func (v *Views) PermissionDeleteFunc(c echo.Context) error {
 		if err != nil {
 			log.Printf("failed to delete permission for deletePermission: %+v", err)
 			if !v.conf.Debug {
-				return v.errorHandle(c, fmt.Errorf("failed to delete permission for deletePermission: %+v", err))
+				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to delete permission for deletePermission: %+v", err))
 			}
 		}
 		return v.PermissionsFunc(c)
 	} else {
-		return v.errorHandle(c, fmt.Errorf("invalid method used"))
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("invalid method used"))
 	}
 }
