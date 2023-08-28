@@ -129,13 +129,13 @@ func (s *Store) getUsersSearchNoOrder(ctx context.Context, size, page int, searc
 	err := s.db.SelectContext(ctx, &u, fmt.Sprintf(`SELECT *
 		FROM people.users
 		WHERE
-		    (CAST(user_id AS TEXT) LIKE '%' || $1 || '%'
-			OR (LOWER(username) LIKE LOWER('%' || $1 || '%'))
-			OR (LOWER(nickname) LIKE LOWER('%' || $1 || '%'))
-			OR (LOWER(first_name) LIKE LOWER('%' || $1 || '%'))
-			or (LOWER(last_name) LIKE LOWER('%' || $1 || '%'))
-			OR (LOWER(email) LIKE LOWER('%' || $1 || '%'))
-			OR (LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || $1 || '%')))
+		    (CAST(user_id AS TEXT) LIKE '%%' || $1 || '%%'
+			OR LOWER(username) LIKE LOWER('%%' || $1 || '%%')
+			OR LOWER(nickname) LIKE LOWER('%%' || $1 || '%%')
+			OR LOWER(first_name) LIKE LOWER('%%' || $1 || '%%')
+			or LOWER(last_name) LIKE LOWER('%%' || $1 || '%%')
+			OR LOWER(email) LIKE LOWER('%%' || $1 || '%%')
+			OR LOWER(first_name || ' ' || last_name) LIKE LOWER('%%' || $1 || '%%'))
 			%[1]s
 			%[2]s
 		%[3]s;`, enabledSQL, deletedSQL, pageSize), search)
@@ -193,13 +193,13 @@ func (s *Store) getUsersSearchOrder(ctx context.Context, size, page int, search,
 	err = s.db.SelectContext(ctx, &u, fmt.Sprintf(`SELECT *
 		FROM people.users
 		WHERE
-		    ((LOWER(CAST(user_id AS TEXT)) LIKE LOWER('%' || $1 || '%'))
-			OR (LOWER(username) LIKE LOWER('%' || $1 || '%'))
-			OR (LOWER(nickname) LIKE LOWER('%' || $1 || '%'))
-			OR (LOWER(first_name) LIKE LOWER('%' || $1 || '%'))
-			or (LOWER(last_name) LIKE LOWER('%' || $1 || '%'))
-			OR (LOWER(email) LIKE LOWER('%' || $1 || '%'))
-			OR (LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || $1 || '%')))
+		    (CAST(user_id AS TEXT) LIKE '%%' || $1 || '%%'
+			OR LOWER(username) LIKE LOWER('%%' || $1 || '%%')
+			OR LOWER(nickname) LIKE LOWER('%%' || $1 || '%%')
+			OR LOWER(first_name) LIKE LOWER('%%' || $1 || '%%')
+			or LOWER(last_name) LIKE LOWER('%%' || $1 || '%%')
+			OR LOWER(email) LIKE LOWER('%%' || $1 || '%%')
+			OR LOWER(first_name || ' ' || last_name) LIKE LOWER('%%' || $1 || '%%'))
 			%[3]s
 			%[4]s
 		ORDER BY
