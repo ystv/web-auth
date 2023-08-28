@@ -43,12 +43,11 @@ func main() {
 		sessionCookieName = "session"
 	}
 
-	host := os.Getenv("WAUTH_DB_HOST")
 	dbPort := os.Getenv("WAUTH_DB_PORT")
 
 	dbConnectionString := fmt.Sprintf(
 		"host=%s port=%s user=%s dbname=%s sslmode=%s password=%s",
-		host,
+		dbHost,
 		dbPort,
 		os.Getenv("WAUTH_DB_USER"),
 		os.Getenv("WAUTH_DB_NAME"),
