@@ -115,6 +115,10 @@ func (v *Views) UsersFunc(c echo.Context) error {
 	column := c.QueryParam("column")
 	direction := c.QueryParam("direction")
 	search := c.QueryParam("search")
+	search, err = url.QueryUnescape(search)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to unescape query: %w", err))
+	}
 	enabled := c.QueryParam("enabled")
 	deleted := c.QueryParam("deleted")
 	var size, page, count int
