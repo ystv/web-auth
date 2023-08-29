@@ -1,0 +1,8 @@
+linters:
+  presets:
+    - bugs
+    - error
+    - unused
+  disable:
+    - wrapcheck
+    - goerr113
