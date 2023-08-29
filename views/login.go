@@ -85,7 +85,6 @@ func (v *Views) LoginFunc(c echo.Context) error {
 				url1 := uuid.NewString()
 				v.cache.Set(url1, u.UserID, cache.DefaultExpiration)
 
-				return c.Redirect(http.StatusFound, fmt.Sprintf("https://%s/forgot/%s", v.conf.DomainName, url1))
 				return c.Redirect(http.StatusFound, fmt.Sprintf("https://%s/reset/%s", v.conf.DomainName, url1))
 			}
 			ctx := v.getSessionData(c)
