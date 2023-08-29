@@ -261,7 +261,7 @@ func (v *Views) UserFunc(c echo.Context) error {
 		}
 	}
 
-	user2.Permissions = v.removeDuplicate(user2.Permissions)
+	user2.Permissions = removeDuplicate(user2.Permissions)
 
 	user2.Roles, err = v.user.GetRolesForUser(c.Request().Context(), user.User{UserID: user2.UserID})
 	if err != nil {
