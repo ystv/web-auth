@@ -67,8 +67,6 @@ func (s *Store) getUser(ctx context.Context, user User) (User, error) {
 	return u, nil
 }
 
-// //getUsersSizePage will get users with page size
-// func (s *Store) getUsersSizePage(ctx context.Context, size, page int) ([]User, error) {
 // getUsers will get users with page size
 func (s *Store) getUsers(ctx context.Context, size, page int, enabled, deleted string) ([]User, error) {
 	var u []User
