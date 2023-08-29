@@ -27,32 +27,35 @@
                                             <span class="icon is-small is-left">
                       <i class="fa fa-lock"></i>
                     </span>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div class="field">
-                                    <label class="label" for="confirmpassword">Confirm password</label>
-                                    <div class="control has-icons-left">
-                                        <input
-                                                id="confirmpassword"
-                                                class="input"
-                                                type="password"
-                                                name="confirmpassword"
-                                                placeholder="********"
-                                        />
-                                        <span class="icon is-small is-left">
+                                    <div class="field">
+                                        <label class="label" for="confirmpassword">Confirm password</label>
+                                        <div class="control has-icons-left">
+                                            <input
+                                                    id="confirmpassword"
+                                                    class="input"
+                                                    type="password"
+                                                    name="confirmpassword"
+                                                    placeholder="********"
+                                            />
+                                            <span class="icon is-small is-left">
                       <i class="fa fa-lock"></i>
                     </span>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="control">
-                                    <input class="button is-link" type="submit" value="Reset password"/>
-                                </div>
-                            </form>
+                                    <div class="control">
+                                        <input class="button is-link" type="submit" value="Reset password"/>
+                                    </div>
+                                </form>
+                            </div>
+                            {{if .Message}}
+                                <div class="notification {{.MsgType}}">{{.Message}}</div>
+                            {{end}}
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
     </section>
 {{end}}
