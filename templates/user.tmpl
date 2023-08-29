@@ -104,7 +104,7 @@
                         Updated by {{if and (and (eq (len .UpdatedBy.Firstname) 0) (eq (len .UpdatedBy.Nickname) 0)) (eq (len .UpdatedBy.Lastname) 0)}}
                             UNKNOWN({{.UpdatedBy.UserID}}){{else}}<a href="/internal/user/{{.UpdatedBy.UserID}}">{{formatUserName .UpdatedBy}}</a>
                         {{end}} at {{.UpdatedAt.String}}<br>
-                    {{else if .UpdatedBy.Valid}}
+                    {{else if .UpdatedAt.Valid}}
                         Updated by UNKNOWN at {{.UpdatedAt.String}}<br>
                     {{end}}
                     </p>
