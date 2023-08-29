@@ -67,7 +67,6 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 func (v *Views) setMessagesInSession(eC echo.Context, c *Context) error {
 	session, err := v.cookie.Get(eC.Request(), v.conf.SessionCookieName)
 	if err != nil {
-		log.Printf("error getting session: %+v", err)
 		return fmt.Errorf("error getting session: %+v", err)
 	}
 	session.Values["internalContext"] = InternalContext{
@@ -78,7 +77,6 @@ func (v *Views) setMessagesInSession(eC echo.Context, c *Context) error {
 
 	err = session.Save(eC.Request(), eC.Response())
 	if err != nil {
-		log.Printf("failed to save session for set message: %+v", err)
 		return fmt.Errorf("failed to save session for set message: %w", err)
 	}
 	return nil
@@ -87,14 +85,12 @@ func (v *Views) setMessagesInSession(eC echo.Context, c *Context) error {
 func (v *Views) clearMessagesInSession(eC echo.Context) error {
 	session, err := v.cookie.Get(eC.Request(), v.conf.SessionCookieName)
 	if err != nil {
-		log.Printf("error getting session: %+v", err)
 		return fmt.Errorf("error getting session: %+v", err)
 	}
 	session.Values["internalContext"] = InternalContext{}
 
 	err = session.Save(eC.Request(), eC.Response())
 	if err != nil {
-		log.Printf("failed to save session for clear message: %+v", err)
 		return fmt.Errorf("failed to save session for clear message: %w", err)
 	}
 	return nil
