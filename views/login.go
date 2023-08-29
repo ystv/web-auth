@@ -15,12 +15,6 @@ import (
 	"github.com/ystv/web-auth/user"
 )
 
-type LoginTemplate struct {
-	Version string
-	Message string
-	MsgType string
-}
-
 // LoginFunc implements the login functionality, will
 // add a cookie to the cookie store for managing authentication
 func (v *Views) LoginFunc(c echo.Context) error {
