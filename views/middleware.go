@@ -17,7 +17,7 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 		if err != nil {
-			log.Println(err)
+			log.Printf("failed to get session: %+v", err)
 			return c.Redirect(http.StatusFound, "/")
 		}
 		c1 := v.getSessionData(c)
@@ -26,7 +26,7 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 		userFromDB, err := v.user.GetUser(c.Request().Context(), c1.User)
 		if err != nil {
-			log.Println(err)
+			log.Printf("failed to get user from db: %+v", err)
 			return c.Redirect(http.StatusFound, "/")
 		}
 		if userFromDB.DeletedBy.Valid || !c1.User.Enabled {
@@ -36,10 +36,6 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to save session for requiresLogin: %w", err))
 			}
-			return c.Redirect(http.StatusFound, "/")
-		}
-		if !c1.User.Authenticated {
-			// Not authenticated
 			return c.Redirect(http.StatusFound, "/")
 		}
 		return next(c)
