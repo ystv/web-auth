@@ -53,7 +53,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 	if c.Request().Method == "POST" {
 		u, err := url.Parse("/internal/users")
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid url: %w", err))
+			panic(fmt.Errorf("invalid url: %w", err)) // this panics because if this errors then many other things will be wrong
 		}
 
 		q := u.Query()
