@@ -1,10 +1,10 @@
-{{define "title"}}Internal: User ({{ .User.Firstname }} {{if ne .User.Firstname .User.Nickname}}({{ .User.Nickname }}) {{end}}{{ .User.Lastname }}){{end}}
+{{define "title"}}Internal: User ({{formatUserName .User}}){{end}}
 {{define "content"}}
     <div class="column is-10" style="min-height: 88vh">
         <section class="hero is-info welcome is-small">
             <div class="hero-body">
                 <div class="container">
-                    <h1 class="title">{{ .User.Firstname }} {{if ne .User.Firstname .User.Nickname}}({{ .User.Nickname }}) {{end}}{{ .User.Lastname }}</h1>
+                    <h1 class="title">{{formatUserName .User}}</h1>
                 </div>
             </div>
         </section>
@@ -46,7 +46,7 @@
                 {{with .User}}
                     <p>
                     {{if ne .DeletedBy.UserID -1}}
-                        Deleted by {{if and (and (eq (len .DeletedBy.Firstname) 0) (eq (len .DeletedBy.Nickname) 0)) (eq (len .DeletedBy.Lastname) 0)}}
+                        Deleted by {{if checkIfNoNameExists .DeletedBy}}
                             UNKNOWN({{.DeletedBy.UserID}}){{else}}<a href="/internal/user/{{.DeletedBy.UserID}}">{{formatUserName .DeletedBy}}</a>
                         {{end}} at {{.DeletedAt.String}}<br>
                     {{else if .DeletedAt.Valid}}
@@ -94,14 +94,14 @@
                         Last login at {{.LastLogin.String}}<br>
                     {{end}}
                     {{if ne .CreatedBy.UserID -1}}
-                        Created by {{if and (and (eq (len .CreatedBy.Firstname) 0) (eq (len .CreatedBy.Nickname) 0)) (eq (len .CreatedBy.Lastname) 0)}}
+                        Created by {{if checkIfNoNameExists .CreatedBy}}
                             UNKNOWN({{.CreatedBy.UserID}}){{else}}<a href="/internal/user/{{.CreatedBy.UserID}}">{{formatUserName .CreatedBy}}</a>
                         {{end}} at {{.CreatedAt.String}}<br>
                     {{else if .CreatedAt.Valid}}
                         Created by UNKNOWN at {{.CreatedAt.String}}<br>
                     {{end}}
                     {{if ne .UpdatedBy.UserID -1}}
-                        Updated by {{if and (and (eq (len .UpdatedBy.Firstname) 0) (eq (len .UpdatedBy.Nickname) 0)) (eq (len .UpdatedBy.Lastname) 0)}}
+                        Updated by {{if checkIfNoNameExists .UpdatedBy}}
                             UNKNOWN({{.UpdatedBy.UserID}}){{else}}<a href="/internal/user/{{.UpdatedBy.UserID}}">{{formatUserName .UpdatedBy}}</a>
                         {{end}} at {{.UpdatedAt.String}}<br>
                     {{else if .UpdatedAt.Valid}}

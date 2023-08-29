@@ -125,6 +125,9 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			}
 			return false
 		},
+		"checkIfNoNameExists": func(u user.User) bool {
+			return len(u.Firstname) == 0 && len(u.Nickname) == 0 && len(u.Lastname) == 0
+		},
 		"formatUserName": func(u user.User) (name string) {
 			if u.Firstname != u.Nickname {
 				name = fmt.Sprintf("%s (%s) %s", u.Firstname, u.Nickname, u.Lastname)
