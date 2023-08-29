@@ -3,6 +3,16 @@ linters:
     - bugs
     - error
     - unused
+    - comment
+    - format
+    - importTw
+    - metalinter
+    - module
+    - performance
+    - sql
   disable:
     - wrapcheck
     - goerr113
+    - depguard
+    - tagalign
+    - godot
