@@ -16,14 +16,14 @@ type (
 	// Notification template for messages
 	Notification struct {
 		Title   string
-		Type    string
+		MsgType string
 		Message string
 	}
 )
 
 var notification = Notification{
 	Title:   "Reset code sent",
-	Type:    "",
+	MsgType: "",
 	Message: "Cheers! If your account exists, you should receive a new email from \"YSTV Security\" with a link to reset your password shortly.",
 }
 
