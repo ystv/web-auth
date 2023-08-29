@@ -5,7 +5,7 @@ linters:
     - unused
     - comment
     - format
-    - importTw
+    - import
     - metalinter
     - module
     - performance
