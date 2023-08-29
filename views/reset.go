@@ -15,6 +15,8 @@ import (
 )
 
 func (v *Views) ResetURLFunc(c echo.Context) error {
+	c1 := v.getSessionData(c)
+
 	url := c.Param("url")
 
 	userID, found := v.cache.Get(url)
@@ -30,7 +32,7 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 
 	switch c.Request().Method {
 	case "GET":
-		return v.template.RenderTemplate(c.Response(), nil, templates.ResetTemplate, templates.NoNavType)
+		return v.template.RenderTemplate(c.Response(), c1, templates.ResetTemplate, templates.NoNavType)
 	case "POST":
 		password := c.FormValue("password")
 		if password != c.FormValue("confirmpassword") {

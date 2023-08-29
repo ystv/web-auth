@@ -16,6 +16,8 @@ import (
 type (
 	// Context is a struct that is applied to the templates.
 	Context struct {
+		// Title is used for sending pages to the user with custom titles
+		Title string
 		// Message is used for sending a message back to the user trying to log in, might decide to move later as it may not be needed
 		Message string
 		// MsgType is the bulma.io class used to indicate what should be displayed
@@ -27,6 +29,12 @@ type (
 		// Version is the version that is running
 		Version string
 	}
+
+	InternalContext struct {
+		Title   string
+		Message string
+		MesType string
+	}
 )
 
 func (v *Views) getSessionData(eC echo.Context) *Context {
@@ -35,17 +43,61 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 		log.Printf("error getting session: %+v", err)
 		return nil
 	}
-	val := session.Values["user"]
-	u, ok := val.(user.User)
+	userValue := session.Values["user"]
+	u, ok := userValue.(user.User)
 	if !ok {
 		u = user.User{Authenticated: false}
 	}
-	c := Context{
+	internalValue := session.Values["internalContext"]
+	i, ok := internalValue.(InternalContext)
+	if !ok {
+		i = InternalContext{}
+	}
+	c := &Context{
+		Title:    i.Title,
+		Message:  i.Message,
+		MsgType:  i.MesType,
 		Callback: "/internal",
 		User:     u,
 		Version:  v.conf.Version,
 	}
-	return &c
+	return c
+}
+
+func (v *Views) setMessagesInSession(eC echo.Context, c *Context) error {
+	session, err := v.cookie.Get(eC.Request(), v.conf.SessionCookieName)
+	if err != nil {
+		log.Printf("error getting session: %+v", err)
+		return fmt.Errorf("error getting session: %+v", err)
+	}
+	session.Values["internalContext"] = InternalContext{
+		Title:   c.Title,
+		Message: c.Message,
+		MesType: c.MsgType,
+	}
+
+	err = session.Save(eC.Request(), eC.Response())
+	if err != nil {
+		log.Printf("failed to save session for set message: %+v", err)
+		return fmt.Errorf("failed to save session for set message: %w", err)
+	}
+	return nil
+}
+
+func (v *Views) clearMessagesInSession(eC echo.Context) error {
+	session, err := v.cookie.Get(eC.Request(), v.conf.SessionCookieName)
+	if err != nil {
+		log.Printf("error getting session: %+v", err)
+		return fmt.Errorf("error getting session: %+v", err)
+	}
+	session.Values["internalContext"] = InternalContext{}
+
+	err = session.Save(eC.Request(), eC.Response())
+	if err != nil {
+		log.Printf("failed to save session for clear message: %+v", err)
+		return fmt.Errorf("failed to save session for clear message: %w", err)
+	}
+	return nil
 }
 
 // DBUsersToUsersTemplateFormat converts from the DB layer type to the user template type
