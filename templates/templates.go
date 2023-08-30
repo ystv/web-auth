@@ -3,16 +3,17 @@ package templates
 import (
 	"embed"
 	"fmt"
+	"html/template"
+	"io"
+	"log"
+	"time"
+
 	permission1 "github.com/ystv/web-auth/infrastructure/permission"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/role"
 	"github.com/ystv/web-auth/user"
 	"gopkg.in/guregu/null.v4"
-	"html/template"
-	"io"
-	"log"
-	"time"
 )
 
 //go:embed *.tmpl
@@ -98,9 +99,6 @@ func (t *Templater) GetEmailTemplate(emailTemplate Template) (*template.Template
 
 func (t *Templater) getFuncMaps() template.FuncMap {
 	return template.FuncMap{
-		"now": func() time.Time {
-			return time.Now()
-		},
 		"thisYear": func() int {
 			return time.Now().Year()
 		},
@@ -138,6 +136,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			} else if atTime.Valid {
 				s = fmt.Sprintf("%s by UNKNOWN at %s<br>", prefix, atTime.String)
 			}
+			// #nosec
 			return template.HTML(s)
 		},
 		"formatUserName": func(u user.DetailedUser) (name string) {

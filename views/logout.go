@@ -2,9 +2,10 @@ package views
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/user"
-	"net/http"
 )
 
 // LogoutFunc Implements the logout functionality.

@@ -3,9 +3,10 @@ package user
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
-	"time"
 )
 
 // countUsersAll will get the number of total users
@@ -186,13 +187,16 @@ func (s *Store) getUsersSearchOrder(ctx context.Context, size, page int, search,
 
 func (s *Store) parseDirection(direction string) (string, string, error) {
 	var dir, nulls string
-	if direction == "asc" {
+	switch direction {
+	case "asc":
 		dir = `ASC`
 		nulls = `FIRST`
-	} else if direction == "desc" {
+		break
+	case "desc":
 		dir = `DESC`
 		nulls = `LAST`
-	} else {
+		break
+	default:
 		return ``, ``, fmt.Errorf("invalid sorting direction, entered \"%s\" of length %d, but expected either \"direction\" or \"desc\"", direction, len(direction))
 	}
 	return dir, nulls, nil
@@ -202,15 +206,13 @@ func (s *Store) parseEnabled(enabled string, includeAND bool) string {
 	if enabled == "enabled" {
 		if includeAND {
 			return `AND enabled`
-		} else {
-			return `enabled`
 		}
+		return `enabled`
 	} else if enabled == "disabled" {
 		if includeAND {
 			return `AND NOT enabled`
-		} else {
-			return `NOT enabled`
 		}
+		return `NOT enabled`
 	}
 	return ``
 }
@@ -219,15 +221,13 @@ func (s *Store) parseDeleted(deleted string, includeAND bool) string {
 	if deleted == "deleted" {
 		if includeAND {
 			return `AND deleted_by IS NOT NULL`
-		} else {
-			return `deleted_by IS NOT NULL`
 		}
+		return `deleted_by IS NOT NULL`
 	} else if deleted == "not_deleted" {
 		if includeAND {
 			return `AND deleted_by IS NULL`
-		} else {
-			return `deleted_by IS NULL`
 		}
+		return `deleted_by IS NULL`
 	}
 	return ``
 }
@@ -235,9 +235,8 @@ func (s *Store) parseDeleted(deleted string, includeAND bool) string {
 func (s *Store) parsePageSize(page, size int) string {
 	if page < 1 || size < 5 || size > 100 {
 		return ``
-	} else {
-		return fmt.Sprintf(`LIMIT %d OFFSET %d`, size, size*(page-1))
 	}
+	return fmt.Sprintf(`LIMIT %d OFFSET %d`, size, size*(page-1))
 }
 
 // getPermissionsForUser returns all permissions for a user

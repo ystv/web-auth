@@ -2,13 +2,14 @@ package views
 
 import (
 	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
-	"net/http"
-	"strconv"
 )
 
 type (
@@ -44,7 +45,7 @@ func (v *Views) RolesFunc(c echo.Context) error {
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for roles: %+v", err))
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for roles: %w", err))
 	}
 
 	data := RolesTemplate{
@@ -83,7 +84,7 @@ func (v *Views) RoleFunc(c echo.Context) error {
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for role: %+v", err))
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for role: %w", err))
 	}
 
 	data := RoleTemplate{
@@ -96,13 +97,16 @@ func (v *Views) RoleFunc(c echo.Context) error {
 }
 
 func (v *Views) RoleAddFunc(c echo.Context) error {
+	_ = c
 	return nil
 }
 
 func (v *Views) RoleEditFunc(c echo.Context) error {
+	_ = c
 	return nil
 }
 
 func (v *Views) RoleDeleteFunc(c echo.Context) error {
+	_ = c
 	return nil
 }

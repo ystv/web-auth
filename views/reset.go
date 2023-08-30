@@ -2,6 +2,10 @@ package views
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+	"strconv"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/patrickmn/go-cache"
@@ -9,9 +13,6 @@ import (
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 	"gopkg.in/guregu/null.v4"
-	"log"
-	"net/http"
-	"strconv"
 )
 
 func (v *Views) ResetURLFunc(c echo.Context) error {

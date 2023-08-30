@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/joho/godotenv"
-	"github.com/ystv/web-auth/views"
 	"log"
 	"os"
 	"strconv"
+
+	"github.com/joho/godotenv"
+	"github.com/ystv/web-auth/views"
 )
 
 //go:generate ./node_modules/.bin/mjml -r ./templates/mjml/forgotEmail.mjml -o ./templates/forgotEmail.tmpl
@@ -28,7 +29,9 @@ func main() {
 
 	if !local && !global && signingKey == "" && dbHost == "" {
 		log.Fatal("unable to find env files and no env variables have been supplied")
-	} else if !local && !global {
+	}
+	//nolint:gocritic
+	if !local && !global {
 		log.Println("using env variables")
 	} else if local && global {
 		log.Println("using global and local env files")

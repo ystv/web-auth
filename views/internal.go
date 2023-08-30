@@ -2,12 +2,13 @@ package views
 
 import (
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
-	"net/http"
-	"time"
 
 	"github.com/dustin/go-humanize"
 )
@@ -38,7 +39,7 @@ func (v *Views) InternalFunc(c echo.Context) error {
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permissions for internal: %+v", err))
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permissions for internal: %w", err))
 	}
 
 	ctx := InternalTemplate{

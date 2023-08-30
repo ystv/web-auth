@@ -2,15 +2,16 @@ package views
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+	"net/url"
+	"strings"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/patrickmn/go-cache"
 	"github.com/ystv/web-auth/templates"
 	"gopkg.in/guregu/null.v4"
-	"log"
-	"net/http"
-	"net/url"
-	"strings"
 
 	"github.com/ystv/web-auth/user"
 )
@@ -34,7 +35,6 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		}
 		// Check if authenticated
 		if context.User.Authenticated {
-			//http.Redirect(w, r, context.Callback, http.StatusFound)
 			return c.Redirect(http.StatusFound, context.Callback)
 		}
 

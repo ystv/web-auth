@@ -1,14 +1,14 @@
 package views
 
 import (
-	"context"
 	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/infrastructure/permission"
 	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/user"
-	"log"
-	"net/http"
 )
 
 // RequiresLogin is a middleware which will be used for each
@@ -122,28 +122,4 @@ func (v *Views) RequirePermission(p permissions.Permissions) echo.MiddlewareFunc
 			return echo.NewHTTPError(http.StatusForbidden, fmt.Errorf("you are not authorised for accessing this"))
 		}
 	}
-}
-
-func (v *Views) RequiresMinimumPermissionNoHttp(userID int, p permissions.Permissions) bool {
-	u, err := v.user.GetUser(context.Background(), user.User{UserID: userID})
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-
-	p1, err := v.user.GetPermissionsForUser(context.Background(), u)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-
-	m := permission.SufficientPermissionsFor(p)
-
-	for _, perm := range p1 {
-		if m[perm.Name] {
-			return true
-		}
-	}
-
-	return false
 }

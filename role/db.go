@@ -49,6 +49,8 @@ func (s *Store) addRole(ctx context.Context, r1 Role) (Role, error) {
 }
 
 func (s *Store) editRole(ctx context.Context, r1 Role) (Role, error) {
+	_ = ctx
+	_ = r1
 	panic("editRole not implemented")
 }
 

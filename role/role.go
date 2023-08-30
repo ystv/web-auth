@@ -2,6 +2,7 @@ package role
 
 import (
 	"context"
+
 	"github.com/jmoiron/sqlx"
 )
 

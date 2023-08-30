@@ -3,11 +3,12 @@ package views
 import (
 	"encoding/gob"
 	"encoding/hex"
+	"time"
+
 	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
 	"github.com/ystv/web-auth/templates"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/securecookie"

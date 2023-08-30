@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/labstack/echo/v4"
 	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/labstack/echo/v4"
 
 	"github.com/ystv/web-auth/user"
 )
@@ -78,7 +79,7 @@ func (v *Views) newJWT(u user.User) (string, error) {
 		return "", fmt.Errorf("failed to get user permissions: %w", err)
 	}
 	p1 := v.removeDuplicate(perms)
-	var p2 []string
+	p2 := make([]string, 0, len(p1))
 	for _, p := range p1 {
 		p2 = append(p2, p.Name)
 	}

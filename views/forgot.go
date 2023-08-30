@@ -2,14 +2,15 @@ package views
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/patrickmn/go-cache"
 	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
-	"log"
-	"net/http"
 )
 
 type (

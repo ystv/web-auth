@@ -2,14 +2,15 @@ package views
 
 import (
 	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/ystv/web-auth/permission"
-	"github.com/ystv/web-auth/templates"
-	"github.com/ystv/web-auth/user"
 	"math"
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/labstack/echo/v4"
+	"github.com/ystv/web-auth/permission"
+	"github.com/ystv/web-auth/templates"
+	"github.com/ystv/web-auth/user"
 )
 
 type (
@@ -68,6 +69,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 			size = 0
 		} else {
 			size, err = strconv.Atoi(sizeRaw)
+			//nolint:gocritic
 			if err != nil {
 				size = 0
 			} else if size <= 0 {
@@ -128,10 +130,10 @@ func (v *Views) UsersFunc(c echo.Context) error {
 	} else if len(sizeRaw) != 0 {
 		page, err = strconv.Atoi(c.QueryParam("page"))
 		if err != nil {
-			page = 1
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("unable to parse page for users: %w", err))
 		}
 		size, err = strconv.Atoi(sizeRaw)
+		//nolint:gocritic
 		if err != nil {
 			size = 0
 		} else if size <= 0 {
@@ -175,7 +177,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 
 	sort := len(column) > 0 && len(direction) > 0
 	searchBool := len(search) > 0
-
+	//nolint:gocritic
 	if sort && searchBool {
 		dbUsers, err = v.user.GetUsersSearchOrder(c.Request().Context(), size, page, search, column, direction, enabled, deleted)
 	} else if sort && !searchBool {
@@ -205,7 +207,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for users: %+v", err))
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for users: %w", err))
 	}
 
 	data := UsersTemplate{
@@ -255,7 +257,7 @@ func (v *Views) UserFunc(c echo.Context) error {
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for user: %+v", err))
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for user: %w", err))
 	}
 
 	data := UserTemplate{
@@ -268,13 +270,16 @@ func (v *Views) UserFunc(c echo.Context) error {
 }
 
 func (v *Views) UserAddFunc(c echo.Context) error {
+	_ = c
 	return nil
 }
 
 func (v *Views) UserEditFunc(c echo.Context) error {
+	_ = c
 	return nil
 }
 
 func (v *Views) UserDeleteFunc(c echo.Context) error {
+	_ = c
 	return nil
 }

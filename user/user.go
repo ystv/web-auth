@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
-	"time"
 
 	"github.com/Clarilab/gocloaksession"
 	"github.com/jmoiron/sqlx"
@@ -22,6 +23,8 @@ type (
 	}
 
 	// User represents relevant user fields
+	//
+	//nolint:musttag
 	User struct {
 		UserID             int                     `db:"user_id" json:"id"`
 		Username           string                  `db:"username" json:"username" schema:"username"`
@@ -113,7 +116,8 @@ type (
 // NewUserRepo stores our dependency
 func NewUserRepo(db *sqlx.DB) *Store {
 	return &Store{
-		db: db,
+		db:    db,
+		cloak: nil,
 	}
 }
 

@@ -48,6 +48,8 @@ func (s *Store) addPermission(ctx context.Context, p1 Permission) (Permission, e
 }
 
 func (s *Store) editPermission(ctx context.Context, p1 Permission) (Permission, error) {
+	_ = ctx
+	_ = p1
 	panic("editPermission not implemented")
 }
 

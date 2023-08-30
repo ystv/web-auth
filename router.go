@@ -4,11 +4,12 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/views"
-	"net/http"
 )
 
 //go:embed public/static/*
@@ -16,10 +17,9 @@ var embeddedFiles embed.FS
 
 type (
 	Router struct {
-		config  *views.Config
-		address string
-		views   *views.Views
-		router  *echo.Echo
+		config *views.Config
+		views  *views.Views
+		router *echo.Echo
 	}
 	RouterConf struct {
 		Config *views.Config
@@ -91,7 +91,6 @@ func (r *Router) loadRoutes() {
 
 	// permissions are for listing the permissions
 	if !r.config.Debug {
-		//internal.GET("/permissions", r.views.PermissionsFunc, r.views.RequiresManageMembersPermissions)
 		internal.GET("/permissions", r.views.PermissionsFunc, r.views.RequirePermission(permissions.ManageMembersPermissions))
 	} else {
 		internal.GET("/permissions", r.views.PermissionsFunc)

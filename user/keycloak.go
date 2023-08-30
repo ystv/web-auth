@@ -6,7 +6,7 @@ import (
 	"github.com/Nerzal/gocloak/v8"
 )
 
-// TODO figure out what this is...
+//nolint:unused
 func (s *Store) newUser(ctx context.Context, u User) error {
 	client := gocloak.NewClient("https://sso2.ystv.co.uk")
 	token, err := client.LoginAdmin(ctx, "user", "pass", "realmName")
@@ -22,5 +22,5 @@ func (s *Store) newUser(ctx context.Context, u User) error {
 		Username:      gocloak.StringP(u.Username),
 	}
 	_, err = client.CreateUser(ctx, token.AccessToken, "realName", user)
-	return nil
+	return err
 }

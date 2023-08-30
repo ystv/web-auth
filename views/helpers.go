@@ -2,15 +2,17 @@ package views
 
 import (
 	"context"
+	// #nosec
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/user"
 	"gopkg.in/guregu/null.v4"
-	"log"
-	"strings"
 )
 
 type (
@@ -67,7 +69,7 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 func (v *Views) setMessagesInSession(eC echo.Context, c *Context) error {
 	session, err := v.cookie.Get(eC.Request(), v.conf.SessionCookieName)
 	if err != nil {
-		return fmt.Errorf("error getting session: %+v", err)
+		return fmt.Errorf("error getting session: %w", err)
 	}
 	session.Values["internalContext"] = InternalContext{
 		Title:   c.Title,
@@ -85,7 +87,7 @@ func (v *Views) setMessagesInSession(eC echo.Context, c *Context) error {
 func (v *Views) clearMessagesInSession(eC echo.Context) error {
 	session, err := v.cookie.Get(eC.Request(), v.conf.SessionCookieName)
 	if err != nil {
-		return fmt.Errorf("error getting session: %+v", err)
+		return fmt.Errorf("error getting session: %w", err)
 	}
 	session.Values["internalContext"] = InternalContext{}
 
@@ -98,7 +100,7 @@ func (v *Views) clearMessagesInSession(eC echo.Context) error {
 
 // DBUsersToUsersTemplateFormat converts from the DB layer type to the user template type
 func DBUsersToUsersTemplateFormat(dbUsers []user.User) []user.StrippedUser {
-	var tplUsers []user.StrippedUser
+	tplUsers := make([]user.StrippedUser, 0, len(dbUsers))
 	for _, dbUser := range dbUsers {
 		var strippedUser user.StrippedUser
 		strippedUser.UserID = dbUser.UserID
@@ -210,6 +212,7 @@ func DBUserToUserTemplateFormat(dbUser user.User, store *user.Store) user.Detail
 	}
 	if dbUser.UseGravatar {
 		u.UseGravatar = true
+		// #nosec
 		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace(u.Email))))
 		u.Avatar = fmt.Sprintf("https://www.gravatar.com/avatar/%s", hex.EncodeToString(hash[:]))
 	} else {

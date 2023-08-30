@@ -1,17 +1,19 @@
 package views
 
 import (
+	// #nosec
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/dustin/go-humanize"
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
-	"net/http"
-	"strings"
-	"time"
 )
 
 type (
@@ -35,13 +37,14 @@ func (v *Views) SettingsFunc(c echo.Context) error {
 	var gravatar string
 
 	if c1.User.UseGravatar {
+		// #nosec
 		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace(c1.User.Email))))
 		gravatar = fmt.Sprintf("https://www.gravatar.com/avatar/%s", hex.EncodeToString(hash[:]))
 	}
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for settings: %+v", err))
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for settings: %w", err))
 	}
 
 	ctx := SettingsTemplate{
