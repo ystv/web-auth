@@ -18,8 +18,8 @@ import (
 type (
 	// Context is a struct that is applied to the templates.
 	Context struct {
-		// Title is used for sending pages to the user with custom titles
-		Title string
+		// TitleText is used for sending pages to the user with custom titles
+		TitleText string
 		// Message is used for sending a message back to the user trying to log in, might decide to move later as it may not be needed
 		Message string
 		// MsgType is the bulma.io class used to indicate what should be displayed
@@ -33,9 +33,9 @@ type (
 	}
 
 	InternalContext struct {
-		Title   string
-		Message string
-		MesType string
+		TitleText string
+		Message   string
+		MesType   string
 	}
 )
 
@@ -56,12 +56,12 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 		i = InternalContext{}
 	}
 	c := &Context{
-		Title:    i.Title,
-		Message:  i.Message,
-		MsgType:  i.MesType,
-		Callback: "/internal",
-		User:     u,
-		Version:  v.conf.Version,
+		TitleText: i.TitleText,
+		Message:   i.Message,
+		MsgType:   i.MesType,
+		Callback:  "/internal",
+		User:      u,
+		Version:   v.conf.Version,
 	}
 	return c
 }
@@ -72,9 +72,9 @@ func (v *Views) setMessagesInSession(eC echo.Context, c *Context) error {
 		return fmt.Errorf("error getting session: %w", err)
 	}
 	session.Values["internalContext"] = InternalContext{
-		Title:   c.Title,
-		Message: c.Message,
-		MesType: c.MsgType,
+		TitleText: c.TitleText,
+		Message:   c.Message,
+		MesType:   c.MsgType,
 	}
 
 	err = session.Save(eC.Request(), eC.Response())
