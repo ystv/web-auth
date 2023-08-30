@@ -118,7 +118,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 	search := c.QueryParam("search")
 	search, err = url.QueryUnescape(search)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to unescape query: %w", err))
+		return fmt.Errorf("failed to unescape query: %w", err)
 	}
 	enabled := c.QueryParam("enabled")
 	deleted := c.QueryParam("deleted")

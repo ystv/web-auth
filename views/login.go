@@ -73,7 +73,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 
 				err = v.setMessagesInSession(c, ctx)
 				if err != nil {
-					return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to set message for login: %w", err))
+					return fmt.Errorf("failed to set message for login: %w", err)
 				}
 
 				url1 := uuid.NewString()
@@ -87,7 +87,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 			ctx.MsgType = "is-danger"
 			err = v.setMessagesInSession(c, ctx)
 			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to set message for login: %w", err))
+				return fmt.Errorf("failed to set message for login: %w", err)
 			}
 
 			return c.Redirect(http.StatusFound, "/login")
@@ -104,7 +104,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 
 		err = v.clearMessagesInSession(c)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to clear message: %w", err))
+			return fmt.Errorf("failed to clear message: %w", err)
 		}
 
 		session.Values["user"] = u
