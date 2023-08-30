@@ -67,7 +67,7 @@ func NewMailer(config Config) *MailerInit {
 		Authentication: mail.AuthLogin,
 		ConnectTimeout: 10 * time.Second,
 		SendTimeout:    10 * time.Second,
-		TLSConfig:      &tls.Config{InsecureSkipVerify: true},
+		TLSConfig:      &tls.Config{ServerName: config.Host},
 	}
 
 	return &MailerInit{
