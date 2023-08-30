@@ -13,8 +13,7 @@ func NewStore(dataSourceName string, host string) *sqlx.DB {
 	db, err := sqlx.ConnectContext(context.Background(), "postgres", dataSourceName)
 	if err != nil {
 		log.Fatalf("db failed: %+v", err)
-	} else {
-		log.Printf("connected to db: %s", host)
 	}
+	log.Printf("connected to db: %s", host)
 	return db
 }
