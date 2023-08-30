@@ -2,10 +2,10 @@ package views
 
 import (
 	"fmt"
-	"net/http"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
+
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
 	"github.com/ystv/web-auth/templates"
@@ -40,12 +40,12 @@ func (v *Views) RolesFunc(c echo.Context) error {
 
 	roles, err := v.role.GetRoles(c.Request().Context())
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get roles for roles: %w", err))
+		return fmt.Errorf("failed to get roles for roles: %w", err)
 	}
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for roles: %w", err))
+		return fmt.Errorf("failed to get user permissions for roles: %w", err)
 	}
 
 	data := RolesTemplate{
@@ -62,29 +62,29 @@ func (v *Views) RoleFunc(c echo.Context) error {
 
 	roleID, err := strconv.Atoi(c.Param("roleid"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get roleid for role: %w", err))
+		return fmt.Errorf("failed to get roleid for role: %w", err)
 	}
 
 	role1, err := v.role.GetRole(c.Request().Context(), role.Role{RoleID: roleID})
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get role for role: %w", err))
+		return fmt.Errorf("failed to get role for role: %w", err)
 	}
 
 	roleTemplate := v.bindRoleToTemplate(role1)
 
 	roleTemplate.Permissions, err = v.user.GetPermissionsForRole(c.Request().Context(), role1)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to permissions for role: %w", err))
+		return fmt.Errorf("failed to permissions for role: %w", err)
 	}
 
 	roleTemplate.Users, err = v.user.GetUsersForRole(c.Request().Context(), role1)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get users for role: %w", err))
+		return fmt.Errorf("failed to get users for role: %w", err)
 	}
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for role: %w", err))
+		return fmt.Errorf("failed to get user permissions for role: %w", err)
 	}
 
 	data := RoleTemplate{

@@ -62,7 +62,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 			log.Printf("failed login for \"%s\": %v", u.Username, err)
 			err = session.Save(c.Request(), c.Response())
 			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to save session for login: %w", err))
+				return fmt.Errorf("failed to save session for login: %w", err)
 			}
 
 			if resetPw {
@@ -96,7 +96,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		// Update last logged in
 		err = v.user.SetUserLoggedIn(c.Request().Context(), u)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to set user logged in for login: %w", err))
+			return fmt.Errorf("failed to set user logged in for login: %w", err)
 		}
 		u.Authenticated = true
 		// This is a bit of a cheat, just so we can have the last login displayed for internal
@@ -115,7 +115,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 
 		err = session.Save(c.Request(), c.Response())
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to save user session for login: %w", err))
+			return fmt.Errorf("failed to save user session for login: %w", err)
 		}
 
 		log.Printf("user \"%s\" is authenticated", u.Username)

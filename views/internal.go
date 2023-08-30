@@ -2,10 +2,10 @@ package views
 
 import (
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
+
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
@@ -34,12 +34,12 @@ func (v *Views) InternalFunc(c echo.Context) error {
 
 	countAll, err := v.user.CountUsersAll(c.Request().Context())
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get count users all for interal: %w", err))
+		return fmt.Errorf("failed to get count users all for interal: %w", err)
 	}
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permissions for internal: %w", err))
+		return fmt.Errorf("failed to get permissions for internal: %w", err)
 	}
 
 	ctx := InternalTemplate{

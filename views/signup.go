@@ -33,7 +33,7 @@ func (v *Views) SignUpFunc(c echo.Context) error {
 		uSignup.Email += "@york.ac.uk"
 		err = v.validate.Struct(uSignup)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to parse form: %w", err))
+			return fmt.Errorf("failed to parse form: %w", err))
 		}
 
 		uNormal := user.User{
@@ -49,7 +49,7 @@ func (v *Views) SignUpFunc(c echo.Context) error {
 	case "GET":
 		return v.template.RenderTemplate(c.Response(), "", templates.SignupTemplate, templates.NoNavType)
 	}
-	return fmt.Errorf("invalid mthod used")
+  return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid mthod used"))
 }
 
 //nolint:godox

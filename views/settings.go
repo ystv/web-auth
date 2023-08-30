@@ -5,12 +5,12 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
 	"github.com/labstack/echo/v4"
+
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
@@ -44,7 +44,7 @@ func (v *Views) SettingsFunc(c echo.Context) error {
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for settings: %w", err))
+		return fmt.Errorf("failed to get user permissions for settings: %w", err)
 	}
 
 	ctx := SettingsTemplate{

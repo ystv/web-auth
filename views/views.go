@@ -14,6 +14,7 @@ import (
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/patrickmn/go-cache"
+
 	"github.com/ystv/web-auth/infrastructure/db"
 	"github.com/ystv/web-auth/user"
 )
@@ -67,7 +68,7 @@ type (
 func New(conf *Config, host string) *Views {
 	v := &Views{}
 	// Connecting to stores
-	dbStore := db.NewStore(conf.DatabaseURL, host, conf.Debug)
+	dbStore := db.NewStore(conf.DatabaseURL, host)
 	v.permission = permission.NewPermissionRepo(dbStore)
 	v.role = role.NewRoleRepo(dbStore)
 	v.user = user.NewUserRepo(dbStore)
