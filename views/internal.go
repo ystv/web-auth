@@ -39,7 +39,7 @@ func (v *Views) InternalFunc(c echo.Context) error {
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		return fmt.Errorf("failed to get permissions for internal: %+v", err)
+		return fmt.Errorf("failed to get permissions for internal: %w", err)
 	}
 
 	ctx := InternalTemplate{
