@@ -6,7 +6,6 @@ import (
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
-	"log"
 	"net/http"
 	"time"
 
@@ -34,18 +33,12 @@ func (v *Views) InternalFunc(c echo.Context) error {
 
 	countAll, err := v.user.CountUsersAll(c.Request().Context())
 	if err != nil {
-		log.Println(err)
-		if !v.conf.Debug {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get count users all for interal: %w", err))
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get count users all for interal: %w", err))
 	}
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		log.Printf("failed to get permissions for internal: %+v", err)
-		if !v.conf.Debug {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permissions for internal: %+v", err))
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permissions for internal: %+v", err))
 	}
 
 	ctx := InternalTemplate{

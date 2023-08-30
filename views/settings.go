@@ -9,7 +9,6 @@ import (
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -42,10 +41,7 @@ func (v *Views) SettingsFunc(c echo.Context) error {
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		log.Printf("failed to get user permissions for settings: %+v", err)
-		if !v.conf.Debug {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for settings: %+v", err))
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for settings: %+v", err))
 	}
 
 	ctx := SettingsTemplate{

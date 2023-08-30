@@ -6,7 +6,6 @@ import (
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -39,18 +38,12 @@ func (v *Views) PermissionsFunc(c echo.Context) error {
 
 	permissions, err := v.permission.GetPermissions(c.Request().Context())
 	if err != nil {
-		log.Printf("failed to get permissions for permissions: %+v", err)
-		if !v.conf.Debug {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permissions for permissions: %w", err))
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permissions for permissions: %w", err))
 	}
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		log.Printf("failed to get user permissions for permissions: %+v", err)
-		if !v.conf.Debug {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for permissions: %+v", err))
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for permissions: %+v", err))
 	}
 
 	data := PermissionsTemplate{
@@ -68,36 +61,24 @@ func (v *Views) PermissionFunc(c echo.Context) error {
 
 	permissionID, err := strconv.Atoi(c.Param("permissionid"))
 	if err != nil {
-		log.Printf("failed to get permissionid for permission: %+v", err)
-		if !v.conf.Debug {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to parse permissionid for permission: %w", err))
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to parse permissionid for permission: %w", err))
 	}
 
 	permission1, err := v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: permissionID})
 	if err != nil {
-		log.Printf("failed to get permission for permission: %+v", err)
-		if !v.conf.Debug {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permission for permission: %w", err))
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permission for permission: %w", err))
 	}
 
 	permissionTemplate := v.bindPermissionToTemplate(permission1)
 
 	permissionTemplate.Roles, err = v.user.GetRolesForPermission(c.Request().Context(), permission1)
 	if err != nil {
-		log.Printf("failed to get roles for permission: %+v", err)
-		if !v.conf.Debug {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get roles for permission: %w", err))
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get roles for permission: %w", err))
 	}
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		log.Printf("failed to get user permissions for permission: %+v", err)
-		if !v.conf.Debug {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for permission: %+v", err))
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for permission: %+v", err))
 	}
 
 	data := PermissionTemplate{
@@ -140,44 +121,29 @@ func (v *Views) PermissionDeleteFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		permissionID, err := strconv.Atoi(c.Param("permissionid"))
 		if err != nil {
-			log.Printf("failed to get permissionid for permission: %+v", err)
-			if !v.conf.Debug {
-				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permissionid for permission: %+v", err))
-			}
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permissionid for permission: %+v", err))
 		}
 
 		permission1, err := v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: permissionID})
 		if err != nil {
-			log.Printf("failed to get permission for deletePermission: %+v", err)
-			if !v.conf.Debug {
-				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permission for deletePermission: %+v", err))
-			}
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permission for deletePermission: %+v", err))
 		}
 
 		roles, err := v.user.GetRolesForPermission(c.Request().Context(), permission1)
 		if err != nil {
-			log.Printf("failed to get roles for deletePermission: %+v", err)
-			if !v.conf.Debug {
-				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get roles for deletePermission: %+v", err))
-			}
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get roles for deletePermission: %+v", err))
 		}
 
 		for _, role1 := range roles {
 			err = v.role.DeleteRolePermission(c.Request().Context(), role1)
 			if err != nil {
-				log.Printf("failed to delete rolePermission for deletePermission: %+v", err)
-				if !v.conf.Debug {
-					return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to delete rolePermission for deletePermission: %+v", err))
-				}
+				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to delete rolePermission for deletePermission: %+v", err))
 			}
 		}
 
 		err = v.permission.DeletePermission(c.Request().Context(), permission1)
 		if err != nil {
-			log.Printf("failed to delete permission for deletePermission: %+v", err)
-			if !v.conf.Debug {
-				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to delete permission for deletePermission: %+v", err))
-			}
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to delete permission for deletePermission: %+v", err))
 		}
 		return v.PermissionsFunc(c)
 	} else {
