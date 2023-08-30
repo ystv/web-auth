@@ -45,13 +45,7 @@
                 {{$permissionAdmin := checkPermission .UserPermissions "ManageMembers.Permission"}}
                 {{with .User}}
                     <p>
-                    {{if ne .DeletedBy.UserID -1}}
-                        Deleted by {{if checkIfNoNameExists .DeletedBy}}
-                            UNKNOWN({{.DeletedBy.UserID}}){{else}}<a href="/internal/user/{{.DeletedBy.UserID}}">{{formatUserName .DeletedBy}}</a>
-                        {{end}} at {{.DeletedAt.String}}<br>
-                    {{else if .DeletedAt.Valid}}
-                        Deleted by UNKNOWN at {{.DeletedAt.String}}<br>
-                    {{end}}
+                    {{getUserModifierField .DeletedBy .DeletedAt "Deleted"}}
                     User ID: {{.UserID}}<br>
                     First name: {{.Firstname}}<br>
                     Nickname: {{.Nickname}}<br>
@@ -93,20 +87,8 @@
                     {{if .LastLogin.Valid}}
                         Last login at {{.LastLogin.String}}<br>
                     {{end}}
-                    {{if ne .CreatedBy.UserID -1}}
-                        Created by {{if checkIfNoNameExists .CreatedBy}}
-                            UNKNOWN({{.CreatedBy.UserID}}){{else}}<a href="/internal/user/{{.CreatedBy.UserID}}">{{formatUserName .CreatedBy}}</a>
-                        {{end}} at {{.CreatedAt.String}}<br>
-                    {{else if .CreatedAt.Valid}}
-                        Created by UNKNOWN at {{.CreatedAt.String}}<br>
-                    {{end}}
-                    {{if ne .UpdatedBy.UserID -1}}
-                        Updated by {{if checkIfNoNameExists .UpdatedBy}}
-                            UNKNOWN({{.UpdatedBy.UserID}}){{else}}<a href="/internal/user/{{.UpdatedBy.UserID}}">{{formatUserName .UpdatedBy}}</a>
-                        {{end}} at {{.UpdatedAt.String}}<br>
-                    {{else if .UpdatedAt.Valid}}
-                        Updated by UNKNOWN at {{.UpdatedAt.String}}<br>
-                    {{end}}
+                    {{getUserModifierField .CreatedBy .CreatedAt "Created"}}
+                    {{getUserModifierField .UpdatedBy .UpdatedAt "Updated"}}
                     </p>
                 {{end}}
             </div>
