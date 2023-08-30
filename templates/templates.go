@@ -146,6 +146,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 				Lastname:  u.Lastname,
 			})
 		},
+		"formatUserNameUserStruct": formatUserName,
 	}
 }
 
