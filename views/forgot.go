@@ -2,14 +2,15 @@ package views
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/patrickmn/go-cache"
+
 	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
-	"log"
-	"net/http"
 )
 
 type (
@@ -54,7 +55,7 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 		if mailer != nil {
 			emailTemplate, err := v.template.GetEmailTemplate(templates.ForgotEmailTemplate)
 			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to render email for forgot: %w", err))
+				return fmt.Errorf("failed to render email for forgot: %w", err)
 			}
 
 			file := mail.Mail{
@@ -74,7 +75,7 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 			err = mailer.SendMail(file)
 			if err != nil {
 				log.Printf("failed to send mail for forgot: %+v", err)
-				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to send email for forgot: %w", err))
+				return fmt.Errorf("failed to send email for forgot: %w", err)
 			}
 			_ = mailer.Close()
 

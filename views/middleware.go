@@ -34,7 +34,7 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 			session.Options.MaxAge = -1
 			err = session.Save(c.Request(), c.Response())
 			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to save session for requiresLogin: %w", err))
+				return fmt.Errorf("failed to save session for requiresLogin: %w", err)
 			}
 			return c.Redirect(http.StatusFound, "/")
 		}
@@ -108,11 +108,11 @@ func (v *Views) RequirePermission(p permissions.Permissions) echo.MiddlewareFunc
 		return func(c echo.Context) error {
 			c1 := v.getSessionData(c)
 			if c1 == nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get session data"))
+				return fmt.Errorf("failed to get session data")
 			}
 			perms, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permissions for requirePermission: %w", err))
+				return fmt.Errorf("failed to get permissions for requirePermission: %w", err)
 			}
 
 			acceptedPerms := permission.SufficientPermissionsFor(p)
