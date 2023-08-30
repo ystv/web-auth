@@ -19,13 +19,13 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 
 	userID, found := v.cache.Get(url)
 	if !found {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get url for reset"))
+		return fmt.Errorf("failed to get url for reset")
 	}
 
 	originalUser, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID.(int)})
 	if err != nil {
 		v.cache.Delete(url)
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("url is invalid, failed to get user : %w", err))
+		return fmt.Errorf("url is invalid, failed to get user : %w", err)
 	}
 
 	switch c.Request().Method {
@@ -55,19 +55,19 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 
 	userID, err := strconv.Atoi(c.Param("userid"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to parse userid for reset: %w", err))
+		return fmt.Errorf("failed to parse userid for reset: %w", err)
 	}
 
 	userFromDB, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user for reset: %w", err))
+		return fmt.Errorf("failed to get user for reset: %w", err)
 	}
 
 	userFromDB.ResetPw = true
 
 	_, err = v.user.UpdateUser(c.Request().Context(), userFromDB, c1.User.UserID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to update user for reset: %w", err))
+		return fmt.Errorf("failed to update user for reset: %w", err)
 	}
 
 	url := uuid.NewString()
@@ -86,7 +86,7 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 	if mailer != nil {
 		emailTemplate, err := v.template.GetEmailTemplate(templates.ResetEmailTemplate)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to render email for reset: %w", err))
+			return fmt.Errorf("failed to render email for reset: %w", err)
 		}
 
 		file := mail.Mail{

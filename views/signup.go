@@ -37,7 +37,7 @@ func (v *Views) SignUpFunc(c echo.Context) error {
 		if err != nil {
 			var validationErrors *validator.ValidationErrors
 			if errors.As(err, &validationErrors) {
-				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to validate: %w", err))
+				return fmt.Errorf("failed to validate: %w", err)
 			}
 			issues := ""
 			for _, err := range err.(validator.ValidationErrors) {
