@@ -3,16 +3,18 @@ package views
 import (
 	"encoding/gob"
 	"encoding/hex"
+	"time"
+
 	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
 	"github.com/ystv/web-auth/templates"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/patrickmn/go-cache"
+
 	"github.com/ystv/web-auth/infrastructure/db"
 	"github.com/ystv/web-auth/user"
 )
@@ -66,7 +68,7 @@ type (
 func New(conf *Config, host string) *Views {
 	v := &Views{}
 	// Connecting to stores
-	dbStore := db.NewStore(conf.DatabaseURL, host, conf.Debug)
+	dbStore := db.NewStore(conf.DatabaseURL, host)
 	v.permission = permission.NewPermissionRepo(dbStore)
 	v.role = role.NewRoleRepo(dbStore)
 	v.user = user.NewUserRepo(dbStore)

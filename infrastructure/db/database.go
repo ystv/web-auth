@@ -9,14 +9,10 @@ import (
 )
 
 // NewStore initialises the store
-func NewStore(dataSourceName string, host string, debug bool) *sqlx.DB {
+func NewStore(dataSourceName string, host string) *sqlx.DB {
 	db, err := sqlx.ConnectContext(context.Background(), "postgres", dataSourceName)
 	if err != nil {
-		if debug {
-			log.Printf("db failed: %+v", err)
-		} else {
-			log.Fatalf("db failed: %+v", err)
-		}
+		log.Fatalf("db failed: %+v", err)
 	} else {
 		log.Printf("connected to db: %s", host)
 	}

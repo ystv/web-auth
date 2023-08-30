@@ -2,15 +2,16 @@ package views
 
 import (
 	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/ystv/web-auth/permission"
-	"github.com/ystv/web-auth/templates"
-	"github.com/ystv/web-auth/user"
-	"log"
 	"math"
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/labstack/echo/v4"
+
+	"github.com/ystv/web-auth/permission"
+	"github.com/ystv/web-auth/templates"
+	"github.com/ystv/web-auth/user"
 )
 
 type (
@@ -178,17 +179,11 @@ func (v *Views) UsersFunc(c echo.Context) error {
 			if size > 0 && page > 0 {
 				dbUsers, err = v.user.GetUsersSortedSearchSizePage(c.Request().Context(), column, direction, search, size, page)
 				if err != nil {
-					log.Println(err)
-					if !v.conf.Debug {
-						return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get users for users: %w", err))
-					}
+					return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get users for users: %w", err))
 				}
 				tmp, err := v.user.GetUsersSortedSearch(c.Request().Context(), column, direction, search)
 				if err != nil {
-					log.Println(err)
-					if !v.conf.Debug {
-						return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get users for users: %w", err))
-					}
+					return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get users for users: %w", err))
 				}
 				count = len(tmp)
 			} else {
@@ -206,10 +201,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 			dbUsers, err = v.user.GetUsersSearchSizePage(c.Request().Context(), search, size, page)
 			tmp, err := v.user.GetUsersSearch(c.Request().Context(), search)
 			if err != nil {
-				log.Println(err)
-				if !v.conf.Debug {
-					return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get users for users: %w", err))
-				}
+				return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get users for users: %w", err))
 			}
 			count = len(tmp)
 		} else {
@@ -224,10 +216,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 	}
 
 	if err != nil {
-		log.Println(err)
-		if !v.conf.Debug {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get users for users: %w", err))
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get users for users: %w", err))
 	}
 	tplUsers := DBUsersToUsersTemplateFormat(dbUsers)
 
@@ -245,10 +234,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		log.Printf("failed to get user permissions for users: %+v", err)
-		if !v.conf.Debug {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for users: %+v", err))
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for users: %+v", err))
 	}
 
 	data := UsersTemplate{
@@ -279,38 +265,26 @@ func (v *Views) UserFunc(c echo.Context) error {
 	}
 	userFromDB, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 	if err != nil {
-		log.Printf("failed to get user in user: %+v", err)
-		if !v.conf.Debug {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user for user: %w", err))
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user for user: %w", err))
 	}
 
 	detailedUser := DBUserToUserTemplateFormat(userFromDB, v.user)
 
 	detailedUser.Permissions, err = v.user.GetPermissionsForUser(c.Request().Context(), user.User{UserID: detailedUser.UserID})
 	if err != nil {
-		log.Println(err)
-		if !v.conf.Debug {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permissions for user: %w", err))
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get permissions for user: %w", err))
 	}
 
 	detailedUser.Permissions = v.removeDuplicate(detailedUser.Permissions)
 
 	detailedUser.Roles, err = v.user.GetRolesForUser(c.Request().Context(), user.User{UserID: detailedUser.UserID})
 	if err != nil {
-		log.Println(err)
-		if !v.conf.Debug {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get roles for user: %w", err))
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get roles for user: %w", err))
 	}
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		log.Printf("failed to get user permissions for user: %+v", err)
-		if !v.conf.Debug {
-			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for user: %+v", err))
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("failed to get user permissions for user: %+v", err))
 	}
 
 	data := UserTemplate{
