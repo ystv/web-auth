@@ -131,21 +131,8 @@ func (s *Store) GetUser(ctx context.Context, u User) (User, error) {
 	return s.getUser(ctx, u)
 }
 
-// GetUsers returns a group of users, used for administration with size and page
-func (s *Store) GetUsers(ctx context.Context, size, page int, enabled, deleted string) ([]User, error) {
-	return s.getUsers(ctx, size, page, enabled, deleted)
-}
-
-func (s *Store) GetUsersSearchNoOrder(ctx context.Context, size, page int, search, enabled, deleted string) ([]User, error) {
-	return s.getUsersSearchNoOrder(ctx, size, page, search, enabled, deleted)
-}
-
-func (s *Store) GetUsersOrderNoSearch(ctx context.Context, size, page int, column, direction, enabled, deleted string) ([]User, error) {
-	return s.getUsersOrderNoSearch(ctx, size, page, column, direction, enabled, deleted)
-}
-
-func (s *Store) GetUsersSearchOrder(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, error) {
-	return s.getUsersSearchOrder(ctx, size, page, search, sortBy, direction, enabled, deleted)
+func (s *Store) GetUsers(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, int, error) {
+	return s.getUsers(ctx, size, page, search, sortBy, direction, enabled, deleted)
 }
 
 // VerifyUser will check that the password is correct with provided

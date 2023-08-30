@@ -122,8 +122,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 	}
 	enabled := c.QueryParam("enabled")
 	deleted := c.QueryParam("deleted")
-	var size, page, count int
-	var countAll user.CountUsers
+	var size, page int
 	sizeRaw := c.QueryParam("size")
 	if sizeRaw == "all" {
 		size = 0
@@ -140,17 +139,6 @@ func (v *Views) UsersFunc(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid size, must be positive"))
 		} else if size != 5 && size != 10 && size != 25 && size != 50 && size != 75 && size != 100 {
 			size = 0
-		}
-
-		countAll, err = v.user.CountUsersAll(c.Request().Context())
-		if err != nil {
-			return fmt.Errorf("failed to get total users for users: %w", err)
-		}
-
-		count = countAll.TotalUsers
-
-		if count <= size*(page-1) {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("size and page given is not valid"))
 		}
 	}
 
@@ -173,24 +161,16 @@ func (v *Views) UsersFunc(c echo.Context) error {
 		column = ""
 		direction = ""
 	}
-	var dbUsers []user.User
 
-	sort := len(column) > 0 && len(direction) > 0
-	searchBool := len(search) > 0
-	//nolint:gocritic
-	if sort && searchBool {
-		dbUsers, err = v.user.GetUsersSearchOrder(c.Request().Context(), size, page, search, column, direction, enabled, deleted)
-	} else if sort && !searchBool {
-		dbUsers, err = v.user.GetUsersOrderNoSearch(c.Request().Context(), size, page, column, direction, enabled, deleted)
-	} else if !sort && searchBool {
-		dbUsers, err = v.user.GetUsersSearchNoOrder(c.Request().Context(), size, page, search, enabled, deleted)
-	} else {
-		dbUsers, err = v.user.GetUsers(c.Request().Context(), size, page, enabled, deleted)
-	}
-
+	dbUsers, fullCount, err := v.user.GetUsers(c.Request().Context(), size, page, search, column, direction, enabled, deleted)
 	if err != nil {
 		return fmt.Errorf("failed to get users for users: %w", err)
 	}
+
+	if len(dbUsers) == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("size and page given is not valid"))
+	}
+
 	tplUsers := DBUsersToUsersTemplateFormat(dbUsers)
 
 	var sum int
@@ -198,7 +178,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 	if size == 0 {
 		sum = 0
 	} else {
-		sum = int(math.Ceil(float64(count) / float64(size)))
+		sum = int(math.Ceil(float64(fullCount) / float64(size)))
 	}
 
 	if page <= 0 {
