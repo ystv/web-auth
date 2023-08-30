@@ -234,7 +234,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		return fmt.Errorf("failed to get user permissions for users: %+v", err)
+		return fmt.Errorf("failed to get user permissions for users: %w", err)
 	}
 
 	data := UsersTemplate{
@@ -284,7 +284,7 @@ func (v *Views) UserFunc(c echo.Context) error {
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		return fmt.Errorf("failed to get user permissions for user: %+v", err)
+		return fmt.Errorf("failed to get user permissions for user: %w", err)
 	}
 
 	data := UserTemplate{

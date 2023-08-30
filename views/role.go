@@ -45,7 +45,7 @@ func (v *Views) RolesFunc(c echo.Context) error {
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		return fmt.Errorf("failed to get user permissions for roles: %+v", err)
+		return fmt.Errorf("failed to get user permissions for roles: %w", err)
 	}
 
 	data := RolesTemplate{
@@ -84,7 +84,7 @@ func (v *Views) RoleFunc(c echo.Context) error {
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		return fmt.Errorf("failed to get user permissions for role: %+v", err)
+		return fmt.Errorf("failed to get user permissions for role: %w", err)
 	}
 
 	data := RoleTemplate{
