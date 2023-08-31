@@ -8,7 +8,7 @@ require (
 	github.com/Nerzal/gocloak/v8 v8.6.0
 	github.com/balacode/zr-whirl v1.0.2
 	github.com/dustin/go-humanize v1.0.1
-	github.com/go-playground/validator/v10 v10.15.1
+	github.com/go-playground/validator/v10 v10.15.3
 	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/google/uuid v1.3.1
 	github.com/gorilla/schema v1.2.0
