@@ -2,8 +2,8 @@ package role
 
 import (
 	"context"
-	//nolint:goimports
 	"fmt"
+
 	sq "github.com/Masterminds/squirrel"
 )
 

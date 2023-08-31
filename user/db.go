@@ -2,18 +2,14 @@ package user
 
 import (
 	"context"
-	//nolint:goimports
 	"fmt"
-	//nolint:goimports
-	sq "github.com/Masterminds/squirrel"
-	//nolint:goimports
-	"github.com/jinzhu/copier"
-	//nolint:goimports
-	"github.com/ystv/web-auth/permission"
-	//nolint:goimports
-	"github.com/ystv/web-auth/role"
-	//nolint:goimports
 	"time"
+
+	sq "github.com/Masterminds/squirrel"
+	"github.com/jinzhu/copier"
+
+	"github.com/ystv/web-auth/permission"
+	"github.com/ystv/web-auth/role"
 )
 
 // countUsersAll will get the number of total users
