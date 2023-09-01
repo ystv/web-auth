@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -93,15 +94,60 @@ func (v *Views) PermissionFunc(c echo.Context) error {
 
 // PermissionAddFunc handles an add permission request
 func (v *Views) PermissionAddFunc(c echo.Context) error {
-	return nil
+	if c.Request().Method == http.MethodPost {
+		name := c.Request().FormValue("name")
+		description := c.Request().FormValue("description")
+
+		p1, err := v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: 0, Name: name})
+		if err == nil && p1.PermissionID > 0 {
+			return fmt.Errorf("permission with name \"%s\" already exists", name)
+		}
+
+		_, err = v.permission.AddPermission(c.Request().Context(), permission.Permission{PermissionID: -1, Name: name, Description: description})
+		if err != nil {
+			return fmt.Errorf("failed to add permission for permissionadd: %w", err)
+		}
+		return v.PermissionsFunc(c)
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 // PermissionEditFunc handles an edit permission request
 func (v *Views) PermissionEditFunc(c echo.Context) error {
+	_ = c
 	return nil
 }
 
 // PermissionDeleteFunc handles a delete permission request
 func (v *Views) PermissionDeleteFunc(c echo.Context) error {
-	return nil
+	if c.Request().Method == http.MethodPost {
+		permissionID, err := strconv.Atoi(c.Param("permissionid"))
+		if err != nil {
+			return fmt.Errorf("failed to get permissionid for permission: %w", err)
+		}
+
+		permission1, err := v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: permissionID})
+		if err != nil {
+			return fmt.Errorf("failed to get permission for deletePermission: %w", err)
+		}
+
+		roles, err := v.user.GetRolesForPermission(c.Request().Context(), permission1)
+		if err != nil {
+			return fmt.Errorf("failed to get roles for deletePermission: %w", err)
+		}
+
+		for _, role1 := range roles {
+			err = v.role.DeleteRolePermission(c.Request().Context(), role1)
+			if err != nil {
+				return fmt.Errorf("failed to delete rolePermission for deletePermission: %w", err)
+			}
+		}
+
+		err = v.permission.DeletePermission(c.Request().Context(), permission1)
+		if err != nil {
+			return fmt.Errorf("failed to delete permission for deletePermission: %w", err)
+		}
+		return v.PermissionsFunc(c)
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }

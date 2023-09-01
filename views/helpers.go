@@ -2,20 +2,24 @@ package views
 
 import (
 	"context"
+	// #nosec
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/user"
 	"gopkg.in/guregu/null.v4"
-	"log"
-	"strings"
 )
 
 type (
 	// Context is a struct that is applied to the templates.
 	Context struct {
+		// TitleText is used for sending pages to the user with custom titles
+		TitleText string
 		// Message is used for sending a message back to the user trying to log in, might decide to move later as it may not be needed
 		Message string
 		// MsgType is the bulma.io class used to indicate what should be displayed
@@ -27,6 +31,12 @@ type (
 		// Version is the version that is running
 		Version string
 	}
+
+	InternalContext struct {
+		TitleText string
+		Message   string
+		MesType   string
+	}
 )
 
 func (v *Views) getSessionData(eC echo.Context) *Context {
@@ -35,22 +45,62 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 		log.Printf("error getting session: %+v", err)
 		return nil
 	}
-	val := session.Values["user"]
-	u, ok := val.(user.User)
+	userValue := session.Values["user"]
+	u, ok := userValue.(user.User)
 	if !ok {
 		u = user.User{Authenticated: false}
 	}
-	c := Context{
-		Callback: "/internal",
-		User:     u,
-		Version:  v.conf.Version,
+	internalValue := session.Values["internalContext"]
+	i, ok := internalValue.(InternalContext)
+	if !ok {
+		i = InternalContext{}
 	}
-	return &c
+	c := &Context{
+		TitleText: i.TitleText,
+		Message:   i.Message,
+		MsgType:   i.MesType,
+		Callback:  "/internal",
+		User:      u,
+		Version:   v.conf.Version,
+	}
+	return c
+}
+
+func (v *Views) setMessagesInSession(eC echo.Context, c *Context) error {
+	session, err := v.cookie.Get(eC.Request(), v.conf.SessionCookieName)
+	if err != nil {
+		return fmt.Errorf("error getting session: %w", err)
+	}
+	session.Values["internalContext"] = InternalContext{
+		TitleText: c.TitleText,
+		Message:   c.Message,
+		MesType:   c.MsgType,
+	}
+
+	err = session.Save(eC.Request(), eC.Response())
+	if err != nil {
+		return fmt.Errorf("failed to save session for set message: %w", err)
+	}
+	return nil
+}
+
+func (v *Views) clearMessagesInSession(eC echo.Context) error {
+	session, err := v.cookie.Get(eC.Request(), v.conf.SessionCookieName)
+	if err != nil {
+		return fmt.Errorf("error getting session: %w", err)
+	}
+	session.Values["internalContext"] = InternalContext{}
+
+	err = session.Save(eC.Request(), eC.Response())
+	if err != nil {
+		return fmt.Errorf("failed to save session for clear message: %w", err)
+	}
+	return nil
 }
 
 // DBUsersToUsersTemplateFormat converts from the DB layer type to the user template type
 func DBUsersToUsersTemplateFormat(dbUsers []user.User) []user.StrippedUser {
-	var tplUsers []user.StrippedUser
+	tplUsers := make([]user.StrippedUser, 0, len(dbUsers))
 	for _, dbUser := range dbUsers {
 		var strippedUser user.StrippedUser
 		strippedUser.UserID = dbUser.UserID
@@ -162,6 +212,7 @@ func DBUserToUserTemplateFormat(dbUser user.User, store *user.Store) user.Detail
 	}
 	if dbUser.UseGravatar {
 		u.UseGravatar = true
+		// #nosec
 		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace(u.Email))))
 		u.Avatar = fmt.Sprintf("https://www.gravatar.com/avatar/%s", hex.EncodeToString(hash[:]))
 	} else {

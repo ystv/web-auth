@@ -1,10 +1,10 @@
-{{define "title"}}Internal: User ({{ .User.Firstname }} {{if ne .User.Firstname .User.Nickname}}({{ .User.Nickname }}) {{end}}{{ .User.Lastname }}){{end}}
+{{define "title"}}Internal: User ({{formatUserName .User}}){{end}}
 {{define "content"}}
     <div class="column is-10" style="min-height: 88vh">
         <section class="hero is-info welcome is-small">
             <div class="hero-body">
                 <div class="container">
-                    <h1 class="title">{{ .User.Firstname }} {{if ne .User.Firstname .User.Nickname}}({{ .User.Nickname }}) {{end}}{{ .User.Lastname }}</h1>
+                    <h1 class="title">{{formatUserName .User}}</h1>
                 </div>
             </div>
         </section>
@@ -45,13 +45,7 @@
                 {{$permissionAdmin := checkPermission .UserPermissions "ManageMembers.Permission"}}
                 {{with .User}}
                     <p>
-                    {{if ne .DeletedBy.UserID -1}}
-                        Deleted by {{if and (and (eq (len .DeletedBy.Firstname) 0) (eq (len .DeletedBy.Nickname) 0)) (eq (len .DeletedBy.Lastname) 0)}}
-                            UNKNOWN({{.DeletedBy.UserID}}){{else}}<a href="/internal/user/{{.DeletedBy.UserID}}">{{formatUserName .DeletedBy}}</a>
-                        {{end}} at {{.DeletedAt.String}}<br>
-                    {{else if .DeletedAt.Valid}}
-                        Deleted by UNKNOWN at {{.DeletedAt.String}}<br>
-                    {{end}}
+                    {{getUserModifierField .DeletedBy .DeletedAt "Deleted"}}
                     User ID: {{.UserID}}<br>
                     First name: {{.Firstname}}<br>
                     Nickname: {{.Nickname}}<br>
@@ -59,6 +53,7 @@
                     Username: {{.Username}}<br>
                     Email: {{.Email}}<br>
                     Enabled: {{.Enabled}}<br>
+                    Reset password required: {{.ResetPw}}<br>
                     Login type: {{.LoginType}}<br>
                     {{if .LDAPUsername.Valid}}
                         LDAP (Active Directory) username: {{.LDAPUsername.String}}<br>
@@ -93,20 +88,8 @@
                     {{if .LastLogin.Valid}}
                         Last login at {{.LastLogin.String}}<br>
                     {{end}}
-                    {{if ne .CreatedBy.UserID -1}}
-                        Created by {{if and (and (eq (len .CreatedBy.Firstname) 0) (eq (len .CreatedBy.Nickname) 0)) (eq (len .CreatedBy.Lastname) 0)}}
-                            UNKNOWN({{.CreatedBy.UserID}}){{else}}<a href="/internal/user/{{.CreatedBy.UserID}}">{{formatUserName .CreatedBy}}</a>
-                        {{end}} at {{.CreatedAt.String}}<br>
-                    {{else if .CreatedAt.Valid}}
-                        Created by UNKNOWN at {{.CreatedAt.String}}<br>
-                    {{end}}
-                    {{if ne .UpdatedBy.UserID -1}}
-                        Updated by {{if and (and (eq (len .UpdatedBy.Firstname) 0) (eq (len .UpdatedBy.Nickname) 0)) (eq (len .UpdatedBy.Lastname) 0)}}
-                            UNKNOWN({{.UpdatedBy.UserID}}){{else}}<a href="/internal/user/{{.UpdatedBy.UserID}}">{{formatUserName .UpdatedBy}}</a>
-                        {{end}} at {{.UpdatedAt.String}}<br>
-                    {{else if .UpdatedBy.Valid}}
-                        Updated by UNKNOWN at {{.UpdatedAt.String}}<br>
-                    {{end}}
+                    {{getUserModifierField .CreatedBy .CreatedAt "Created"}}
+                    {{getUserModifierField .UpdatedBy .UpdatedAt "Updated"}}
                     </p>
                 {{end}}
             </div>

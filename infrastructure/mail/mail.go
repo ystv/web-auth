@@ -67,7 +67,10 @@ func NewMailer(config Config) *MailerInit {
 		Authentication: mail.AuthLogin,
 		ConnectTimeout: 10 * time.Second,
 		SendTimeout:    10 * time.Second,
-		TLSConfig:      &tls.Config{InsecureSkipVerify: true},
+		TLSConfig: &tls.Config{
+			MinVersion: tls.VersionTLS12,
+			ServerName: config.Host,
+		},
 	}
 
 	return &MailerInit{
@@ -83,10 +86,9 @@ func (m *MailerInit) ConnectMailer() *Mailer {
 	if err != nil {
 		log.Printf("mailer failed: %+v", err)
 		return nil
-	} else {
-		log.Printf("connected to mailer: %s", m.SMTPServer.Host)
-		return &Mailer{smtpClient, m.Defaults, m.DomainName}
 	}
+	log.Printf("connected to mailer: %s", m.SMTPServer.Host)
+	return &Mailer{smtpClient, m.Defaults, m.DomainName}
 }
 
 // CheckSendable verifies that the email can be sent

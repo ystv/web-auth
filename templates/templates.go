@@ -3,15 +3,17 @@ package templates
 import (
 	"embed"
 	"fmt"
+	"html/template"
+	"io"
+	"log"
+	"time"
+
 	permission1 "github.com/ystv/web-auth/infrastructure/permission"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/role"
 	"github.com/ystv/web-auth/user"
-	"html/template"
-	"io"
-	"log"
-	"time"
+	"gopkg.in/guregu/null.v4"
 )
 
 //go:embed *.tmpl
@@ -97,9 +99,6 @@ func (t *Templater) GetEmailTemplate(emailTemplate Template) (*template.Template
 
 func (t *Templater) getFuncMaps() template.FuncMap {
 	return template.FuncMap{
-		"now": func() time.Time {
-			return time.Now()
-		},
 		"thisYear": func() int {
 			return time.Now().Year()
 		},
@@ -125,13 +124,37 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			}
 			return false
 		},
-		"formatUserName": func(u user.User) (name string) {
-			if u.Firstname != u.Nickname {
-				name = fmt.Sprintf("%s (%s) %s", u.Firstname, u.Nickname, u.Lastname)
-			} else {
-				name = fmt.Sprintf("%s %s", u.Firstname, u.Lastname)
+		"getUserModifierField": func(u user.User, atTime null.String, prefix string) template.HTML {
+			var s string
+			if u.UserID != -1 {
+				if len(u.Firstname) == 0 && len(u.Nickname) == 0 && len(u.Lastname) == 0 {
+					s = fmt.Sprintf("%s by UNKNOWN(%d) at %s<br>", template.HTMLEscapeString(prefix), u.UserID, template.HTMLEscapeString(atTime.String))
+				} else {
+					name := formatUserName(u)
+					s = fmt.Sprintf("%s by <a href=\"/internal/user/%d\">%s</a> at %s<br>", template.HTMLEscapeString(prefix), u.UserID, template.HTMLEscapeString(name), template.HTMLEscapeString(atTime.String))
+				}
+			} else if atTime.Valid {
+				s = fmt.Sprintf("%s by UNKNOWN at %s<br>", prefix, atTime.String)
 			}
-			return name
+			// #nosec
+			return template.HTML(s)
 		},
+		"formatUserName": func(u user.DetailedUser) (name string) {
+			return formatUserName(user.User{
+				Firstname: u.Firstname,
+				Nickname:  u.Nickname,
+				Lastname:  u.Lastname,
+			})
+		},
+		"formatUserNameUserStruct": formatUserName,
 	}
+}
+
+func formatUserName(u user.User) (name string) {
+	if u.Firstname != u.Nickname {
+		name = fmt.Sprintf("%s (%s) %s", u.Firstname, u.Nickname, u.Lastname)
+	} else {
+		name = fmt.Sprintf("%s %s", u.Firstname, u.Lastname)
+	}
+	return name
 }

@@ -97,13 +97,16 @@ func (v *Views) RoleFunc(c echo.Context) error {
 }
 
 func (v *Views) RoleAddFunc(c echo.Context) error {
+	_ = c
 	return nil
 }
 
 func (v *Views) RoleEditFunc(c echo.Context) error {
+	_ = c
 	return nil
 }
 
 func (v *Views) RoleDeleteFunc(c echo.Context) error {
+	_ = c
 	return nil
 }

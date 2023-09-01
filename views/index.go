@@ -2,10 +2,11 @@ package views
 
 import (
 	"fmt"
-	"github.com/labstack/echo/v4"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/labstack/echo/v4"
 )
 
 // IndexFunc handles the index page.

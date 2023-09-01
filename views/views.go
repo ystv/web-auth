@@ -111,6 +111,7 @@ func New(conf *Config, host string) *Views {
 
 	// So we can use our struct in the cookie
 	gob.Register(user.User{})
+	gob.Register(InternalContext{})
 
 	v.conf = conf
 

@@ -44,9 +44,9 @@
                             {{range .Users}}
                                 <li style='list-style-type: none;'><span class='tab'></span>
                                     {{if $userAdmin}}
-                                        <a href="/internal/user/{{.UserID}}">{{formatUserName .}}</a>
+                                        <a href="/internal/user/{{.UserID}}">{{formatUserNameUserStruct .}}</a>
                                     {{else}}
-                                        {{formatUserName .}}
+                                        {{formatUserNameUserStruct .}}
                                     {{end}}
                                 </li>
                             {{end}}

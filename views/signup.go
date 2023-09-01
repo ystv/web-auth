@@ -1,15 +1,13 @@
 package views
 
 import (
-	"errors"
 	"fmt"
-	"github.com/go-playground/validator/v10"
+	"net/http"
+
 	"github.com/gorilla/schema"
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
-	"log"
-	"net/http"
 )
 
 var decoder = schema.NewDecoder()
@@ -35,16 +33,7 @@ func (v *Views) SignUpFunc(c echo.Context) error {
 		uSignup.Email += "@york.ac.uk"
 		err = v.validate.Struct(uSignup)
 		if err != nil {
-			var validationErrors *validator.ValidationErrors
-			if errors.As(err, &validationErrors) {
-				return fmt.Errorf("failed to validate: %w", err)
-			}
-			issues := ""
-			for _, err := range err.(validator.ValidationErrors) {
-				issues += " " + err.Error()
-			}
-			log.Println(issues)
-			return v.template.RenderTemplate(c.Response(), issues, templates.SignupTemplate, templates.NoNavType)
+			return fmt.Errorf("failed to parse form: %w", err)
 		}
 
 		uNormal := user.User{
@@ -60,7 +49,8 @@ func (v *Views) SignUpFunc(c echo.Context) error {
 	case "GET":
 		return v.template.RenderTemplate(c.Response(), "", templates.SignupTemplate, templates.NoNavType)
 	}
-	return fmt.Errorf("invalid mthod used")
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid mthod used"))
 }
 
-//TODO: Implement signup holding page
+//nolint:godox
+// TODO: Implement signup holding page

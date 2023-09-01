@@ -2,6 +2,7 @@ package views
 
 import (
 	"errors"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/ystv/web-auth/templates"

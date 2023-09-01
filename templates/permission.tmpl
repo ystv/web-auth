@@ -58,7 +58,9 @@
                             <div class="content">
                                 <p class="title">Are you sure you want to delete this permission?</p>
                                 <p>Be careful! Roles use the permission id and will have to set back up manually.</p>
-                                <a class="button is-danger" onclick="deletePermission()">Delete permission</a>
+                                <form action="/internal/permission/{{.Permission.PermissionID}}/delete" method="post">
+                                    <button class="button is-danger">Delete permission</button>
+                                </form>
                             </div>
                         </div>
                     </article>
@@ -80,10 +82,6 @@
         {{if ne .Permission.Name "SuperUser"}}
         function deletePermissionModal() {
             document.getElementById("deletePermissionModal").classList.add("is-active");
-        }
-
-        function deletePermission() {
-            // unimplemented for now
         }
         {{end}}
     </script>

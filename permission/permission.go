@@ -2,6 +2,7 @@ package permission
 
 import (
 	"context"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -50,4 +51,9 @@ func (s *Store) EditPermission(ctx context.Context, p Permission) (Permission, e
 // DeletePermission deletes a permission
 func (s *Store) DeletePermission(ctx context.Context, p Permission) error {
 	return s.deletePermission(ctx, p)
+}
+
+// DeleteRolePermission deletes a rolePermission
+func (s *Store) DeleteRolePermission(ctx context.Context, p Permission) error {
+	return s.deleteRolePermission(ctx, p)
 }

@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
@@ -52,15 +51,25 @@ func (v *Views) UsersFunc(c echo.Context) error {
 	var err error
 
 	if c.Request().Method == "POST" {
+		u, err := url.Parse("/internal/users")
+		if err != nil {
+			panic(fmt.Errorf("invalid url: %w", err)) // this panics because if this errors then many other things will be wrong
+		}
+
+		q := u.Query()
+
 		column := c.FormValue("column")
 		direction := c.FormValue("direction")
 		search := c.FormValue("search")
+		enabled := c.FormValue("enabled")
+		deleted := c.FormValue("deleted")
 		var size int
 		sizeRaw := c.FormValue("size")
 		if sizeRaw == "all" {
 			size = 0
 		} else {
 			size, err = strconv.Atoi(sizeRaw)
+			//nolint:gocritic
 			if err != nil {
 				size = 0
 			} else if size <= 0 {
@@ -69,72 +78,61 @@ func (v *Views) UsersFunc(c echo.Context) error {
 				size = 25
 			}
 		}
-		valid := true
-		switch column {
-		case "userId":
-		case "name":
-		case "username":
-		case "email":
-		case "lastLogin":
-			break
-		default:
-			valid = false
+
+		if enabled == "enabled" || enabled == "disabled" {
+			q.Set("enabled", enabled)
+		} else if enabled != "any" {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("enabled must be set to either \"any\", \"enabled\" or \"disabled\""))
 		}
-		switch direction {
-		case "asc":
-		case "desc":
-			break
-		default:
-			valid = false
+
+		if deleted == "deleted" || deleted == "not_deleted" {
+			q.Set("deleted", deleted)
+		} else if deleted != "any" {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("deleted must be set to either \"any\", \"deleted\" or \"not_deleted\""))
 		}
+
+		if column == "userId" || column == "name" || column == "username" || column == "email" || column == "lastLogin" {
+			if direction == "asc" || direction == "desc" {
+				q.Set("column", column)
+				q.Set("direction", direction)
+			}
+		}
+
 		c.Request().Method = "GET"
-		var redirect string
-		if valid {
-			if len(search) > 0 {
-				if size > 0 {
-					redirect = fmt.Sprintf("/internal/users?column=%s&direction=%s&search=%s&size=%d&page=1", column, direction, url.QueryEscape(search), size)
-				} else {
-					redirect = fmt.Sprintf("/internal/users?column=%s&direction=%s&search=%s", column, direction, url.QueryEscape(search))
-				}
-			} else {
-				if size > 0 {
-					redirect = fmt.Sprintf("/internal/users?column=%s&direction=%s&size=%d&page=1", column, direction, size)
-				} else {
-					redirect = fmt.Sprintf("/internal/users?column=%s&direction=%s", column, direction)
-				}
-			}
-		} else if len(search) > 0 {
-			if size > 0 {
-				redirect = fmt.Sprintf("/internal/users?search=%s&size=%d&page=1", url.QueryEscape(search), size)
-			} else {
-				redirect = fmt.Sprintf("/internal/users?search=%s", url.QueryEscape(search))
-			}
-		} else {
-			if size > 0 {
-				redirect = fmt.Sprintf("/internal/users?size=%d&page=1", size)
-			} else {
-				c.Request().URL.Query().Del("*")
-				redirect = "/internal/users"
-			}
+
+		if size > 0 {
+			q.Set("size", strconv.FormatInt(int64(size), 10))
+			q.Set("page", "1")
 		}
-		return c.Redirect(http.StatusFound, redirect)
+
+		if len(search) > 0 {
+			q.Set("search", url.QueryEscape(search))
+		}
+
+		u.RawQuery = q.Encode()
+		return c.Redirect(http.StatusFound, u.String())
 	}
 
 	column := c.QueryParam("column")
 	direction := c.QueryParam("direction")
 	search := c.QueryParam("search")
-	var size, page, count int
-	var countAll user.CountUsers
+	search, err = url.QueryUnescape(search)
+	if err != nil {
+		return fmt.Errorf("failed to unescape query: %w", err)
+	}
+	enabled := c.QueryParam("enabled")
+	deleted := c.QueryParam("deleted")
+	var size, page int
 	sizeRaw := c.QueryParam("size")
 	if sizeRaw == "all" {
 		size = 0
 	} else if len(sizeRaw) != 0 {
 		page, err = strconv.Atoi(c.QueryParam("page"))
 		if err != nil {
-			page = 1
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("unable to parse page for users: %w", err))
 		}
 		size, err = strconv.Atoi(sizeRaw)
+		//nolint:gocritic
 		if err != nil {
 			size = 0
 		} else if size <= 0 {
@@ -142,82 +140,37 @@ func (v *Views) UsersFunc(c echo.Context) error {
 		} else if size != 5 && size != 10 && size != 25 && size != 50 && size != 75 && size != 100 {
 			size = 0
 		}
-
-		countAll, err = v.user.CountUsersAll(c.Request().Context())
-		if err != nil {
-			return fmt.Errorf("failed to get total users for users: %w", err)
-		}
-
-		count = countAll.TotalUsers
-
-		if count <= size*(page-1) {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("size and page given is not valid"))
-		}
 	}
 
-	valid := true
 	switch column {
 	case "userId":
 	case "name":
 	case "username":
 	case "email":
 	case "lastLogin":
+		switch direction {
+		case "asc":
+		case "desc":
+			break
+		default:
+			column = ""
+			direction = ""
+		}
 		break
 	default:
-		valid = false
-	}
-	switch direction {
-	case "asc":
-	case "desc":
-		break
-	default:
-		valid = false
-	}
-	var dbUsers []user.User
-	if valid {
-		if len(search) > 0 {
-			if size > 0 && page > 0 {
-				dbUsers, err = v.user.GetUsersSortedSearchSizePage(c.Request().Context(), column, direction, search, size, page)
-				if err != nil {
-					return fmt.Errorf("failed to get users for users: %w", err)
-				}
-				tmp, err := v.user.GetUsersSortedSearch(c.Request().Context(), column, direction, search)
-				if err != nil {
-					return fmt.Errorf("failed to get users for users: %w", err)
-				}
-				count = len(tmp)
-			} else {
-				dbUsers, err = v.user.GetUsersSortedSearch(c.Request().Context(), column, direction, search)
-			}
-		} else {
-			if size > 0 && page > 0 {
-				dbUsers, err = v.user.GetUsersSortedSizePage(c.Request().Context(), column, direction, size, page)
-			} else {
-				dbUsers, err = v.user.GetUsersSorted(c.Request().Context(), column, direction)
-			}
-		}
-	} else if len(search) > 0 {
-		if size > 0 && page > 0 {
-			dbUsers, err = v.user.GetUsersSearchSizePage(c.Request().Context(), search, size, page)
-			tmp, err := v.user.GetUsersSearch(c.Request().Context(), search)
-			if err != nil {
-				return fmt.Errorf("failed to get users for users: %w", err)
-			}
-			count = len(tmp)
-		} else {
-			dbUsers, err = v.user.GetUsersSearch(c.Request().Context(), search)
-		}
-	} else {
-		if size > 0 && page > 0 {
-			dbUsers, err = v.user.GetUsersSizePage(c.Request().Context(), size, page)
-		} else {
-			dbUsers, err = v.user.GetUsers(c.Request().Context())
-		}
+		column = ""
+		direction = ""
 	}
 
+	dbUsers, fullCount, err := v.user.GetUsers(c.Request().Context(), size, page, search, column, direction, enabled, deleted)
 	if err != nil {
 		return fmt.Errorf("failed to get users for users: %w", err)
 	}
+
+	if len(dbUsers) == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("size and page given is not valid"))
+	}
+
 	tplUsers := DBUsersToUsersTemplateFormat(dbUsers)
 
 	var sum int
@@ -225,7 +178,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 	if size == 0 {
 		sum = 0
 	} else {
-		sum = int(math.Ceil(float64(count) / float64(size)))
+		sum = int(math.Ceil(float64(fullCount) / float64(size)))
 	}
 
 	if page <= 0 {
@@ -248,8 +201,8 @@ func (v *Views) UsersFunc(c echo.Context) error {
 			Column:     column,
 			Direction:  direction,
 			Search:     search,
-			Enabled:    "",
-			Deleted:    "",
+			Enabled:    enabled,
+			Deleted:    deleted,
 		},
 	}
 	return v.template.RenderTemplate(c.Response(), data, templates.UsersTemplate, templates.PaginationType)
@@ -297,13 +250,16 @@ func (v *Views) UserFunc(c echo.Context) error {
 }
 
 func (v *Views) UserAddFunc(c echo.Context) error {
+	_ = c
 	return nil
 }
 
 func (v *Views) UserEditFunc(c echo.Context) error {
+	_ = c
 	return nil
 }
 
 func (v *Views) UserDeleteFunc(c echo.Context) error {
+	_ = c
 	return nil
 }

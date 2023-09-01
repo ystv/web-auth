@@ -2,24 +2,19 @@ package views
 
 import (
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
-	"github.com/patrickmn/go-cache"
-	"github.com/ystv/web-auth/templates"
-	"gopkg.in/guregu/null.v4"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
 
+	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
+	"github.com/patrickmn/go-cache"
+	"github.com/ystv/web-auth/templates"
+	"gopkg.in/guregu/null.v4"
+
 	"github.com/ystv/web-auth/user"
 )
-
-type LoginTemplate struct {
-	Version string
-	Message string
-	MsgType string
-}
 
 // LoginFunc implements the login functionality, will
 // add a cookie to the cookie store for managing authentication
@@ -40,7 +35,6 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		}
 		// Check if authenticated
 		if context.User.Authenticated {
-			//http.Redirect(w, r, context.Callback, http.StatusFound)
 			return c.Redirect(http.StatusFound, context.Callback)
 		}
 
@@ -77,27 +71,42 @@ func (v *Views) LoginFunc(c echo.Context) error {
 				ctx.Message = "Password reset required"
 				ctx.MsgType = "is-danger"
 
+				err = v.setMessagesInSession(c, ctx)
+				if err != nil {
+					return fmt.Errorf("failed to set message for login: %w", err)
+				}
+
 				url1 := uuid.NewString()
 				v.cache.Set(url1, u.UserID, cache.DefaultExpiration)
 
-				return c.Redirect(http.StatusFound, fmt.Sprintf("https://%s/forgot/%s", v.conf.DomainName, url1))
+				return c.Redirect(http.StatusFound, fmt.Sprintf("https://%s/reset/%s", v.conf.DomainName, url1))
 			}
 			ctx := v.getSessionData(c)
 			ctx.Callback = callback
 			ctx.Message = "Invalid username or password"
 			ctx.MsgType = "is-danger"
-			return v.template.RenderTemplate(c.Response(), ctx, templates.LoginTemplate, templates.NoNavType)
+			err = v.setMessagesInSession(c, ctx)
+			if err != nil {
+				return fmt.Errorf("failed to set message for login: %w", err)
+			}
+
+			return c.Redirect(http.StatusFound, "/login")
 		}
 		prevLogin := u.LastLogin
 		// Update last logged in
 		err = v.user.SetUserLoggedIn(c.Request().Context(), u)
 		if err != nil {
-			err = fmt.Errorf("failed to set user logged in: %w", err)
 			return fmt.Errorf("failed to set user logged in for login: %w", err)
 		}
 		u.Authenticated = true
 		// This is a bit of a cheat, just so we can have the last login displayed for internal
 		u.LastLogin = prevLogin
+
+		err = v.clearMessagesInSession(c)
+		if err != nil {
+			return fmt.Errorf("failed to clear message: %w", err)
+		}
+
 		session.Values["user"] = u
 
 		if c.FormValue("remember") != "on" {

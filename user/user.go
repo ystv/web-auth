@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
-	"time"
 
 	"github.com/Clarilab/gocloaksession"
 	"github.com/jmoiron/sqlx"
@@ -22,6 +23,8 @@ type (
 	}
 
 	// User represents relevant user fields
+	//
+	//nolint:musttag
 	User struct {
 		UserID             int                     `db:"user_id" json:"id"`
 		Username           string                  `db:"username" json:"username" schema:"username"`
@@ -113,7 +116,8 @@ type (
 // NewUserRepo stores our dependency
 func NewUserRepo(db *sqlx.DB) *Store {
 	return &Store{
-		db: db,
+		db:    db,
+		cloak: nil,
 	}
 }
 
@@ -127,68 +131,8 @@ func (s *Store) GetUser(ctx context.Context, u User) (User, error) {
 	return s.getUser(ctx, u)
 }
 
-// GetUsers returns a group of users, used for administration
-func (s *Store) GetUsers(ctx context.Context) ([]User, error) {
-	return s.getUsers(ctx)
-}
-
-// GetUsersSizePage returns a group of users, used for administration with size and page
-func (s *Store) GetUsersSizePage(ctx context.Context, size, page int) ([]User, error) {
-	return s.getUsersSizePage(ctx, size, page)
-}
-
-// GetUsersSearch returns a group of users, used for administration
-func (s *Store) GetUsersSearch(ctx context.Context, search string) ([]User, error) {
-	return s.getUsersSearch(ctx, search)
-}
-
-// GetUsersSearchSizePage returns a group of users, used for administration with size and page
-func (s *Store) GetUsersSearchSizePage(ctx context.Context, search string, size, page int) ([]User, error) {
-	return s.getUsersSearchSizePage(ctx, search, size, page)
-}
-
-// GetUsersSorted returns a group of users, used for administration with sorting
-func (s *Store) GetUsersSorted(ctx context.Context, column, direction string) ([]User, error) {
-	switch direction {
-	case "asc":
-		return s.getUsersOptionsAsc(ctx, column)
-	case "desc":
-		return s.getUsersOptionsDesc(ctx, column)
-	}
-	return nil, fmt.Errorf("error in db sorting")
-}
-
-// GetUsersSortedSizePage returns a group of users, used for administration with sorting with size and page
-func (s *Store) GetUsersSortedSizePage(ctx context.Context, column, direction string, size, page int) ([]User, error) {
-	switch direction {
-	case "asc":
-		return s.getUsersOptionsAscSizePage(ctx, column, size, page)
-	case "desc":
-		return s.getUsersOptionsDescSizePage(ctx, column, size, page)
-	}
-	return nil, fmt.Errorf("error in db sorting size page")
-}
-
-// GetUsersSortedSearch returns a group of users, used for administration with sorting and searching
-func (s *Store) GetUsersSortedSearch(ctx context.Context, column, direction, search string) ([]User, error) {
-	switch direction {
-	case "asc":
-		return s.getUsersSearchOptionsAsc(ctx, search, column)
-	case "desc":
-		return s.getUsersSearchOptionsDesc(ctx, search, column)
-	}
-	return nil, fmt.Errorf("error in db sorting")
-}
-
-// GetUsersSortedSearchSizePage returns a group of users, used for administration with sorting and searching with pages
-func (s *Store) GetUsersSortedSearchSizePage(ctx context.Context, column, direction, search string, size, page int) ([]User, error) {
-	switch direction {
-	case "asc":
-		return s.getUsersSearchOptionsAscSizePage(ctx, search, column, size, page)
-	case "desc":
-		return s.getUsersSearchOptionsDescSizePage(ctx, search, column, size, page)
-	}
-	return nil, fmt.Errorf("error in db sorting size page")
+func (s *Store) GetUsers(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, int, error) {
+	return s.getUsers(ctx, size, page, search, sortBy, direction, enabled, deleted)
 }
 
 // VerifyUser will check that the password is correct with provided

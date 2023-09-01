@@ -2,6 +2,7 @@ package role
 
 import (
 	"context"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -51,4 +52,9 @@ func (s *Store) EditRole(ctx context.Context, r Role) (Role, error) {
 // DeleteRole deletes a role
 func (s *Store) DeleteRole(ctx context.Context, r Role) error {
 	return s.deleteRole(ctx, r)
+}
+
+// DeleteRolePermission deletes a rolePermission
+func (s *Store) DeleteRolePermission(ctx context.Context, r Role) error {
+	return s.deleteRolePermission(ctx, r)
 }
