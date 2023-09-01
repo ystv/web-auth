@@ -3,17 +3,24 @@ package role
 import (
 	"context"
 	"fmt"
+
+	sq "github.com/Masterminds/squirrel"
 )
 
 // getRoles returns all roles for a user
 func (s *Store) getRoles(ctx context.Context) ([]Role, error) {
 	var r []Role
-	err := s.db.SelectContext(ctx, &r, `SELECT r.role_id, r.name, r.description, COUNT(DISTINCT rm.user_id) AS users, COUNT(DISTINCT rp.permission_id) AS permissions
-		FROM people.roles r
-		LEFT JOIN people.role_members rm ON r.role_id = rm.role_id
-		LEFT JOIN people.role_permissions rp ON r.role_id = rp.role_id
-		GROUP BY r.role_id, r.name, r.description
-		ORDER BY r.name;`)
+	builder := sq.Select("r.*", "COUNT(DISTINCT rm.user_id) AS users", "COUNT(DISTINCT rp.permission_id) AS permissions").
+		From("people.roles r").
+		LeftJoin("people.role_members rm ON r.role_id = rm.role_id").
+		LeftJoin("people.role_permissions rp ON r.role_id = rp.role_id").
+		GroupBy("r", "r.role_id", "name", "description").
+		OrderBy("r.name")
+	sql, _, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for getRoles: %w", err))
+	}
+	err = s.db.SelectContext(ctx, &r, sql)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get roles: %w", err)
 	}
@@ -22,26 +29,41 @@ func (s *Store) getRoles(ctx context.Context) ([]Role, error) {
 
 func (s *Store) getRole(ctx context.Context, r1 Role) (Role, error) {
 	var r Role
-	err := s.db.GetContext(ctx, &r, `SELECT r.role_id, r.name, r.description, COUNT(DISTINCT rm.user_id) AS users, COUNT(DISTINCT rp.permission_id) AS permissions
-		FROM people.roles r
-		LEFT JOIN people.role_members rm ON r.role_id = rm.role_id
-		LEFT JOIN people.role_permissions rp ON r.role_id = rp.role_id
-		WHERE r.role_id = $1 OR (r.name = $2 AND r.name != '')
-		GROUP BY r.role_id, r.name, r.description
-		LIMIT 1;`, r1.RoleID, r1.Name)
+	builder := sq.Select("r.*", "COUNT(DISTINCT rm.user_id) AS users", "COUNT(DISTINCT rp.permission_id) AS permissions").
+		From("people.roles r").
+		LeftJoin("people.role_members rm ON r.role_id = rm.role_id").
+		LeftJoin("people.role_permissions rp ON r.role_id = rp.role_id").
+		Where(sq.Or{sq.Eq{"r.role_id": r1.RoleID}, sq.And{sq.Eq{"r.name": r1.Name}, sq.NotEq{"r.name": ""}}}).
+		GroupBy("r", "r.role_id", "name", "description").
+		Limit(1).
+		PlaceholderFormat(sq.Dollar)
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for getRole: %w", err))
+	}
+	err = s.db.GetContext(ctx, &r, sql, args...)
 	if err != nil {
 		return Role{}, fmt.Errorf("failed to get role: %w", err)
 	}
 	return r, nil
 }
 
-func (s *Store) addRole(ctx context.Context, r1 Role) (Role, error) {
-	var r Role
-	stmt, err := s.db.PrepareNamedContext(ctx, "INSERT INTO people.roles (name, description) VALUES (:name, :description) RETURNING role_id, name, description")
+func (s *Store) addRole(ctx context.Context, r Role) (Role, error) {
+	builder := sq.Insert("people.roles").
+		Columns("name", "description").
+		Values(r.Name, r.Description).
+		Suffix("RETURNING role_id").
+		PlaceholderFormat(sq.Dollar)
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for addRole: %w", err))
+	}
+	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
 		return Role{}, fmt.Errorf("failed to add role: %w", err)
 	}
-	err = stmt.Get(&r, r1)
+	defer stmt.Close()
+	err = stmt.QueryRow(args...).Scan(&r.RoleID)
 	if err != nil {
 		return Role{}, fmt.Errorf("failed to add role: %w", err)
 	}
@@ -49,11 +71,20 @@ func (s *Store) addRole(ctx context.Context, r1 Role) (Role, error) {
 }
 
 func (s *Store) editRole(ctx context.Context, r1 Role) (Role, error) {
-	return Role{}, nil
+	_ = ctx
+	_ = r1
+	panic("editRole not implemented")
 }
 
-func (s *Store) deleteRole(ctx context.Context, r1 Role) error {
-	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.roles WHERE role_id = :role_id`, r1)
+func (s *Store) deleteRole(ctx context.Context, r Role) error {
+	builder := sq.Delete("people.roles").
+		Where(sq.Eq{"role_id": r.RoleID}).
+		PlaceholderFormat(sq.Dollar)
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for deleteRole: %w", err))
+	}
+	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
 		return fmt.Errorf("failed to delete role: %w", err)
 	}
@@ -61,7 +92,14 @@ func (s *Store) deleteRole(ctx context.Context, r1 Role) error {
 }
 
 func (s *Store) deleteRolePermission(ctx context.Context, r Role) error {
-	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.role_permissions WHERE role_id = :role_id`, r)
+	builder := sq.Delete("people.role_permissions").
+		Where(sq.Eq{"role_id": r.RoleID}).
+		PlaceholderFormat(sq.Dollar)
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for deleteRolePermission: %w", err))
+	}
+	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
 		return fmt.Errorf("failed to delete rolePermission: %w", err)
 	}
@@ -69,7 +107,14 @@ func (s *Store) deleteRolePermission(ctx context.Context, r Role) error {
 }
 
 func (s *Store) deleteRoleUser(ctx context.Context, r Role) error {
-	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.role_members WHERE role_id = :role_id`, r)
+	builder := sq.Delete("people.role_members").
+		Where(sq.Eq{"role_id": r.RoleID}).
+		PlaceholderFormat(sq.Dollar)
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for deleteRoleUser: %w", err))
+	}
+	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
 		return fmt.Errorf("failed to delete roleUser: %w", err)
 	}
