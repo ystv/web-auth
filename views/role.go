@@ -15,17 +15,15 @@ import (
 
 type (
 	RolesTemplate struct {
-		Roles           []role.Role
-		UserPermissions []permission.Permission
-		ActivePage      string
+		Roles []role.Role
+		TemplateHelper
 	}
 
 	RoleTemplate struct {
 		Role                 user.RoleTemplate
-		UserPermissions      []permission.Permission
 		PermissionsNotInRole []permission.Permission
 		UsersNotInRole       []user.User
-		ActivePage           string
+		TemplateHelper
 	}
 )
 
@@ -52,9 +50,11 @@ func (v *Views) RolesFunc(c echo.Context) error {
 	}
 
 	data := RolesTemplate{
-		Roles:           roles,
-		UserPermissions: p1,
-		ActivePage:      "roles",
+		Roles: roles,
+		TemplateHelper: TemplateHelper{
+			UserPermissions: p1,
+			ActivePage:      "roles",
+		},
 	}
 
 	return v.template.RenderTemplate(c.Response(), data, templates.RolesTemplate, templates.RegularType)
@@ -102,10 +102,12 @@ func (v *Views) RoleFunc(c echo.Context) error {
 
 	data := RoleTemplate{
 		Role:                 roleTemplate,
-		UserPermissions:      p1,
 		PermissionsNotInRole: permissions,
 		UsersNotInRole:       users,
-		ActivePage:           "role",
+		TemplateHelper: TemplateHelper{
+			UserPermissions: p1,
+			ActivePage:      "role",
+		},
 	}
 
 	return v.template.RenderTemplate(c.Response(), data, templates.RoleTemplate, templates.RegularType)
@@ -148,10 +150,12 @@ func (v *Views) roleFunc(c echo.Context, roleID int) error {
 
 	data := RoleTemplate{
 		Role:                 roleTemplate,
-		UserPermissions:      p1,
 		PermissionsNotInRole: permissions,
 		UsersNotInRole:       users,
-		ActivePage:           "role",
+		TemplateHelper: TemplateHelper{
+			UserPermissions: p1,
+			ActivePage:      "role",
+		},
 	}
 
 	return v.template.RenderTemplate(c.Response(), data, templates.RoleTemplate, templates.RegularType)

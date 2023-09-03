@@ -14,15 +14,13 @@ import (
 
 type (
 	PermissionsTemplate struct {
-		Permissions     []permission.Permission
-		UserPermissions []permission.Permission
-		ActivePage      string
+		Permissions []permission.Permission
+		TemplateHelper
 	}
 
 	PermissionTemplate struct {
-		Permission      user.PermissionTemplate
-		UserPermissions []permission.Permission
-		ActivePage      string
+		Permission user.PermissionTemplate
+		TemplateHelper
 	}
 )
 
@@ -49,9 +47,11 @@ func (v *Views) PermissionsFunc(c echo.Context) error {
 	}
 
 	data := PermissionsTemplate{
-		Permissions:     permissions,
-		UserPermissions: p1,
-		ActivePage:      "permissions",
+		Permissions: permissions,
+		TemplateHelper: TemplateHelper{
+			UserPermissions: p1,
+			ActivePage:      "permissions",
+		},
 	}
 
 	return v.template.RenderTemplate(c.Response(), data, templates.PermissionsTemplate, templates.RegularType)
@@ -84,9 +84,11 @@ func (v *Views) PermissionFunc(c echo.Context) error {
 	}
 
 	data := PermissionTemplate{
-		Permission:      permissionTemplate,
-		UserPermissions: p1,
-		ActivePage:      "permission",
+		Permission: permissionTemplate,
+		TemplateHelper: TemplateHelper{
+			UserPermissions: p1,
+			ActivePage:      "permission",
+		},
 	}
 
 	return v.template.RenderTemplate(c.Response(), data, templates.PermissionTemplate, templates.RegularType)

@@ -61,6 +61,11 @@ type (
 		validate   *validator.Validate
 		template   *templates.Templater
 	}
+
+	TemplateHelper struct {
+		UserPermissions []permission.Permission
+		ActivePage      string
+	}
 )
 
 // New initialises connections, templates, and cookies

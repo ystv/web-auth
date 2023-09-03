@@ -6,7 +6,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 
@@ -16,11 +15,10 @@ import (
 type (
 	// InternalTemplate represents the context for the internal template
 	InternalTemplate struct {
-		Nickname        string
-		LastLogin       string
-		CountAll        user.CountUsers
-		UserPermissions []permission.Permission
-		ActivePage      string
+		Nickname  string
+		LastLogin string
+		CountAll  user.CountUsers
+		TemplateHelper
 	}
 )
 
@@ -43,11 +41,13 @@ func (v *Views) InternalFunc(c echo.Context) error {
 	}
 
 	ctx := InternalTemplate{
-		Nickname:        c1.User.Nickname,
-		LastLogin:       humanize.Time(lastLogin),
-		CountAll:        countAll,
-		UserPermissions: p1,
-		ActivePage:      "dashboard",
+		Nickname:  c1.User.Nickname,
+		LastLogin: humanize.Time(lastLogin),
+		CountAll:  countAll,
+		TemplateHelper: TemplateHelper{
+			UserPermissions: p1,
+			ActivePage:      "dashboard",
+		},
 	}
 	return v.template.RenderTemplate(c.Response(), ctx, templates.InternalTemplate, templates.RegularType)
 }

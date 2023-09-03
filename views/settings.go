@@ -11,18 +11,16 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/labstack/echo/v4"
 
-	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 )
 
 type (
 	SettingsTemplate struct {
-		User            user.User
-		UserPermissions []permission.Permission
-		LastLogin       string
-		ActivePage      string
-		Gravatar        string
+		User      user.User
+		LastLogin string
+		Gravatar  string
+		TemplateHelper
 	}
 )
 
@@ -48,11 +46,13 @@ func (v *Views) SettingsFunc(c echo.Context) error {
 	}
 
 	ctx := SettingsTemplate{
-		User:            c1.User,
-		UserPermissions: p1,
-		LastLogin:       humanize.Time(lastLogin),
-		ActivePage:      "settings",
-		Gravatar:        gravatar,
+		User:      c1.User,
+		LastLogin: humanize.Time(lastLogin),
+		Gravatar:  gravatar,
+		TemplateHelper: TemplateHelper{
+			UserPermissions: p1,
+			ActivePage:      "settings",
+		},
 	}
 
 	return v.template.RenderTemplate(c.Response(), ctx, templates.SettingsTemplate, templates.RegularType)
