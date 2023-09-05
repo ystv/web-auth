@@ -113,7 +113,8 @@ type (
 		UseGravatar        bool                    `db:"use_gravatar" json:"useGravatar" schema:"useGravatar"`
 		Permissions        []permission.Permission `json:"permissions"`
 		Roles              []role.Role             `json:"roles"`
-		Authenticated      bool
+		Authenticated      bool                    `json:"authenticated"`
+		AssumedUser        *User                   `json:"assumedUser"`
 	}
 
 	// StrippedUser represents user information, an administrator can view

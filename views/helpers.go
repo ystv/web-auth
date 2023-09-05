@@ -18,26 +18,36 @@ import (
 type (
 	// Context is a struct that is applied to the templates.
 	Context struct {
-		Message  string
-		MsgType  string
-		Version  string
-		Callback string
-		User     user.User
+		Message    string
+		MsgType    string
+		Version    string
+		Callback   string
+		User       user.User
+		Assumed    bool
+		actualUser user.User
 	}
 )
 
 // getData gets the data for the user session
 func (v *Views) getData(s *sessions.Session) *Context {
 	val := s.Values["user"]
-	var u user.User
+	var u, actual user.User
 	u, ok := val.(user.User)
 	if !ok {
 		u = user.User{Authenticated: false}
 	}
+	var assumed bool
+	if u.AssumedUser != nil {
+		assumed = true
+		actual = u
+		u = *u.AssumedUser
+	}
 	c := Context{
-		Version:  v.conf.Version,
-		Callback: "/internal",
-		User:     u,
+		Version:    v.conf.Version,
+		Callback:   "/internal",
+		User:       u,
+		Assumed:    assumed,
+		actualUser: actual,
 	}
 	return &c
 }
