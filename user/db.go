@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"github.com/ystv/web-auth/utils"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -31,7 +32,7 @@ func (s *Store) countUsersAll(ctx context.Context) (CountUsers, error) {
 
 // updateUser will update a user record by ID
 func (s *Store) updateUser(ctx context.Context, u User) error {
-	builder := sq.Update("people.users").
+	builder := utils.PSQL().Update("people.users").
 		SetMap(map[string]interface{}{"password": u.Password,
 			"salt":                u.Salt,
 			"email":               u.Email,
@@ -52,8 +53,7 @@ func (s *Store) updateUser(ctx context.Context, u User) error {
 			"deleted_by":          u.DeletedBy,
 			"deleted_at":          u.DeletedAt,
 		}).
-		Where(sq.Eq{"user_id": u.UserID}).
-		PlaceholderFormat(sq.Dollar)
+		Where(sq.Eq{"user_id": u.UserID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for updateUser: %w", err))
@@ -75,15 +75,14 @@ func (s *Store) updateUser(ctx context.Context, u User) error {
 // getUser will get a user using any unique identity fields for a user
 func (s *Store) getUser(ctx context.Context, u1 User) (User, error) {
 	var u User
-	builder := sq.Select("*").
+	builder := utils.PSQL().Select("*").
 		From("people.users").
 		Where(sq.Or{
 			sq.And{sq.Eq{"username": u1.Username}, sq.NotEq{"username": ""}},
 			sq.And{sq.Eq{"email": u1.Email}, sq.NotEq{"email": ""}},
 			sq.And{sq.Eq{"ldap_username": u1.LDAPUsername}, sq.NotEq{"ldap_username": ""}},
 			sq.Eq{"user_id": u1.UserID}}).
-		Limit(1).
-		PlaceholderFormat(sq.Dollar)
+		Limit(1)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for updateUser: %w", err))
@@ -100,7 +99,7 @@ func (s *Store) getUser(ctx context.Context, u1 User) (User, error) {
 func (s *Store) getUsers(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, int, error) {
 	var u []User
 	var count int
-	builder := sq.Select(
+	builder := utils.PSQL().Select(
 		"*",
 		"count(*) OVER() AS full_count",
 	).
@@ -157,7 +156,6 @@ func (s *Store) getUsers(ctx context.Context, size, page int, search, sortBy, di
 	if page >= 1 && size >= 5 && size <= 100 {
 		builder = builder.Limit(uint64(size)).Offset(uint64(size * (page - 1)))
 	}
-	builder = builder.PlaceholderFormat(sq.Dollar)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getUsers: %w", err))
