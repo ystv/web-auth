@@ -67,7 +67,7 @@ func (s *Store) updateUser(ctx context.Context, u User) error {
 		return fmt.Errorf("failed to update user: %w", err)
 	}
 	if rows < 1 {
-		return fmt.Errorf("failed to update user: invalid rows affected: %d", rows)
+		return fmt.Errorf("failed to update user: invalid rows affected: %d, this user may not exist: %d", rows, u.UserID)
 	}
 	return nil
 }
