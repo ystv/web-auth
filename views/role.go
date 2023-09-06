@@ -60,6 +60,7 @@ func (v *Views) RolesFunc(c echo.Context) error {
 	return v.template.RenderTemplate(c.Response(), data, templates.RolesTemplate, templates.RegularType)
 }
 
+// RoleFunc handles a role request
 func (v *Views) RoleFunc(c echo.Context) error {
 	c1 := v.getSessionData(c)
 
@@ -98,54 +99,6 @@ func (v *Views) RoleFunc(c echo.Context) error {
 	users, err := v.user.GetUsersNotInRole(c.Request().Context(), role1)
 	if err != nil {
 		return fmt.Errorf("failed to get users not in role for role: %w", err)
-	}
-
-	data := RoleTemplate{
-		Role:                 roleTemplate,
-		PermissionsNotInRole: permissions,
-		UsersNotInRole:       users,
-		TemplateHelper: TemplateHelper{
-			UserPermissions: p1,
-			ActivePage:      "role",
-		},
-	}
-
-	return v.template.RenderTemplate(c.Response(), data, templates.RoleTemplate, templates.RegularType)
-}
-
-func (v *Views) roleFunc(c echo.Context, roleID int) error {
-	c1 := v.getSessionData(c)
-
-	role1, err := v.role.GetRole(c.Request().Context(), role.Role{RoleID: roleID})
-	if err != nil {
-		return fmt.Errorf("failed to get role for role: %w", err)
-	}
-
-	roleTemplate := v.bindRoleToTemplate(role1)
-
-	roleTemplate.Permissions, err = v.user.GetPermissionsForRole(c.Request().Context(), role1)
-	if err != nil {
-		return fmt.Errorf("failed to get roles for role: %w", err)
-	}
-
-	roleTemplate.Users, err = v.user.GetUsersForRole(c.Request().Context(), role1)
-	if err != nil {
-		return fmt.Errorf("failed to get users for role: %w", err)
-	}
-
-	permissions, err := v.user.GetPermissionsNotInRole(c.Request().Context(), role1)
-	if err != nil {
-		return fmt.Errorf("failed to get permissions not in role for role: %w", err)
-	}
-
-	users, err := v.user.GetUsersNotInRole(c.Request().Context(), role1)
-	if err != nil {
-		return fmt.Errorf("failed to get users not in role for role: %w", err)
-	}
-
-	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
-	if err != nil {
-		return fmt.Errorf("failed to get user permissions for role: %w", err)
 	}
 
 	data := RoleTemplate{
@@ -252,7 +205,7 @@ func (v *Views) RoleAddPermissionFunc(c echo.Context) error {
 			return fmt.Errorf("failed to add rolePermission for roleAddPermission: %w", err)
 		}
 
-		return v.roleFunc(c, roleID)
+		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/role/%d", roleID))
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
@@ -293,7 +246,7 @@ func (v *Views) RoleRemovePermissionFunc(c echo.Context) error {
 			return fmt.Errorf("failed to remove rolePermission for roleRemoveRole: %w", err)
 		}
 
-		return v.roleFunc(c, roleID)
+		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/role/%d", roleID))
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
@@ -334,7 +287,7 @@ func (v *Views) RoleAddUserFunc(c echo.Context) error {
 			return fmt.Errorf("failed to add roleUser for roleAddUser: %w", err)
 		}
 
-		return v.roleFunc(c, roleID)
+		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/role/%d", roleID))
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
@@ -375,7 +328,7 @@ func (v *Views) RoleRemoveUserFunc(c echo.Context) error {
 			return fmt.Errorf("failed to remove roleUser for roleRemoveUser: %w", err)
 		}
 
-		return v.roleFunc(c, roleID)
+		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/role/%d", roleID))
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
