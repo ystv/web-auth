@@ -34,41 +34,14 @@
                                 {{if $permissionAdmin}}
                                     <a href="/internal/permission/{{.PermissionID}}">{{.Name}}</a>&emsp;<a
                                             class="button is-danger is-outlined"
-                                            onclick="removePermission{{.PermissionID}}FromRoleModal()">Remove
+                                            onclick="removePermissionFromRoleModal({{.PermissionID}}, '{{.Name}}')">Remove
                                         permission</a>
                                 {{else}}
                                     {{.Name}}&emsp;<a class="button is-danger is-outlined"
-                                                      onclick="removePermission{{.PermissionID}}FromRoleModal()">Remove
+                                                      onclick="removePermissionFromRoleModal({{.PermissionID}}, '{{.Name}}')">Remove
                                         permission</a>
                                 {{end}}
                             </li>
-                            <div id="removePermission{{.PermissionID}}FromRoleModal" class="modal">
-                                <div class="modal-background"></div>
-                                <div class="modal-content">
-                                    <div class="box">
-                                        <article class="media">
-                                            <div class="media-content">
-                                                <div class="content">
-                                                    <p class="title">Are you sure you want to remove "{{.Name}}" from
-                                                        this role?<br>
-                                                        Be careful! Removing permissions can have unintended
-                                                        consequences.</p>
-                                                    <form action="/internal/role/{{$.Role.RoleID}}/permission/remove/{{.PermissionID}}"
-                                                          method="post">
-                                                        <button class="button is-danger">Remove permission</button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </article>
-                                    </div>
-                                </div>
-                                <button class="modal-close is-large" aria-label="close"></button>
-                            </div>
-                            <script>
-                                function removePermission{{.PermissionID}}FromRoleModal() {
-                                    document.getElementById("removePermission{{.PermissionID}}FromRoleModal").classList.add("is-active");
-                                }
-                            </script>
                         {{end}}
                     </ol>
                     {{end}}
@@ -80,68 +53,45 @@
                                 {{if $userAdmin}}
                                     <a href="/internal/user/{{.UserID}}">{{formatUserNameUserStruct .}}</a>&emsp;<a
                                             class="button is-danger is-outlined"
-                                            onclick="removeUser{{.UserID}}FromRoleModal()">Remove user</a>
+                                            onclick="removeUserFromRoleModal({{.UserID}}, '{{formatUserNameUserStruct .}}')">Remove user</a>
                                 {{else}}
                                     {{formatUserNameUserStruct .}}&emsp;<a
                                             class="button is-danger is-outlined"
-                                            onclick="removeUser{{.UserID}}FromRoleModal()">Remove user</a>
+                                            onclick="removeUserFromRoleModal({{.UserID}}, '{{formatUserNameUserStruct .}}')">Remove user</a>
                                 {{end}}
                             </li>
-                            <div id="removeUser{{.UserID}}FromRoleModal" class="modal">
-                                <div class="modal-background"></div>
-                                <div class="modal-content">
-                                    <div class="box">
-                                        <article class="media">
-                                            <div class="media-content">
-                                                <div class="content"> <p class="title">Are you sure you want to remove "{{formatUserNameUserStruct .}}" from this
-                                                        role?</p>
-                                                    <form action="/internal/role/{{$.Role.RoleID}}/user/remove/{{.UserID}}" method="post">
-                                                        <button class="button is-danger">Remove user</button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </article>
-                                    </div>
-                                </div>
-                                <button class="modal-close is-large" aria-label="close"></button>
-                            </div>
-                            <script>
-                                function removeUser{{.UserID}}FromRoleModal() {
-                                    document.getElementById("removeUser{{.UserID}}FromRoleModal").classList.add("is-active");
-                                }
-                            </script>
                         {{end}}
                     </ol>
                     {{end}}<br><br>
                     {{if gt (len $.PermissionsNotInRole) 0}}
-                    Use the drop down below to add more permissions to this role.<br>
-                    <form method="post" action="/internal/role/{{.RoleID}}/permission/add">
-                        <div class="select">
-                            <select id="permission" name="permission">
-                                <option value disabled selected>Please select</option>
-                                {{range $.PermissionsNotInRole}}
-                                    <option value="{{.PermissionID}}">{{.Name}}</option>
-                                {{end}}
-                            </select>
-                        </div>
-                        <br>
-                        <button class="button is-info">Add permission</button>
-                    </form>
+                        Use the drop down below to add more permissions to this role.<br>
+                        <form method="post" action="/internal/role/{{.RoleID}}/permission/add">
+                            <div class="select">
+                                <select id="permission" name="permission">
+                                    <option value disabled selected>Please select</option>
+                                    {{range $.PermissionsNotInRole}}
+                                        <option value="{{.PermissionID}}">{{.Name}}</option>
+                                    {{end}}
+                                </select>
+                            </div>
+                            <br>
+                            <button class="button is-info">Add permission</button>
+                        </form>
                     {{end}}<br><br>
                     {{if gt (len $.UsersNotInRole) 0}}
-                    Use the drop down below to add more users to this role.<br>
-                    <form method="post" action="/internal/role/{{.RoleID}}/user/add">
-                        <div class="select">
-                            <select id="user" name="user">
-                                <option value disabled selected>Please select</option>
-                                {{range $.UsersNotInRole}}
-                                    <option value="{{.UserID}}">{{formatUserNameUserStruct .}}</option>
-                                {{end}}
-                            </select>
-                        </div>
-                        <br>
-                        <button class="button is-info">Add user</button>
-                    </form>
+                        Use the drop down below to add more users to this role.<br>
+                        <form method="post" action="/internal/role/{{.RoleID}}/user/add">
+                            <div class="select">
+                                <select id="user" name="user">
+                                    <option value disabled selected>Please select</option>
+                                    {{range $.UsersNotInRole}}
+                                        <option value="{{.UserID}}">{{formatUserNameUserStruct .}}</option>
+                                    {{end}}
+                                </select>
+                            </div>
+                            <br>
+                            <button class="button is-info">Add user</button>
+                        </form>
                     {{end}}
                     </p>
                 {{end}}
@@ -152,6 +102,43 @@
 {{end}}
 
 {{define "modals"}}
+    <div id="removePermissionFromRoleModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title" id="removePermissionFromRoleModalTitle"></p>
+                            <p>Be careful! Removing permissions can have unintended consequences.</p>
+                            <form method="post" id="removePermissionFromRoleModalForm">
+                                <a class="button is-danger" onclick="removePermissionFromRole()">Remove permission</a>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <div id="removeUserFromRoleModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title" id="removeUserFromRoleModalTitle"></p>
+                            <form method="post" id="removeUserFromRoleModalForm">
+                                <a class="button is-danger" onclick="removeUserFromRole()">Remove user</a>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
     <div id="deleteRoleModal" class="modal">
         <div class="modal-background"></div>
         <div class="modal-content">
@@ -180,6 +167,30 @@
                 $modal.classList.remove("is-active");
             });
         });
+
+        let permissionID = 0, userID = 0;
+
+        function removePermissionFromRoleModal(permissionID1, name) {
+            permissionID = permissionID1
+            document.getElementById("removePermissionFromRoleModal").classList.add("is-active");
+            document.getElementById("removePermissionFromRoleModalTitle").innerHTML = 'Are you sure you want to remove "' + name + '" from this role?';
+        }
+
+        function removePermissionFromRole() {
+            document.getElementById("removePermissionFromRoleModalForm").action = "/internal/role/{{$.Role.RoleID}}/permission/remove/" + permissionID;
+            $('#removePermissionFromRoleModalForm').submit();
+        }
+
+        function removeUserFromRoleModal(userID1, name) {
+            userID = userID1
+            document.getElementById("removeUserFromRoleModal").classList.add("is-active");
+            document.getElementById("removeUserFromRoleModalTitle").innerHTML = 'Are you sure you want to remove "' + name + '" from this role?';
+        }
+
+        function removeUserFromRole() {
+            document.getElementById("removeUserFromRoleModalForm").action = "/internal/role/{{$.Role.RoleID}}/user/remove/" + userID;
+            $('#removeUserFromRoleModalForm').submit();
+        }
 
         function deleteRoleModal() {
             document.getElementById("deleteRoleModal").classList.add("is-active");
