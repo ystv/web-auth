@@ -125,6 +125,12 @@ func (r *Router) loadRoutes() {
 	// roleID is any function to do with a specific role
 	roleID.Match(validMethods, "/edit", r.views.RoleEditFunc)
 	roleID.Match(validMethods, "/delete", r.views.RoleDeleteFunc)
+	rolePermission := roleID.Group("/permission")
+	rolePermission.Match(validMethods, "/add", r.views.RoleAddPermissionFunc)
+	rolePermission.Match(validMethods, "/remove/:permissionid", r.views.RoleRemovePermissionFunc)
+	roleUser := roleID.Group("/user")
+	roleUser.Match(validMethods, "/add", r.views.RoleAddUserFunc)
+	roleUser.Match(validMethods, "/remove/:userid", r.views.RoleRemoveUserFunc)
 	roleID.Match(validMethods, "", r.views.RoleFunc)
 
 	// this section of users is a bit weird, users is valid for anyone who can list users and user/add can be used by add users permission
