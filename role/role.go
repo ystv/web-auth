@@ -54,12 +54,12 @@ func (s *Store) DeleteRole(ctx context.Context, r Role) error {
 	return s.deleteRole(ctx, r)
 }
 
-// DeleteRolePermission deletes a rolePermission
-func (s *Store) DeleteRolePermission(ctx context.Context, r Role) error {
-	return s.deleteRolePermission(ctx, r)
+// RemovePermissionsForRole deletes a rolePermission
+func (s *Store) RemovePermissionsForRole(ctx context.Context, r Role) error {
+	return s.removePermissionsForRole(ctx, r)
 }
 
-// DeleteRoleUser deletes a roleUser
-func (s *Store) DeleteRoleUser(ctx context.Context, r Role) error {
-	return s.deleteRoleUser(ctx, r)
+// RemoveUsersForRole deletes a roleUser
+func (s *Store) RemoveUsersForRole(ctx context.Context, r Role) error {
+	return s.removeUsersForRole(ctx, r)
 }

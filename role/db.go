@@ -90,12 +90,12 @@ func (s *Store) deleteRole(ctx context.Context, r Role) error {
 	return nil
 }
 
-func (s *Store) deleteRolePermission(ctx context.Context, r Role) error {
+func (s *Store) removePermissionsForRole(ctx context.Context, r Role) error {
 	builder := utils.PSQL().Delete("people.role_permissions").
 		Where(sq.Eq{"role_id": r.RoleID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for deleteRolePermission: %w", err))
+		panic(fmt.Errorf("failed to build sql for removePermissionsForRole: %w", err))
 	}
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
@@ -104,12 +104,12 @@ func (s *Store) deleteRolePermission(ctx context.Context, r Role) error {
 	return nil
 }
 
-func (s *Store) deleteRoleUser(ctx context.Context, r Role) error {
+func (s *Store) removeUsersForRole(ctx context.Context, r Role) error {
 	builder := utils.PSQL().Delete("people.role_members").
 		Where(sq.Eq{"role_id": r.RoleID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for deleteRoleUser: %w", err))
+		panic(fmt.Errorf("failed to build sql for removeUsersForRole: %w", err))
 	}
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
