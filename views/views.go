@@ -91,9 +91,6 @@ func New(conf *Config, host string) *Views {
 		DomainName: conf.Mail.DomainName,
 	})
 
-	// Initialising cache
-	v.cache = cache.New(1*time.Hour, 1*time.Hour)
-
 	// Initialising session cookie
 	authKey, _ := hex.DecodeString(conf.Security.AuthenticationKey)
 	if len(authKey) == 0 {
