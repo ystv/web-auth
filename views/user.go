@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 )
@@ -16,14 +15,13 @@ import (
 type (
 	// UsersTemplate represents the context for the user template
 	UsersTemplate struct {
-		Users           []user.StrippedUser
-		UserPermissions []permission.Permission
-		CurPage         int
-		NextPage        int
-		PrevPage        int
-		LastPage        int
-		ActivePage      string
-		Sort            Sort
+		Users    []user.StrippedUser
+		CurPage  int
+		NextPage int
+		PrevPage int
+		LastPage int
+		Sort     Sort
+		TemplateHelper
 	}
 
 	Sort struct {
@@ -38,9 +36,8 @@ type (
 	}
 
 	UserTemplate struct {
-		User            user.DetailedUser
-		UserPermissions []permission.Permission
-		ActivePage      string
+		User user.DetailedUser
+		TemplateHelper
 	}
 )
 
@@ -191,9 +188,11 @@ func (v *Views) UsersFunc(c echo.Context) error {
 	}
 
 	data := UsersTemplate{
-		Users:           tplUsers,
-		UserPermissions: p1,
-		ActivePage:      "users",
+		Users: tplUsers,
+		TemplateHelper: TemplateHelper{
+			UserPermissions: p1,
+			ActivePage:      "users",
+		},
 		Sort: Sort{
 			Pages:      sum,
 			Size:       size,
@@ -241,9 +240,11 @@ func (v *Views) UserFunc(c echo.Context) error {
 	}
 
 	data := UserTemplate{
-		User:            detailedUser,
-		UserPermissions: p1,
-		ActivePage:      "user",
+		User: detailedUser,
+		TemplateHelper: TemplateHelper{
+			UserPermissions: p1,
+			ActivePage:      "user",
+		},
 	}
 
 	return v.template.RenderTemplate(c.Response(), data, templates.UserTemplate, templates.RegularType)

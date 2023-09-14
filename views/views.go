@@ -5,17 +5,16 @@ import (
 	"encoding/hex"
 	"time"
 
-	"github.com/ystv/web-auth/infrastructure/mail"
-	"github.com/ystv/web-auth/permission"
-	"github.com/ystv/web-auth/role"
-	"github.com/ystv/web-auth/templates"
-
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/ystv/web-auth/infrastructure/db"
+	"github.com/ystv/web-auth/infrastructure/mail"
+	"github.com/ystv/web-auth/permission"
+	"github.com/ystv/web-auth/role"
+	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 )
 
@@ -61,6 +60,11 @@ type (
 		mailer     *mail.MailerInit
 		validate   *validator.Validate
 		template   *templates.Templater
+	}
+
+	TemplateHelper struct {
+		UserPermissions []permission.Permission
+		ActivePage      string
 	}
 )
 

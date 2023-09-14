@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	sq "github.com/Masterminds/squirrel"
-	"github.com/jinzhu/copier"
-
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
+	"github.com/ystv/web-auth/utils"
+
+	sq "github.com/Masterminds/squirrel"
+	"github.com/jinzhu/copier"
 )
 
 // countUsersAll will get the number of total users
@@ -31,7 +32,7 @@ func (s *Store) countUsersAll(ctx context.Context) (CountUsers, error) {
 
 // updateUser will update a user record by ID
 func (s *Store) updateUser(ctx context.Context, u User) error {
-	builder := sq.Update("people.users").
+	builder := utils.PSQL().Update("people.users").
 		SetMap(map[string]interface{}{"password": u.Password,
 			"salt":                u.Salt,
 			"email":               u.Email,
@@ -52,15 +53,21 @@ func (s *Store) updateUser(ctx context.Context, u User) error {
 			"deleted_by":          u.DeletedBy,
 			"deleted_at":          u.DeletedAt,
 		}).
-		Where(sq.Eq{"user_id": u.UserID}).
-		PlaceholderFormat(sq.Dollar)
+		Where(sq.Eq{"user_id": u.UserID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for updateUser: %w", err))
 	}
-	_, err = s.db.ExecContext(ctx, sql, args...)
+	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
 		return fmt.Errorf("failed to update user: %w", err)
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+	if rows < 1 {
+		return fmt.Errorf("failed to update user: invalid rows affected: %d, this user may not exist: %d", rows, u.UserID)
 	}
 	return nil
 }
@@ -68,15 +75,14 @@ func (s *Store) updateUser(ctx context.Context, u User) error {
 // getUser will get a user using any unique identity fields for a user
 func (s *Store) getUser(ctx context.Context, u1 User) (User, error) {
 	var u User
-	builder := sq.Select("*").
+	builder := utils.PSQL().Select("*").
 		From("people.users").
 		Where(sq.Or{
 			sq.And{sq.Eq{"username": u1.Username}, sq.NotEq{"username": ""}},
 			sq.And{sq.Eq{"email": u1.Email}, sq.NotEq{"email": ""}},
 			sq.And{sq.Eq{"ldap_username": u1.LDAPUsername}, sq.NotEq{"ldap_username": ""}},
 			sq.Eq{"user_id": u1.UserID}}).
-		Limit(1).
-		PlaceholderFormat(sq.Dollar)
+		Limit(1)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for updateUser: %w", err))
@@ -93,7 +99,7 @@ func (s *Store) getUser(ctx context.Context, u1 User) (User, error) {
 func (s *Store) getUsers(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, int, error) {
 	var u []User
 	var count int
-	builder := sq.Select(
+	builder := utils.PSQL().Select(
 		"*",
 		"count(*) OVER() AS full_count",
 	).
@@ -150,7 +156,6 @@ func (s *Store) getUsers(ctx context.Context, size, page int, search, sortBy, di
 	if page >= 1 && size >= 5 && size <= 100 {
 		builder = builder.Limit(uint64(size)).Offset(uint64(size * (page - 1)))
 	}
-	builder = builder.PlaceholderFormat(sq.Dollar)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getUsers: %w", err))
@@ -224,6 +229,56 @@ func (s *Store) getUsersForRole(ctx context.Context, r role.Role) ([]User, error
 	return u, nil
 }
 
+// getRoleUser returns a role user - moved here for cycle import reasons
+func (s *Store) getRoleUser(ctx context.Context, ru1 RoleUser) (RoleUser, error) {
+	var ru RoleUser
+	err := s.db.GetContext(ctx, &ru, `SELECT *
+		FROM people.role_members
+		WHERE role_id = $1 AND user_id = $2
+		LIMIT 1`, ru1.RoleID, ru1.UserID)
+	if err != nil {
+		return RoleUser{}, fmt.Errorf("failed to get roleUser: %w", err)
+	}
+	return ru, nil
+}
+
+func (s *Store) getUsersNotInRole(ctx context.Context, r role.Role) ([]User, error) {
+	var u []User
+	err := s.db.SelectContext(ctx, &u, `SELECT DISTINCT u.*
+		FROM people.users u
+        WHERE user_id NOT IN
+        (SELECT u.user_id
+		FROM people.users u
+		LEFT JOIN people.role_members ru on u.user_id = ru.user_id
+		WHERE ru.role_id = $1)
+		ORDER BY first_name, last_name`, r.RoleID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get users not in role: %w", err)
+	}
+	return u, nil
+}
+
+func (s *Store) addRoleUser(ctx context.Context, ru1 RoleUser) (RoleUser, error) {
+	var ru RoleUser
+	stmt, err := s.db.PrepareNamedContext(ctx, "INSERT INTO people.role_members (role_id, user_id) VALUES (:role_id, :user_id) RETURNING role_id, user_id")
+	if err != nil {
+		return RoleUser{}, fmt.Errorf("failed to add roleUser: %w", err)
+	}
+	err = stmt.Get(&ru, ru1)
+	if err != nil {
+		return RoleUser{}, fmt.Errorf("failed to add roleUser: %w", err)
+	}
+	return ru, nil
+}
+
+func (s *Store) removeRoleUser(ctx context.Context, ru RoleUser) error {
+	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.role_members WHERE role_id = :role_id AND user_id = :user_id`, ru)
+	if err != nil {
+		return fmt.Errorf("failed to remove roleUser: %w", err)
+	}
+	return nil
+}
+
 // getPermissionsForRole returns all permissions for a role - moved here for cycle import reasons
 func (s *Store) getPermissionsForRole(ctx context.Context, r role.Role) ([]permission.Permission, error) {
 	var p []permission.Permission
@@ -248,4 +303,54 @@ func (s *Store) getRolesForPermission(ctx context.Context, p permission.Permissi
 		return nil, fmt.Errorf("failed to get permission roles: %w", err)
 	}
 	return r, nil
+}
+
+// getRolePermission returns a role permission - moved here for cycle import reasons
+func (s *Store) getRolePermission(ctx context.Context, rp1 RolePermission) (RolePermission, error) {
+	var rp RolePermission
+	err := s.db.GetContext(ctx, &rp, `SELECT *
+		FROM people.role_permissions
+		WHERE role_id = $1 AND permission_id = $2
+		LIMIT 1`, rp1.RoleID, rp1.PermissionID)
+	if err != nil {
+		return RolePermission{}, fmt.Errorf("failed to get rolePermisison: %w", err)
+	}
+	return rp, nil
+}
+
+func (s *Store) getPermissionsNotInRole(ctx context.Context, r role.Role) ([]permission.Permission, error) {
+	var p []permission.Permission
+	err := s.db.SelectContext(ctx, &p, `SELECT DISTINCT p.*
+		FROM people.permissions p
+        WHERE permission_id NOT IN
+        (SELECT p.permission_id
+		FROM people.permissions p
+		LEFT JOIN people.role_permissions rp on p.permission_id = rp.permission_id
+		WHERE rp.role_id = $1)
+		ORDER BY name`, r.RoleID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get permissions not in role: %w", err)
+	}
+	return p, nil
+}
+
+func (s *Store) addRolePermission(ctx context.Context, rp1 RolePermission) (RolePermission, error) {
+	var rp RolePermission
+	stmt, err := s.db.PrepareNamedContext(ctx, "INSERT INTO people.role_permissions (role_id, permission_id) VALUES (:role_id, :permission_id) RETURNING role_id, permission_id")
+	if err != nil {
+		return RolePermission{}, fmt.Errorf("failed to add rolePermission: %w", err)
+	}
+	err = stmt.Get(&rp, rp1)
+	if err != nil {
+		return RolePermission{}, fmt.Errorf("failed to add rolePermission: %w", err)
+	}
+	return rp, nil
+}
+
+func (s *Store) removeRolePermission(ctx context.Context, rp RolePermission) error {
+	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.role_permissions WHERE role_id = :role_id AND permission_id = :permission_id`, rp)
+	if err != nil {
+		return fmt.Errorf("failed to remove rolePermission: %w", err)
+	}
+	return nil
 }

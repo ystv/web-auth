@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ystv/web-auth/utils"
+
 	sq "github.com/Masterminds/squirrel"
 )
 
@@ -29,13 +31,12 @@ func (s *Store) getPermissions(ctx context.Context) ([]Permission, error) {
 // getPermissions returns all permissions
 func (s *Store) getPermission(ctx context.Context, p1 Permission) (Permission, error) {
 	var p Permission
-	builder := sq.Select("p.*", "COUNT(rp.role_id) AS roles").
+	builder := utils.PSQL().Select("p.*", "COUNT(rp.role_id) AS roles").
 		From("people.permissions p").
 		LeftJoin("people.role_permissions rp on p.permission_id = rp.permission_id").
 		Where(sq.Eq{"p.permission_id": p1.PermissionID}).
 		GroupBy("p", "p.permission_id", "name", "description").
-		Limit(1).
-		PlaceholderFormat(sq.Dollar)
+		Limit(1)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getPermission: %w", err))
@@ -48,11 +49,10 @@ func (s *Store) getPermission(ctx context.Context, p1 Permission) (Permission, e
 }
 
 func (s *Store) addPermission(ctx context.Context, p Permission) (Permission, error) {
-	builder := sq.Insert("people.permissions").
+	builder := utils.PSQL().Insert("people.permissions").
 		Columns("name", "description").
 		Values(p.Name, p.Description).
-		Suffix("RETURNING permission_id").
-		PlaceholderFormat(sq.Dollar)
+		Suffix("RETURNING permission_id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for addPermission: %w", err))
@@ -76,7 +76,7 @@ func (s *Store) editPermission(ctx context.Context, p1 Permission) (Permission, 
 }
 
 func (s *Store) deletePermission(ctx context.Context, p Permission) error {
-	builder := sq.Delete("people.permissions").
+	builder := utils.PSQL().Delete("people.permissions").
 		Where(sq.Eq{"permission_id": p.PermissionID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -90,7 +90,7 @@ func (s *Store) deletePermission(ctx context.Context, p Permission) error {
 }
 
 func (s *Store) deleteRolePermission(ctx context.Context, p Permission) error {
-	builder := sq.Delete("people.role_permissions").
+	builder := utils.PSQL().Delete("people.role_permissions").
 		Where(sq.Eq{"permission_id": p.PermissionID})
 	sql, args, err := builder.ToSql()
 	if err != nil {

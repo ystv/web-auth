@@ -26,7 +26,7 @@ type (
 	//
 	//nolint:musttag
 	User struct {
-		UserID             int                     `db:"user_id" json:"id"`
+		UserID             int                     `db:"user_id" json:"userID"`
 		Username           string                  `db:"username" json:"username" schema:"username"`
 		UniversityUsername null.String             `db:"university_username" json:"universityUsername"`
 		LDAPUsername       null.String             `db:"ldap_username" json:"LDAPUsername"`
@@ -38,8 +38,8 @@ type (
 		Salt               null.String             `db:"salt" json:"-"`
 		Avatar             string                  `db:"avatar" json:"avatar" schema:"avatar"`
 		Email              string                  `db:"email" json:"email" schema:"email"`
-		LastLogin          null.Time               `db:"last_login"`
-		ResetPw            bool                    `db:"reset_pw" json:"-"`
+		LastLogin          null.Time               `db:"last_login" json:"lastLogin"`
+		ResetPw            bool                    `db:"reset_pw" json:"resetPw"`
 		Enabled            bool                    `db:"enabled" json:"enabled"`
 		CreatedAt          null.Time               `db:"created_at" json:"createdAt"`
 		CreatedBy          null.Int                `db:"created_by" json:"createdBy"`
@@ -111,6 +111,16 @@ type (
 		Description  string
 		Roles        []role.Role
 	}
+
+	RolePermission struct {
+		RoleID       int `db:"role_id" json:"roleID"`
+		PermissionID int `db:"permission_id" json:"permissionID"`
+	}
+
+	RoleUser struct {
+		RoleID int `db:"role_id" json:"roleID"`
+		UserID int `db:"user_id" json:"userID"`
+	}
 )
 
 // NewUserRepo stores our dependency
@@ -160,25 +170,25 @@ func (s *Store) VerifyUser(ctx context.Context, u User) (User, bool, error) {
 }
 
 // UpdateUserPassword will update the password and set the reset_pw to false
-func (s *Store) UpdateUserPassword(ctx context.Context, u User) (User, error) {
+func (s *Store) UpdateUserPassword(ctx context.Context, u User) error {
 	user, err := s.GetUser(ctx, u)
 	if err != nil {
-		return u, fmt.Errorf("failed to get user: %w", err)
+		return fmt.Errorf("failed to get user: %w", err)
 	}
 	user.Password = null.StringFrom(utils.HashPass(user.Salt.String + u.Password.String))
 	user.ResetPw = false
 	err = s.updateUser(ctx, user)
 	if err != nil {
-		return u, fmt.Errorf("failed to update user: %w", err)
+		return fmt.Errorf("failed to update user: %w", err)
 	}
-	return user, nil
+	return nil
 }
 
 // UpdateUser will update the user
-func (s *Store) UpdateUser(ctx context.Context, u User, userID int) (User, error) {
+func (s *Store) UpdateUser(ctx context.Context, u User, userID int) error {
 	user, err := s.GetUser(ctx, u)
 	if err != nil {
-		return u, fmt.Errorf("failed to get user: %w", err)
+		return fmt.Errorf("failed to get user: %w", err)
 	}
 	if u.Username != user.Username && len(u.Username) > 0 {
 		user.Username = u.Username
@@ -220,9 +230,9 @@ func (s *Store) UpdateUser(ctx context.Context, u User, userID int) (User, error
 	user.UpdatedAt = null.TimeFrom(time.Now())
 	err = s.updateUser(ctx, user)
 	if err != nil {
-		return u, fmt.Errorf("failed to update user: %w", err)
+		return fmt.Errorf("failed to update user: %w", err)
 	}
-	return user, nil
+	return nil
 }
 
 // SetUserLoggedIn will set the last login date to now
@@ -258,6 +268,22 @@ func (s *Store) GetUsersForRole(ctx context.Context, r role.Role) ([]User, error
 	return s.getUsersForRole(ctx, r)
 }
 
+func (s *Store) GetRoleUser(ctx context.Context, ru RoleUser) (RoleUser, error) {
+	return s.getRoleUser(ctx, ru)
+}
+
+func (s *Store) GetUsersNotInRole(ctx context.Context, r role.Role) ([]User, error) {
+	return s.getUsersNotInRole(ctx, r)
+}
+
+func (s *Store) AddRoleUser(ctx context.Context, ru RoleUser) (RoleUser, error) {
+	return s.addRoleUser(ctx, ru)
+}
+
+func (s *Store) RemoveRoleUser(ctx context.Context, ru RoleUser) error {
+	return s.removeRoleUser(ctx, ru)
+}
+
 // GetPermissionsForRole returns all permissions for role
 func (s *Store) GetPermissionsForRole(ctx context.Context, r role.Role) ([]permission.Permission, error) {
 	return s.getPermissionsForRole(ctx, r)
@@ -266,4 +292,21 @@ func (s *Store) GetPermissionsForRole(ctx context.Context, r role.Role) ([]permi
 // GetRolesForPermission returns all roles where a permission is used
 func (s *Store) GetRolesForPermission(ctx context.Context, p permission.Permission) ([]role.Role, error) {
 	return s.getRolesForPermission(ctx, p)
+}
+
+// GetRolePermission returns the role permission
+func (s *Store) GetRolePermission(ctx context.Context, rp RolePermission) (RolePermission, error) {
+	return s.getRolePermission(ctx, rp)
+}
+
+func (s *Store) GetPermissionsNotInRole(ctx context.Context, r role.Role) ([]permission.Permission, error) {
+	return s.getPermissionsNotInRole(ctx, r)
+}
+
+func (s *Store) AddRolePermission(ctx context.Context, rp RolePermission) (RolePermission, error) {
+	return s.addRolePermission(ctx, rp)
+}
+
+func (s *Store) RemoveRolePermission(ctx context.Context, rp RolePermission) error {
+	return s.removeRolePermission(ctx, rp)
 }
