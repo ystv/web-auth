@@ -226,7 +226,7 @@ func DBUserToUserTemplateFormat(dbUser user.User, store *user.Store) user.Detail
 	return u
 }
 
-func (v *Views) removeDuplicate(strSlice []permission.Permission) []permission.Permission {
+func removeDuplicate(strSlice []permission.Permission) []permission.Permission {
 	allKeys := make(map[int]bool)
 	var list []permission.Permission
 	for _, item := range strSlice {
