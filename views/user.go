@@ -227,7 +227,7 @@ func (v *Views) UserFunc(c echo.Context) error {
 		return fmt.Errorf("failed to get permissions for user: %w", err)
 	}
 
-	detailedUser.Permissions = v.removeDuplicate(detailedUser.Permissions)
+	detailedUser.Permissions = removeDuplicate(detailedUser.Permissions)
 
 	detailedUser.Roles, err = v.user.GetRolesForUser(c.Request().Context(), user.User{UserID: detailedUser.UserID})
 	if err != nil {

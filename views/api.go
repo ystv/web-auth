@@ -78,7 +78,7 @@ func (v *Views) newJWT(u user.User) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to get user permissions: %w", err)
 	}
-	p1 := v.removeDuplicate(perms)
+	p1 := removeDuplicate(perms)
 	p2 := make([]string, 0, len(p1))
 	for _, p := range p1 {
 		p2 = append(p2, p.Name)
