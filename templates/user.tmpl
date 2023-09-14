@@ -1,10 +1,10 @@
-{{define "title"}}Internal: User ({{ .User.Firstname }} {{if ne .User.Firstname .User.Nickname}}({{ .User.Nickname }}) {{end}}{{ .User.Lastname }}){{end}}
+{{define "title"}}Internal: User ({{formatUserName .User}}){{end}}
 {{define "content"}}
-    <div class="column is-10">
+    <div class="column is-10" style="min-height: 88vh">
         <section class="hero is-info welcome is-small">
             <div class="hero-body">
                 <div class="container">
-                    <h1 class="title">You are currently viewing {{ .User.Firstname }} {{if ne .User.Firstname .User.Nickname}}({{ .User.Nickname }}) {{end}}{{ .User.Lastname }}.</h1>
+                    <h1 class="title">{{formatUserName .User}}</h1>
                 </div>
             </div>
         </section>
@@ -41,11 +41,61 @@
             <div class="column">
                 <p id="message" style="color: green"></p>
                 <p id="error" style="color: red"></p>
-                {{parseHTMLUser .User $.UserID}}
+                {{$roleAdmin := checkPermission .UserPermissions "ManageMembers.Group"}}
+                {{$permissionAdmin := checkPermission .UserPermissions "ManageMembers.Permission"}}
+                {{with .User}}
+                    <p>
+                    {{getUserModifierField .DeletedBy .DeletedAt "Deleted"}}
+                    User ID: {{.UserID}}<br>
+                    First name: {{.Firstname}}<br>
+                    Nickname: {{.Nickname}}<br>
+                    Last name: {{.Lastname}}<br>
+                    Username: {{.Username}}<br>
+                    Email: {{.Email}}<br>
+                    Enabled: {{.Enabled}}<br>
+                    Reset password required: {{.ResetPw}}<br>
+                    Login type: {{.LoginType}}<br>
+                    {{if .LDAPUsername.Valid}}
+                        LDAP (Active Directory) username: {{.LDAPUsername.String}}<br>
+                    {{end}}
+                    Avatar source: {{if .UseGravatar}}Using gravatar{{else}}Using local file{{end}}<br>
+                    {{if gt (len .Permissions) 0}}
+                    Permissions: <ol>
+                        {{range .Permissions}}
+                            <li style='list-style-type: none;'><span class='tab'></span>
+                                {{if $permissionAdmin}}
+                                    <a href="/internal/permission/{{.PermissionID}}">{{.Name}}</a>
+                                {{else}}
+                                    {{.Name}}
+                                {{end}}
+                            </li>
+                        {{end}}
+                    </ol><br>
+                    {{end}}
+                    {{if gt (len .Roles) 0}}
+                    Roles: <ol>
+                        {{range .Roles}}
+                            <li style='list-style-type: none;'><span class='tab'></span>
+                                {{if $roleAdmin}}
+                                    <a href="/internal/role/{{.RoleID}}">{{.Name}}</a>
+                                {{else}}
+                                    {{.Name}}
+                                {{end}}
+                            </li>
+                        {{end}}
+                    </ol><br>
+                    {{end}}
+                    {{if .LastLogin.Valid}}
+                        Last login at {{.LastLogin.String}}<br>
+                    {{end}}
+                    {{getUserModifierField .CreatedBy .CreatedAt "Created"}}
+                    {{getUserModifierField .UpdatedBy .UpdatedAt "Updated"}}
+                    </p>
+                {{end}}
             </div>
         </div>
     </div>
-    {{if not .User.DeletedBy.Valid}}
+    {{if not .User.DeletedAt.Valid}}
         {{template "modals" .}}
     {{end}}
 {{end}}
@@ -59,7 +109,7 @@
                     <div class="media-content">
                         <div class="content">
                             <p class="title">Are you sure you want to reset the password?</p>
-                            <p><strong>This action cannot be undone</strong><br>An email will be sent to the user for
+                            <p>An email will be sent to the user for
                                 them to reset their password</p>
                             <a class="button is-danger" onclick="resetPassword()">Reset password</a>
                         </div>
@@ -76,10 +126,9 @@
                 <article class="media">
                     <div class="media-content">
                         <div class="content">
-                            <p class="title">Are you sure you want to reset the password?</p>
-                            <p><strong>This action cannot be undone</strong><br>An email will be sent to the user for
-                                them to reset their password</p>
-                            <a class="button is-danger" onclick="editUser()">Edit user</a>
+                            <p class="title">Are you sure you want to edit this user?</p>
+                            <p>Coming soon!</p>
+{{/*                            <a class="button is-danger" onclick="editUser()">Edit user</a>*/}}
                         </div>
                     </div>
                 </article>
@@ -96,8 +145,7 @@
                         <div class="media-content">
                             <div class="content">
                                 <p class="title">Are you sure you want to disable this account?</p>
-                                <p>This can be undone<br>
-                                They won't be able to log in until it is re-enabled</p>
+                                <p>This user won't be able to log in until it is re-enabled</p>
                                 <a class="button is-danger" onclick="disableUser()">Disable user</a>
                             </div>
                         </div>
@@ -115,8 +163,7 @@
                         <div class="media-content">
                             <div class="content">
                                 <p class="title">Are you sure you want to enable this account?</p>
-                                <p>This can be undone<br>
-                                    They will be able to log in until it is re-disabled</p>
+                                <p>This user will be able to log in until it is re-disabled</p>
                                 <a class="button is-danger" onclick="enableUser()">Enable user</a>
                             </div>
                         </div>
@@ -134,8 +181,7 @@
                     <div class="media-content">
                         <div class="content">
                             <p class="title">Are you sure you want to disable this account?</p>
-                            <p><strong>This can be undone</strong><br>
-                                They won't be able to log in until it is re-enabled</p>
+                            <p>This user won't be able to log in until it is re-enabled</p>
                             <a class="button is-danger" onclick="deleteUser()">Delete user</a>
                         </div>
                     </div>
@@ -190,19 +236,19 @@
         }
         {{if .User.Enabled}}
             function disableUser() {
-
+                // unimplemented for now
             }
         {{else}}
             function enableUser() {
-
+                // unimplemented for now
             }
         {{end}}
         function editUser() {
-
+            // unimplemented for now
         }
 
         function deleteUser() {
-
+            // unimplemented for now
         }
     </script>
 {{end}}

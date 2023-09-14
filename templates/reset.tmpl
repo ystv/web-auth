@@ -5,53 +5,57 @@
             <div class="container">
                 <div class="columns is-centered">
                     <div class="column is-5-tablet is-4-desktop is-3-widescreen">
-                        <div class="box">
-                            <progress class="progress is-link" value="60" max="90"
-                            >60%
-                            </progress
-                            >
-                            <p class="title is-5">Reset password</p>
-                            <p>Fantastic, let's get this password sorted.</p>
-                            <form action="" method="POST">
-                                <div class="field">
-                                    <label class="label" for="password1">Password</label>
-                                    <div class="control has-icons-left">
-                                        <input
-                                                id="password1"
-                                                class="input"
-                                                type="password"
-                                                name="password"
-                                                placeholder="********"
-                                        />
-                                        <span class="icon is-small is-left">
+                        <div class="register">
+                            <div class="box">
+                                <progress class="progress is-link" value="60" max="90"
+                                >60%
+                                </progress
+                                >
+                                <p class="title is-5">Reset password</p>
+                                <p>Fantastic, let's get this password sorted.</p>
+                                <form action="" method="POST">
+                                    <div class="field">
+                                        <label class="label" for="password1">Password</label>
+                                        <div class="control has-icons-left">
+                                            <input
+                                                    id="password1"
+                                                    class="input"
+                                                    type="password"
+                                                    name="password"
+                                                    placeholder="********"
+                                            />
+                                            <span class="icon is-small is-left">
                       <i class="fa fa-lock"></i>
                     </span>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div class="field">
-                                    <label class="label" for="confirmpassword">Confirm password</label>
-                                    <div class="control has-icons-left">
-                                        <input
-                                                id="confirmpassword"
-                                                class="input"
-                                                type="password"
-                                                name="confirmpassword"
-                                                placeholder="********"
-                                        />
-                                        <span class="icon is-small is-left">
+                                    <div class="field">
+                                        <label class="label" for="confirmpassword">Confirm password</label>
+                                        <div class="control has-icons-left">
+                                            <input
+                                                    id="confirmpassword"
+                                                    class="input"
+                                                    type="password"
+                                                    name="confirmpassword"
+                                                    placeholder="********"
+                                            />
+                                            <span class="icon is-small is-left">
                       <i class="fa fa-lock"></i>
                     </span>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="control">
-                                    <input class="button is-link" type="submit" value="Reset password"/>
-                                </div>
-                            </form>
+                                    <div class="control">
+                                        <input class="button is-link" type="submit" value="Reset password"/>
+                                    </div>
+                                </form>
+                            </div>
+                            {{if .Message}}
+                                <div class="notification {{.MsgType}}">{{.Message}}</div>
+                            {{end}}
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
     </section>
 {{end}}
