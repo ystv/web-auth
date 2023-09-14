@@ -2,9 +2,6 @@ package views
 
 import (
 	"fmt"
-	"github.com/ystv/web-auth/infrastructure/mail"
-	"github.com/ystv/web-auth/utils"
-	"gopkg.in/guregu/null.v4"
 	"log"
 	"math"
 	"net/http"
@@ -12,8 +9,12 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
+	"gopkg.in/guregu/null.v4"
+
+	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
+	"github.com/ystv/web-auth/utils"
 )
 
 type (
@@ -260,7 +261,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 
 		err := c.Request().ParseForm()
 		if err != nil {
-			return fmt.Errorf("failed to parse form for userAdd: %+v", err)
+			return fmt.Errorf("failed to parse form for userAdd: %w", err)
 		}
 
 		fmt.Println(c.Request(), "\n\n", c.Request().Form)
@@ -290,7 +291,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 
 		_, err = v.user.AddUser(c.Request().Context(), u, c1.User.UserID)
 		if err != nil {
-			return fmt.Errorf("failed to add user for addUser: %+v", err)
+			return fmt.Errorf("failed to add user for addUser: %w", err)
 		}
 
 		var message struct {
@@ -303,7 +304,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 		if mailer != nil {
 			template, err := v.template.GetEmailTemplate(templates.SignupEmailTemplate)
 			if err != nil {
-				return fmt.Errorf("failed to get email in addUser: %+v", err)
+				return fmt.Errorf("failed to get email in addUser: %w", err)
 			}
 
 			file := mail.Mail{
@@ -324,7 +325,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 
 			err = mailer.SendMail(file)
 			if err != nil {
-				return fmt.Errorf("failed to send email in addUser: %+v", err)
+				return fmt.Errorf("failed to send email in addUser: %w", err)
 			}
 
 			message.Message = fmt.Sprintf("Successfully sent user email to: \"%s\"", email)
@@ -338,9 +339,8 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 		var status int
 
 		return c.JSON(status, message)
-	} else {
-		return fmt.Errorf("invalid method used")
 	}
+	return fmt.Errorf("invalid method used")
 }
 
 func (v *Views) UserEditFunc(c echo.Context) error {

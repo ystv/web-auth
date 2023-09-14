@@ -2,8 +2,9 @@ package utils
 
 import (
 	"encoding/hex"
-	whirl "github.com/balacode/zr-whirl"
 	mRand "math/rand"
+
+	whirl "github.com/balacode/zr-whirl"
 )
 
 const (
@@ -28,6 +29,7 @@ func HashPass(password string) string {
 func GenerateSalt() string {
 	b := make([]byte, 22)
 	for i := range b {
+		// #nosec
 		b[i] = SaltCharacters[mRand.Intn(len(SaltCharacters))]
 	}
 	return "$2a$06$" + string(b)
@@ -37,6 +39,7 @@ func GenerateSalt() string {
 func GeneratePassword() string {
 	b := make([]byte, 12)
 	for i := range b {
+		// #nosec
 		b[i] = PasswordCharacters[mRand.Intn(len(PasswordCharacters))]
 	}
 	return string(b)
