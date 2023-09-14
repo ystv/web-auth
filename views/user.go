@@ -2,6 +2,10 @@ package views
 
 import (
 	"fmt"
+	"github.com/ystv/web-auth/infrastructure/mail"
+	"github.com/ystv/web-auth/utils"
+	"gopkg.in/guregu/null.v4"
+	"log"
 	"math"
 	"net/http"
 	"net/url"
@@ -252,13 +256,11 @@ func (v *Views) UserFunc(c echo.Context) error {
 
 func (v *Views) UserAddFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
-		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-		c1 := v.getData(session)
+		c1 := v.getSessionData(c)
 
 		err := c.Request().ParseForm()
 		if err != nil {
-			return v.errorHandle(c, fmt.Errorf("failed to parse form for userAdd: %+v", err))
+			return fmt.Errorf("failed to parse form for userAdd: %+v", err)
 		}
 
 		fmt.Println(c.Request(), "\n\n", c.Request().Form)
@@ -288,10 +290,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 
 		_, err = v.user.AddUser(c.Request().Context(), u, c1.User.UserID)
 		if err != nil {
-			log.Printf("failed to add user for addUser: %+v", err)
-			if !v.conf.Debug {
-				return v.errorHandle(c, fmt.Errorf("failed to add user for addUser: %+v", err))
-			}
+			return fmt.Errorf("failed to add user for addUser: %+v", err)
 		}
 
 		var message struct {
@@ -299,21 +298,17 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 			Error   error  `json:"error"`
 		}
 
-		if v.Mailer.Enabled {
-			v.Mailer, err = mail.NewMailer(mail.Config{
-				Host:       v.conf.Mail.Host,
-				Port:       v.conf.Mail.Port,
-				Username:   v.conf.Mail.Username,
-				Password:   v.conf.Mail.Password,
-				DomainName: v.conf.DomainName,
-			})
+		mailer := v.mailer.ConnectMailer()
+
+		if mailer != nil {
+			template, err := v.template.GetEmailTemplate(templates.SignupEmailTemplate)
 			if err != nil {
-				log.Printf("Mailer failed: %+v", err)
+				return fmt.Errorf("failed to get email in addUser: %+v", err)
 			}
 
 			file := mail.Mail{
 				Subject: "Welcome to YSTV!",
-				Tpl:     v.template.RenderEmail(templates.SignupEmailTemplate),
+				Tpl:     template,
 				To:      u.Email,
 				From:    "YSTV No-Reply <no-reply@ystv.co.uk>",
 				TplData: struct {
@@ -327,10 +322,9 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 				},
 			}
 
-			err = v.Mailer.SendMail(file)
+			err = mailer.SendMail(file)
 			if err != nil {
-				log.Printf("failed to send email in addUser: %+v", err)
-				return v.errorHandle(c, fmt.Errorf("failed to send email in addUser: %+v", err))
+				return fmt.Errorf("failed to send email in addUser: %+v", err)
 			}
 
 			message.Message = fmt.Sprintf("Successfully sent user email to: \"%s\"", email)
@@ -345,7 +339,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 
 		return c.JSON(status, message)
 	} else {
-		return v.errorHandle(c, fmt.Errorf("invalid method used"))
+		return fmt.Errorf("invalid method used")
 	}
 }
 
