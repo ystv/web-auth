@@ -3,279 +3,190 @@ package user
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
-	"time"
+	"github.com/ystv/web-auth/utils"
+
+	sq "github.com/Masterminds/squirrel"
+	"github.com/jinzhu/copier"
 )
 
-// countUsers will get the number of total users
-func (s *Store) countUsers(ctx context.Context) (int, error) {
-	var count int
-	err := s.db.GetContext(ctx, &count, `SELECT COUNT(*) FROM people.users;`)
+// countUsersAll will get the number of total users
+func (s *Store) countUsersAll(ctx context.Context) (CountUsers, error) {
+	var countUsers CountUsers
+	err := s.db.GetContext(ctx, &countUsers,
+		`SELECT
+		(SELECT COUNT(*) FROM people.users) as total_users,
+		(SELECT COUNT(*) FROM people.users WHERE enabled = true AND deleted_by IS NULL AND deleted_at IS NULL) as active_users,
+		(SELECT COUNT(*) FROM people.users WHERE last_login > TO_TIMESTAMP($1, 'YYYY-MM-DD HH24:MI:SS')) as active_users_past_24_hours,
+		(SELECT COUNT(*) FROM people.users WHERE last_login > TO_TIMESTAMP($2, 'YYYY-MM-DD HH24:MI:SS')) as active_users_past_year;`,
+		time.Now().AddDate(0, 0, -1).Format("2006-01-02 15:04:05"),
+		time.Now().AddDate(-1, 0, 0).Format("2006-01-02 15:04:05"))
 	if err != nil {
-		return count, fmt.Errorf("failed to count users from db: %w", err)
+		return countUsers, fmt.Errorf("failed to count users all from db: %w", err)
 	}
-	return count, nil
-}
-
-// countUsersActive will get the number of total active users
-func (s *Store) countUsersActive(ctx context.Context) (int, error) {
-	var count int
-	err := s.db.GetContext(ctx, &count, `SELECT COUNT(*)
-		FROM people.users
-		WHERE enabled = true AND deleted_by IS NULL AND deleted_at IS NULL;`)
-	if err != nil {
-		return count, fmt.Errorf("failed to count users from db: %w", err)
-	}
-	return count, nil
-}
-
-// countUsers24Hours will get the number of users in the last 24 hours
-func (s *Store) countUsers24Hours(ctx context.Context) (int, error) {
-	var count int
-	err := s.db.GetContext(ctx, &count, `SELECT COUNT(*)
-		FROM people.users
-		WHERE last_login > TO_TIMESTAMP($1, 'YYYY-MM-DD HH24:MI:SS');`, time.Now().AddDate(0, 0, -1).Format("2006-01-02 15:04:05"))
-	if err != nil {
-		return count, fmt.Errorf("failed to count users 24 hours from db: %w", err)
-	}
-	return count, nil
-}
-
-// countUsersPastYear will get the number of users in the last 24 hours
-func (s *Store) countUsersPastYear(ctx context.Context) (int, error) {
-	var count int
-	err := s.db.GetContext(ctx, &count, `SELECT COUNT(*)
-		FROM people.users
-		WHERE last_login > TO_TIMESTAMP($1, 'YYYY-MM-DD HH24:MI:SS');`, time.Now().AddDate(-1, 0, 0).Format("2006-01-02 15:04:05"))
-	if err != nil {
-		return count, fmt.Errorf("failed to count users past year from db: %w", err)
-	}
-	return count, nil
+	return countUsers, nil
 }
 
 // updateUser will update a user record by ID
-func (s *Store) updateUser(ctx context.Context, u1 User) (User, error) {
-	stmt, err := s.db.NamedExecContext(ctx, `UPDATE people.users
-		SET password = :password,
-			salt = :salt,
-			email = :email,
-			last_login = :last_login,
-			reset_pw = :reset_pw,
-			avatar = :avatar,
-			use_gravatar = :use_gravatar,
-			first_name = :first_name,
-			last_name = :last_name,
-			nickname = :nickname,
-			university_username = :university_username,
-			ldap_username = :ldap_username,
-			login_type = :login_type,
-			enabled = :enabled,
-			updated_by = :updated_by,
-			updated_at = :updated_at,
-			deleted_by = :deleted_by,
-			deleted_at = :deleted_at
-		WHERE user_id = :user_id;`, u1)
+func (s *Store) updateUser(ctx context.Context, u User) error {
+	builder := utils.PSQL().Update("people.users").
+		SetMap(map[string]interface{}{"password": u.Password,
+			"salt":                u.Salt,
+			"email":               u.Email,
+			"last_login":          u.LastLogin,
+			"reset_pw":            u.ResetPw,
+			"avatar":              u.Avatar,
+			"use_gravatar":        u.UseGravatar,
+			"first_name":          u.Firstname,
+			"nickname":            u.Nickname,
+			"last_name":           u.Lastname,
+			"username":            u.Username,
+			"university_username": u.UniversityUsername,
+			"ldap_username":       u.LDAPUsername,
+			"login_type":          u.LoginType,
+			"enabled":             u.Enabled,
+			"updated_by":          u.UpdatedBy,
+			"updated_at":          u.UpdatedAt,
+			"deleted_by":          u.DeletedBy,
+			"deleted_at":          u.DeletedAt,
+		}).
+		Where(sq.Eq{"user_id": u.UserID})
+	sql, args, err := builder.ToSql()
 	if err != nil {
-		return User{}, fmt.Errorf("failed to update user: %w", err)
+		panic(fmt.Errorf("failed to build sql for updateUser: %w", err))
 	}
-	rows, err := stmt.RowsAffected()
+	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return User{}, fmt.Errorf("failed to update user: %w", err)
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
 	}
 	if rows < 1 {
-		return User{}, fmt.Errorf("failed to update user: invalid rows affected: %d", rows)
+		return fmt.Errorf("failed to update user: invalid rows affected: %d, this user may not exist: %d", rows, u.UserID)
 	}
-	return u1, nil
+	return nil
 }
 
 // getUser will get a user using any unique identity fields for a user
-func (s *Store) getUser(ctx context.Context, user User) (User, error) {
+func (s *Store) getUser(ctx context.Context, u1 User) (User, error) {
 	var u User
-	err := s.db.GetContext(ctx, &u, `SELECT *
-		FROM people.users
-		WHERE (username = $1 AND username != '') OR (email = $2 AND email != '') OR (ldap_username = $3 AND ldap_username != '') OR user_id = $4
-		LIMIT 1;`, user.Username, user.Email, user.LDAPUsername, user.UserID)
+	builder := utils.PSQL().Select("*").
+		From("people.users").
+		Where(sq.Or{
+			sq.And{sq.Eq{"username": u1.Username}, sq.NotEq{"username": ""}},
+			sq.And{sq.Eq{"email": u1.Email}, sq.NotEq{"email": ""}},
+			sq.And{sq.Eq{"ldap_username": u1.LDAPUsername}, sq.NotEq{"ldap_username": ""}},
+			sq.Eq{"user_id": u1.UserID}}).
+		Limit(1)
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for updateUser: %w", err))
+	}
+	err = s.db.GetContext(ctx, &u, sql, args...)
 	if err != nil {
 		return u, fmt.Errorf("failed to get user from db: %w", err)
 	}
 	return u, nil
 }
 
-// //getUsersSizePage will get users with page size
-// func (s *Store) getUsersSizePage(ctx context.Context, size, page int) ([]User, error) {
-// getUsers will get users with page size
-func (s *Store) getUsers(ctx context.Context, size, page int, enabled, deleted string) ([]User, error) {
-	var u []User
-	enabledSQL := s.parseEnabled(enabled, false)
-	deletedSQL := s.parseDeleted(deleted, len(enabledSQL) > 0)
-	var where string
-	if len(enabledSQL) > 0 || len(deletedSQL) > 0 {
-		where = `WHERE`
-	}
-	pageSize := s.parsePageSize(page, size)
-	err := s.db.SelectContext(ctx, &u, fmt.Sprintf(`SELECT u.*
-		FROM people.users u
-		%[1]s
-		%[2]s
-		%[3]s
-		%[4]s;`, where, enabledSQL, deletedSQL, pageSize))
-	if err != nil {
-		return nil, err
-	}
-	return u, nil
-}
-
-// getUsersSearchNoOrder will get users search with size and page
-func (s *Store) getUsersSearchNoOrder(ctx context.Context, size, page int, search, enabled, deleted string) ([]User, error) {
-	var u []User
-	enabledSQL := s.parseEnabled(enabled, true)
-	deletedSQL := s.parseDeleted(deleted, true)
-	pageSize := s.parsePageSize(page, size)
-	err := s.db.SelectContext(ctx, &u, fmt.Sprintf(`SELECT *
-		FROM people.users
-		WHERE
-		    (CAST(user_id AS TEXT) LIKE '%' || $1 || '%'
-			OR (LOWER(username) LIKE LOWER('%' || $1 || '%'))
-			OR (LOWER(nickname) LIKE LOWER('%' || $1 || '%'))
-			OR (LOWER(first_name) LIKE LOWER('%' || $1 || '%'))
-			or (LOWER(last_name) LIKE LOWER('%' || $1 || '%'))
-			OR (LOWER(email) LIKE LOWER('%' || $1 || '%'))
-			OR (LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || $1 || '%')))
-			%[1]s
-			%[2]s
-		%[3]s;`, enabledSQL, deletedSQL, pageSize), search)
-	if err != nil {
-		return nil, err
-	}
-	return u, nil
-}
-
-// getUsersOrderNoSearch will get users sorting with size and page
+// getUsers will get users search with sorting with size and page, enabled and deleted
 // Use the parameter direction for determining of the sorting will be ascending(asc) or descending(desc)
-func (s *Store) getUsersOrderNoSearch(ctx context.Context, size, page int, sortBy, direction, enabled, deleted string) ([]User, error) {
+func (s *Store) getUsers(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, int, error) {
 	var u []User
-	dir, nulls, err := s.parseDirection(direction)
-	if err != nil {
-		return nil, err
+	var count int
+	builder := utils.PSQL().Select(
+		"*",
+		"count(*) OVER() AS full_count",
+	).
+		From("people.users")
+	if len(search) > 0 {
+		builder = builder.Where(
+			"(CAST(user_id AS TEXT) LIKE '%' || ? || '%' "+
+				"OR LOWER(username) LIKE LOWER('%' || ? || '%') "+
+				"OR LOWER(nickname) LIKE LOWER('%' || ? || '%') "+
+				"OR LOWER(first_name) LIKE LOWER('%' || ? || '%') "+
+				"OR LOWER(last_name) LIKE LOWER('%' || ? || '%') "+
+				"OR LOWER(email) LIKE LOWER('%' || ? || '%') "+
+				"OR LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || ? || '%'))", search, search, search, search, search, search, search)
 	}
-	enabledSQL := s.parseEnabled(enabled, false)
-	deletedSQL := s.parseDeleted(deleted, len(enabledSQL) > 0)
-	var where string
-	if len(enabledSQL) > 0 || len(deletedSQL) > 0 {
-		where = `WHERE`
+	switch enabled {
+	case "enabled":
+		builder = builder.Where(sq.Eq{"enabled": true})
+		break
+	case "disabled":
+		builder = builder.Where(sq.Eq{"enabled": false})
+		break
 	}
-	pageSize := s.parsePageSize(page, size)
-	err = s.db.SelectContext(ctx, &u, fmt.Sprintf(`SELECT *
-		FROM people.users
-		%[3]s
-		%[4]s
-		%[5]s
-		ORDER BY
-		    CASE WHEN $1 = 'userId' THEN user_id END %[1]s,
-		    CASE WHEN $1 = 'name' THEN first_name END %[1]s,
-			CASE WHEN $1 = 'name' THEN last_name END %[1]s,
-		    CASE WHEN $1 = 'username' THEN username END %[1]s,
-		    CASE WHEN $1 = 'email' THEN email END %[1]s,
-		    CASE WHEN $1 = 'lastLogin' THEN last_login END %[1]s NULLS %[2]s
-		%[6]s;`, dir, nulls, where, enabledSQL, deletedSQL, pageSize), sortBy)
-	if err != nil {
-		return nil, err
+	switch deleted {
+	case "not_deleted":
+		builder = builder.Where(sq.Eq{"deleted_by": nil})
+		break
+	case "deleted":
+		builder = builder.Where(sq.NotEq{"deleted_by": nil})
 	}
-	return u, nil
-}
-
-// getUsersSearchOrder will get users search with sorting with size and page, enabled and deleted
-// Use the parameter direction for determining of the sorting will be ascending(asc) or descending(desc)
-func (s *Store) getUsersSearchOrder(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, error) {
-	var u []User
-	dir, nulls, err := s.parseDirection(direction)
-	if err != nil {
-		return nil, err
-	}
-	enabledSQL := s.parseEnabled(enabled, true)
-	deletedSQL := s.parseDeleted(deleted, true)
-	pageSize := s.parsePageSize(page, size)
-	err = s.db.SelectContext(ctx, &u, fmt.Sprintf(`SELECT *
-		FROM people.users
-		WHERE
-		    ((LOWER(CAST(user_id AS TEXT)) LIKE LOWER('%' || $1 || '%'))
-			OR (LOWER(username) LIKE LOWER('%' || $1 || '%'))
-			OR (LOWER(nickname) LIKE LOWER('%' || $1 || '%'))
-			OR (LOWER(first_name) LIKE LOWER('%' || $1 || '%'))
-			or (LOWER(last_name) LIKE LOWER('%' || $1 || '%'))
-			OR (LOWER(email) LIKE LOWER('%' || $1 || '%'))
-			OR (LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || $1 || '%')))
-			%[3]s
-			%[4]s
-		ORDER BY
-		    CASE WHEN $2 = 'userId' THEN user_id END %[1]s,
-		    CASE WHEN $2 = 'name' THEN first_name END %[1]s,
-			CASE WHEN $2 = 'name' THEN last_name END %[1]s,
-		    CASE WHEN $2 = 'username' THEN username END %[1]s,
-		    CASE WHEN $2 = 'email' THEN email END %[1]s,
-		    CASE WHEN $2 = 'lastLogin' THEN last_login END %[1]s NULLS %[2]s
-	    %[5]s;`, dir, nulls, enabledSQL, deletedSQL, pageSize), search, sortBy)
-	if err != nil {
-		return nil, err
-	}
-	return u, nil
-}
-
-func (s *Store) parseDirection(direction string) (string, string, error) {
-	var dir, nulls string
-	if direction == "asc" {
-		dir = `ASC`
-		nulls = `FIRST`
-	} else if direction == "desc" {
-		dir = `DESC`
-		nulls = `LAST`
-	} else {
-		return ``, ``, fmt.Errorf("invalid sorting direction, entered \"%s\" of length %d, but expected either \"direction\" or \"desc\"", direction, len(direction))
-	}
-	return dir, nulls, nil
-}
-
-func (s *Store) parseEnabled(enabled string, includeAND bool) string {
-	if enabled == "enabled" {
-		if includeAND {
-			return `AND enabled`
-		} else {
-			return `enabled`
-		}
-	} else if enabled == "disabled" {
-		if includeAND {
-			return `AND NOT enabled`
-		} else {
-			return `NOT enabled`
+	if len(sortBy) > 0 && len(direction) > 0 {
+		switch direction {
+		case "asc":
+			builder = builder.OrderByClause(
+				"CASE WHEN ? = 'userId' THEN user_id END ASC, "+
+					"CASE WHEN ? = 'name' THEN first_name END ASC, "+
+					"CASE WHEN ? = 'name' THEN last_name END ASC, "+
+					"CASE WHEN ? = 'username' THEN username END ASC, "+
+					"CASE WHEN ? = 'email' THEN email END ASC, "+
+					"CASE WHEN ? = 'lastLogin' THEN last_login END ASC NULLS FIRST", sortBy, sortBy, sortBy, sortBy, sortBy, sortBy)
+			break
+		case "desc":
+			builder = builder.OrderByClause(
+				"CASE WHEN ? = 'userId' THEN user_id END DESC, "+
+					"CASE WHEN ? = 'name' THEN first_name END DESC, "+
+					"CASE WHEN ? = 'name' THEN last_name END DESC, "+
+					"CASE WHEN ? = 'username' THEN username END DESC, "+
+					"CASE WHEN ? = 'email' THEN email END DESC, "+
+					"CASE WHEN ? = 'lastLogin' THEN last_login END DESC NULLS LAST", sortBy, sortBy, sortBy, sortBy, sortBy, sortBy)
+			break
+		default:
+			return nil, -1, fmt.Errorf("invalid sorting direction, entered \"%s\" of length %d, but expected either \"direction\" or \"desc\"", direction, len(direction))
 		}
 	}
-	return ``
-}
-
-func (s *Store) parseDeleted(deleted string, includeAND bool) string {
-	if deleted == "deleted" {
-		if includeAND {
-			return `AND deleted_by IS NOT NULL`
-		} else {
-			return `deleted_by IS NOT NULL`
-		}
-	} else if deleted == "not_deleted" {
-		if includeAND {
-			return `AND deleted_by IS NULL`
-		} else {
-			return `deleted_by IS NULL`
-		}
+	if page >= 1 && size >= 5 && size <= 100 {
+		builder = builder.Limit(uint64(size)).Offset(uint64(size * (page - 1)))
 	}
-	return ``
-}
-
-func (s *Store) parsePageSize(page, size int) string {
-	if page < 1 || size < 5 || size > 100 {
-		return ``
-	} else {
-		return fmt.Sprintf(`LIMIT %d OFFSET %d`, size, size*(page-1))
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for getUsers: %w", err))
 	}
+	rows, err := s.db.QueryxContext(ctx, sql, args...)
+	if err != nil {
+		return nil, -1, fmt.Errorf("failed to get db users: %w", err)
+	}
+
+	defer rows.Close()
+
+	type tempStruct struct {
+		User
+		Count int `db:"full_count" json:"fullCount"`
+	}
+
+	for rows.Next() {
+		var u1 User
+		var temp tempStruct
+		err = rows.StructScan(&temp)
+		if err != nil {
+			return nil, -1, fmt.Errorf("failed to get db users: %w", err)
+		}
+		count = temp.Count
+		err = copier.Copy(&u1, &temp)
+		if err != nil {
+			return nil, -1, fmt.Errorf("failed to copy struct: %w", err)
+		}
+		u = append(u, u1)
+	}
+	return u, count, nil
 }
 
 // getPermissionsForUser returns all permissions for a user
