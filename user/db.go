@@ -44,7 +44,7 @@ func (s *Store) addUser(ctx context.Context, u1 User) (User, error) {
 	return u, nil
 }
 
-// updateUser will update a user record by ID
+// editUser will edit a user record by ID
 func (s *Store) editUser(ctx context.Context, u User) error {
 	builder := utils.PSQL().Update("people.users").
 		SetMap(map[string]interface{}{"password": u.Password,
@@ -78,10 +78,10 @@ func (s *Store) editUser(ctx context.Context, u User) error {
 	}
 	rows, err := res.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("failed to update user: %w", err)
+		return fmt.Errorf("failed to edit user: %w", err)
 	}
 	if rows < 1 {
-		return fmt.Errorf("failed to update user: invalid rows affected: %d, this user may not exist: %d", rows, u.UserID)
+		return fmt.Errorf("failed to edit user: invalid rows affected: %d, this user may not exist: %d", rows, u.UserID)
 	}
 	return nil
 }
@@ -99,7 +99,7 @@ func (s *Store) getUser(ctx context.Context, u1 User) (User, error) {
 		Limit(1)
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for updateUser: %w", err))
+		panic(fmt.Errorf("failed to build sql for getUser: %w", err))
 	}
 	err = s.db.GetContext(ctx, &u, sql, args...)
 	if err != nil {

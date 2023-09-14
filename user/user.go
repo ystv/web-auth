@@ -185,23 +185,23 @@ func (s *Store) AddUser(ctx context.Context, u User, userID int) (User, error) {
 	return u, nil
 }
 
-// UpdateUserPassword will update the password and set the reset_pw to false
-func (s *Store) UpdateUserPassword(ctx context.Context, u User) error {
+// EditUserPassword will update the password and set the reset_pw to false
+func (s *Store) EditUserPassword(ctx context.Context, u User) error {
 	user, err := s.GetUser(ctx, u)
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
 	}
 	user.Password = null.StringFrom(utils.HashPass(user.Salt.String + u.Password.String))
 	user.ResetPw = false
-	err = s.updateUser(ctx, user)
+	err = s.editUser(ctx, user)
 	if err != nil {
 		return fmt.Errorf("failed to update user: %w", err)
 	}
 	return nil
 }
 
-// UpdateUser will update the user
-func (s *Store) UpdateUser(ctx context.Context, u User, userID int) error {
+// EditUser will update the user
+func (s *Store) EditUser(ctx context.Context, u User, userID int) error {
 	user, err := s.GetUser(ctx, u)
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
@@ -244,7 +244,7 @@ func (s *Store) UpdateUser(ctx context.Context, u User, userID int) error {
 	}
 	user.UpdatedBy = null.IntFrom(int64(userID))
 	user.UpdatedAt = null.TimeFrom(time.Now())
-	err = s.updateUser(ctx, user)
+	err = s.editUser(ctx, user)
 	if err != nil {
 		return fmt.Errorf("failed to update user: %w", err)
 	}
@@ -254,7 +254,7 @@ func (s *Store) UpdateUser(ctx context.Context, u User, userID int) error {
 // SetUserLoggedIn will set the last login date to now
 func (s *Store) SetUserLoggedIn(ctx context.Context, u User) error {
 	u.LastLogin = null.TimeFrom(time.Now())
-	return s.updateUser(ctx, u)
+	return s.editUser(ctx, u)
 }
 
 // DeleteUser will delete a user
@@ -267,7 +267,7 @@ func (s *Store) DeleteUser(ctx context.Context, u User, userID int) error {
 	u.UpdatedAt = now
 	u.DeletedBy = null.IntFrom(int64(userID))
 	u.DeletedAt = now
-	return s.updateUser(ctx, u)
+	return s.editUser(ctx, u)
 }
 
 // GetPermissionsForUser returns all permissions of a user
