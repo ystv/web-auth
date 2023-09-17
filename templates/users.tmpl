@@ -1,7 +1,9 @@
 {{define "title"}}Internal: Users{{end}}
 {{define "content"}}
-    {{template "_pagination" .}}
-    <div class="column is-10">
+    {{if ne .Sort.Pages 0}}
+        {{template "_pagination" .}}
+    {{end}}
+    <div class="column is-10" style="min-height: 88vh">
         <div class="card">
             <form method="post" action="">
                 <div class="column">
@@ -104,7 +106,8 @@
             <header class="card-header">
                 <p class="card-header-title">Users</p>
             </header>
-            {{if (checkPermission $.UserID "ManageMembers.Members.Add")}}
+            {{$userAdmin := checkPermission $.UserPermissions "ManageMembers.Members.Admin"}}
+            {{if (checkPermission .UserPermissions "ManageMembers.Members.Add")}}
                 <p id="message" style="color: green"></p>
                 <p id="error" style="color: red"></p>
                 <div class="card" style="margin-bottom: 0">
@@ -127,13 +130,26 @@
                             <th>Enabled</th>
                             <th>Deleted</th>
                             <th>Last login</th>
-                            {{if (checkPermission $.UserID "ManageMembers.Members.Admin")}}
+                            {{if $userAdmin}}
                                 <th>View</th>
                             {{end}}
                         </tr>
                         </thead>
                         <tbody>
-                        {{parseHTMLUsers .Users $.UserID}}
+                        {{range .Users}}
+                            <tr>
+                                <td>{{.UserID}}</td>
+                                <td>{{.Name}}</td>
+                                <td>{{.Username}}</td>
+                                <td>{{.Email}}</td>
+                                <td>{{if .Enabled}}Enabled{{else}}Disabled{{end}}</td>
+                                <td>{{if .Deleted}}Deleted{{else}}-{{end}}</td>
+                                <td>{{.LastLogin}}</td>
+                                {{if $userAdmin}}
+                                    <td><a href="/internal/user/{{.UserID}}">View</a></td>
+                                {{end}}
+                            </tr>
+                        {{end}}
                         </tbody>
                         <tfoot>
                         <tr>
@@ -144,7 +160,7 @@
                             <th>Enabled</th>
                             <th>Deleted</th>
                             <th>Last login</th>
-                            {{if (checkPermission $.UserID "ManageMembers.Members.Admin")}}
+                            {{if $userAdmin}}
                                 <th>View</th>
                             {{end}}
                         </tr>
@@ -154,7 +170,7 @@
             </div>
         </div>
     </div>
-    {{if (checkPermission $.UserID "ManageMembers.Members.Add")}}
+    {{if (checkPermission .UserPermissions "ManageMembers.Members.Add")}}
         {{template "modal" .}}
     {{end}}
 {{end}}

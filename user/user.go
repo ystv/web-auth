@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
-	"time"
 
 	"github.com/Clarilab/gocloaksession"
 	"github.com/jmoiron/sqlx"
@@ -15,71 +16,6 @@ import (
 )
 
 type (
-	// Repo where all user data is stored
-	Repo interface {
-		CountUsers(ctx context.Context) (int, error)
-		CountUsersActive(ctx context.Context) (int, error)
-		CountUsers24Hours(ctx context.Context) (int, error)
-		CountUsersPastYear(ctx context.Context) (int, error)
-
-		GetUser(ctx context.Context, u User) (User, error)
-		GetUsers(ctx context.Context, size, page int, enabled, deleted string) ([]User, error)
-		GetUsersSearchNoOrder(ctx context.Context, size, page int, search, enabled, deleted string) ([]User, error)
-		GetUsersOrderNoSearch(ctx context.Context, size, page int, sortBy, direction, enabled, deleted string) ([]User, error)
-		GetUsersSearchOrder(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, error)
-		VerifyUser(ctx context.Context, u User) (User, bool, error)
-		AddUser(ctx context.Context, u User, userID int) (User, error)
-		EditUserPassword(ctx context.Context, u User) (User, error)
-		EditUser(ctx context.Context, u User, userID int) (User, error)
-		SetUserLoggedIn(ctx context.Context, u User) (User, error)
-		DeleteUser(ctx context.Context, u User, userID int) (User, error)
-		GetPermissionsForUser(ctx context.Context, u User) ([]permission.Permission, error)
-		GetRolesForUser(ctx context.Context, u User) ([]role.Role, error)
-		GetUsersForRole(ctx context.Context, r role.Role) ([]User, error)
-		GetRoleUser(ctx context.Context, ru RoleUser) (RoleUser, error)
-		GetUsersNotInRole(ctx context.Context, r role.Role) ([]User, error)
-		AddRoleUser(ctx context.Context, ru RoleUser) (RoleUser, error)
-		RemoveRoleUser(ctx context.Context, ru RoleUser) error
-		GetPermissionsForRole(ctx context.Context, r role.Role) ([]permission.Permission, error)
-		GetRolesForPermission(ctx context.Context, p permission.Permission) ([]role.Role, error)
-		GetRolePermission(ctx context.Context, rp RolePermission) (RolePermission, error)
-		GetPermissionsNotInRole(ctx context.Context, r role.Role) ([]permission.Permission, error)
-		AddRolePermission(ctx context.Context, rp RolePermission) (RolePermission, error)
-		RemoveRolePermission(ctx context.Context, rp RolePermission) error
-
-		newUser(ctx context.Context, u User) error
-
-		countUsers(ctx context.Context) (int, error)
-		countUsersActive(ctx context.Context) (int, error)
-		countUsers24Hours(ctx context.Context) (int, error)
-		countUsersPastYear(ctx context.Context) (int, error)
-
-		addUser(ctx context.Context, user User) (User, error)
-		editUser(ctx context.Context, user User) (User, error)
-		getUser(ctx context.Context, user User) (User, error)
-		getUsers(ctx context.Context, size, page int, enabled, deleted string) ([]User, error)
-		getUsersSearchNoOrder(ctx context.Context, size, page int, search, enabled, deleted string) ([]User, error)
-		getUsersOrderNoSearch(ctx context.Context, size, page int, sortBy, direction, enabled, deleted string) ([]User, error)
-		getUsersSearchOrder(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, error)
-		getRolesForUser(ctx context.Context, u User) ([]role.Role, error)
-		getUsersForRole(ctx context.Context, r role.Role) ([]User, error)
-		getRoleUser(ctx context.Context, ru RoleUser) (RoleUser, error)
-		getUsersNotInRole(ctx context.Context, r role.Role) ([]User, error)
-		addRoleUser(ctx context.Context, ru RoleUser) (RoleUser, error)
-		removeRoleUser(ctx context.Context, ru RoleUser) error
-		getPermissionsForRole(ctx context.Context, r role.Role) ([]permission.Permission, error)
-		getRolesForPermission(ctx context.Context, p permission.Permission) ([]role.Role, error)
-		getRolePermission(ctx context.Context, rp RolePermission) (RolePermission, error)
-		getPermissionsNotInRole(ctx context.Context, r role.Role) ([]permission.Permission, error)
-		addRolePermission(ctx context.Context, rp RolePermission) (RolePermission, error)
-		removeRolePermission(ctx context.Context, rp RolePermission) error
-
-		parseDirection(direction string) (string, string, error)
-		parseEnabled(enabled string, includeAND bool) string
-		parseDeleted(deleted string, includeAND bool) string
-		parsePageSize(page, size int) string
-	}
-
 	// Store stores the dependencies
 	Store struct {
 		db    *sqlx.DB
@@ -87,6 +23,8 @@ type (
 	}
 
 	// User represents relevant user fields
+	//
+	//nolint:musttag
 	User struct {
 		UserID             int                     `db:"user_id" json:"userID"`
 		Username           string                  `db:"username" json:"username" schema:"username"`
@@ -152,6 +90,13 @@ type (
 		Roles              []role.Role             `json:"roles"`
 	}
 
+	CountUsers struct {
+		TotalUsers             int `db:"total_users" json:"totalUsers"`
+		ActiveUsers            int `db:"active_users" json:"activeUsers"`
+		ActiveUsersPast24Hours int `db:"active_users_past_24_hours" json:"activeUsersPast24Hours"`
+		ActiveUsersPastYear    int `db:"active_users_past_year" json:"activeUsersPastYear"`
+	}
+
 	RoleTemplate struct {
 		RoleID      int
 		Name        string
@@ -178,33 +123,17 @@ type (
 	}
 )
 
-var _ Repo = &Store{}
-
 // NewUserRepo stores our dependency
 func NewUserRepo(db *sqlx.DB) *Store {
 	return &Store{
-		db: db,
+		db:    db,
+		cloak: nil,
 	}
 }
 
-// CountUsers returns the number of users
-func (s *Store) CountUsers(ctx context.Context) (int, error) {
-	return s.countUsers(ctx)
-}
-
-// CountUsersActive returns the number of active users
-func (s *Store) CountUsersActive(ctx context.Context) (int, error) {
-	return s.countUsersActive(ctx)
-}
-
-// CountUsers24Hours returns the number of users who logged in the past 24 hours
-func (s *Store) CountUsers24Hours(ctx context.Context) (int, error) {
-	return s.countUsers24Hours(ctx)
-}
-
-// CountUsersPastYear returns the number of users who logged in the past 24 hours
-func (s *Store) CountUsersPastYear(ctx context.Context) (int, error) {
-	return s.countUsersPastYear(ctx)
+// CountUsersAll returns the number of users, active users, active users in the last 24 hours and past year
+func (s *Store) CountUsersAll(ctx context.Context) (CountUsers, error) {
+	return s.countUsersAll(ctx)
 }
 
 // GetUser returns a user using any unique identity fields
@@ -212,25 +141,13 @@ func (s *Store) GetUser(ctx context.Context, u User) (User, error) {
 	return s.getUser(ctx, u)
 }
 
-// GetUsers returns a group of users, used for administration with size and page
-func (s *Store) GetUsers(ctx context.Context, size, page int, enabled, deleted string) ([]User, error) {
-	return s.getUsers(ctx, size, page, enabled, deleted)
-}
-
-func (s *Store) GetUsersSearchNoOrder(ctx context.Context, size, page int, search, enabled, deleted string) ([]User, error) {
-	return s.getUsersSearchNoOrder(ctx, size, page, search, enabled, deleted)
-}
-
-func (s *Store) GetUsersOrderNoSearch(ctx context.Context, size, page int, sortBy, direction, enabled, deleted string) ([]User, error) {
-	return s.getUsersOrderNoSearch(ctx, size, page, sortBy, direction, enabled, deleted)
-}
-
-func (s *Store) GetUsersSearchOrder(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, error) {
-	return s.getUsersSearchOrder(ctx, size, page, search, sortBy, direction, enabled, deleted)
+func (s *Store) GetUsers(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, int, error) {
+	return s.getUsers(ctx, size, page, search, sortBy, direction, enabled, deleted)
 }
 
 // VerifyUser will check that the password is correct with provided
 // credentials and if verified will return the User object
+// returned is the user object, bool of if the password is forced to be changed and any errors encountered
 func (s *Store) VerifyUser(ctx context.Context, u User) (User, bool, error) {
 	user, err := s.GetUser(ctx, u)
 	if err != nil {
@@ -269,10 +186,10 @@ func (s *Store) AddUser(ctx context.Context, u User, userID int) (User, error) {
 }
 
 // EditUserPassword will update the password and set the reset_pw to false
-func (s *Store) EditUserPassword(ctx context.Context, u User) (User, error) {
+func (s *Store) EditUserPassword(ctx context.Context, u User) error {
 	user, err := s.GetUser(ctx, u)
 	if err != nil {
-		return u, fmt.Errorf("failed to get user for editUser: %w", err)
+		return fmt.Errorf("failed to get user: %w", err)
 	}
 	user.Password = null.StringFrom(utils.HashPass(user.Salt.String + u.Password.String))
 	user.ResetPw = false
@@ -282,7 +199,7 @@ func (s *Store) EditUserPassword(ctx context.Context, u User) (User, error) {
 	if err != nil {
 		return u, fmt.Errorf("failed to edit user for editUserPassword: %w", err)
 	}
-	return user, nil
+	return nil
 }
 
 // EditUser will update the user
@@ -329,11 +246,15 @@ func (s *Store) EditUser(ctx context.Context, u User, userID int) (User, error) 
 	}
 	user.UpdatedBy = null.IntFrom(int64(userID))
 	user.UpdatedAt = null.TimeFrom(time.Now())
-	return s.editUser(ctx, user)
+	err = s.updateUser(ctx, user)
+	if err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+	return nil
 }
 
 // SetUserLoggedIn will set the last login date to now
-func (s *Store) SetUserLoggedIn(ctx context.Context, u User) (User, error) {
+func (s *Store) SetUserLoggedIn(ctx context.Context, u User) error {
 	u.LastLogin = null.TimeFrom(time.Now())
 	return s.editUser(ctx, u)
 }

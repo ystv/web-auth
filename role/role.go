@@ -3,29 +3,11 @@ package role
 import (
 	"context"
 	"fmt"
+
 	"github.com/jmoiron/sqlx"
 )
 
 type (
-	// Repo where all user data is stored
-	Repo interface {
-		GetRoles(ctx context.Context) ([]Role, error)
-		GetRole(ctx context.Context, r Role) (Role, error)
-		AddRole(ctx context.Context, r Role) (Role, error)
-		EditRole(ctx context.Context, r Role) (Role, error)
-		DeleteRole(ctx context.Context, r Role) error
-		DeleteRolePermission(ctx context.Context, r Role) error
-		DeleteRoleUser(ctx context.Context, r Role) error
-
-		getRoles(ctx context.Context) ([]Role, error)
-		getRole(ctx context.Context, r1 Role) (Role, error)
-		addRole(ctx context.Context, r1 Role) (Role, error)
-		editRole(ctx context.Context, r1 Role) (Role, error)
-		deleteRole(ctx context.Context, r1 Role) error
-		deleteRolePermission(ctx context.Context, r Role) error
-		deleteRoleUser(ctx context.Context, r Role) error
-	}
-
 	// Store stores the dependencies
 	Store struct {
 		db *sqlx.DB
@@ -40,8 +22,6 @@ type (
 		Permissions int    `db:"permissions" json:"permissions"`
 	}
 )
-
-var _ Repo = &Store{}
 
 // NewRoleRepo stores our dependency
 func NewRoleRepo(db *sqlx.DB) *Store {
@@ -85,12 +65,12 @@ func (s *Store) DeleteRole(ctx context.Context, r Role) error {
 	return s.deleteRole(ctx, r)
 }
 
-// DeleteRolePermission deletes a rolePermission
-func (s *Store) DeleteRolePermission(ctx context.Context, r Role) error {
-	return s.deleteRolePermission(ctx, r)
+// RemovePermissionsForRole deletes a rolePermission
+func (s *Store) RemovePermissionsForRole(ctx context.Context, r Role) error {
+	return s.removePermissionsForRole(ctx, r)
 }
 
-// DeleteRoleUser deletes a roleUser
-func (s *Store) DeleteRoleUser(ctx context.Context, r Role) error {
-	return s.deleteRoleUser(ctx, r)
+// RemoveUsersForRole deletes a roleUser
+func (s *Store) RemoveUsersForRole(ctx context.Context, r Role) error {
+	return s.removeUsersForRole(ctx, r)
 }
