@@ -185,7 +185,7 @@ func (s *Store) AddUser(ctx context.Context, u User, userID int) (User, error) {
 	return u, nil
 }
 
-// EditUserPassword will update the password and set the reset_pw to false
+// EditUserPassword will edit the password and set the reset_pw to false
 func (s *Store) EditUserPassword(ctx context.Context, u User) error {
 	user, err := s.GetUser(ctx, u)
 	if err != nil {
@@ -195,18 +195,18 @@ func (s *Store) EditUserPassword(ctx context.Context, u User) error {
 	user.ResetPw = false
 	user.UpdatedBy = null.IntFrom(int64(user.UserID))
 	user.UpdatedAt = null.TimeFrom(time.Now())
-	user, err = s.editUser(ctx, user)
+	err = s.editUser(ctx, user)
 	if err != nil {
-		return u, fmt.Errorf("failed to edit user for editUserPassword: %w", err)
+		return fmt.Errorf("failed to edit user for editUserPassword: %w", err)
 	}
 	return nil
 }
 
-// EditUser will update the user
-func (s *Store) EditUser(ctx context.Context, u User, userID int) (User, error) {
+// EditUser will edit the user
+func (s *Store) EditUser(ctx context.Context, u User, userID int) error {
 	user, err := s.GetUser(ctx, u)
 	if err != nil {
-		return u, fmt.Errorf("failed to get user for editUser: %w", err)
+		return fmt.Errorf("failed to get user for editUser: %w", err)
 	}
 	if u.Username != user.Username && len(u.Username) > 0 {
 		user.Username = u.Username
@@ -246,9 +246,9 @@ func (s *Store) EditUser(ctx context.Context, u User, userID int) (User, error) 
 	}
 	user.UpdatedBy = null.IntFrom(int64(userID))
 	user.UpdatedAt = null.TimeFrom(time.Now())
-	err = s.updateUser(ctx, user)
+	err = s.editUser(ctx, user)
 	if err != nil {
-		return fmt.Errorf("failed to update user: %w", err)
+		return fmt.Errorf("failed to edit user: %w", err)
 	}
 	return nil
 }
@@ -260,7 +260,7 @@ func (s *Store) SetUserLoggedIn(ctx context.Context, u User) error {
 }
 
 // DeleteUser will soft delete a user
-func (s *Store) DeleteUser(ctx context.Context, u User, userID int) (User, error) {
+func (s *Store) DeleteUser(ctx context.Context, u User, userID int) error {
 	now := null.TimeFrom(time.Now())
 	u.Enabled = false
 	u.Password = null.NewString("", true)

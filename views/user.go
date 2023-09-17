@@ -256,13 +256,11 @@ func (v *Views) UserFunc(c echo.Context) error {
 
 func (v *Views) UserAddFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
-		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-		c1 := v.getData(session)
+		c1 := v.getSessionData(c)
 
 		err := c.Request().ParseForm()
 		if err != nil {
-			return v.errorHandle(c, fmt.Errorf("failed to parse form for userAdd: %+v", err))
+			return fmt.Errorf("failed to parse form for userAdd: %w", err)
 		}
 
 		fmt.Println(c.Request(), "\n\n", c.Request().Form)
@@ -294,7 +292,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 		if err != nil {
 			log.Printf("failed to add user for addUser: %+v", err)
 			if !v.conf.Debug {
-				return v.errorHandle(c, fmt.Errorf("failed to add user for addUser: %+v", err))
+				return fmt.Errorf("failed to add user for addUser: %w", err)
 			}
 		}
 
@@ -303,21 +301,17 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 			Error   error  `json:"error"`
 		}
 
-		if v.Mailer.Enabled {
-			v.Mailer, err = mail.NewMailer(mail.Config{
-				Host:       v.conf.Mail.Host,
-				Port:       v.conf.Mail.Port,
-				Username:   v.conf.Mail.Username,
-				Password:   v.conf.Mail.Password,
-				DomainName: v.conf.DomainName,
-			})
+		mailer := v.mailer.ConnectMailer()
+
+		if mailer != nil {
+			template, err := v.template.GetEmailTemplate(templates.SignupEmailTemplate)
 			if err != nil {
-				log.Printf("Mailer failed: %+v", err)
+				return fmt.Errorf("failed to send email in addUser: %w", err)
 			}
 
 			file := mail.Mail{
 				Subject: "Welcome to YSTV!",
-				Tpl:     v.template.RenderEmail(templates.SignupEmailTemplate),
+				Tpl:     template,
 				To:      u.Email,
 				From:    "YSTV No-Reply <no-reply@ystv.co.uk>",
 				TplData: struct {
@@ -331,10 +325,9 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 				},
 			}
 
-			err = v.Mailer.SendMail(file)
+			err = mailer.SendMail(file)
 			if err != nil {
-				log.Printf("failed to send email in addUser: %+v", err)
-				return v.errorHandle(c, fmt.Errorf("failed to send email in addUser: %+v", err))
+				return fmt.Errorf("failed to send email in addUser: %w", err)
 			}
 
 			message.Message = fmt.Sprintf("Successfully sent user email to: \"%s\"", email)
@@ -348,36 +341,27 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 		var status int
 
 		return c.JSON(status, message)
-	} else {
-		return v.errorHandle(c, fmt.Errorf("invalid method used"))
 	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 func (v *Views) UserEditFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
-		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-		c1 := v.getData(session)
+		c1 := v.getSessionData(c)
 
 		userID, err := strconv.Atoi(c.Param("userid"))
 		if err != nil {
-			log.Printf("failed to get userid for toggleUser: %+v", err)
-			if !v.conf.Debug {
-				return v.errorHandle(c, fmt.Errorf("failed to get userid for toggleUser: %+v", err))
-			}
+			return fmt.Errorf("failed to get userid for toggleUser: %w", err)
 		}
 
 		user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 		if err != nil {
-			log.Printf("failed to get user for toggleUser: %+v", err)
-			if !v.conf.Debug {
-				return v.errorHandle(c, fmt.Errorf("failed to get user for toggleUser: %+v", err))
-			}
+			return fmt.Errorf("failed to get user for toggleUser: %w", err)
 		}
 
 		err = c.Request().ParseForm()
 		if err != nil {
-			return v.errorHandle(c, fmt.Errorf("failed to parse form for userEdit: %+v", err))
+			return fmt.Errorf("failed to parse form for userEdit: %w", err)
 		}
 
 		firstName := c.Request().FormValue("firstname")
@@ -413,95 +397,64 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 			user1.Email = email
 		}
 
-		_, err = v.user.EditUser(c.Request().Context(), user1, c1.User.UserID)
+		err = v.user.EditUser(c.Request().Context(), user1, c1.User.UserID)
 		if err != nil {
-			log.Printf("failed to edit user for editUser: %+v", err)
-			if !v.conf.Debug {
-				return v.errorHandle(c, fmt.Errorf("failed to edit user for editUser: %+v", err))
-			}
+			return fmt.Errorf("failed to edit user for editUser: %w", err)
 		}
-		return v.userFunc(c, userID)
-	} else {
-		return v.errorHandle(c, fmt.Errorf("invalid method used"))
+		return c.Redirect(http.StatusOK, fmt.Sprintf("/internal/user/%d", userID))
 	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 func (v *Views) UserToggleEnabledFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
-		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-		c1 := v.getData(session)
+		c1 := v.getSessionData(c)
 
 		userID, err := strconv.Atoi(c.Param("userid"))
 		if err != nil {
-			log.Printf("failed to get userid for toggleUser: %+v", err)
-			if !v.conf.Debug {
-				return v.errorHandle(c, fmt.Errorf("failed to get userid for toggleUser: %+v", err))
-			}
+			return fmt.Errorf("failed to get userid for toggleUser: %w", err)
 		}
 
 		user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 		if err != nil {
-			log.Printf("failed to get user for toggleUser: %+v", err)
-			if !v.conf.Debug {
-				return v.errorHandle(c, fmt.Errorf("failed to get user for toggleUser: %+v", err))
-			}
+			return fmt.Errorf("failed to get user for toggleUser: %w", err)
 		}
 
 		user1.Enabled = !user1.Enabled
 
-		_, err = v.user.EditUser(c.Request().Context(), user1, c1.User.UserID)
+		err = v.user.EditUser(c.Request().Context(), user1, c1.User.UserID)
 		if err != nil {
-			log.Printf("failed to edit user for toggleUser: %+v", err)
-			if !v.conf.Debug {
-				return v.errorHandle(c, fmt.Errorf("failed to edit user for toggleUser: %+v", err))
-			}
+			return fmt.Errorf("failed to edit user for toggleUser: %w", err)
 		}
-		return v.userFunc(c, userID)
-	} else {
-		return v.errorHandle(c, fmt.Errorf("invalid method used"))
+		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/user/%d", userID))
 	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 func (v *Views) UserDeleteFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
-		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-		c1 := v.getData(session)
+		c1 := v.getSessionData(c)
 
 		userID, err := strconv.Atoi(c.Param("userid"))
 		if err != nil {
-			log.Printf("failed to get userid for deleteUser: %+v", err)
-			if !v.conf.Debug {
-				return v.errorHandle(c, fmt.Errorf("failed to get userid for deleteUser: %+v", err))
-			}
+			return fmt.Errorf("failed to get userid for deleteUser: %w", err)
 		}
 
 		user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 		if err != nil {
-			log.Printf("failed to get user for deleteUser: %+v", err)
-			if !v.conf.Debug {
-				return v.errorHandle(c, fmt.Errorf("failed to get user for deleteUser: %+v", err))
-			}
+			return fmt.Errorf("failed to get user for deleteUser: %w", err)
 		}
 
 		err = v.user.RemoveRoleUsers(c.Request().Context(), user1)
 		if err != nil {
-			log.Printf("failed to delete roleUsers for deleteUser: %+v", err)
-			if !v.conf.Debug {
-				return v.errorHandle(c, fmt.Errorf("failed to delete roleUsers for deleteUser: %+v", err))
-			}
+			return fmt.Errorf("failed to delete roleUsers for deleteUser: %w", err)
 		}
 
-		_, err = v.user.DeleteUser(c.Request().Context(), user1, c1.User.UserID)
+		err = v.user.DeleteUser(c.Request().Context(), user1, c1.User.UserID)
 		if err != nil {
-			log.Printf("failed to delete user for deleteUser: %+v", err)
-			if !v.conf.Debug {
-				return v.errorHandle(c, fmt.Errorf("failed to delete user for deleteUser: %+v", err))
-			}
+			return fmt.Errorf("failed to delete user for deleteUser: %w", err)
 		}
 		return v.UsersFunc(c)
-	} else {
-		return v.errorHandle(c, fmt.Errorf("invalid method used"))
 	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
