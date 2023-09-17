@@ -3,9 +3,10 @@ package utils
 import (
 	"crypto/rand"
 	"encoding/hex"
-	whirl "github.com/balacode/zr-whirl"
 	"log"
 	"math/big"
+
+	whirl "github.com/balacode/zr-whirl"
 )
 
 const (
