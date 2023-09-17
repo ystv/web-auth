@@ -18,6 +18,7 @@ type (
 		Roles      []role.Role
 		UserID     int
 		ActivePage string
+		Assumed    bool
 	}
 
 	// RoleTemplate is for the role front end
@@ -27,6 +28,7 @@ type (
 		PermissionsNotInRole []permission.Permission
 		UsersNotInRole       []user.User
 		ActivePage           string
+		Assumed              bool
 	}
 )
 

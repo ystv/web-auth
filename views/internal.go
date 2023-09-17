@@ -20,6 +20,7 @@ type (
 		LoginsPast24Hours   int
 		ActiveUsersPastYear int
 		ActivePage          string
+		Assumed             bool
 	}
 )
 

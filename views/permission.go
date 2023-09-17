@@ -17,6 +17,7 @@ type (
 		Permissions []permission.Permission
 		UserID      int
 		ActivePage  string
+		Assumed     bool
 	}
 
 	// PermissionTemplate is for the permission front end
@@ -24,6 +25,7 @@ type (
 		Permission user.PermissionTemplate
 		UserID     int
 		ActivePage string
+		Assumed    bool
 	}
 )
 
