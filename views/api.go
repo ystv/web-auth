@@ -302,24 +302,22 @@ func (v *Views) TestAPI(c echo.Context) error {
 
 		if token == "" {
 			log.Println("no bearer token provided")
-			http.Error(c.Response(), "no bearer token provided", http.StatusBadRequest)
-			return fmt.Errorf("no bearer token provided")
+			return &echo.HTTPError{
+				Code:     http.StatusBadRequest,
+				Message:  fmt.Sprintf("no bearer token provided"),
+				Internal: fmt.Errorf("no bearer token provided"),
+			}
 		}
 
 		valid, claims, err := v.ValidateToken(token)
 		log.Printf("valid: %t - claims: %+v - error: %+v", valid, claims, err)
 		if !valid {
-			status := statusStruct{
-				StatusCode: http.StatusBadRequest,
-				Message:    "invalid token",
+			log.Println("invalid token")
+			return &echo.HTTPError{
+				Code:     http.StatusBadRequest,
+				Message:  fmt.Sprintf("invalid token"),
+				Internal: fmt.Errorf("invalid token"),
 			}
-			c.Response().WriteHeader(http.StatusBadRequest)
-			err := json.NewEncoder(c.Response()).Encode(status)
-			if err != nil {
-				log.Printf("error encoding: %+v", err)
-				http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
-			}
-			return err
 		}
 
 		log.Printf("token is valid \"%d\" is logged in", claims.UserID)
