@@ -290,10 +290,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 
 		_, err = v.user.AddUser(c.Request().Context(), u, c1.User.UserID)
 		if err != nil {
-			log.Printf("failed to add user for addUser: %+v", err)
-			if !v.conf.Debug {
-				return fmt.Errorf("failed to add user for addUser: %w", err)
-			}
+			return fmt.Errorf("failed to add user for addUser: %w", err)
 		}
 
 		var message struct {
@@ -306,7 +303,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 		if mailer != nil {
 			template, err := v.template.GetEmailTemplate(templates.SignupEmailTemplate)
 			if err != nil {
-				return fmt.Errorf("failed to send email in addUser: %w", err)
+				return fmt.Errorf("failed to get email in addUser: %w", err)
 			}
 
 			file := mail.Mail{

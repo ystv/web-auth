@@ -27,6 +27,7 @@ func HashPass(password string) string {
 	return next
 }
 
+// GenerateSalt generates a salt for the password to be salted against
 func GenerateSalt() string {
 	lenSalt := big.NewInt(int64(len(SaltCharacters)))
 
@@ -41,6 +42,7 @@ func GenerateSalt() string {
 	return "$2a$06$" + string(b)
 }
 
+// GeneratePassword generates a random password for a user to change
 func GeneratePassword() string {
 	lenPass := big.NewInt(int64(len(PasswordCharacters)))
 

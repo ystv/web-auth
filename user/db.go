@@ -99,7 +99,7 @@ func (s *Store) getUser(ctx context.Context, u1 User) (User, error) {
 		Limit(1)
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for editUser: %w", err))
+		panic(fmt.Errorf("failed to build sql for getUser: %w", err))
 	}
 	err = s.db.GetContext(ctx, &u, sql, args...)
 	if err != nil {
