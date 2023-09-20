@@ -46,7 +46,6 @@ const (
 	PermissionsTemplate  Template = "permissions.tmpl"
 	SignupEmailTemplate  Template = "signupEmail.tmpl"
 	PermissionTemplate   Template = "permission.tmpl"
-	SignupEmailTemplate  Template = "signupEmail.tmpl"
 )
 
 type TemplateType int
