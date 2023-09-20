@@ -2,14 +2,19 @@ package views
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"net/http"
 	"net/url"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
+	"gopkg.in/guregu/null.v4"
+
+	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
+	"github.com/ystv/web-auth/utils"
 )
 
 type (
@@ -251,8 +256,91 @@ func (v *Views) UserFunc(c echo.Context) error {
 }
 
 func (v *Views) UserAddFunc(c echo.Context) error {
-	_ = c
-	return nil
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		err := c.Request().ParseForm()
+		if err != nil {
+			return fmt.Errorf("failed to parse form for userAdd: %w", err)
+		}
+
+		fmt.Println(c.Request(), "\n\n", c.Request().Form)
+
+		firstName := c.Request().FormValue("firstname")
+		lastName := c.Request().FormValue("lastname")
+		username := c.Request().FormValue("username")
+		universityUsername := c.Request().FormValue("universityusername")
+		email := c.Request().FormValue("email")
+
+		password := utils.GeneratePassword()
+		salt := utils.GenerateSalt()
+		u := user.User{
+			UserID:             0,
+			Username:           username,
+			UniversityUsername: null.StringFrom(universityUsername),
+			LoginType:          "internal",
+			Firstname:          firstName,
+			Nickname:           firstName,
+			Lastname:           lastName,
+			Password:           null.StringFrom(password),
+			Salt:               null.StringFrom(salt),
+			Email:              email,
+			ResetPw:            true,
+			Enabled:            true,
+		}
+
+		_, err = v.user.AddUser(c.Request().Context(), u, c1.User.UserID)
+		if err != nil {
+			return fmt.Errorf("failed to add user for addUser: %w", err)
+		}
+
+		var message struct {
+			Message string `json:"message"`
+			Error   error  `json:"error"`
+		}
+
+		mailer := v.mailer.ConnectMailer()
+
+		if mailer != nil {
+			template, err := v.template.GetEmailTemplate(templates.SignupEmailTemplate)
+			if err != nil {
+				return fmt.Errorf("failed to get email in addUser: %w", err)
+			}
+
+			file := mail.Mail{
+				Subject: "Welcome to YSTV!",
+				Tpl:     template,
+				To:      u.Email,
+				From:    "YSTV No-Reply <no-reply@ystv.co.uk>",
+				TplData: struct {
+					Name     string
+					Username string
+					Password string
+				}{
+					Name:     firstName,
+					Username: username,
+					Password: password,
+				},
+			}
+
+			err = mailer.SendMail(file)
+			if err != nil {
+				return fmt.Errorf("failed to send email in addUser: %w", err)
+			}
+
+			message.Message = fmt.Sprintf("Successfully sent user email to: \"%s\"", email)
+		} else {
+			message.Message = fmt.Sprintf("No mailer present\nPlease send the username and password to this email: %s, username: %s, password: %s", email, username, password)
+			message.Error = fmt.Errorf("no mailer present")
+			log.Printf("no Mailer present")
+		}
+		log.Printf("created user: %s", u.Username)
+
+		var status int
+
+		return c.JSON(status, message)
+	}
+	return fmt.Errorf("invalid method used")
 }
 
 func (v *Views) UserEditFunc(c echo.Context) error {

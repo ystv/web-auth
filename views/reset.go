@@ -42,7 +42,7 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 
 		originalUser.Password = null.StringFrom(password)
 
-		err = v.user.UpdateUserPassword(c.Request().Context(), originalUser)
+		err = v.user.EditUserPassword(c.Request().Context(), originalUser)
 		if err != nil {
 			log.Printf("failed to reset user: %+v", err)
 		}
@@ -68,7 +68,7 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 
 	userFromDB.ResetPw = true
 
-	err = v.user.UpdateUser(c.Request().Context(), userFromDB, c1.User.UserID)
+	err = v.user.EditUser(c.Request().Context(), userFromDB, c1.User.UserID)
 	if err != nil {
 		return fmt.Errorf("failed to update user for reset: %w", err)
 	}

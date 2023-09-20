@@ -30,8 +30,22 @@ func (s *Store) countUsersAll(ctx context.Context) (CountUsers, error) {
 	return countUsers, nil
 }
 
-// updateUser will update a user record by ID
-func (s *Store) updateUser(ctx context.Context, u User) error {
+// addUser will add a user
+func (s *Store) addUser(ctx context.Context, u1 User) (User, error) {
+	var u User
+	stmt, err := s.db.PrepareNamedContext(ctx, "INSERT INTO people.users (username, university_username, email, first_name, last_name, nickname, login_type, password, salt, reset_pw, enabled, created_at, created_by) VALUES (:username, :university_username, :email, :first_name, :last_name, :nickname, :login_type, :password, :salt, :reset_pw, :enabled, :created_at, :created_by) RETURNING user_id, username, university_username, email, first_name, last_name, nickname, login_type, password, salt, reset_pw, enabled, created_at, created_by")
+	if err != nil {
+		return User{}, fmt.Errorf("failed to add user: %w", err)
+	}
+	err = stmt.Get(&u, u1)
+	if err != nil {
+		return User{}, fmt.Errorf("failed to add user: %w", err)
+	}
+	return u, nil
+}
+
+// editUser will edit a user record by ID
+func (s *Store) editUser(ctx context.Context, u User) error {
 	builder := utils.PSQL().Update("people.users").
 		SetMap(map[string]interface{}{"password": u.Password,
 			"salt":                u.Salt,
@@ -56,18 +70,18 @@ func (s *Store) updateUser(ctx context.Context, u User) error {
 		Where(sq.Eq{"user_id": u.UserID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for updateUser: %w", err))
+		panic(fmt.Errorf("failed to build sql for editUser: %w", err))
 	}
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return fmt.Errorf("failed to update user: %w", err)
+		return fmt.Errorf("failed to edit user: %w", err)
 	}
 	rows, err := res.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("failed to update user: %w", err)
+		return fmt.Errorf("failed to edit user: %w", err)
 	}
 	if rows < 1 {
-		return fmt.Errorf("failed to update user: invalid rows affected: %d, this user may not exist: %d", rows, u.UserID)
+		return fmt.Errorf("failed to edit user: invalid rows affected: %d, this user may not exist: %d", rows, u.UserID)
 	}
 	return nil
 }
@@ -85,7 +99,7 @@ func (s *Store) getUser(ctx context.Context, u1 User) (User, error) {
 		Limit(1)
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for updateUser: %w", err))
+		panic(fmt.Errorf("failed to build sql for getUser: %w", err))
 	}
 	err = s.db.GetContext(ctx, &u, sql, args...)
 	if err != nil {
@@ -250,7 +264,7 @@ func (s *Store) getUsersNotInRole(ctx context.Context, r role.Role) ([]User, err
         (SELECT u.user_id
 		FROM people.users u
 		LEFT JOIN people.role_members ru on u.user_id = ru.user_id
-		WHERE ru.role_id = $1)
+		WHERE ru.role_id = $1) AND deleted_by IS NOT NULL
 		ORDER BY first_name, last_name`, r.RoleID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users not in role: %w", err)
@@ -275,6 +289,14 @@ func (s *Store) removeRoleUser(ctx context.Context, ru RoleUser) error {
 	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.role_members WHERE role_id = :role_id AND user_id = :user_id`, ru)
 	if err != nil {
 		return fmt.Errorf("failed to remove roleUser: %w", err)
+	}
+	return nil
+}
+
+func (s *Store) removeRoleUsers(ctx context.Context, u User) error {
+	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.role_members WHERE user_id = :user_id`, u)
+	if err != nil {
+		return fmt.Errorf("failed to remove roleUsers: %w", err)
 	}
 	return nil
 }

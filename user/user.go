@@ -169,23 +169,39 @@ func (s *Store) VerifyUser(ctx context.Context, u User) (User, bool, error) {
 	return u, false, errors.New("invalid credentials")
 }
 
-// UpdateUserPassword will update the password and set the reset_pw to false
-func (s *Store) UpdateUserPassword(ctx context.Context, u User) error {
+func (s *Store) AddUser(ctx context.Context, u User, userID int) (User, error) {
+	_, err := s.GetUser(ctx, u)
+	if err == nil {
+		return User{}, fmt.Errorf("failed to add user for addUser: user already exists")
+	}
+	u.Password = null.StringFrom(utils.HashPass(u.Salt.String + u.Password.String))
+	u.ResetPw = true
+	u.CreatedBy = null.IntFrom(int64(userID))
+	u.CreatedAt = null.TimeFrom(time.Now())
+	u, err = s.addUser(ctx, u)
+	if err != nil {
+		return User{}, fmt.Errorf("failed to add user for addUser: %w", err)
+	}
+	return u, nil
+}
+
+// EditUserPassword will update the password and set the reset_pw to false
+func (s *Store) EditUserPassword(ctx context.Context, u User) error {
 	user, err := s.GetUser(ctx, u)
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
 	}
 	user.Password = null.StringFrom(utils.HashPass(user.Salt.String + u.Password.String))
 	user.ResetPw = false
-	err = s.updateUser(ctx, user)
+	err = s.editUser(ctx, user)
 	if err != nil {
 		return fmt.Errorf("failed to update user: %w", err)
 	}
 	return nil
 }
 
-// UpdateUser will update the user
-func (s *Store) UpdateUser(ctx context.Context, u User, userID int) error {
+// EditUser will update the user
+func (s *Store) EditUser(ctx context.Context, u User, userID int) error {
 	user, err := s.GetUser(ctx, u)
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
@@ -228,7 +244,7 @@ func (s *Store) UpdateUser(ctx context.Context, u User, userID int) error {
 	}
 	user.UpdatedBy = null.IntFrom(int64(userID))
 	user.UpdatedAt = null.TimeFrom(time.Now())
-	err = s.updateUser(ctx, user)
+	err = s.editUser(ctx, user)
 	if err != nil {
 		return fmt.Errorf("failed to update user: %w", err)
 	}
@@ -238,7 +254,7 @@ func (s *Store) UpdateUser(ctx context.Context, u User, userID int) error {
 // SetUserLoggedIn will set the last login date to now
 func (s *Store) SetUserLoggedIn(ctx context.Context, u User) error {
 	u.LastLogin = null.TimeFrom(time.Now())
-	return s.updateUser(ctx, u)
+	return s.editUser(ctx, u)
 }
 
 // DeleteUser will delete a user
@@ -251,7 +267,7 @@ func (s *Store) DeleteUser(ctx context.Context, u User, userID int) error {
 	u.UpdatedAt = now
 	u.DeletedBy = null.IntFrom(int64(userID))
 	u.DeletedAt = now
-	return s.updateUser(ctx, u)
+	return s.editUser(ctx, u)
 }
 
 // GetPermissionsForUser returns all permissions of a user
@@ -282,6 +298,10 @@ func (s *Store) AddRoleUser(ctx context.Context, ru RoleUser) (RoleUser, error) 
 
 func (s *Store) RemoveRoleUser(ctx context.Context, ru RoleUser) error {
 	return s.removeRoleUser(ctx, ru)
+}
+
+func (s *Store) RemoveRoleUsers(ctx context.Context, u User) error {
+	return s.removeRoleUsers(ctx, u)
 }
 
 // GetPermissionsForRole returns all permissions for role
