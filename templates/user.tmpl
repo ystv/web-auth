@@ -57,6 +57,9 @@
                     Last name: {{.Lastname}}<br>
                     Username: {{.Username}}<br>
                     Email: {{.Email}}<br>
+                    {{if .UniversityUsername.Valid}}
+                        University username: {{.UniversityUsername.String}}<br>
+                    {{end}}<br>
                     Enabled: {{.Enabled}}<br>
                     Reset password required: {{.ResetPw}}<br>
                     Login type: {{.LoginType}}<br>
@@ -279,7 +282,7 @@
                         <div class="media-content">
                             <div class="content">
                                 <p class="title">Are you sure you want to enable this account?</p>
-                                <p>This user will be able to log in until it is re-disabled</p>
+                                <p>This user will be able to log in again</p>
                                 <form action="/internal/user/{{.User.UserID}}/toggle" method="post">
                                     <button class="button is-danger"><span class="mdi mdi-account-lock-open"></span>&ensp;Enable user</button>
                                 </form>
@@ -298,8 +301,8 @@
                 <article class="media">
                     <div class="media-content">
                         <div class="content">
-                            <p class="title">Are you sure you want to disable this account?</p>
-                            <p>This user won't be able to log in until it is re-enabled</p>
+                            <p class="title">Are you sure you want to delete this account?</p>
+                            <p>This user won't be able to log in or access any functions forever</p>
                             <form action="/internal/user/{{.User.UserID}}/delete" method="post">
                                 <button class="button is-danger"><span class="mdi mdi-account-remove"></span>&ensp;Delete user</button>
                             </form>

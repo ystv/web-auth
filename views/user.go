@@ -339,12 +339,15 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 	c1 := v.getSessionData(c)
 
 	if c.Request().Method == http.MethodGet {
-		data := struct {
-			UserID     int
-			ActivePage string
-		}{
-			UserID:     c1.User.UserID,
-			ActivePage: "useradd",
+		p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+		if err != nil {
+			return fmt.Errorf("failed to get user permissions for user: %w", err)
+		}
+
+		data := TemplateHelper{
+			UserPermissions: p1,
+			ActivePage:      "useradd",
+			Assumed:         c1.Assumed,
 		}
 
 		return v.template.RenderTemplate(c.Response(), data, templates.UserAddTemplate, templates.RegularType)
@@ -444,12 +447,12 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 
 		userID, err := strconv.Atoi(c.Param("userid"))
 		if err != nil {
-			return fmt.Errorf("failed to get userid for toggleUser: %w", err)
+			return fmt.Errorf("failed to get userid for editUser: %w", err)
 		}
 
 		user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 		if err != nil {
-			return fmt.Errorf("failed to get user for toggleUser: %w", err)
+			return fmt.Errorf("failed to get user for editUser: %w", err)
 		}
 
 		err = c.Request().ParseForm()

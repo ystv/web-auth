@@ -151,6 +151,7 @@ func (r *Router) loadRoutes() {
 	user.Match(validMethods, "/edit", r.views.UserEditFunc)
 	user.Match(validMethods, "/delete", r.views.UserDeleteFunc)
 	user.Match(validMethods, "/reset", r.views.ResetUserPasswordFunc)
+	user.Match(validMethods, "/toggle", r.views.UserToggleEnabledFunc)
 	user.Match(validMethods, "/assume", r.views.AssumeUserFunc, r.views.RequirePermission(permissions.SuperUser))
 	user.Match(validMethods, "", r.views.UserFunc)
 
