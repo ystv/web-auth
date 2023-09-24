@@ -14,7 +14,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"gopkg.in/guregu/null.v4"
 
-
 	"github.com/ystv/web-auth/api"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
@@ -35,9 +34,8 @@ type (
 
 	// ManageAPITemplate returns the data to the front end
 	ManageAPITemplate struct {
-		Tokens []api.Token
-		UserID int
-		//ValidPermissions []permission.Permission
+		Tokens     []api.Token
+		UserID     int
 		AddedJWT   string
 		ActivePage string
 	}

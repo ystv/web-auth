@@ -9,7 +9,6 @@ import (
 	"time"
 
 	permission1 "github.com/ystv/web-auth/infrastructure/permission"
-	"github.com/ystv/web-auth/api"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/role"
@@ -49,8 +48,8 @@ const (
 	PermissionsTemplate  Template = "permissions.tmpl"
 	SignupEmailTemplate  Template = "signupEmail.tmpl"
 	PermissionTemplate   Template = "permission.tmpl"
-	ManageAPITemplate           Template = "manageAPI.tmpl"
-	UserAddTemplate             Template = "userAdd.tmpl"
+	ManageAPITemplate    Template = "manageAPI.tmpl"
+	UserAddTemplate      Template = "userAdd.tmpl"
 )
 
 type TemplateType int

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/gob"
 	"encoding/hex"
+	"log"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -62,8 +63,6 @@ type (
 		role       *role.Store
 		template   *templates.Templater
 		user       *user.Store
-		cookie     *sessions.CookieStore
-		cache      *cache.Cache
 		mailer     *mail.MailerInit
 		validate   *validator.Validate
 	}

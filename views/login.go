@@ -12,10 +12,6 @@ import (
 	"github.com/patrickmn/go-cache"
 	"github.com/ystv/web-auth/templates"
 	"gopkg.in/guregu/null.v4"
-	"log"
-	"net/http"
-	"net/url"
-	"strings"
 
 	"github.com/ystv/web-auth/user"
 )

@@ -3,8 +3,9 @@ package api
 import (
 	"context"
 	"fmt"
-	"gopkg.in/guregu/null.v4"
 	"time"
+
+	"gopkg.in/guregu/null.v4"
 )
 
 // getTokens will get the tokens for a user

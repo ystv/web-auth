@@ -31,7 +31,7 @@ type (
 		// User is the stored logged-in user
 		User user.User
 		// Version is the version that is running
-		Version string
+		Version    string
 		Assumed    bool
 		actualUser user.User
 	}

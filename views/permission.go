@@ -23,7 +23,7 @@ type (
 	// PermissionTemplate is for the permission front end
 	PermissionTemplate struct {
 		Permission user.PermissionTemplate
-		Assumed     bool
+		Assumed    bool
 		TemplateHelper
 	}
 )
