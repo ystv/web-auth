@@ -271,8 +271,14 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 		universityUsername := c.Request().FormValue("universityusername")
 		email := c.Request().FormValue("email")
 
-		password := utils.GeneratePassword()
-		salt := utils.GenerateSalt()
+		password, err := utils.GenerateRandom(utils.GeneratePassword)
+		if err != nil {
+			return fmt.Errorf("error generating password: %w", err)
+		}
+		salt, err := utils.GenerateRandom(utils.GenerateSalt)
+		if err != nil {
+			return fmt.Errorf("error generating salt: %w", err)
+		}
 		u := user.User{
 			UserID:             0,
 			Username:           username,
