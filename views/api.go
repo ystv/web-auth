@@ -47,10 +47,7 @@ func (v *Views) ManageAPIFunc(c echo.Context) error {
 
 	tokens, err := v.api.GetTokens(c.Request().Context(), c1.User.UserID)
 	if err != nil {
-		log.Printf("failed to get tokens for manageAPI: %+v", err)
-		if !v.conf.Debug {
-			return v.errorHandle(c, fmt.Errorf("failed to get tokens for manageAPI: %+v", err))
-		}
+		return fmt.Errorf("failed to get tokens for manageAPI: %w", err)
 	}
 
 	data := ManageAPITemplate{
@@ -59,21 +56,16 @@ func (v *Views) ManageAPIFunc(c echo.Context) error {
 		ActivePage: "apiManage",
 	}
 
-	return v.template.RenderTemplate(c.Response(), data, templates.ManageAPITemplate)
+	return v.template.RenderTemplate(c.Response(), data, templates.ManageAPITemplate, templates.RegularType)
 }
 
 // ManageAPIFunc is the main home page for API management internal
 func (v *Views) manageAPIFunc(c echo.Context, addedJWT string) error {
-	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-	c1 := v.getData(session)
+	c1 := v.getSessionData(c)
 
 	tokens, err := v.api.GetTokens(c.Request().Context(), c1.User.UserID)
 	if err != nil {
-		log.Printf("failed to get tokens for manageAPI: %+v", err)
-		if !v.conf.Debug {
-			return v.errorHandle(c, fmt.Errorf("failed to get tokens for manageAPI: %+v", err))
-		}
+		return fmt.Errorf("failed to get tokens for manageAPI: %w", err)
 	}
 
 	data := ManageAPITemplate{
@@ -83,21 +75,17 @@ func (v *Views) manageAPIFunc(c echo.Context, addedJWT string) error {
 		ActivePage: "apiManage",
 	}
 
-	return v.template.RenderTemplate(c.Response(), data, templates.ManageAPITemplate)
+	return v.template.RenderTemplate(c.Response(), data, templates.ManageAPITemplate, templates.RegularType)
 }
-
-//func (v *Views) getPossiblePermissions(currentPermissions []permission.Permission) map[string]string
 
 // TokenAddFunc adds a token to be used by the user
 func (v *Views) TokenAddFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
-		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-		c1 := v.getData(session)
+		c1 := v.getSessionData(c)
 
 		err := c.Request().ParseForm()
 		if err != nil {
-			return v.errorHandle(c, fmt.Errorf("failed to parse form for tokenAdd: %+v", err))
+			return fmt.Errorf("failed to parse form for tokenAdd: %w", err)
 		}
 
 		name := c.Request().FormValue("name")
@@ -105,19 +93,19 @@ func (v *Views) TokenAddFunc(c echo.Context) error {
 		expiry := c.Request().FormValue("expiry")
 
 		if len(name) < 2 {
-			return v.errorHandle(c, fmt.Errorf("token name too short"))
+			return fmt.Errorf("token name too short")
 		}
 
 		id := uuid.NewString()
 
 		parse, err := time.Parse("02/01/2006", expiry)
 		if err != nil {
-			return v.errorHandle(c, fmt.Errorf("failed to parse expiry: %w", err))
+			return fmt.Errorf("failed to parse expiry: %w", err)
 		}
 
 		diff := time.Now().Add(2 * time.Hour * 24).Compare(parse)
 		if diff != -1 {
-			return v.errorHandle(c, fmt.Errorf("expiry date must be more than 2 days away"))
+			return fmt.Errorf("expiry date must be more than 2 days away")
 		}
 
 		t := api.Token{
@@ -130,53 +118,49 @@ func (v *Views) TokenAddFunc(c echo.Context) error {
 
 		t1, err := v.api.GetToken(c.Request().Context(), t)
 		if err == nil && len(t1.TokenID) > 0 {
-			return v.errorHandle(c, fmt.Errorf("token with id \"%s\" already exists", id))
+			return fmt.Errorf("token with id \"%s\" already exists", id)
 		}
 
 		addedJWT, err := v.newJWTCustom(c1.User, parse, id)
 		if err != nil {
-			return v.errorHandle(c, fmt.Errorf("failed to generate jwt for tokenAdd: %w", err))
+			return fmt.Errorf("failed to generate jwt for tokenAdd: %w", err)
 		}
 
 		_, err = v.api.AddToken(c.Request().Context(), t)
 		if err != nil {
-			return v.errorHandle(c, fmt.Errorf("error adding token for addToken: %w", err))
+			return fmt.Errorf("error adding token for addToken: %w", err)
 		}
 		return v.manageAPIFunc(c, addedJWT)
-	} else {
-		return v.errorHandle(c, fmt.Errorf("invalid method used"))
 	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 // TokenDeleteFunc deletes a token
 func (v *Views) TokenDeleteFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
-		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-		c1 := v.getData(session)
+		c1 := v.getSessionData(c)
 
 		tokenID := c.Param("tokenid")
 		if len(tokenID) != 36 {
-			return v.errorHandle(c, fmt.Errorf("failed to parse tokenid for tokenDelete: tokenid is the incorrect length"))
+			return fmt.Errorf("failed to parse tokenid for tokenDelete: tokenid is the incorrect length")
 		}
 
 		token1, err := v.api.GetToken(c.Request().Context(), api.Token{TokenID: tokenID})
 		if err != nil {
-			return v.errorHandle(c, fmt.Errorf("failed to get token in tokenDelete: %w", err))
+			return fmt.Errorf("failed to get token in tokenDelete: %w", err)
 		}
 
 		if token1.UserID != c1.User.UserID {
-			return v.errorHandle(c, fmt.Errorf("failed to get token in tokenDelete: unauthorized"))
+			return fmt.Errorf("failed to get token in tokenDelete: unauthorized")
 		}
 
 		err = v.api.DeleteToken(c.Request().Context(), token1)
 		if err != nil {
-			return v.errorHandle(c, fmt.Errorf("failed to delete token in tokenDelete: %w", err))
+			return fmt.Errorf("failed to delete token in tokenDelete: %w", err)
 		}
 		return v.ManageAPIFunc(c)
-	} else {
-		return v.errorHandle(c, fmt.Errorf("invalid method used"))
 	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 // SetTokenHandler sets a valid JWT in a cookie instead of returning a string
@@ -261,10 +245,12 @@ func (v *Views) newJWTCustom(u user.User, expiry time.Time, tokenID string) (str
 	if compare == 1 {
 		return "", fmt.Errorf("expiration date is more than a year away, can only have a maximum of 1 year")
 	}
+
 	perms, err := v.user.GetPermissionsForUser(context.Background(), u)
 	if err != nil {
 		return "", fmt.Errorf("failed to get user permissions: %w", err)
 	}
+
 	p1 := removeDuplicate(perms)
 	var p2 []string
 	for _, p := range p1 {
@@ -348,7 +334,7 @@ func (v *Views) TestAPITokenFunc(c echo.Context) error {
 			Message:    "valid token",
 		}
 
-		err := json.NewEncoder(c.Response()).Encode(status)
+		err = json.NewEncoder(c.Response()).Encode(status)
 		if err != nil {
 			log.Printf("failed to encode json: %+v", err)
 			data := struct {
