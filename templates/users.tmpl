@@ -107,7 +107,7 @@
                 <p class="card-header-title">Users</p>
             </header>
             {{$userAdmin := checkPermission $.UserPermissions "ManageMembers.Members.Admin"}}
-            {{if (checkPermission $.UserID "ManageMembers.Members.Add")}}
+            {{if (checkPermission .UserPermissions "ManageMembers.Members.Add")}}
                 <p id="message" style="color: green"></p>
                 <p id="error" style="color: red"></p>
                 <div class="card" style="margin-bottom: 0">

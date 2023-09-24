@@ -116,8 +116,40 @@ func (v *Views) PermissionAddFunc(c echo.Context) error {
 
 // PermissionEditFunc handles an edit permission request
 func (v *Views) PermissionEditFunc(c echo.Context) error {
-	_ = c
-	return nil
+	if c.Request().Method == http.MethodPost {
+		permissionID, err := strconv.Atoi(c.Param("permissionid"))
+		if err != nil {
+			return fmt.Errorf("failed to get permissionid for editPermission: %w", err)
+		}
+
+		permission1, err := v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: permissionID})
+		if err != nil {
+			return fmt.Errorf("failed to get permission for editPermission: %w", err)
+		}
+
+		err = c.Request().ParseForm()
+		if err != nil {
+			return fmt.Errorf("failed to parse form for permissionEdit: %w", err)
+		}
+
+		name := c.Request().FormValue("name")
+		description := c.Request().FormValue("description")
+
+		if name != permission1.Name && len(name) > 0 {
+			permission1.Name = name
+		}
+		if description != permission1.Description && len(description) > 0 {
+			permission1.Description = description
+		}
+
+		_, err = v.permission.EditPermission(c.Request().Context(), permission1)
+		if err != nil {
+			return fmt.Errorf("failed to edit permission for editPermission: %w", err)
+		}
+
+		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/permission/%d", permissionID))
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 // PermissionDeleteFunc handles a delete permission request

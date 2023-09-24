@@ -62,11 +62,30 @@
                         <div class="content">
                             <p class="title">Add permission</p>
                             <p>Enter the permission's details below.</p>
-                            <form id="addPermissionForm" action="/internal/permission/add" method="post">
-                                <label for="name">Name</label>
-                                <input type="text" class="input" name="name" id="name">
-                                <label for="description">Description</label>
-                                <textarea class="input" id="description" name="description"></textarea>
+                            <form action="/internal/permission/add" method="post">
+                                <div class="field">
+                                    <label class="label" for="name">Name</label>
+                                    <div class="control">
+                                        <input
+                                                id="name"
+                                                class="input"
+                                                type="text"
+                                                name="name"
+                                                placeholder="Name"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="description">Description</label>
+                                    <div class="control">
+                                        <textarea
+                                                id="description"
+                                                class="input"
+                                                name="description"
+                                                placeholder="Description"
+                                        ></textarea>
+                                    </div>
+                                </div>
                                 <button class="button is-info">Add permission</button>
                             </form>
                         </div>

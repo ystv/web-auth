@@ -7,7 +7,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/permission"
@@ -130,6 +132,10 @@ func DBUsersToUsersTemplateFormat(dbUsers []user.User) []user.StrippedUser {
 func DBUserToUserTemplateFormat(dbUser user.User, store *user.Store) user.DetailedUser {
 	var u user.DetailedUser
 	var err error
+	location, err := time.LoadLocation("Europe/London")
+	if err != nil {
+		fmt.Println(err)
+	}
 	u.UserID = dbUser.UserID
 	u.Username = dbUser.Username
 	u.UniversityUsername = dbUser.UniversityUsername
@@ -139,10 +145,10 @@ func DBUserToUserTemplateFormat(dbUser user.User, store *user.Store) user.Detail
 	u.Firstname = dbUser.Firstname
 	u.Lastname = dbUser.Lastname
 	u.Email = dbUser.Email
-	u.LastLogin = null.NewString(dbUser.LastLogin.Time.Format("2006-01-02 15:04:05"), dbUser.LastLogin.Valid)
+	u.LastLogin = null.NewString(dbUser.LastLogin.Time.In(location).Format("2006-01-02 15:04:05 MST"), dbUser.LastLogin.Valid)
 	u.ResetPw = dbUser.ResetPw
 	u.Enabled = dbUser.Enabled
-	u.CreatedAt = null.StringFrom(dbUser.CreatedAt.Time.Format("2006-01-02 15:04:05"))
+	u.CreatedAt = null.StringFrom(dbUser.CreatedAt.Time.In(location).Format("2006-01-02 15:04:05 MST"))
 	if dbUser.CreatedBy.Valid {
 		u.CreatedBy, err = store.GetUser(context.Background(), user.User{UserID: int(dbUser.CreatedBy.Int64)})
 		if err != nil {
@@ -163,7 +169,7 @@ func DBUserToUserTemplateFormat(dbUser user.User, store *user.Store) user.Detail
 		}
 	}
 	if dbUser.UpdatedAt.Valid {
-		u.UpdatedAt = null.StringFrom(dbUser.UpdatedAt.Time.Format("2006-01-02 15:04:05"))
+		u.UpdatedAt = null.StringFrom(dbUser.UpdatedAt.Time.In(location).Format("2006-01-02 15:04:05 MST"))
 	} else {
 		u.UpdatedAt = null.NewString("", false)
 	}
@@ -187,7 +193,7 @@ func DBUserToUserTemplateFormat(dbUser user.User, store *user.Store) user.Detail
 		}
 	}
 	if dbUser.DeletedAt.Valid {
-		u.DeletedAt = null.StringFrom(dbUser.DeletedAt.Time.Format("2006-01-02 15:04:05"))
+		u.DeletedAt = null.StringFrom(dbUser.DeletedAt.Time.In(location).Format("2006-01-02 15:04:05 MST"))
 	} else {
 		u.DeletedAt = null.NewString("", false)
 	}
@@ -236,4 +242,44 @@ func removeDuplicate(strSlice []permission.Permission) []permission.Permission {
 		}
 	}
 	return list
+}
+
+func minRequirementsMet(password string) (errString string) {
+	var match bool
+	match, err := regexp.MatchString("^.*[a-z].*$", password)
+	if err != nil || !match {
+		errString = "password must contain at least 1 lower case letter"
+	}
+	match, err = regexp.MatchString("^.*[A-Z].*$", password)
+	if err != nil || !match {
+		if len(errString) > 0 {
+			errString += " and password must contain at least 1 upper case letter"
+		} else {
+			errString = "password must contain at least 1 upper case letter"
+		}
+	}
+	match, err = regexp.MatchString("^.*\\d.*$", password)
+	if err != nil || !match {
+		if len(errString) > 0 {
+			errString += " and password must contain at least 1 number"
+		} else {
+			errString = "password must contain at least 1 number"
+		}
+	}
+	match, err = regexp.MatchString("^.*[@$!%*?&|^£;:/.,<>()_=+~§±#{}-].*$", password)
+	if err != nil || !match {
+		if len(errString) > 0 {
+			errString += " and password must contain at least 1 special character"
+		} else {
+			errString = "password must contain at least 1 special character"
+		}
+	}
+	if len(password) <= 8 {
+		if len(errString) > 0 {
+			errString += " and password must be at least 8 characters long"
+		} else {
+			errString = "password must be at least 8 characters long"
+		}
+	}
+	return errString
 }

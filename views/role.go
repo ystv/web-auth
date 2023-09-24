@@ -134,8 +134,40 @@ func (v *Views) RoleAddFunc(c echo.Context) error {
 }
 
 func (v *Views) RoleEditFunc(c echo.Context) error {
-	_ = c
-	return nil
+	if c.Request().Method == http.MethodPost {
+		roleID, err := strconv.Atoi(c.Param("roleid"))
+		if err != nil {
+			return fmt.Errorf("failed to get roleid for editRole: %w", err)
+		}
+
+		role1, err := v.role.GetRole(c.Request().Context(), role.Role{RoleID: roleID})
+		if err != nil {
+			return fmt.Errorf("failed to get role for editRole: %w", err)
+		}
+
+		err = c.Request().ParseForm()
+		if err != nil {
+			return fmt.Errorf("failed to parse form for roleEdit: %w", err)
+		}
+
+		name := c.Request().FormValue("name")
+		description := c.Request().FormValue("description")
+
+		if name != role1.Name && len(name) > 0 {
+			role1.Name = name
+		}
+		if description != role1.Description && len(description) > 0 {
+			role1.Description = description
+		}
+
+		_, err = v.role.EditRole(c.Request().Context(), role1)
+		if err != nil {
+			return fmt.Errorf("failed to edit role for editRole: %w", err)
+		}
+
+		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/role/%d", roleID))
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 func (v *Views) RoleDeleteFunc(c echo.Context) error {

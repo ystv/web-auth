@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -26,7 +27,44 @@ type (
 
 // SettingsFunc handles a request to the internal template
 func (v *Views) SettingsFunc(c echo.Context) error {
+	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+
 	c1 := v.getSessionData(c)
+
+	if c.Request().Method == http.MethodPost {
+		firstName := c.Request().FormValue("firstname")
+		nickname := c.Request().FormValue("nickname")
+		lastName := c.Request().FormValue("lastname")
+		// avatar type can't be changed yet but the infrastructure is in
+		avatar := c.Request().FormValue("avatar")
+		_ = avatar
+
+		if firstName != c1.User.Firstname && len(firstName) > 0 {
+			c1.User.Firstname = firstName
+		}
+		if nickname != c1.User.Nickname && len(nickname) > 0 {
+			c1.User.Nickname = nickname
+		}
+		if lastName != c1.User.Lastname && len(lastName) > 0 {
+			c1.User.Lastname = lastName
+		}
+
+		err := v.user.EditUser(c.Request().Context(), c1.User, c1.User.UserID)
+		if err != nil {
+			return fmt.Errorf("failed to edit user for settings: %w", err)
+		}
+
+		session.Values["user"] = c1.User
+
+		err = session.Save(c.Request(), c.Response())
+		if err != nil {
+			return fmt.Errorf("failed to save user session in settings: %w", err)
+		}
+
+		c.Request().Method = http.MethodGet
+		return v.SettingsFunc(c)
+	}
+
 	lastLogin := time.Now()
 	if c1.User.LastLogin.Valid {
 		lastLogin = c1.User.LastLogin.Time

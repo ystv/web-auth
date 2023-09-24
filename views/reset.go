@@ -42,6 +42,12 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 
 		originalUser.Password = null.StringFrom(password)
 
+		errString := minRequirementsMet(password)
+		if len(errString) > 0 {
+			data := struct{ Error string }{Error: errString}
+			return v.template.RenderTemplate(c.Response().Writer, data, templates.ResetTemplate, templates.NoNavType)
+		}
+
 		err = v.user.EditUserPassword(c.Request().Context(), originalUser)
 		if err != nil {
 			log.Printf("failed to reset user: %+v", err)
@@ -75,8 +81,6 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 
 	url := uuid.NewString()
 	v.cache.Set(url, userFromDB.UserID, cache.DefaultExpiration)
-
-	var status int
 
 	var message struct {
 		Message string `json:"message"`
@@ -125,5 +129,6 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 		log.Printf("password reset requested for email: %s by user: %d", userFromDB.Email, c1.User.UserID)
 	}
 	log.Printf("reset for %d (%s) requested by %d (%s)", userFromDB.UserID, userFromDB.Firstname+" "+userFromDB.Lastname, c1.User.UserID, c1.User.Firstname+" "+c1.User.Lastname)
+	var status int
 	return c.JSON(status, message)
 }

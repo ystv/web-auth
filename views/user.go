@@ -9,12 +9,11 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"gopkg.in/guregu/null.v4"
-
 	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 	"github.com/ystv/web-auth/utils"
+	"gopkg.in/guregu/null.v4"
 )
 
 type (
@@ -272,8 +271,14 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 		universityUsername := c.Request().FormValue("universityusername")
 		email := c.Request().FormValue("email")
 
-		password := utils.GeneratePassword()
-		salt := utils.GenerateSalt()
+		password, err := utils.GenerateRandom(utils.GeneratePassword)
+		if err != nil {
+			return fmt.Errorf("error generating password: %w", err)
+		}
+		salt, err := utils.GenerateRandom(utils.GenerateSalt)
+		if err != nil {
+			return fmt.Errorf("error generating salt: %w", err)
+		}
 		u := user.User{
 			UserID:             0,
 			Username:           username,
@@ -340,15 +345,119 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 
 		return c.JSON(status, message)
 	}
-	return fmt.Errorf("invalid method used")
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 func (v *Views) UserEditFunc(c echo.Context) error {
-	_ = c
-	return nil
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		userID, err := strconv.Atoi(c.Param("userid"))
+		if err != nil {
+			return fmt.Errorf("failed to get userid for toggleUser: %w", err)
+		}
+
+		user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
+		if err != nil {
+			return fmt.Errorf("failed to get user for toggleUser: %w", err)
+		}
+
+		err = c.Request().ParseForm()
+		if err != nil {
+			return fmt.Errorf("failed to parse form for userEdit: %w", err)
+		}
+
+		firstName := c.Request().FormValue("firstname")
+		nickname := c.Request().FormValue("nickname")
+		lastName := c.Request().FormValue("lastname")
+		username := c.Request().FormValue("username")
+		universityUsername := c.Request().FormValue("universityusername")
+		LDAPUsername := c.Request().FormValue("ldapusername")
+		email := c.Request().FormValue("email")
+		// login type can't be changed yet but the infrastructure is in
+		loginType := c.Request().FormValue("logintype")
+		_ = loginType
+
+		if firstName != user1.Firstname && len(firstName) > 0 {
+			user1.Firstname = firstName
+		}
+		if nickname != user1.Nickname && len(nickname) > 0 {
+			user1.Nickname = nickname
+		}
+		if lastName != user1.Lastname && len(lastName) > 0 {
+			user1.Lastname = lastName
+		}
+		if username != user1.Username && len(username) > 0 {
+			user1.Username = username
+		}
+		if universityUsername != user1.UniversityUsername.String && len(universityUsername) > 0 {
+			user1.UniversityUsername = null.StringFrom(universityUsername)
+		}
+		if LDAPUsername != user1.LDAPUsername.String && len(LDAPUsername) > 0 {
+			user1.LDAPUsername = null.StringFrom(LDAPUsername)
+		}
+		if email != user1.Email && len(email) > 0 {
+			user1.Email = email
+		}
+
+		err = v.user.EditUser(c.Request().Context(), user1, c1.User.UserID)
+		if err != nil {
+			return fmt.Errorf("failed to edit user for editUser: %w", err)
+		}
+		return c.Redirect(http.StatusOK, fmt.Sprintf("/internal/user/%d", userID))
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+}
+
+func (v *Views) UserToggleEnabledFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		userID, err := strconv.Atoi(c.Param("userid"))
+		if err != nil {
+			return fmt.Errorf("failed to get userid for toggleUser: %w", err)
+		}
+
+		user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
+		if err != nil {
+			return fmt.Errorf("failed to get user for toggleUser: %w", err)
+		}
+
+		user1.Enabled = !user1.Enabled
+
+		err = v.user.EditUser(c.Request().Context(), user1, c1.User.UserID)
+		if err != nil {
+			return fmt.Errorf("failed to edit user for toggleUser: %w", err)
+		}
+		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/user/%d", userID))
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 func (v *Views) UserDeleteFunc(c echo.Context) error {
-	_ = c
-	return nil
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		userID, err := strconv.Atoi(c.Param("userid"))
+		if err != nil {
+			return fmt.Errorf("failed to get userid for deleteUser: %w", err)
+		}
+
+		user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
+		if err != nil {
+			return fmt.Errorf("failed to get user for deleteUser: %w", err)
+		}
+
+		err = v.user.RemoveRoleUsers(c.Request().Context(), user1)
+		if err != nil {
+			return fmt.Errorf("failed to delete roleUsers for deleteUser: %w", err)
+		}
+
+		err = v.user.DeleteUser(c.Request().Context(), user1, c1.User.UserID)
+		if err != nil {
+			return fmt.Errorf("failed to delete user for deleteUser: %w", err)
+		}
+		return v.UsersFunc(c)
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }

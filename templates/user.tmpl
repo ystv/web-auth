@@ -13,30 +13,30 @@
             <div class="column is-2">
                 <figure class="avatar">
                     <img src="{{.User.Avatar}}" alt="{{.User.Avatar}}" width="128px"
-                                                 height="128px"/>
+                         height="128px"/>
                 </figure>
+                {{if not .User.DeletedAt.Valid}}
                 <div class="buttons" style="display: block">
-                    {{if eq .User.DeletedBy.UserID -1}}
-                        <a class="button is-info is-outlined" onclick="resetPasswordModal()">
-                            Reset password
+                    <a class="button is-info is-outlined" onclick="resetPasswordModal()">
+                        Reset password
+                    </a>
+                    <a class="button is-info is-outlined" onclick="editUserModal()">
+                        Edit
+                    </a>
+                    {{if .User.Enabled}}
+                        <a class="button is-warning is-outlined" onclick="disableUserModal()">
+                            Disable
                         </a>
-                        <a class="button is-info is-outlined" onclick="editUserModal()">
-                            Edit
-                        </a>
-                        {{if .User.Enabled}}
-                            <a class="button is-warning is-outlined" onclick="disableUserModal()">
-                                Disable
-                            </a>
-                        {{else}}
-                            <a class="button is-warning is-outlined" onclick="enableUserModal()">
-                                Enable
-                            </a>
-                        {{end}}
-                        <a class="button is-danger is-outlined" onclick="deleteUserModal()">
-                            Delete
+                    {{else}}
+                        <a class="button is-warning is-outlined" onclick="enableUserModal()">
+                            Enable
                         </a>
                     {{end}}
+                    <a class="button is-danger is-outlined" onclick="deleteUserModal()">
+                        Delete
+                    </a>
                 </div>
+                {{end}}
             </div>
             <div class="column">
                 <p id="message" style="color: green"></p>
@@ -127,8 +127,117 @@
                     <div class="media-content">
                         <div class="content">
                             <p class="title">Are you sure you want to edit this user?</p>
-                            <p>Coming soon!</p>
-{{/*                            <a class="button is-danger" onclick="editUser()">Edit user</a>*/}}
+                            <p><strong>This action cannot be undone</strong><br>
+                                Use the fields below to modify the user, to not change a field, either leave it as
+                                is or blank.</p>
+                            <form action="/internal/user/{{.User.UserID}}/edit" method="post">
+                                <div class="field">
+                                    <label class="label" for="firstname">First name</label>
+                                    <div class="control">
+                                        <input
+                                                id="firstname"
+                                                class="input"
+                                                type="text"
+                                                name="firstname"
+                                                placeholder="{{.User.Firstname}}"
+                                                value="{{.User.Firstname}}"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="nickname">Nickname</label>
+                                    <div class="control">
+                                        <input
+                                                id="nickname"
+                                                class="input"
+                                                type="text"
+                                                name="nickname"
+                                                placeholder="{{.User.Nickname}}"
+                                                value="{{.User.Nickname}}"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="lastname">Last name</label>
+                                    <div class="control">
+                                        <input
+                                                id="lastname"
+                                                class="input"
+                                                type="text"
+                                                name="lastname"
+                                                placeholder="{{.User.Lastname}}"
+                                                value="{{.User.Lastname}}"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="username">Username</label>
+                                    <div class="control">
+                                        <input
+                                                id="username"
+                                                class="input"
+                                                type="text"
+                                                name="username"
+                                                placeholder="{{.User.Username}}"
+                                                value="{{.User.Username}}"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="universityusername">University username</label>
+                                    <div class="control">
+                                        <input
+                                                id="universityusername"
+                                                class="input"
+                                                type="text"
+                                                name="universityusername"
+                                                placeholder="{{.User.UniversityUsername.String}}"
+                                                value="{{.User.UniversityUsername.String}}"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="ldapusername">LDAP username</label>
+                                    <div class="control">
+                                        <input
+                                                id="ldapusername"
+                                                class="input"
+                                                type="text"
+                                                name="ldapusername"
+                                                placeholder="{{.User.LDAPUsername.String}}"
+                                                value="{{.User.LDAPUsername.String}}"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="email">Email</label>
+                                    <div class="control">
+                                        <input
+                                                id="email"
+                                                class="input"
+                                                type="email"
+                                                name="email"
+                                                placeholder="{{.User.Email}}"
+                                                value="{{.User.Email}}"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="logintype">Login type (not for change yet)</label>
+                                    <div class="control">
+                                        <input
+                                                id="logintype"
+                                                class="input"
+                                                type="text"
+                                                name="logintype"
+                                                placeholder="{{.User.LoginType}}"
+                                                value="{{.User.LoginType}}"
+                                                disabled
+                                        />
+                                    </div>
+                                </div>
+                                <button class="button is-danger">Edit user</button>
+                            </form>
                         </div>
                     </div>
                 </article>
@@ -146,7 +255,9 @@
                             <div class="content">
                                 <p class="title">Are you sure you want to disable this account?</p>
                                 <p>This user won't be able to log in until it is re-enabled</p>
-                                <a class="button is-danger" onclick="disableUser()">Disable user</a>
+                                <form action="/internal/user/{{.User.UserID}}/toggle" method="post">
+                                    <button class="button is-danger">Disable user</button>
+                                </form>
                             </div>
                         </div>
                     </article>
@@ -164,7 +275,9 @@
                             <div class="content">
                                 <p class="title">Are you sure you want to enable this account?</p>
                                 <p>This user will be able to log in until it is re-disabled</p>
-                                <a class="button is-danger" onclick="enableUser()">Enable user</a>
+                                <form action="/internal/user/{{.User.UserID}}/toggle" method="post">
+                                    <button class="button is-danger">Enable user</button>
+                                </form>
                             </div>
                         </div>
                     </article>
@@ -182,7 +295,9 @@
                         <div class="content">
                             <p class="title">Are you sure you want to disable this account?</p>
                             <p>This user won't be able to log in until it is re-enabled</p>
-                            <a class="button is-danger" onclick="deleteUser()">Delete user</a>
+                            <form action="/internal/user/{{.User.UserID}}/delete" method="post">
+                                <button class="button is-danger">Delete user</button>
+                            </form>
                         </div>
                     </div>
                 </article>
@@ -226,29 +341,13 @@
                 url: '/internal/user/{{.User.UserID}}/reset',
                 type: 'post',
                 dataType: 'json',
-                contentType: 'application/json',
+                contentType: 'application/x-www-form-urlencoded',
                 success: function (data) {
                     document.getElementById("resetPasswordModal").classList.remove("is-active");
                     $("#message").html(data.message);
                     $("#error").html(data.error);
                 },
             })
-        }
-        {{if .User.Enabled}}
-            function disableUser() {
-                // unimplemented for now
-            }
-        {{else}}
-            function enableUser() {
-                // unimplemented for now
-            }
-        {{end}}
-        function editUser() {
-            // unimplemented for now
-        }
-
-        function deleteUser() {
-            // unimplemented for now
         }
     </script>
 {{end}}

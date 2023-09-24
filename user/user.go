@@ -149,7 +149,7 @@ func (s *Store) GetUsers(ctx context.Context, size, page int, search, sortBy, di
 // credentials and if verified will return the User object
 // returned is the user object, bool of if the password is forced to be changed and any errors encountered
 func (s *Store) VerifyUser(ctx context.Context, u User) (User, bool, error) {
-	user, err := s.getUser(ctx, u)
+	user, err := s.GetUser(ctx, u)
 	if err != nil {
 		return u, false, fmt.Errorf("failed to get user: %w", err)
 	}
@@ -185,7 +185,7 @@ func (s *Store) AddUser(ctx context.Context, u User, userID int) (User, error) {
 	return u, nil
 }
 
-// EditUserPassword will update the password and set the reset_pw to false
+// EditUserPassword will edit the password and set the reset_pw to false
 func (s *Store) EditUserPassword(ctx context.Context, u User) error {
 	user, err := s.GetUser(ctx, u)
 	if err != nil {
@@ -193,18 +193,20 @@ func (s *Store) EditUserPassword(ctx context.Context, u User) error {
 	}
 	user.Password = null.StringFrom(utils.HashPass(user.Salt.String + u.Password.String))
 	user.ResetPw = false
+	user.UpdatedBy = null.IntFrom(int64(user.UserID))
+	user.UpdatedAt = null.TimeFrom(time.Now())
 	err = s.editUser(ctx, user)
 	if err != nil {
-		return fmt.Errorf("failed to update user: %w", err)
+		return fmt.Errorf("failed to edit user for editUserPassword: %w", err)
 	}
 	return nil
 }
 
-// EditUser will update the user
+// EditUser will edit the user
 func (s *Store) EditUser(ctx context.Context, u User, userID int) error {
 	user, err := s.GetUser(ctx, u)
 	if err != nil {
-		return fmt.Errorf("failed to get user: %w", err)
+		return fmt.Errorf("failed to get user for editUser: %w", err)
 	}
 	if u.Username != user.Username && len(u.Username) > 0 {
 		user.Username = u.Username
@@ -246,7 +248,7 @@ func (s *Store) EditUser(ctx context.Context, u User, userID int) error {
 	user.UpdatedAt = null.TimeFrom(time.Now())
 	err = s.editUser(ctx, user)
 	if err != nil {
-		return fmt.Errorf("failed to update user: %w", err)
+		return fmt.Errorf("failed to edit user: %w", err)
 	}
 	return nil
 }
@@ -257,12 +259,12 @@ func (s *Store) SetUserLoggedIn(ctx context.Context, u User) error {
 	return s.editUser(ctx, u)
 }
 
-// DeleteUser will delete a user
+// DeleteUser will soft delete a user
 func (s *Store) DeleteUser(ctx context.Context, u User, userID int) error {
 	now := null.TimeFrom(time.Now())
 	u.Enabled = false
-	u.Password = null.NewString("", false)
-	u.Salt = null.NewString("", false)
+	u.Password = null.NewString("", true)
+	u.Salt = null.NewString("", true)
 	u.UpdatedBy = null.IntFrom(int64(userID))
 	u.UpdatedAt = now
 	u.DeletedBy = null.IntFrom(int64(userID))

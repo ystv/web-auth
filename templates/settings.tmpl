@@ -18,11 +18,11 @@
                         <img src="https://placehold.it/128x128" alt="placeholder"/>{{end}}
                 </figure>
                 <div class="buttons">
-                    <a class="button is-info is-outlined">
+                    <a class="button is-info is-outlined" onclick="changePasswordModal()">
                         Change password
                     </a>
-                    <a class="button is-info is-outlined">
-                        Update your details
+                    <a class="button is-info is-outlined" onclick="editDetailsModal()">
+                        Edit your details
                     </a>
                 </div>
             </div>
@@ -53,15 +53,121 @@
                     <div class="media-content">
                         <div class="content">
                             <p class="title">Change your password</p>
+                            <p>Please enter your current password then your new password and confirm the new password.</p>
                             <form id="changePasswordForm">
-                                <label for="oldPassword">Enter your old password</label>
-                                <input class="input" type="password" placeholder="Old password" id="oldPassword" name="oldPassword" value="">
-                                <label for="newPassword">Enter your new password</label>
-                                <input class="input" type="password" placeholder="New password" id="newPassword" name="newPassword" value="">
-                                <label for="confirmationPassword">Enter your new password again</label>
-                                <input class="input" type="password" placeholder="New password again" id="confirmationPassword" name="confirmationPassword" value="">
+                                <div class="field">
+                                    <label class="label" for="oldPassword">Enter your old password</label>
+                                    <div class="control">
+                                        <input
+                                                id="oldPassword"
+                                                class="input"
+                                                type="password"
+                                                name="oldPassword"
+                                                placeholder="********"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="newPassword">Enter your new password</label>
+                                    <div class="control">
+                                        <input
+                                                id="newPassword"
+                                                class="input"
+                                                type="password"
+                                                name="newPassword"
+                                                placeholder="********"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="confirmationPassword">Enter your new password again</label>
+                                    <div class="control">
+                                        <input
+                                                id="confirmationPassword"
+                                                class="input"
+                                                type="password"
+                                                name="confirmationPassword"
+                                                placeholder="********"
+                                        />
+                                    </div>
+                                </div>
                             </form>
+                            <br>
                             <a class="button is-warning" onclick="changePassword()">Change password</a>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <div id="editDetailsModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title">Are you sure you want to edit your details?</p>
+                            <p><strong>This action can be undone by changing them back</strong><br>
+                                Use the fields below to modify your details, to not change a field, either leave it as
+                                is or blank.<br>If you wish for any other details to change not in this form, please contact the Computing Team on Slack at #computing.</p>
+                            <form action="/internal/settings" method="post">
+                                <div class="field">
+                                    <label class="label" for="firstname">First name</label>
+                                    <div class="control">
+                                        <input
+                                                id="firstname"
+                                                class="input"
+                                                type="text"
+                                                name="firstname"
+                                                placeholder="{{.User.Firstname}}"
+                                                value="{{.User.Firstname}}"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="nickname">Nickname</label>
+                                    <div class="control">
+                                        <input
+                                                id="nickname"
+                                                class="input"
+                                                type="text"
+                                                name="nickname"
+                                                placeholder="{{.User.Nickname}}"
+                                                value="{{.User.Nickname}}"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="lastname">Last name</label>
+                                    <div class="control">
+                                        <input
+                                                id="lastname"
+                                                class="input"
+                                                type="text"
+                                                name="lastname"
+                                                placeholder="{{.User.Lastname}}"
+                                                value="{{.User.Lastname}}"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="avatar">Avatar (coming soon)</label>
+                                    <div class="control">
+                                        <input
+                                                id="avatar"
+                                                class="input"
+                                                type="text"
+                                                name="avatar"
+                                                placeholder="Coming soon"
+                                                value="Coming soon"
+                                                disabled
+                                        />
+                                    </div>
+                                </div>
+                                <button class="button is-danger">Edit details</button>
+                            </form>
                         </div>
                     </div>
                 </article>
@@ -83,12 +189,16 @@
         document.getElementById("changePasswordModal").classList.add("is-active");
     }
 
+    function editDetailsModal() {
+        document.getElementById("editDetailsModal").classList.add("is-active");
+    }
+
     function changePassword() {
         $.ajax({
             url: '/internal/changepassword',
             type: 'post',
             dataType: 'json',
-            contentType: 'application/json',
+            contentType: 'application/x-www-form-urlencoded',
             data: $('#changePasswordForm').serialize(),
             success: function (data) {
                 document.getElementById("changePasswordModal").classList.remove("is-active");
