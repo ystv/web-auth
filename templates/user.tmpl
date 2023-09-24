@@ -27,6 +27,11 @@
                         <a class="button is-warning is-outlined" onclick="disableUserModal()">
                             <span class="mdi mdi-account-lock"></span>&ensp;Disable
                         </a>
+                        {{if and (checkPermission .UserPermissions "SuperUser") (not .Assumed)}}
+                            <a class="button is-warning is-outlined" onclick="assumeUserModal()">
+                                <span class="mdi mdi-account-child"></span>&ensp;Assume user
+                            </a>
+                        {{end}}
                     {{else}}
                         <a class="button is-warning is-outlined" onclick="enableUserModal()">
                             <span class="mdi mdi-account-lock-open"></span>&ensp;Enable
@@ -305,6 +310,27 @@
         </div>
         <button class="modal-close is-large" aria-label="close"></button>
     </div>
+    {{if and (checkPermission .UserPermissions "SuperUser") (not .Assumed)}}
+        <div id="assumeUserModal" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-content">
+                <div class="box">
+                    <article class="media">
+                        <div class="media-content">
+                            <div class="content">
+                                <p class="title">Are you sure you want to assume this user?</p>
+                                <p>Your current permissions may not work and your actions will appear as though it was from this user</p>
+                                <form action="/internal/user/{{.User.UserID}}/assume" method="post">
+                                    <button class="button is-danger"><span class="mdi mdi-account-child"></span>&ensp;Assume user</button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+            <button class="modal-close is-large" aria-label="close"></button>
+        </div>
+    {{end}}
     <script>
         document.querySelectorAll(
             ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
@@ -323,6 +349,11 @@
             function disableUserModal() {
                 document.getElementById("disableUserModal").classList.add("is-active");
             }
+            {{if and (checkPermission .UserPermissions "SuperUser") (not .Assumed)}}
+                function assumeUserModal() {
+                    document.getElementById("assumeUserModal").classList.add("is-active");
+                }
+            {{end}}
         {{else}}
             function enableUserModal() {
                 document.getElementById("enableUserModal").classList.add("is-active");
