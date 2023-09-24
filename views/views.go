@@ -127,7 +127,7 @@ func New(conf *Config, host string) *Views {
 
 	go func() {
 		for {
-			err = v.api.DeleteOldToken(context.Background())
+			err := v.api.DeleteOldToken(context.Background())
 			if err != nil {
 				log.Printf("failed to delete old token func: %+v", err)
 			}

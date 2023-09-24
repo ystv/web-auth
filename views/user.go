@@ -226,7 +226,7 @@ func (v *Views) UserFunc(c echo.Context) error {
 		return fmt.Errorf("failed to get user for user: %w", err)
 	}
 
-	detailedUser := DBUserToUserTemplateFormat(userFromDB, v.user)
+	detailedUser := DBUserToDetailedUser(userFromDB, v.user)
 
 	detailedUser.Permissions, err = v.user.GetPermissionsForUser(c.Request().Context(), user.User{UserID: detailedUser.UserID})
 	if err != nil {
@@ -269,7 +269,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 			ActivePage: "useradd",
 		}
 
-		return v.template.RenderTemplate(c.Response(), data, templates.UserAddTemplate)
+		return v.template.RenderTemplate(c.Response(), data, templates.UserAddTemplate, templates.RegularType)
 	} else if c.Request().Method == http.MethodPost {
 		err := c.Request().ParseForm()
 		if err != nil {

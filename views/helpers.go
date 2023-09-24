@@ -49,6 +49,8 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 		log.Printf("error getting session: %+v", err)
 		return nil
 	}
+
+	var u, actual user.User
 	userValue := session.Values["user"]
 	u, ok := userValue.(user.User)
 	if !ok {
@@ -67,12 +69,12 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 		i = InternalContext{}
 	}
 	c := &Context{
-		TitleText: i.TitleText,
-		Message:   i.Message,
-		MsgType:   i.MesType,
-		Callback:  "/internal",
-		User:      u,
-		Version:   v.conf.Version,
+		TitleText:  i.TitleText,
+		Message:    i.Message,
+		MsgType:    i.MesType,
+		Callback:   "/internal",
+		User:       u,
+		Version:    v.conf.Version,
 		Assumed:    assumed,
 		actualUser: actual,
 	}
