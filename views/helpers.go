@@ -2,37 +2,55 @@ package views
 
 import (
 	"context"
+	// #nosec
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"github.com/gorilla/sessions"
-	"github.com/ystv/web-auth/permission"
-	"github.com/ystv/web-auth/user"
-	"gopkg.in/guregu/null.v4"
 	"log"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/labstack/echo/v4"
+	"github.com/ystv/web-auth/permission"
+	"github.com/ystv/web-auth/user"
+	"gopkg.in/guregu/null.v4"
 )
 
 type (
 	// Context is a struct that is applied to the templates.
 	Context struct {
-		Message    string
-		MsgType    string
-		Version    string
-		Callback   string
-		User       user.User
+		// TitleText is used for sending pages to the user with custom titles
+		TitleText string
+		// Message is used for sending a message back to the user trying to log in, might decide to move later as it may not be needed
+		Message string
+		// MsgType is the bulma.io class used to indicate what should be displayed
+		MsgType string
+		// Callback is the address to redirect the user to
+		Callback string
+		// User is the stored logged-in user
+		User user.User
+		// Version is the version that is running
+		Version string
 		Assumed    bool
 		actualUser user.User
 	}
+
+	InternalContext struct {
+		TitleText string
+		Message   string
+		MesType   string
+	}
 )
 
-// getData gets the data for the user session
-func (v *Views) getData(s *sessions.Session) *Context {
-	val := s.Values["user"]
-	var u, actual user.User
-	u, ok := val.(user.User)
+func (v *Views) getSessionData(eC echo.Context) *Context {
+	session, err := v.cookie.Get(eC.Request(), v.conf.SessionCookieName)
+	if err != nil {
+		log.Printf("error getting session: %+v", err)
+		return nil
+	}
+	userValue := session.Values["user"]
+	u, ok := userValue.(user.User)
 	if !ok {
 		u = user.User{Authenticated: false}
 	}
@@ -42,45 +60,82 @@ func (v *Views) getData(s *sessions.Session) *Context {
 		actual = u
 		u = *u.AssumedUser
 	}
-	c := Context{
-		Version:    v.conf.Version,
-		Callback:   "/internal",
-		User:       u,
+
+	internalValue := session.Values["internalContext"]
+	i, ok := internalValue.(InternalContext)
+	if !ok {
+		i = InternalContext{}
+	}
+	c := &Context{
+		TitleText: i.TitleText,
+		Message:   i.Message,
+		MsgType:   i.MesType,
+		Callback:  "/internal",
+		User:      u,
+		Version:   v.conf.Version,
 		Assumed:    assumed,
 		actualUser: actual,
 	}
-	return &c
+	return c
 }
 
-// DBToTemplateType converts from the DB layer type to the user template type
-func DBToTemplateType(dbUsers []user.User) []user.StrippedUser {
-	var tplUsers []user.StrippedUser
-	location, err := time.LoadLocation("Europe/London")
+func (v *Views) setMessagesInSession(eC echo.Context, c *Context) error {
+	session, err := v.cookie.Get(eC.Request(), v.conf.SessionCookieName)
 	if err != nil {
-		fmt.Println(err)
+		return fmt.Errorf("error getting session: %w", err)
 	}
+	session.Values["internalContext"] = InternalContext{
+		TitleText: c.TitleText,
+		Message:   c.Message,
+		MesType:   c.MsgType,
+	}
+
+	err = session.Save(eC.Request(), eC.Response())
+	if err != nil {
+		return fmt.Errorf("failed to save session for set message: %w", err)
+	}
+	return nil
+}
+
+func (v *Views) clearMessagesInSession(eC echo.Context) error {
+	session, err := v.cookie.Get(eC.Request(), v.conf.SessionCookieName)
+	if err != nil {
+		return fmt.Errorf("error getting session: %w", err)
+	}
+	session.Values["internalContext"] = InternalContext{}
+
+	err = session.Save(eC.Request(), eC.Response())
+	if err != nil {
+		return fmt.Errorf("failed to save session for clear message: %w", err)
+	}
+	return nil
+}
+
+// DBUsersToUsersTemplateFormat converts from the DB layer type to the user template type
+func DBUsersToUsersTemplateFormat(dbUsers []user.User) []user.StrippedUser {
+	tplUsers := make([]user.StrippedUser, 0, len(dbUsers))
 	for _, dbUser := range dbUsers {
-		var user1 user.StrippedUser
-		user1.UserID = dbUser.UserID
-		user1.Username = dbUser.Username
+		var strippedUser user.StrippedUser
+		strippedUser.UserID = dbUser.UserID
+		strippedUser.Username = dbUser.Username
 		if dbUser.Firstname != dbUser.Nickname {
-			user1.Name = fmt.Sprintf("%s (%s) %s", dbUser.Firstname, dbUser.Nickname, dbUser.Lastname)
+			strippedUser.Name = fmt.Sprintf("%s (%s) %s", dbUser.Firstname, dbUser.Nickname, dbUser.Lastname)
 		} else {
-			user1.Name = fmt.Sprintf("%s %s", dbUser.Firstname, dbUser.Lastname)
+			strippedUser.Name = fmt.Sprintf("%s %s", dbUser.Firstname, dbUser.Lastname)
 		}
-		user1.Email = dbUser.Email
-		user1.Enabled = dbUser.Enabled
+		strippedUser.Email = dbUser.Email
+		strippedUser.Enabled = dbUser.Enabled
 		if dbUser.DeletedAt.Valid || dbUser.DeletedBy.Valid {
-			user1.Deleted = true
+			strippedUser.Deleted = true
 		} else {
-			user1.Deleted = false
+			strippedUser.Deleted = false
 		}
 		if dbUser.LastLogin.Valid {
-			user1.LastLogin = dbUser.LastLogin.Time.In(location).Format("2006-01-02 15:04:05 MST")
+			strippedUser.LastLogin = dbUser.LastLogin.Time.Format("2006-01-02 15:04:05")
 		} else {
-			user1.LastLogin = "-"
+			strippedUser.LastLogin = "-"
 		}
-		tplUsers = append(tplUsers, user1)
+		tplUsers = append(tplUsers, strippedUser)
 	}
 	return tplUsers
 }
@@ -175,7 +230,8 @@ func DBUserToDetailedUser(dbUser user.User, store *user.Store) user.DetailedUser
 	}
 	if dbUser.UseGravatar {
 		u.UseGravatar = true
-		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace(dbUser.Email))))
+		// #nosec
+		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace(u.Email))))
 		u.Avatar = fmt.Sprintf("https://www.gravatar.com/avatar/%s", hex.EncodeToString(hash[:]))
 	} else {
 		u.UseGravatar = false

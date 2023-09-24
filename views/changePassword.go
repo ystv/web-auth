@@ -2,21 +2,20 @@ package views
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 	"gopkg.in/guregu/null.v4"
-	"net/http"
 )
 
 // ChangePasswordFunc handles the password change from a user
 func (v *Views) ChangePasswordFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
-		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-		c1 := v.getData(session)
+		c1 := v.getSessionData(c)
 
 		err := c.Request().ParseForm()
 		if err != nil {
-			return v.errorHandle(c, fmt.Errorf("failed to parse form for changePassword: %+v", err))
+			return fmt.Errorf("failed to parse form for changePassword: %w", err)
 		}
 
 		oldPassword := c.Request().FormValue("oldPassword")
@@ -50,7 +49,7 @@ func (v *Views) ChangePasswordFunc(c echo.Context) error {
 
 		c1.User.Password = null.StringFrom(password)
 
-		_, err = v.user.EditUserPassword(c.Request().Context(), c1.User)
+		err = v.user.EditUserPassword(c.Request().Context(), c1.User)
 		if err != nil {
 			message.Error = fmt.Sprintf("failed to change password: %+v", err)
 			return c.JSON(status, message)
@@ -58,7 +57,6 @@ func (v *Views) ChangePasswordFunc(c echo.Context) error {
 
 		message.Message = "successfully changed password"
 		return c.JSON(status, message)
-	} else {
-		return v.errorHandle(c, fmt.Errorf("invalid method used"))
 	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }

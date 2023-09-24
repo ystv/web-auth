@@ -1,6 +1,6 @@
 {{define "title"}}Internal: Permissions{{end}}
 {{define "content"}}
-    <div class="column is-10">
+    <div class="column is-10" style="min-height: 88vh">
         <div class="card events-card">
             <header class="card-header">
                 <p class="card-header-title">Permissions</p>
@@ -25,7 +25,15 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {{parseHTMLPermissions .Permissions}}
+                        {{range .Permissions}}
+                            <tr>
+                                <th>{{.PermissionID}}</th>
+                                <td>{{.Name}}</td>
+                                <td>{{.Description}}</td>
+                                <td>{{.Roles}}</td>
+                                <td><a href="/internal/permission/{{.PermissionID}}">View</a></td>
+                            </tr>
+                        {{end}}
                         </tbody>
                         <tfoot>
                         <tr>

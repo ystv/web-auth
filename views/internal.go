@@ -1,10 +1,13 @@
 package views
 
 import (
-	"github.com/labstack/echo/v4"
-	"github.com/ystv/web-auth/templates"
-	"log"
+	"fmt"
 	"time"
+
+	"github.com/labstack/echo/v4"
+
+	"github.com/ystv/web-auth/templates"
+	"github.com/ystv/web-auth/user"
 
 	"github.com/dustin/go-humanize"
 )
@@ -15,65 +18,38 @@ type (
 		UserID              int
 		Nickname            string
 		LastLogin           string
-		TotalUsers          int
-		TotalActiveUsers    int
-		LoginsPast24Hours   int
-		ActiveUsersPastYear int
-		ActivePage          string
+		CountAll  user.CountUsers
 		Assumed             bool
+		TemplateHelper
 	}
 )
 
 // InternalFunc handles a request to the internal template
 func (v *Views) InternalFunc(c echo.Context) error {
-	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-	c1 := v.getData(session)
+	c1 := v.getSessionData(c)
 	lastLogin := time.Now()
 	if c1.User.LastLogin.Valid {
 		lastLogin = c1.User.LastLogin.Time
 	}
-	count, err := v.user.CountUsers(c.Request().Context())
+
+	countAll, err := v.user.CountUsersAll(c.Request().Context())
 	if err != nil {
-		log.Println(err)
-		if !v.conf.Debug {
-			return v.errorHandle(c, err)
-		}
+		return fmt.Errorf("failed to get count users all for interal: %w", err)
 	}
 
-	totalActiveUsers, err := v.user.CountUsersActive(c.Request().Context())
+	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		log.Println(err)
-		if !v.conf.Debug {
-			return v.errorHandle(c, err)
-		}
-	}
-
-	hours24, err := v.user.CountUsers24Hours(c.Request().Context())
-	if err != nil {
-		log.Println(err)
-		if !v.conf.Debug {
-			return v.errorHandle(c, err)
-		}
-	}
-
-	pastYear, err := v.user.CountUsersPastYear(c.Request().Context())
-	if err != nil {
-		log.Println(err)
-		if !v.conf.Debug {
-			return v.errorHandle(c, err)
-		}
+		return fmt.Errorf("failed to get permissions for internal: %w", err)
 	}
 
 	ctx := InternalTemplate{
-		UserID:              c1.User.UserID,
-		Nickname:            c1.User.Nickname,
-		LastLogin:           humanize.Time(lastLogin),
-		TotalUsers:          count,
-		TotalActiveUsers:    totalActiveUsers,
-		LoginsPast24Hours:   hours24,
-		ActiveUsersPastYear: pastYear,
-		ActivePage:          "dashboard",
+		Nickname:  c1.User.Nickname,
+		LastLogin: humanize.Time(lastLogin),
+		CountAll:  countAll,
+		TemplateHelper: TemplateHelper{
+			UserPermissions: p1,
+			ActivePage:      "dashboard",
+		},
 	}
-	return v.template.RenderTemplate(c.Response(), ctx, templates.InternalTemplate)
+	return v.template.RenderTemplate(c.Response(), ctx, templates.InternalTemplate, templates.RegularType)
 }

@@ -4,18 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
-	"github.com/ystv/web-auth/api"
-	//"github.com/ystv/web-auth/permission"
-	"github.com/ystv/web-auth/templates"
-	"gopkg.in/guregu/null.v4"
 	"log"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
+	"gopkg.in/guregu/null.v4"
+
+
+	"github.com/ystv/web-auth/api"
+	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 )
 
@@ -44,9 +45,7 @@ type (
 
 // ManageAPIFunc is the main home page for API management
 func (v *Views) ManageAPIFunc(c echo.Context) error {
-	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-	c1 := v.getData(session)
+	c1 := v.getSessionData(c)
 
 	tokens, err := v.api.GetTokens(c.Request().Context(), c1.User.UserID)
 	if err != nil {
@@ -184,33 +183,43 @@ func (v *Views) TokenDeleteFunc(c echo.Context) error {
 
 // SetTokenHandler sets a valid JWT in a cookie instead of returning a string
 func (v *Views) SetTokenHandler(c echo.Context) error {
-	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-
-	c1 := v.getData(session)
+	c1 := v.getSessionData(c)
 
 	tokenString, err := v.newJWT(c1.User)
 	if err != nil {
-		err = fmt.Errorf("failed to set cookie: %w", err)
-		http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
-		return err
+		log.Printf("failed to set cookie: %+v", err)
+		data := struct {
+			Error error `json:"error"`
+		}{
+			Error: fmt.Errorf("failed to set cookie: %w", err),
+		}
+		return c.JSON(http.StatusInternalServerError, data)
 	}
 	token := struct {
 		Token string `json:"token"`
 	}{Token: tokenString}
 	tokenByte, err := json.Marshal(token)
 	if err != nil {
-		err = fmt.Errorf("failed to marshal jwt: %w", err)
-		http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
-		return err
+		log.Printf("failed to marshal json: %+v", err)
+		data := struct {
+			Error error `json:"error"`
+		}{
+			Error: fmt.Errorf("failed to marshal json: %w", err),
+		}
+		return c.JSON(http.StatusInternalServerError, data)
 	}
 
 	c.Response().Header().Set("Content-Type", "application/json")
 	c.Response().WriteHeader(http.StatusCreated)
 	_, err = c.Response().Write(tokenByte)
 	if err != nil {
-		err = fmt.Errorf("failed to write token to http body: %w", err)
-		http.Error(c.Response(), err.Error(), http.StatusInternalServerError)
-		return err
+		log.Printf("failed to write token to http body: %+v", err)
+		data := struct {
+			Error error `json:"error"`
+		}{
+			Error: fmt.Errorf("failed to write token to http body: %w", err),
+		}
+		return c.JSON(http.StatusInternalServerError, data)
 	}
 	return nil
 }
@@ -223,7 +232,7 @@ func (v *Views) newJWT(u user.User) (string, error) {
 		return "", fmt.Errorf("failed to get user permissions: %w", err)
 	}
 	p1 := removeDuplicate(perms)
-	var p2 []string
+	p2 := make([]string, 0, len(p1))
 	for _, p := range p1 {
 		p2 = append(p2, p.Name)
 	}
@@ -285,39 +294,51 @@ func (v *Views) newJWTCustom(u user.User, expiry time.Time, tokenID string) (str
 	return tokenString, nil
 }
 
-// TestAPI returns a JSON object with a valid JWT
-func (v *Views) TestAPI(c echo.Context) error {
+// TestAPITokenFunc returns a JSON object if the JWT in the Authorization header is valid.
+func (v *Views) TestAPITokenFunc(c echo.Context) error {
 	if c.Request().Method == "GET" {
 		token := c.Request().Header.Get("Authorization")
 		splitToken := strings.Split(token, "Bearer ")
 		if len(splitToken) <= 1 {
-			log.Println("invalid bearer token")
-			return &echo.HTTPError{
-				Code:     http.StatusBadRequest,
-				Message:  fmt.Sprintf("inalid bearer token provided"),
-				Internal: fmt.Errorf("invalid bearer token provided"),
+			log.Println("invalid bearer token provided")
+			data := struct {
+				Error string `json:"error"`
+			}{
+				Error: "invalid bearer token provided",
 			}
+			return c.JSON(http.StatusBadRequest, data)
 		}
 		token = splitToken[1]
 
 		if token == "" {
 			log.Println("no bearer token provided")
-			return &echo.HTTPError{
-				Code:     http.StatusBadRequest,
-				Message:  fmt.Sprintf("no bearer token provided"),
-				Internal: fmt.Errorf("no bearer token provided"),
+			data := struct {
+				Error string `json:"error"`
+			}{
+				Error: "no bearer token provided",
 			}
+			return c.JSON(http.StatusBadRequest, data)
 		}
 
 		valid, claims, err := v.ValidateToken(token)
 		log.Printf("valid: %t - claims: %+v - error: %+v", valid, claims, err)
 		if !valid {
-			log.Println("invalid token")
-			return &echo.HTTPError{
-				Code:     http.StatusBadRequest,
-				Message:  fmt.Sprintf("invalid token"),
-				Internal: fmt.Errorf("invalid token"),
+			status := statusStruct{
+				StatusCode: http.StatusBadRequest,
+				Message:    "invalid token",
 			}
+			c.Response().WriteHeader(http.StatusBadRequest)
+			err := json.NewEncoder(c.Response()).Encode(status)
+			if err != nil {
+				log.Printf("failed to encode json: %+v", err)
+				data := struct {
+					Error error `json:"error"`
+				}{
+					Error: fmt.Errorf("failed to encode json: %w", err),
+				}
+				return c.JSON(http.StatusInternalServerError, data)
+			}
+			return c.JSON(http.StatusBadRequest, status)
 		}
 
 		log.Printf("token is valid \"%d\" is logged in", claims.UserID)
@@ -329,11 +350,16 @@ func (v *Views) TestAPI(c echo.Context) error {
 			Message:    "valid token",
 		}
 
-		log.Println(status)
-
-		return json.NewEncoder(c.Response()).Encode(status)
-	} else {
-		log.Printf("invalid method: %s", c.Request().Method)
+		err := json.NewEncoder(c.Response()).Encode(status)
+		if err != nil {
+			log.Printf("failed to encode json: %+v", err)
+			data := struct {
+				Error error `json:"error"`
+			}{
+				Error: fmt.Errorf("failed to encode json: %w", err),
+			}
+			return c.JSON(http.StatusInternalServerError, data)
+		}
 	}
 	return nil
 }
