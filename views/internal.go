@@ -19,7 +19,6 @@ type (
 		Nickname  string
 		LastLogin string
 		CountAll  user.CountUsers
-		Assumed   bool
 		TemplateHelper
 	}
 )

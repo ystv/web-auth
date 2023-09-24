@@ -16,8 +16,7 @@ import (
 type (
 	// RolesTemplate is for the roles front end
 	RolesTemplate struct {
-		Roles   []role.Role
-		Assumed bool
+		Roles []role.Role
 		TemplateHelper
 	}
 
@@ -26,7 +25,6 @@ type (
 		Role                 user.RoleTemplate
 		PermissionsNotInRole []permission.Permission
 		UsersNotInRole       []user.User
-		Assumed              bool
 		TemplateHelper
 	}
 )

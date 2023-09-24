@@ -16,14 +16,12 @@ type (
 	// PermissionsTemplate is for the permissions front end
 	PermissionsTemplate struct {
 		Permissions []permission.Permission
-		Assumed     bool
 		TemplateHelper
 	}
 
 	// PermissionTemplate is for the permission front end
 	PermissionTemplate struct {
 		Permission user.PermissionTemplate
-		Assumed    bool
 		TemplateHelper
 	}
 )
