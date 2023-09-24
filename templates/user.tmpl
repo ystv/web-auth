@@ -66,7 +66,7 @@
                     {{if .LDAPUsername.Valid}}
                         LDAP (Active Directory) username: {{.LDAPUsername.String}}<br>
                     {{end}}
-                    Avatar source: {{if .UseGravatar}}Using gravatar{{else}}Using local file{{end}}<br>
+                    Avatar source: {{if .UseGravatar}}Using gravatar{{else}}Using local file{{end}}<br><br>
                     {{if gt (len .Permissions) 0}}
                     Permissions: <ol>
                         {{range .Permissions}}
