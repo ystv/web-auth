@@ -152,9 +152,9 @@ func (r *Router) loadRoutes() {
 	user.Match(validMethods, "/reset", r.views.ResetUserPasswordFunc)
 	user.Match(validMethods, "", r.views.UserFunc)
 
-	internalApi := internal.Group("/api")
-	internalApi.Match(validMethods, "/set_token", r.views.SetTokenHandler)
-	manage := internalApi.Group("/manage")
+	internalAPI := internal.Group("/api")
+	internalAPI.Match(validMethods, "/set_token", r.views.SetTokenHandler)
+	manage := internalAPI.Group("/manage")
 	manage.Match(validMethods, "/add", r.views.TokenAddFunc)
 	manage.Match(validMethods, "/:tokenid/delete", r.views.TokenDeleteFunc)
 	manage.Match(validMethods, "", r.views.ManageAPIFunc)
