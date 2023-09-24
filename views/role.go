@@ -59,6 +59,7 @@ func (v *Views) RolesFunc(c echo.Context) error {
 		TemplateHelper: TemplateHelper{
 			UserPermissions: p1,
 			ActivePage:      "roles",
+			Assumed:         c1.Assumed,
 		},
 	}
 
@@ -113,6 +114,7 @@ func (v *Views) RoleFunc(c echo.Context) error {
 		TemplateHelper: TemplateHelper{
 			UserPermissions: p1,
 			ActivePage:      "role",
+			Assumed:         c1.Assumed,
 		},
 	}
 

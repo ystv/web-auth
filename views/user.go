@@ -198,6 +198,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 		TemplateHelper: TemplateHelper{
 			UserPermissions: p1,
 			ActivePage:      "users",
+			Assumed:         c1.Assumed,
 		},
 		Sort: Sort{
 			Pages:      sum,
@@ -250,6 +251,7 @@ func (v *Views) UserFunc(c echo.Context) error {
 		TemplateHelper: TemplateHelper{
 			UserPermissions: p1,
 			ActivePage:      "user",
+			Assumed:         c1.Assumed,
 		},
 	}
 

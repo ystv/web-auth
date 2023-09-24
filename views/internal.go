@@ -49,6 +49,7 @@ func (v *Views) InternalFunc(c echo.Context) error {
 		TemplateHelper: TemplateHelper{
 			UserPermissions: p1,
 			ActivePage:      "dashboard",
+			Assumed:         c1.Assumed,
 		},
 	}
 	return v.template.RenderTemplate(c.Response(), ctx, templates.InternalTemplate, templates.RegularType)

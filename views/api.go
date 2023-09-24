@@ -59,6 +59,7 @@ func (v *Views) ManageAPIFunc(c echo.Context) error {
 		TemplateHelper: TemplateHelper{
 			UserPermissions: p1,
 			ActivePage:      "apiManage",
+			Assumed:         c1.Assumed,
 		},
 	}
 
@@ -85,6 +86,7 @@ func (v *Views) manageAPIFunc(c echo.Context, addedJWT string) error {
 		TemplateHelper: TemplateHelper{
 			UserPermissions: p1,
 			ActivePage:      "apiManage",
+			Assumed:         c1.Assumed,
 		},
 	}
 
