@@ -165,6 +165,10 @@ func (s *Store) GetUserValid(ctx context.Context, u User) (User, error) {
 	return user, nil
 }
 
+func (s *Store) GetUsers(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, int, error) {
+	return s.getUsers(ctx, size, page, search, sortBy, direction, enabled, deleted)
+}
+
 // VerifyUser will check that the password is correct with provided
 // credentials and if verified will return the User object
 // returned is the user object, bool of if the password is forced to be changed and any errors encountered
