@@ -152,6 +152,13 @@ func (r *Router) loadRoutes() {
 	user.Match(validMethods, "/reset", r.views.ResetUserPasswordFunc)
 	user.Match(validMethods, "", r.views.UserFunc)
 
+	internalApi := internal.Group("/api")
+	internalApi.Match(validMethods, "/set_token", r.views.SetTokenHandler)
+	manage := internalApi.Group("/manage")
+	manage.Match(validMethods, "/add", r.views.TokenAddFunc)
+	manage.Match(validMethods, "/:tokenid/delete", r.views.TokenDeleteFunc)
+	manage.Match(validMethods, "", r.views.ManageAPIFunc)
+
 	api := r.router.Group("/api")
 	// api is all the methods that are used by the api interactions
 	api.GET("/set_token", r.views.SetTokenHandler, r.views.RequiresLoginJSON)
