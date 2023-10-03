@@ -20,6 +20,7 @@
         </ul>
         <p class="menu-label">API Interactions</p>
         <ul class="menu-list">
+            <li><a {{if eq $page "apiManage"}}class="is-active"{{end}} href="/internal/api/manage">Manage API tokens</a></li>
             <li><a {{if eq $page "apiGet"}}class="is-active"{{end}} href="/api/get_token">Get API token</a></li>
             <li><a {{if eq $page "apiTest"}}class="is-active"{{end}} href="/api/test">Test API</a></li>
         </ul>

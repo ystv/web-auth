@@ -10,8 +10,12 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"gopkg.in/guregu/null.v4"
 
+	"github.com/ystv/web-auth/api"
+	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 )
 
@@ -27,7 +31,137 @@ type (
 		StatusCode int    `json:"status_code"`
 		Message    string `json:"message"`
 	}
+
+	// ManageAPITemplate returns the data to the front end
+	ManageAPITemplate struct {
+		Tokens     []api.Token
+		UserID     int
+		AddedJWT   string
+		ActivePage string
+	}
 )
+
+// ManageAPIFunc is the main home page for API management
+func (v *Views) ManageAPIFunc(c echo.Context) error {
+	c1 := v.getSessionData(c)
+
+	tokens, err := v.api.GetTokens(c.Request().Context(), c1.User.UserID)
+	if err != nil {
+		return fmt.Errorf("failed to get tokens for manageAPI: %w", err)
+	}
+
+	data := ManageAPITemplate{
+		Tokens:     tokens,
+		UserID:     c1.User.UserID,
+		ActivePage: "apiManage",
+	}
+
+	return v.template.RenderTemplate(c.Response(), data, templates.ManageAPITemplate, templates.RegularType)
+}
+
+// ManageAPIFunc is the main home page for API management internal
+func (v *Views) manageAPIFunc(c echo.Context, addedJWT string) error {
+	c1 := v.getSessionData(c)
+
+	tokens, err := v.api.GetTokens(c.Request().Context(), c1.User.UserID)
+	if err != nil {
+		return fmt.Errorf("failed to get tokens for manageAPI: %w", err)
+	}
+
+	data := ManageAPITemplate{
+		Tokens:     tokens,
+		UserID:     c1.User.UserID,
+		AddedJWT:   addedJWT,
+		ActivePage: "apiManage",
+	}
+
+	return v.template.RenderTemplate(c.Response(), data, templates.ManageAPITemplate, templates.RegularType)
+}
+
+// TokenAddFunc adds a token to be used by the user
+func (v *Views) TokenAddFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		err := c.Request().ParseForm()
+		if err != nil {
+			return fmt.Errorf("failed to parse form for tokenAdd: %w", err)
+		}
+
+		name := c.Request().FormValue("name")
+		description := c.Request().FormValue("description")
+		expiry := c.Request().FormValue("expiry")
+
+		if len(name) < 2 {
+			return fmt.Errorf("token name too short")
+		}
+
+		id := uuid.NewString()
+
+		parse, err := time.Parse("02/01/2006", expiry)
+		if err != nil {
+			return fmt.Errorf("failed to parse expiry: %w", err)
+		}
+
+		diff := time.Now().Add(2 * time.Hour * 24).Compare(parse)
+		if diff != -1 {
+			return fmt.Errorf("expiry date must be more than 2 days away")
+		}
+
+		t := api.Token{
+			TokenID:     id,
+			Name:        name,
+			Description: description,
+			Expiry:      null.TimeFrom(parse),
+			UserID:      c1.User.UserID,
+		}
+
+		t1, err := v.api.GetToken(c.Request().Context(), t)
+		if err == nil && len(t1.TokenID) > 0 {
+			return fmt.Errorf("token with id \"%s\" already exists", id)
+		}
+
+		addedJWT, err := v.newJWTCustom(c1.User, parse, id)
+		if err != nil {
+			return fmt.Errorf("failed to generate jwt for tokenAdd: %w", err)
+		}
+
+		_, err = v.api.AddToken(c.Request().Context(), t)
+		if err != nil {
+			return fmt.Errorf("error adding token for addToken: %w", err)
+		}
+		return v.manageAPIFunc(c, addedJWT)
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+}
+
+// TokenDeleteFunc deletes a token
+func (v *Views) TokenDeleteFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		tokenID := c.Param("tokenid")
+		if len(tokenID) != 36 {
+			return fmt.Errorf("failed to parse tokenid for tokenDelete: tokenid is the incorrect length")
+		}
+
+		token1, err := v.api.GetToken(c.Request().Context(), api.Token{TokenID: tokenID})
+		if err != nil {
+			return fmt.Errorf("failed to get token in tokenDelete: %w", err)
+		}
+
+		if token1.UserID != c1.User.UserID {
+			return fmt.Errorf("failed to get token in tokenDelete: unauthorized")
+		}
+
+		err = v.api.DeleteToken(c.Request().Context(), token1)
+		if err != nil {
+			return fmt.Errorf("failed to delete token in tokenDelete: %w", err)
+		}
+		return v.ManageAPIFunc(c)
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+}
 
 // SetTokenHandler sets a valid JWT in a cookie instead of returning a string
 func (v *Views) SetTokenHandler(c echo.Context) error {
@@ -72,6 +206,7 @@ func (v *Views) SetTokenHandler(c echo.Context) error {
 	return nil
 }
 
+// newJWT generates a new jwt token
 func (v *Views) newJWT(u user.User) (string, error) {
 	expirationTime := time.Now().Add(5 * time.Minute)
 	perms, err := v.user.GetPermissionsForUser(context.Background(), u)
@@ -87,13 +222,54 @@ func (v *Views) newJWT(u user.User) (string, error) {
 		UserID:      u.UserID,
 		Permissions: p2,
 		RegisteredClaims: jwt.RegisteredClaims{
+			IssuedAt:  &jwt.NumericDate{Time: time.Now()},
 			ExpiresAt: &jwt.NumericDate{Time: expirationTime},
 		},
 	}
 
 	// Declare the token with the algorithm used for signing,
 	// and the claims.
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
+	// Create the JWT string
+	tokenString, err := token.SignedString([]byte(v.conf.Security.SigningKey))
+	if err != nil {
+		// If there is an error in creating the JWT
+		return "", fmt.Errorf("failed to make jwt string: %w", err)
+	}
+	return tokenString, nil
+}
+
+// newJWTCustom generates a new jwt token for the user
+func (v *Views) newJWTCustom(u user.User, expiry time.Time, tokenID string) (string, error) {
+	compare := expiry.Compare(time.Now().AddDate(1, 0, 0))
+	if compare == 1 {
+		return "", fmt.Errorf("expiration date is more than a year away, can only have a maximum of 1 year")
+	}
+
+	perms, err := v.user.GetPermissionsForUser(context.Background(), u)
+	if err != nil {
+		return "", fmt.Errorf("failed to get user permissions: %w", err)
+	}
+
+	p1 := removeDuplicate(perms)
+
+	p2 := make([]string, 0, len(p1))
+	for _, p := range p1 {
+		p2 = append(p2, p.Name)
+	}
+	claims := &JWTClaims{
+		UserID:      u.UserID,
+		Permissions: p2,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        tokenID,
+			IssuedAt:  &jwt.NumericDate{Time: time.Now()},
+			ExpiresAt: &jwt.NumericDate{Time: expiry},
+		},
+	}
+
+	// Declare the token with the algorithm used for signing,
+	// and the claims.
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 	// Create the JWT string
 	tokenString, err := token.SignedString([]byte(v.conf.Security.SigningKey))
 	if err != nil {
@@ -129,8 +305,9 @@ func (v *Views) TestAPITokenFunc(c echo.Context) error {
 			return c.JSON(http.StatusBadRequest, data)
 		}
 
-		IsTokenValid, claims := v.ValidateToken(token)
-		if !IsTokenValid {
+		valid, claims, err := v.ValidateToken(token)
+		log.Printf("valid: %t - claims: %+v - error: %+v", valid, claims, err)
+		if !valid {
 			status := statusStruct{
 				StatusCode: http.StatusBadRequest,
 				Message:    "invalid token",
@@ -146,7 +323,7 @@ func (v *Views) TestAPITokenFunc(c echo.Context) error {
 				}
 				return c.JSON(http.StatusInternalServerError, data)
 			}
-			return err
+			return c.JSON(http.StatusBadRequest, status)
 		}
 
 		log.Printf("token is valid \"%d\" is logged in", claims.UserID)
@@ -158,7 +335,7 @@ func (v *Views) TestAPITokenFunc(c echo.Context) error {
 			Message:    "valid token",
 		}
 
-		err := json.NewEncoder(c.Response()).Encode(status)
+		err = json.NewEncoder(c.Response()).Encode(status)
 		if err != nil {
 			log.Printf("failed to encode json: %+v", err)
 			data := struct {
@@ -173,19 +350,30 @@ func (v *Views) TestAPITokenFunc(c echo.Context) error {
 }
 
 // ValidateToken will validate the token
-func (v *Views) ValidateToken(token string) (bool, *JWTClaims) {
+func (v *Views) ValidateToken(token string) (bool, *JWTClaims, error) {
 	parsedToken, err := jwt.ParseWithClaims(token, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(v.conf.Security.SigningKey), nil
 	})
-
 	if err != nil {
-		return false, nil
+		return false, nil, fmt.Errorf("failed to parse token: %w", err)
 	}
 
 	if !parsedToken.Valid {
-		return false, nil
+		return false, nil, fmt.Errorf("failed to validate token: invalid token")
 	}
 
 	claims := parsedToken.Claims.(*JWTClaims)
-	return parsedToken.Valid, claims
+
+	if len(claims.ID) > 0 {
+		_, err = v.api.GetToken(context.Background(), api.Token{TokenID: claims.ID})
+		if err != nil {
+			return false, nil, fmt.Errorf("failed to get token: %w", err)
+		}
+	}
+
+	_, err = v.user.GetUserValid(context.Background(), user.User{UserID: claims.UserID})
+	if err != nil {
+		return false, nil, fmt.Errorf("failed to get valid user: %w", err)
+	}
+	return parsedToken.Valid, claims, nil
 }

@@ -28,6 +28,7 @@ type (
 		TemplateHelper
 	}
 
+	// Sort is the parameters for how to sort a users request
 	Sort struct {
 		Pages      int
 		Size       int
@@ -39,6 +40,7 @@ type (
 		Deleted    string
 	}
 
+	// UserTemplate is for the user front end
 	UserTemplate struct {
 		User user.DetailedUser
 		TemplateHelper
@@ -168,7 +170,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 		return fmt.Errorf("failed to get users for users: %w", err)
 	}
 
-	if len(dbUsers) == 0 {
+	if (len(dbUsers) == 0 || fullCount == 0) && size != 0 && page != 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("size and page given is not valid"))
 	}
 
@@ -224,7 +226,7 @@ func (v *Views) UserFunc(c echo.Context) error {
 		return fmt.Errorf("failed to get user for user: %w", err)
 	}
 
-	detailedUser := DBUserToUserTemplateFormat(userFromDB, v.user)
+	detailedUser := DBUserToDetailedUser(userFromDB, v.user)
 
 	detailedUser.Permissions, err = v.user.GetPermissionsForUser(c.Request().Context(), user.User{UserID: detailedUser.UserID})
 	if err != nil {
@@ -254,16 +256,25 @@ func (v *Views) UserFunc(c echo.Context) error {
 	return v.template.RenderTemplate(c.Response(), data, templates.UserTemplate, templates.RegularType)
 }
 
+// UserAddFunc handles an add user request
 func (v *Views) UserAddFunc(c echo.Context) error {
-	if c.Request().Method == http.MethodPost {
-		c1 := v.getSessionData(c)
+	c1 := v.getSessionData(c)
 
+	if c.Request().Method == http.MethodGet {
+		data := struct {
+			UserID     int
+			ActivePage string
+		}{
+			UserID:     c1.User.UserID,
+			ActivePage: "useradd",
+		}
+
+		return v.template.RenderTemplate(c.Response(), data, templates.UserAddTemplate, templates.RegularType)
+	} else if c.Request().Method == http.MethodPost {
 		err := c.Request().ParseForm()
 		if err != nil {
 			return fmt.Errorf("failed to parse form for userAdd: %w", err)
 		}
-
-		fmt.Println(c.Request(), "\n\n", c.Request().Form)
 
 		firstName := c.Request().FormValue("firstname")
 		lastName := c.Request().FormValue("lastname")
@@ -348,6 +359,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
+// UserEditFunc handles an edit user request
 func (v *Views) UserEditFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
@@ -409,6 +421,7 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
+// UserToggleEnabledFunc handles an toggle enable user request
 func (v *Views) UserToggleEnabledFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
@@ -434,6 +447,7 @@ func (v *Views) UserToggleEnabledFunc(c echo.Context) error {
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
+// UserDeleteFunc handles an delete user request
 func (v *Views) UserDeleteFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)

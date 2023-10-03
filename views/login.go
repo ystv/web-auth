@@ -44,6 +44,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		username := c.FormValue("username")
 		password := c.FormValue("password")
 		var u user.User
+
 		// Since we let users enter either an email or username, it's easier
 		// to just let it both for the query
 		u.Username = username

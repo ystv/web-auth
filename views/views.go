@@ -1,8 +1,10 @@
 package views
 
 import (
+	"context"
 	"encoding/gob"
 	"encoding/hex"
+	"log"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -10,6 +12,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/patrickmn/go-cache"
 
+	"github.com/ystv/web-auth/api"
 	"github.com/ystv/web-auth/infrastructure/db"
 	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/permission"
@@ -51,15 +54,17 @@ type (
 
 	// Views encapsulates our view dependencies
 	Views struct {
+		api        *api.Store
+		cache      *cache.Cache
 		conf       *Config
+		cookie     *sessions.CookieStore
+		Mailer     *mail.Mailer
 		permission *permission.Store
 		role       *role.Store
+		template   *templates.Templater
 		user       *user.Store
-		cookie     *sessions.CookieStore
-		cache      *cache.Cache
 		mailer     *mail.MailerInit
 		validate   *validator.Validate
-		template   *templates.Templater
 	}
 
 	TemplateHelper struct {
@@ -76,6 +81,7 @@ func New(conf *Config, host string) *Views {
 	v.permission = permission.NewPermissionRepo(dbStore)
 	v.role = role.NewRoleRepo(dbStore)
 	v.user = user.NewUserRepo(dbStore)
+	v.api = api.NewAPIRepo(dbStore)
 
 	v.template = templates.NewTemplate(v.permission, v.role, v.user)
 
@@ -118,6 +124,16 @@ func New(conf *Config, host string) *Views {
 
 	// Struct validator
 	v.validate = validator.New()
+
+	go func() {
+		for {
+			err := v.api.DeleteOldToken(context.Background())
+			if err != nil {
+				log.Printf("failed to delete old token func: %+v", err)
+			}
+			time.Sleep(30 * time.Second)
+		}
+	}()
 
 	return v
 }

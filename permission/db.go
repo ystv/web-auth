@@ -28,7 +28,7 @@ func (s *Store) getPermissions(ctx context.Context) ([]Permission, error) {
 	return p, nil
 }
 
-// getPermissions returns all permissions
+// getPermission returns a permission
 func (s *Store) getPermission(ctx context.Context, p1 Permission) (Permission, error) {
 	var p Permission
 	builder := utils.PSQL().Select("p.*", "COUNT(rp.role_id) AS roles").
@@ -48,6 +48,7 @@ func (s *Store) getPermission(ctx context.Context, p1 Permission) (Permission, e
 	return p, nil
 }
 
+// addPermission adds a new permission
 func (s *Store) addPermission(ctx context.Context, p Permission) (Permission, error) {
 	builder := utils.PSQL().Insert("people.permissions").
 		Columns("name", "description").
@@ -69,6 +70,7 @@ func (s *Store) addPermission(ctx context.Context, p Permission) (Permission, er
 	return p, nil
 }
 
+// editPermission edits an existing permission
 func (s *Store) editPermission(ctx context.Context, p Permission) (Permission, error) {
 	stmt, err := s.db.NamedExecContext(ctx, `UPDATE people.permissions
 		SET name = :name,
@@ -87,6 +89,7 @@ func (s *Store) editPermission(ctx context.Context, p Permission) (Permission, e
 	return p, nil
 }
 
+// deletePermission deletes a specific permission
 func (s *Store) deletePermission(ctx context.Context, p Permission) error {
 	builder := utils.PSQL().Delete("people.permissions").
 		Where(sq.Eq{"permission_id": p.PermissionID})
@@ -101,6 +104,7 @@ func (s *Store) deletePermission(ctx context.Context, p Permission) error {
 	return nil
 }
 
+// deleteRolePermission deletes the connection between a Role and Permission
 func (s *Store) deleteRolePermission(ctx context.Context, p Permission) error {
 	builder := utils.PSQL().Delete("people.role_permissions").
 		Where(sq.Eq{"permission_id": p.PermissionID})

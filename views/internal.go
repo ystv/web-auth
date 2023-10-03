@@ -15,9 +15,11 @@ import (
 type (
 	// InternalTemplate represents the context for the internal template
 	InternalTemplate struct {
+		UserID    int
 		Nickname  string
 		LastLogin string
 		CountAll  user.CountUsers
+		Assumed   bool
 		TemplateHelper
 	}
 )

@@ -18,22 +18,22 @@
                 {{if not .User.DeletedAt.Valid}}
                 <div class="buttons" style="display: block">
                     <a class="button is-info is-outlined" onclick="resetPasswordModal()">
-                        Reset password
+                        <span class="mdi mdi-account-key"></span>&ensp;Reset password
                     </a>
                     <a class="button is-info is-outlined" onclick="editUserModal()">
-                        Edit
+                        <span class="mdi mdi-account-edit"></span>&ensp;Edit
                     </a>
                     {{if .User.Enabled}}
                         <a class="button is-warning is-outlined" onclick="disableUserModal()">
-                            Disable
+                            <span class="mdi mdi-account-lock"></span>&ensp;Disable
                         </a>
                     {{else}}
                         <a class="button is-warning is-outlined" onclick="enableUserModal()">
-                            Enable
+                            <span class="mdi mdi-account-lock-open"></span>&ensp;Enable
                         </a>
                     {{end}}
                     <a class="button is-danger is-outlined" onclick="deleteUserModal()">
-                        Delete
+                        <span class="mdi mdi-account-remove"></span>&ensp;Delete
                     </a>
                 </div>
                 {{end}}
@@ -111,7 +111,7 @@
                             <p class="title">Are you sure you want to reset the password?</p>
                             <p>An email will be sent to the user for
                                 them to reset their password</p>
-                            <a class="button is-danger" onclick="resetPassword()">Reset password</a>
+                            <a class="button is-danger" onclick="resetPassword()"><span class="mdi mdi-account-key"></span>&ensp;Reset password</a>
                         </div>
                     </div>
                 </article>
@@ -236,7 +236,7 @@
                                         />
                                     </div>
                                 </div>
-                                <button class="button is-danger">Edit user</button>
+                                <button class="button is-danger"><span class="mdi mdi-account-edit"></span>&ensp;Edit user</button>
                             </form>
                         </div>
                     </div>
@@ -256,7 +256,7 @@
                                 <p class="title">Are you sure you want to disable this account?</p>
                                 <p>This user won't be able to log in until it is re-enabled</p>
                                 <form action="/internal/user/{{.User.UserID}}/toggle" method="post">
-                                    <button class="button is-danger">Disable user</button>
+                                    <button class="button is-danger"><span class="mdi mdi-account-lock"></span>&ensp;Disable user</button>
                                 </form>
                             </div>
                         </div>
@@ -276,7 +276,7 @@
                                 <p class="title">Are you sure you want to enable this account?</p>
                                 <p>This user will be able to log in until it is re-disabled</p>
                                 <form action="/internal/user/{{.User.UserID}}/toggle" method="post">
-                                    <button class="button is-danger">Enable user</button>
+                                    <button class="button is-danger"><span class="mdi mdi-account-lock-open"></span>&ensp;Enable user</button>
                                 </form>
                             </div>
                         </div>
@@ -296,7 +296,7 @@
                             <p class="title">Are you sure you want to disable this account?</p>
                             <p>This user won't be able to log in until it is re-enabled</p>
                             <form action="/internal/user/{{.User.UserID}}/delete" method="post">
-                                <button class="button is-danger">Delete user</button>
+                                <button class="button is-danger"><span class="mdi mdi-account-remove"></span>&ensp;Delete user</button>
                             </form>
                         </div>
                     </div>

@@ -50,7 +50,8 @@ type (
 		UseGravatar        bool                    `db:"use_gravatar" json:"useGravatar" schema:"useGravatar"`
 		Permissions        []permission.Permission `json:"permissions"`
 		Roles              []role.Role             `json:"roles"`
-		Authenticated      bool
+		Authenticated      bool                    `json:"authenticated"`
+		AssumedUser        *User                   `json:"assumedUser"`
 	}
 
 	// StrippedUser represents user information, an administrator can view
@@ -64,6 +65,7 @@ type (
 		Deleted   bool
 	}
 
+	// DetailedUser is the user object in full for the front end
 	DetailedUser struct {
 		UserID             int                     `json:"id"`
 		Username           string                  `json:"username"`
@@ -105,6 +107,7 @@ type (
 		Users       []User
 	}
 
+	// PermissionTemplate is for the front end of permission
 	PermissionTemplate struct {
 		PermissionID int
 		Name         string
@@ -112,11 +115,13 @@ type (
 		Roles        []role.Role
 	}
 
+	// RolePermission symbolises a link between a role.Role and permission.Permission
 	RolePermission struct {
 		RoleID       int `db:"role_id" json:"roleID"`
 		PermissionID int `db:"permission_id" json:"permissionID"`
 	}
 
+	// RoleUser symbolises a link between a role.Role and User
 	RoleUser struct {
 		RoleID int `db:"role_id" json:"roleID"`
 		UserID int `db:"user_id" json:"userID"`
@@ -139,6 +144,25 @@ func (s *Store) CountUsersAll(ctx context.Context) (CountUsers, error) {
 // GetUser returns a user using any unique identity fields
 func (s *Store) GetUser(ctx context.Context, u User) (User, error) {
 	return s.getUser(ctx, u)
+}
+
+// GetUserValid returns a user using any unique identity fields which is enabled and not deleted
+func (s *Store) GetUserValid(ctx context.Context, u User) (User, error) {
+	user, err := s.GetUser(ctx, u)
+	if err != nil {
+		return u, fmt.Errorf("failed to get user: %w", err)
+	}
+	if !user.Enabled {
+		return u, errors.New("user not enabled, contact Computing Team for help")
+	}
+	if user.DeletedBy.Valid {
+		return u, errors.New("user has been deleted, contact Computing Team for help")
+	}
+	if user.ResetPw {
+		u.UserID = user.UserID
+		return u, errors.New("password reset required")
+	}
+	return user, nil
 }
 
 func (s *Store) GetUsers(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, int, error) {
@@ -169,6 +193,7 @@ func (s *Store) VerifyUser(ctx context.Context, u User) (User, bool, error) {
 	return u, false, errors.New("invalid credentials")
 }
 
+// AddUser adds a new User
 func (s *Store) AddUser(ctx context.Context, u User, userID int) (User, error) {
 	_, err := s.GetUser(ctx, u)
 	if err == nil {
@@ -282,22 +307,27 @@ func (s *Store) GetRolesForUser(ctx context.Context, u User) ([]role.Role, error
 	return s.getRolesForUser(ctx, u)
 }
 
+// GetUsersForRole returns all the Users that are linked to a role.Role
 func (s *Store) GetUsersForRole(ctx context.Context, r role.Role) ([]User, error) {
 	return s.getUsersForRole(ctx, r)
 }
 
+// GetRoleUser returns a single link between a role.Role and User
 func (s *Store) GetRoleUser(ctx context.Context, ru RoleUser) (RoleUser, error) {
 	return s.getRoleUser(ctx, ru)
 }
 
+// GetUsersNotInRole returns all the users not linked to a role.Role
 func (s *Store) GetUsersNotInRole(ctx context.Context, r role.Role) ([]User, error) {
 	return s.getUsersNotInRole(ctx, r)
 }
 
+// AddRoleUser adds a link between a role.Role and User
 func (s *Store) AddRoleUser(ctx context.Context, ru RoleUser) (RoleUser, error) {
 	return s.addRoleUser(ctx, ru)
 }
 
+// RemoveRoleUser removes a link between a role.Role and User
 func (s *Store) RemoveRoleUser(ctx context.Context, ru RoleUser) error {
 	return s.removeRoleUser(ctx, ru)
 }
@@ -321,14 +351,17 @@ func (s *Store) GetRolePermission(ctx context.Context, rp RolePermission) (RoleP
 	return s.getRolePermission(ctx, rp)
 }
 
+// GetPermissionsNotInRole returns all the permission.Permission not in a role.Role
 func (s *Store) GetPermissionsNotInRole(ctx context.Context, r role.Role) ([]permission.Permission, error) {
 	return s.getPermissionsNotInRole(ctx, r)
 }
 
+// AddRolePermission creates a link between a role.Role and permission.Permission
 func (s *Store) AddRolePermission(ctx context.Context, rp RolePermission) (RolePermission, error) {
 	return s.addRolePermission(ctx, rp)
 }
 
+// RemoveRolePermission removes a link between a role.Role and permission.Permission
 func (s *Store) RemoveRolePermission(ctx context.Context, rp RolePermission) error {
 	return s.removeRolePermission(ctx, rp)
 }

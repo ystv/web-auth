@@ -13,11 +13,11 @@
             <div class="column is-2">
                 <div class="buttons" style="display: block">
                     <a class="button is-warning is-outlined" onclick="editPermissionModal()">
-                        Edit
+                        <span class="mdi mdi-pencil"></span>&ensp;Edit
                     </a>
                     {{if ne .Permission.Name "SuperUser"}}
                         <a class="button is-danger is-outlined" onclick="deletePermissionModal()">
-                            Delete
+                            <span class="mdi mdi-key-remove"></span>&ensp;Delete
                         </a>
                     {{end}}
                 </div>
@@ -108,7 +108,7 @@
                                         />
                                     </div>
                                 </div>
-                                <button class="button is-danger">Edit permission</button>
+                                <button class="button is-danger"><span class="mdi mdi-pencil"></span>&ensp;Edit permission</button>
                             </form>
                         </div>
                     </div>
@@ -129,7 +129,7 @@
                             Be very careful, this is the most powerful permission and will break many, many things!<br>
                             {{end}}</strong></p>
                             <form action="/internal/permission/{{.Permission.PermissionID}}/delete" method="post">
-                                <button class="button is-danger">Delete permission</button>
+                                <button class="button is-danger"><span class="mdi mdi-key-remove"></span>&ensp;Delete permission</button>
                             </form>
                         </div>
                     </div>

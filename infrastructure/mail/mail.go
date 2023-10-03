@@ -26,6 +26,7 @@ type (
 		DomainName string
 	}
 
+	// Defaults is the default values for the mailer if none are explicitly mentioned
 	Defaults struct {
 		DefaultTo   string
 		DefaultCC   []string

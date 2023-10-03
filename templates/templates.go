@@ -16,6 +16,8 @@ import (
 	"gopkg.in/guregu/null.v4"
 )
 
+// tmpls are the storage of templates in the executable
+//
 //go:embed *.tmpl
 var tmpls embed.FS
 
@@ -46,6 +48,8 @@ const (
 	PermissionsTemplate  Template = "permissions.tmpl"
 	SignupEmailTemplate  Template = "signupEmail.tmpl"
 	PermissionTemplate   Template = "permission.tmpl"
+	ManageAPITemplate    Template = "manageAPI.tmpl"
+	UserAddTemplate      Template = "userAdd.tmpl"
 )
 
 type TemplateType int
@@ -56,6 +60,7 @@ const (
 	RegularType
 )
 
+// NewTemplate returns the template format to be used
 func NewTemplate(p *permission.Store, r *role.Store, u *user.Store) *Templater {
 	return &Templater{
 		Permission: p,
@@ -64,6 +69,7 @@ func NewTemplate(p *permission.Store, r *role.Store, u *user.Store) *Templater {
 	}
 }
 
+// String returns the string equivalent of Template
 func (t Template) String() string {
 	return string(t)
 }
@@ -98,6 +104,7 @@ func (t *Templater) GetEmailTemplate(emailTemplate Template) (*template.Template
 	return template.New(emailTemplate.String()).ParseFS(tmpls, emailTemplate.String())
 }
 
+// getFuncMaps returns all the in built functions that templates can use
 func (t *Templater) getFuncMaps() template.FuncMap {
 	return template.FuncMap{
 		"thisYear": func() int {

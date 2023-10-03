@@ -1,5 +1,17 @@
 {{define "title"}}Internal: Role ({{.Role.Name}}){{end}}
 {{define "content"}}
+    <style>
+        .toolbar ol {
+            display:table-row;
+        }
+        .toolbar ol li {
+            margin-bottom: 10px;
+            vertical-align: middle;
+        }
+        .toolbar ol li a {
+            vertical-align: middle;
+        }
+    </style>
     <div class="column is-10" style="min-height: 88vh">
         <section class="hero is-info welcome is-small">
             <div class="hero-body">
@@ -13,10 +25,10 @@
             <div class="column is-2">
                 <div class="buttons" style="display: block">
                     <a class="button is-warning is-outlined" onclick="editRoleModal()">
-                        Edit
+                        <span class="mdi mdi-shield-edit"></span>&ensp;Edit
                     </a>
                     <a class="button is-danger is-outlined" onclick="deleteRoleModal()">
-                        Delete
+                        <span class="mdi mdi-shield-remove"></span>&ensp;Delete
                     </a>
                 </div>
             </div>
@@ -140,7 +152,7 @@
                                         />
                                     </div>
                                 </div>
-                                <button class="button is-danger">Edit role</button>
+                                <button class="button is-danger"><span class="mdi mdi-shield-edit"></span>&ensp;Edit role</button>
                             </form>
                         </div>
                     </div>
@@ -196,7 +208,7 @@
                             <p class="title">Are you sure you want to delete this role?</p>
                             <p>Be careful! If any users or permissions use this role, it will be removed.</p>
                             <form action="/internal/role/{{.Role.RoleID}}/delete" method="post">
-                                <button class="button is-danger">Delete role</button>
+                                <button class="button is-danger"><span class="mdi mdi-shield-remove"></span>&ensp;Delete role</button>
                             </form>
                         </div>
                     </div>

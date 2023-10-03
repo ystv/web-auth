@@ -14,19 +14,24 @@ import (
 )
 
 type (
+	// RolesTemplate is for the roles front end
 	RolesTemplate struct {
-		Roles []role.Role
+		Roles   []role.Role
+		Assumed bool
 		TemplateHelper
 	}
 
+	// RoleTemplate is for the role front end
 	RoleTemplate struct {
 		Role                 user.RoleTemplate
 		PermissionsNotInRole []permission.Permission
 		UsersNotInRole       []user.User
+		Assumed              bool
 		TemplateHelper
 	}
 )
 
+// bindRoleToTemplate converts from role.Role to user.RoleTemplate
 func (v *Views) bindRoleToTemplate(r1 role.Role) user.RoleTemplate {
 	var r user.RoleTemplate
 	r.RoleID = r1.RoleID
@@ -114,6 +119,7 @@ func (v *Views) RoleFunc(c echo.Context) error {
 	return v.template.RenderTemplate(c.Response(), data, templates.RoleTemplate, templates.RegularType)
 }
 
+// RoleAddFunc handles a role add request
 func (v *Views) RoleAddFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		name := c.Request().FormValue("name")
@@ -133,6 +139,7 @@ func (v *Views) RoleAddFunc(c echo.Context) error {
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
+// RoleEditFunc handles a role edit request
 func (v *Views) RoleEditFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		roleID, err := strconv.Atoi(c.Param("roleid"))
@@ -170,6 +177,7 @@ func (v *Views) RoleEditFunc(c echo.Context) error {
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
+// RoleDeleteFunc handles a role delete request
 func (v *Views) RoleDeleteFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		roleID, err := strconv.Atoi(c.Param("roleid"))
@@ -201,6 +209,7 @@ func (v *Views) RoleDeleteFunc(c echo.Context) error {
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
+// RoleAddPermissionFunc handles a rolePermission add request
 func (v *Views) RoleAddPermissionFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		roleID, err := strconv.Atoi(c.Param("roleid"))
@@ -242,6 +251,7 @@ func (v *Views) RoleAddPermissionFunc(c echo.Context) error {
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
+// RoleRemovePermissionFunc handles a rolePermission remove request
 func (v *Views) RoleRemovePermissionFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		roleID, err := strconv.Atoi(c.Param("roleid"))
@@ -283,6 +293,7 @@ func (v *Views) RoleRemovePermissionFunc(c echo.Context) error {
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
+// RoleAddUserFunc handles a roleUser add request
 func (v *Views) RoleAddUserFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		roleID, err := strconv.Atoi(c.Param("roleid"))
@@ -324,6 +335,7 @@ func (v *Views) RoleAddUserFunc(c echo.Context) error {
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
+// RoleRemoveUserFunc handles a roleUser remove request
 func (v *Views) RoleRemoveUserFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		roleID, err := strconv.Atoi(c.Param("roleid"))

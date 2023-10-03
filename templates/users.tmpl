@@ -113,7 +113,14 @@
                 <div class="card" style="margin-bottom: 0">
                     <div class="column">
                         <div class="field">
-                            <a onclick="addUserModal()" class="button is-info">Add User</a>
+                            <a onclick="addUserModal()" class="button is-info">
+                                <i class="fa-solid fa-user-plus"></i>&ensp;
+                                Add User</a>
+                        </div>
+                        <div class="field">
+                            <a href="/internal/user/add" class="button is-info">
+                                <i class="fa-solid fa-user-plus"></i>&ensp;
+                                Add bulk Users</a>
                         </div>
                     </div>
                 </div>
@@ -261,7 +268,8 @@
                                         />
                                     </div>
                                 </div>
-                                <a class="button is-info" onclick="addUser()">Add user</a>
+                                <button class="button is-info" onclick="addUser()" id="addUserButton"><i class="fa-solid fa-user-plus"></i>&ensp;
+                                    Add User</button>
                             </form>
                         </div>
                     </div>
@@ -285,6 +293,7 @@
         }
 
         function addUser() {
+            document.getElementById("addUserButton").disabled = true;
             $.ajax({
                 url: '/internal/user/add',
                 type: 'post',
@@ -292,9 +301,15 @@
                 contentType: 'application/x-www-form-urlencoded',
                 data: $('#addUserForm').serialize(),
                 success: function (data) {
-                    document.getElementById("addUserModal").classList.remove("is-active");
                     $("#message").html(data.message);
                     $("#error").html(data.error);
+                    document.getElementById("firstname").value = "";
+                    document.getElementById("lastname").value = "";
+                    document.getElementById("universityusername").value = "";
+                    document.getElementById("username").value = "";
+                    document.getElementById("email").value = "";
+                    document.getElementById("addUserButton").disabled = false;
+                    document.getElementById("addUserModal").classList.remove("is-active");
                 },
             })
         }

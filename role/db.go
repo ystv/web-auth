@@ -29,6 +29,7 @@ func (s *Store) getRoles(ctx context.Context) ([]Role, error) {
 	return r, nil
 }
 
+// getRole returns a specific Role
 func (s *Store) getRole(ctx context.Context, r1 Role) (Role, error) {
 	var r Role
 	builder := utils.PSQL().Select("r.*", "COUNT(DISTINCT rm.user_id) AS users", "COUNT(DISTINCT rp.permission_id) AS permissions").
@@ -49,6 +50,7 @@ func (s *Store) getRole(ctx context.Context, r1 Role) (Role, error) {
 	return r, nil
 }
 
+// addRole adds a new Role
 func (s *Store) addRole(ctx context.Context, r Role) (Role, error) {
 	builder := utils.PSQL().Insert("people.roles").
 		Columns("name", "description").
@@ -70,6 +72,7 @@ func (s *Store) addRole(ctx context.Context, r Role) (Role, error) {
 	return r, nil
 }
 
+// editRole erits an existing Role
 func (s *Store) editRole(ctx context.Context, r Role) (Role, error) {
 	stmt, err := s.db.NamedExecContext(ctx, `UPDATE people.roles
 		SET name = :name,
@@ -88,6 +91,7 @@ func (s *Store) editRole(ctx context.Context, r Role) (Role, error) {
 	return r, nil
 }
 
+// deleteRole deletes a specific Role
 func (s *Store) deleteRole(ctx context.Context, r Role) error {
 	builder := utils.PSQL().Delete("people.roles").
 		Where(sq.Eq{"role_id": r.RoleID})
@@ -102,6 +106,7 @@ func (s *Store) deleteRole(ctx context.Context, r Role) error {
 	return nil
 }
 
+// deleteRolePermission deletes a link between a Role and a Permission
 func (s *Store) removePermissionsForRole(ctx context.Context, r Role) error {
 	builder := utils.PSQL().Delete("people.role_permissions").
 		Where(sq.Eq{"role_id": r.RoleID})
@@ -116,6 +121,7 @@ func (s *Store) removePermissionsForRole(ctx context.Context, r Role) error {
 	return nil
 }
 
+// deleteRoleUser deletes a link between a Role and a User
 func (s *Store) removeUsersForRole(ctx context.Context, r Role) error {
 	builder := utils.PSQL().Delete("people.role_members").
 		Where(sq.Eq{"role_id": r.RoleID})

@@ -31,7 +31,9 @@ type (
 		// User is the stored logged-in user
 		User user.User
 		// Version is the version that is running
-		Version string
+		Version    string
+		Assumed    bool
+		actualUser user.User
 	}
 
 	InternalContext struct {
@@ -47,23 +49,34 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 		log.Printf("error getting session: %+v", err)
 		return nil
 	}
+
+	var u, actual user.User
 	userValue := session.Values["user"]
 	u, ok := userValue.(user.User)
 	if !ok {
 		u = user.User{Authenticated: false}
 	}
+	var assumed bool
+	if u.AssumedUser != nil {
+		assumed = true
+		actual = u
+		u = *u.AssumedUser
+	}
+
 	internalValue := session.Values["internalContext"]
 	i, ok := internalValue.(InternalContext)
 	if !ok {
 		i = InternalContext{}
 	}
 	c := &Context{
-		TitleText: i.TitleText,
-		Message:   i.Message,
-		MsgType:   i.MesType,
-		Callback:  "/internal",
-		User:      u,
-		Version:   v.conf.Version,
+		TitleText:  i.TitleText,
+		Message:    i.Message,
+		MsgType:    i.MesType,
+		Callback:   "/internal",
+		User:       u,
+		Version:    v.conf.Version,
+		Assumed:    assumed,
+		actualUser: actual,
 	}
 	return c
 }
@@ -129,7 +142,8 @@ func DBUsersToUsersTemplateFormat(dbUsers []user.User) []user.StrippedUser {
 	return tplUsers
 }
 
-func DBUserToUserTemplateFormat(dbUser user.User, store *user.Store) user.DetailedUser {
+// DBUserToDetailedUser handles all the little details for the users front end
+func DBUserToDetailedUser(dbUser user.User, store *user.Store) user.DetailedUser {
 	var u user.DetailedUser
 	var err error
 	location, err := time.LoadLocation("Europe/London")
@@ -232,6 +246,7 @@ func DBUserToUserTemplateFormat(dbUser user.User, store *user.Store) user.Detail
 	return u
 }
 
+// removeDuplicates removes all duplicate permissions
 func removeDuplicate(strSlice []permission.Permission) []permission.Permission {
 	allKeys := make(map[int]bool)
 	var list []permission.Permission
@@ -244,6 +259,7 @@ func removeDuplicate(strSlice []permission.Permission) []permission.Permission {
 	return list
 }
 
+// minRequirementsMet tests if the password meets the minimum requirements
 func minRequirementsMet(password string) (errString string) {
 	var match bool
 	match, err := regexp.MatchString("^.*[a-z].*$", password)

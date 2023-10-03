@@ -13,17 +13,22 @@ import (
 )
 
 type (
+	// PermissionsTemplate is for the permissions front end
 	PermissionsTemplate struct {
 		Permissions []permission.Permission
+		Assumed     bool
 		TemplateHelper
 	}
 
+	// PermissionTemplate is for the permission front end
 	PermissionTemplate struct {
 		Permission user.PermissionTemplate
+		Assumed    bool
 		TemplateHelper
 	}
 )
 
+// bindPermissionToTemplate converts from permission.Permission to user.PermissionTemplate
 func (v *Views) bindPermissionToTemplate(p1 permission.Permission) user.PermissionTemplate {
 	var p = user.PermissionTemplate{}
 	p.PermissionID = p1.PermissionID
