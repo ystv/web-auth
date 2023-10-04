@@ -53,7 +53,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		u.Password = null.StringFrom(password)
 
 		callback := "/internal"
-		callbackURL, err := url.Parse("callback")
+		callbackURL, err := url.Parse(c.QueryParam("callback"))
 		if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) && callbackURL.String() != "" {
 			callback = callbackURL.String()
 		}
