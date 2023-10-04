@@ -70,6 +70,7 @@ type (
 	TemplateHelper struct {
 		UserPermissions []permission.Permission
 		ActivePage      string
+		Assumed         bool
 	}
 )
 

@@ -16,8 +16,7 @@ import (
 type (
 	// RolesTemplate is for the roles front end
 	RolesTemplate struct {
-		Roles   []role.Role
-		Assumed bool
+		Roles []role.Role
 		TemplateHelper
 	}
 
@@ -26,7 +25,6 @@ type (
 		Role                 user.RoleTemplate
 		PermissionsNotInRole []permission.Permission
 		UsersNotInRole       []user.User
-		Assumed              bool
 		TemplateHelper
 	}
 )
@@ -59,6 +57,7 @@ func (v *Views) RolesFunc(c echo.Context) error {
 		TemplateHelper: TemplateHelper{
 			UserPermissions: p1,
 			ActivePage:      "roles",
+			Assumed:         c1.Assumed,
 		},
 	}
 
@@ -113,6 +112,7 @@ func (v *Views) RoleFunc(c echo.Context) error {
 		TemplateHelper: TemplateHelper{
 			UserPermissions: p1,
 			ActivePage:      "role",
+			Assumed:         c1.Assumed,
 		},
 	}
 

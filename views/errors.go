@@ -2,7 +2,6 @@ package views
 
 import (
 	"errors"
-
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/ystv/web-auth/templates"
@@ -17,13 +16,18 @@ func (v *Views) CustomHTTPErrorHandler(err error, c echo.Context) {
 	} else {
 		status = 500
 	}
+	var message interface{}
+	message = err
+	if he != nil {
+		message = he.Message
+	}
 	c.Response().WriteHeader(status)
 	data := struct {
 		Code  int
 		Error any
 	}{
 		Code:  status,
-		Error: he.Message,
+		Error: message,
 	}
 	err1 := v.template.RenderTemplate(c.Response().Writer, data, templates.ErrorTemplate, templates.NoNavType)
 	if err1 != nil {

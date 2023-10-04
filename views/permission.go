@@ -16,14 +16,12 @@ type (
 	// PermissionsTemplate is for the permissions front end
 	PermissionsTemplate struct {
 		Permissions []permission.Permission
-		Assumed     bool
 		TemplateHelper
 	}
 
 	// PermissionTemplate is for the permission front end
 	PermissionTemplate struct {
 		Permission user.PermissionTemplate
-		Assumed    bool
 		TemplateHelper
 	}
 )
@@ -56,6 +54,7 @@ func (v *Views) PermissionsFunc(c echo.Context) error {
 		TemplateHelper: TemplateHelper{
 			UserPermissions: p1,
 			ActivePage:      "permissions",
+			Assumed:         c1.Assumed,
 		},
 	}
 
@@ -93,6 +92,7 @@ func (v *Views) PermissionFunc(c echo.Context) error {
 		TemplateHelper: TemplateHelper{
 			UserPermissions: p1,
 			ActivePage:      "permission",
+			Assumed:         c1.Assumed,
 		},
 	}
 

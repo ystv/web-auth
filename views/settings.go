@@ -91,6 +91,7 @@ func (v *Views) SettingsFunc(c echo.Context) error {
 		TemplateHelper: TemplateHelper{
 			UserPermissions: p1,
 			ActivePage:      "settings",
+			Assumed:         c1.Assumed,
 		},
 	}
 

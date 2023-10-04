@@ -142,6 +142,7 @@ func (r *Router) loadRoutes() {
 		internal.Match(validMethods, "/user/add", r.views.UserAddFunc)
 	}
 
+	internal.Match(validMethods, "/user/release", r.views.ReleaseUserFunc)
 	user := internal.Group("/user/:userid")
 	// user is any function to do with a specific user
 	if !r.config.Debug {
@@ -150,6 +151,8 @@ func (r *Router) loadRoutes() {
 	user.Match(validMethods, "/edit", r.views.UserEditFunc)
 	user.Match(validMethods, "/delete", r.views.UserDeleteFunc)
 	user.Match(validMethods, "/reset", r.views.ResetUserPasswordFunc)
+	user.Match(validMethods, "/toggle", r.views.UserToggleEnabledFunc)
+	user.Match(validMethods, "/assume", r.views.AssumeUserFunc, r.views.RequirePermission(permissions.SuperUser))
 	user.Match(validMethods, "", r.views.UserFunc)
 
 	internalAPI := internal.Group("/api")

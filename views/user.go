@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/infrastructure/mail"
@@ -198,6 +199,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 		TemplateHelper: TemplateHelper{
 			UserPermissions: p1,
 			ActivePage:      "users",
+			Assumed:         c1.Assumed,
 		},
 		Sort: Sort{
 			Pages:      sum,
@@ -250,10 +252,86 @@ func (v *Views) UserFunc(c echo.Context) error {
 		TemplateHelper: TemplateHelper{
 			UserPermissions: p1,
 			ActivePage:      "user",
+			Assumed:         c1.Assumed,
 		},
 	}
 
 	return v.template.RenderTemplate(c.Response(), data, templates.UserTemplate, templates.RegularType)
+}
+
+func (v *Views) AssumeUserFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+		if err != nil {
+			return fmt.Errorf("error getting session: %w", err)
+		}
+
+		c1 := v.getSessionData(c)
+
+		if c1.Assumed {
+			return c.Redirect(http.StatusFound, "/internal")
+		}
+
+		userID, err := strconv.Atoi(c.Param("userid"))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse userid for user: %w", err))
+		}
+
+		userFromDB, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
+		if err != nil {
+			return fmt.Errorf("failed to get user for user: %w", err)
+		}
+
+		userFromDB.Authenticated = true
+
+		userFromDB.LastLogin = null.TimeFrom(time.Now())
+
+		c1.User.AssumedUser = &userFromDB
+
+		session.Values["user"] = c1.User
+
+		err = session.Save(c.Request(), c.Response())
+		if err != nil {
+			return fmt.Errorf("failed to save user session for assume: %w", err)
+		}
+
+		return c.Redirect(http.StatusFound, "/internal")
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+}
+
+func (v *Views) ReleaseUserFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+		if err != nil {
+			return fmt.Errorf("error getting session: %w", err)
+		}
+
+		c1 := v.getSessionData(c)
+
+		if !c1.Assumed {
+			return c.Redirect(http.StatusFound, "/internal")
+		}
+
+		var u user.User
+		userValue := session.Values["user"]
+		u, ok := userValue.(user.User)
+		if !ok {
+			u = user.User{Authenticated: false}
+		}
+
+		u.AssumedUser = nil
+
+		session.Values["user"] = u
+
+		err = session.Save(c.Request(), c.Response())
+		if err != nil {
+			return fmt.Errorf("failed to save user session for release: %w", err)
+		}
+
+		return c.Redirect(http.StatusFound, "/internal")
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 // UserAddFunc handles an add user request
@@ -261,12 +339,15 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 	c1 := v.getSessionData(c)
 
 	if c.Request().Method == http.MethodGet {
-		data := struct {
-			UserID     int
-			ActivePage string
-		}{
-			UserID:     c1.User.UserID,
-			ActivePage: "useradd",
+		p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+		if err != nil {
+			return fmt.Errorf("failed to get user permissions for user: %w", err)
+		}
+
+		data := TemplateHelper{
+			UserPermissions: p1,
+			ActivePage:      "useradd",
+			Assumed:         c1.Assumed,
 		}
 
 		return v.template.RenderTemplate(c.Response(), data, templates.UserAddTemplate, templates.RegularType)
@@ -366,12 +447,12 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 
 		userID, err := strconv.Atoi(c.Param("userid"))
 		if err != nil {
-			return fmt.Errorf("failed to get userid for toggleUser: %w", err)
+			return fmt.Errorf("failed to get userid for editUser: %w", err)
 		}
 
 		user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 		if err != nil {
-			return fmt.Errorf("failed to get user for toggleUser: %w", err)
+			return fmt.Errorf("failed to get user for editUser: %w", err)
 		}
 
 		err = c.Request().ParseForm()

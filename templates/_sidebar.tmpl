@@ -8,7 +8,7 @@
             {{if (checkPermission .UserPermissions "ManageMembers.Members.List")}}
                 <li><a {{if eq $page "users"}}class="is-active"{{end}} href="/internal/users">Users</a></li>
             {{else if (checkPermission .UserPermissions "ManageMembers.Members.Add")}}
-                <li><a {{if eq $page "useradd"}}class="is-active"{{end}} href="/internal/useradd">Add User</a></li>
+                <li><a {{if eq $page "useradd"}}class="is-active"{{end}} href="/internal/user/add">Add User</a></li>
             {{end}}
             {{if (checkPermission .UserPermissions "ManageMembers.Groups")}}
                 <li><a {{if eq $page "roles"}}class="is-active"{{end}} href="/internal/roles">Roles</a></li>

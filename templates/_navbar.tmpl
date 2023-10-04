@@ -7,7 +7,9 @@
                 <a class="navbar-item brand-text" href="/internal">web-auth</a>
                 <a class="navbar-item" href="/logout">Logout</a>
                 {{if .Assumed}}
-                    <a class="navbar-item">Release assumed user</a>
+                    <a class="navbar-item" onclick="document.getElementById('assumeReleaseForm').submit()">Release
+                        assumed user</a>
+                    <form method="post" action="/internal/user/release" id="assumeReleaseForm"></form>
                 {{end}}
             </div>
         </div>

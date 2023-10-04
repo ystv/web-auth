@@ -34,10 +34,9 @@ type (
 
 	// ManageAPITemplate returns the data to the front end
 	ManageAPITemplate struct {
-		Tokens     []api.Token
-		UserID     int
-		AddedJWT   string
-		ActivePage string
+		Tokens   []api.Token
+		AddedJWT string
+		TemplateHelper
 	}
 )
 
@@ -50,10 +49,18 @@ func (v *Views) ManageAPIFunc(c echo.Context) error {
 		return fmt.Errorf("failed to get tokens for manageAPI: %w", err)
 	}
 
+	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+	if err != nil {
+		return fmt.Errorf("failed to get user permissions for users: %w", err)
+	}
+
 	data := ManageAPITemplate{
-		Tokens:     tokens,
-		UserID:     c1.User.UserID,
-		ActivePage: "apiManage",
+		Tokens: tokens,
+		TemplateHelper: TemplateHelper{
+			UserPermissions: p1,
+			ActivePage:      "apiManage",
+			Assumed:         c1.Assumed,
+		},
 	}
 
 	return v.template.RenderTemplate(c.Response(), data, templates.ManageAPITemplate, templates.RegularType)
@@ -68,11 +75,19 @@ func (v *Views) manageAPIFunc(c echo.Context, addedJWT string) error {
 		return fmt.Errorf("failed to get tokens for manageAPI: %w", err)
 	}
 
+	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+	if err != nil {
+		return fmt.Errorf("failed to get user permissions for users: %w", err)
+	}
+
 	data := ManageAPITemplate{
-		Tokens:     tokens,
-		UserID:     c1.User.UserID,
-		AddedJWT:   addedJWT,
-		ActivePage: "apiManage",
+		Tokens:   tokens,
+		AddedJWT: addedJWT,
+		TemplateHelper: TemplateHelper{
+			UserPermissions: p1,
+			ActivePage:      "apiManage",
+			Assumed:         c1.Assumed,
+		},
 	}
 
 	return v.template.RenderTemplate(c.Response(), data, templates.ManageAPITemplate, templates.RegularType)

@@ -51,7 +51,17 @@
                 <a class="button is-info" onclick="addTokenModal()">Add token</a>
                 <br>
                 <br>
-                {{parseHTMLManageAPI .Tokens}}
+                {{if ne (len .Tokens) 0}}
+                    Current tokens: <div class="toolbar"><ol>
+                    {{range .Tokens}}
+                        <li style='list-style-type: none;'><span class='tab'></span>{{.Name}}{{if .Description}} -
+                            {{.Description}}{{end}}&emsp;
+                            <a class="button is-danger is-outlined" onclick="removeTokenFromAPIModal({{.TokenID}}, {{.Name}})">
+                            <span class="mdi mdi-key-minus"></span>&ensp;Remove token</a></li>
+                    {{end}}
+                    </ol>
+                    </div>
+                {{end}}
             </div>
         </div>
     </div>
@@ -114,6 +124,25 @@
         </div>
         <button class="modal-close is-large" aria-label="close"></button>
     </div>
+    <div id="removeTokenFromAPIModal" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-content">
+                <div class="box">
+                    <article class="media">
+                        <div class="media-content">
+                            <div class="content">
+                                <p class="title" id="removeTokenFromAPIModalTitle"></p>
+                                <p><strong>This cannot be undone</strong></p>
+                                <form id="removeTokenFromAPIModalForm" method="post">
+                                    <a class="button is-danger" onclick="removeTokenFromAPI()">Remove token</a>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+            <button class="modal-close is-large" aria-label="close"></button>
+        </div>
     <script>
         document.querySelectorAll(
             ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
@@ -155,6 +184,19 @@
                 elements[0].parentNode.removeChild(elements[0]);
             }
             document.getElementById("addTokenModal").classList.add("is-active");
+        }
+
+        let tokenID = 0;
+
+        function removeTokenFromAPIModal(tokenID1, name) {
+            tokenID = tokenID1;
+            document.getElementById("removeTokenFromAPIModal").classList.add("is-active");
+            document.getElementById("removeTokenFromAPIModalTitle").innerHTML = 'Are you sure you want to remove "' + name + '" token?';
+        }
+
+        function removeTokenFromAPI() {
+            document.getElementById("removeTokenFromAPIModalForm").action = "/internal/api/manage/" + tokenID + "/delete";
+            $('#removeTokenFromAPIModalForm').submit();
         }
     </script>
 {{end}}
