@@ -171,7 +171,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 		return fmt.Errorf("failed to get users for users: %w", err)
 	}
 
-	if len(dbUsers) == 0 {
+	if (len(dbUsers) == 0 || fullCount == 0) && size != 0 && page != 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("size and page given is not valid"))
 	}
 
