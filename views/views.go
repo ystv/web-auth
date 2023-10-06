@@ -1,21 +1,23 @@
 package views
 
 import (
+	"context"
 	"encoding/gob"
 	"encoding/hex"
-	"github.com/ystv/web-auth/permission"
-	"github.com/ystv/web-auth/public/templates"
-	"github.com/ystv/web-auth/role"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/patrickmn/go-cache"
+
+	"github.com/ystv/web-auth/api"
 	"github.com/ystv/web-auth/infrastructure/db"
 	"github.com/ystv/web-auth/infrastructure/mail"
+	"github.com/ystv/web-auth/permission"
+	"github.com/ystv/web-auth/role"
+	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 )
 
@@ -23,6 +25,8 @@ type (
 	// Config the global web-auth configuration
 	Config struct {
 		Version           string
+		Debug             bool
+		Address           string
 		DatabaseURL       string
 		BaseDomainName    string
 		DomainName        string
@@ -32,12 +36,13 @@ type (
 		Security          SecurityConfig
 	}
 
-	// SMTPConfig stores the SMTP mailer configuration
+	// SMTPConfig stores the SMTP Mailer configuration
 	SMTPConfig struct {
-		Host     string
-		Username string
-		Password string
-		Port     int
+		Host       string
+		Username   string
+		Password   string
+		Port       int
+		DomainName string
 	}
 
 	// SecurityConfig stores the security configuration
@@ -47,76 +52,51 @@ type (
 		SigningKey        string
 	}
 
-	// Repo defines all view interactions
-	Repo interface {
-		// index
-		IndexFunc(w http.ResponseWriter, r *http.Request)
-		// login
-		LogoutFunc(w http.ResponseWriter, r *http.Request)
-		LoginFunc(w http.ResponseWriter, r *http.Request)
-		SignUpFunc(w http.ResponseWriter, r *http.Request)
-		ForgotFunc(w http.ResponseWriter, r *http.Request)
-		ResetURLFunc(w http.ResponseWriter, r *http.Request)
-		//ResetFunc(w http.ResponseWriter, r *http.Request)
-		// internal
-		InternalFunc(w http.ResponseWriter, r *http.Request)
-		UsersFunc(w http.ResponseWriter, r *http.Request)
-		UserFunc(w http.ResponseWriter, r *http.Request)
-		// middleware
-		RequiresLogin(h http.Handler) http.HandlerFunc
-		// api
-		SetTokenHandler(w http.ResponseWriter, r *http.Request)
-		ValidateToken(myToken string) (bool, *JWTClaims)
-		newJWT(u user.User) (string, error)
-		TestAPI(w http.ResponseWriter, r *http.Request)
-	}
-
 	// Views encapsulates our view dependencies
 	Views struct {
-		conf       Config
+		api        *api.Store
+		cache      *cache.Cache
+		conf       *Config
+		cookie     *sessions.CookieStore
+		Mailer     *mail.Mailer
 		permission *permission.Store
 		role       *role.Store
-		user       *user.Store
-		cookie     *sessions.CookieStore
-		mailer     *mail.Mailer
-		cache      *cache.Cache
-		validate   *validator.Validate
 		template   *templates.Templater
+		user       *user.Store
+		mailer     *mail.MailerInit
+		validate   *validator.Validate
+	}
+
+	TemplateHelper struct {
+		UserPermissions []permission.Permission
+		ActivePage      string
+		Assumed         bool
 	}
 )
 
-// here to verify we are meeting the interface
-var _ Repo = &Views{}
-
 // New initialises connections, templates, and cookies
-func New(conf Config) *Views {
-	v := Views{}
+func New(conf *Config, host string) *Views {
+	v := &Views{}
 	// Connecting to stores
-	dbStore, err := db.NewStore(conf.DatabaseURL)
-	if err != nil {
-		log.Fatalf("NewStore failed: %+v", err)
-	}
-
+	dbStore := db.NewStore(conf.DatabaseURL, host)
 	v.permission = permission.NewPermissionRepo(dbStore)
 	v.role = role.NewRoleRepo(dbStore)
 	v.user = user.NewUserRepo(dbStore)
+	v.api = api.NewAPIRepo(dbStore)
 
 	v.template = templates.NewTemplate(v.permission, v.role, v.user)
 
-	// Connecting to mail
-	v.mailer, err = mail.NewMailer(mail.Config{
+	// Initialising cache
+	v.cache = cache.New(1*time.Hour, 1*time.Hour)
+
+	// Initialise mailer
+	v.mailer = mail.NewMailer(mail.Config{
 		Host:       conf.Mail.Host,
 		Port:       conf.Mail.Port,
 		Username:   conf.Mail.Username,
 		Password:   conf.Mail.Password,
-		DomainName: conf.DomainName,
+		DomainName: conf.Mail.DomainName,
 	})
-	if err != nil {
-		log.Printf("mailer failed: %+v", err)
-	}
-
-	// Initialising cache
-	v.cache = cache.New(1*time.Hour, 1*time.Hour)
 
 	// Initialising session cookie
 	authKey, _ := hex.DecodeString(conf.Security.AuthenticationKey)
@@ -139,14 +119,22 @@ func New(conf Config) *Views {
 
 	// So we can use our struct in the cookie
 	gob.Register(user.User{})
-
-	//// Loading templates
-	//v.tpl = template.Must(template.ParseFS(templates, "*.tmpl"))
+	gob.Register(InternalContext{})
 
 	v.conf = conf
 
 	// Struct validator
 	v.validate = validator.New()
 
-	return &v
+	go func() {
+		for {
+			err := v.api.DeleteOldToken(context.Background())
+			if err != nil {
+				log.Printf("failed to delete old token func: %+v", err)
+			}
+			time.Sleep(30 * time.Second)
+		}
+	}()
+
+	return v
 }

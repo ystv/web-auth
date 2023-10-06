@@ -1,0 +1,121 @@
+{{define "title"}}User Add{{end}}
+{{define "content"}}
+    <div class="column is-10" style="min-height: 88vh">
+        <section class="hero is-info welcome is-small">
+            <div class="hero-body">
+                <div class="container">
+                    <h1 class="title">User Add</h1>
+                </div>
+            </div>
+        </section>
+        <br>
+        <div class="columns box" style="height: fit-content">
+            <div class="column">
+                <p id="message" style="color: green"></p>
+                <p id="error" style="color: red"></p>
+                <p>Enter the user's details below.</p>
+                <form id="addUserForm">
+                    <div class="field">
+                        <label class="label" for="firstname">First name</label>
+                        <div class="control">
+                            <input
+                                    id="firstname"
+                                    class="input"
+                                    type="text"
+                                    name="firstname"
+                                    placeholder="First name"
+                            />
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label" for="lastname">Last name</label>
+                        <div class="control">
+                            <input
+                                    id="lastname"
+                                    class="input"
+                                    type="text"
+                                    name="lastname"
+                                    placeholder="Last name"
+                            />
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label" for="universityusername">University username</label>
+                        <div class="control">
+                            <input
+                                    id="universityusername"
+                                    class="input"
+                                    type="text"
+                                    name="universityusername"
+                                    placeholder="abc1234"
+                                    onchange="if (document.getElementById('email').value === '' && this.value.length > 0) document.getElementById('email').value = this.value + '@york.ac.uk'; if (document.getElementById('username').value === '' && this.value.length > 0) document.getElementById('username').value = this.value"
+                            />
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label" for="username">Username</label>
+                        <div class="control">
+                            <input
+                                    id="username"
+                                    class="input"
+                                    type="text"
+                                    name="username"
+                                    placeholder="abc123"
+                            />
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label" for="email">Email</label>
+                        <div class="control">
+                            <input
+                                    id="email"
+                                    class="input"
+                                    type="email"
+                                    name="email"
+                                    placeholder="abc123@york.ac.uk"
+                            />
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label" for="logintype">Login type (not for change yet)</label>
+                        <div class="control">
+                            <input
+                                    id="logintype"
+                                    class="input"
+                                    type="text"
+                                    name="logintype"
+                                    placeholder="internal"
+                                    value="internal"
+                                    disabled
+                            />
+                        </div>
+                    </div>
+                    <button class="button is-info" onclick="addUser()" id="addUserButton"><i class="fa-solid fa-user-plus"></i>&ensp;
+                        Add User</button>
+                </form>
+                <script>
+                    function addUser() {
+                        document.getElementById("addUserButton").disabled = true;
+                        $.ajax({
+                            url: '/internal/user/add',
+                            type: 'post',
+                            dataType: 'json',
+                            contentType: 'application/x-www-form-urlencoded',
+                            data: $('#addUserForm').serialize(),
+                            success: function (data) {
+                                $("#message").html(data.message);
+                                $("#error").html(data.error);
+                                document.getElementById("firstname").value = "";
+                                document.getElementById("lastname").value = "";
+                                document.getElementById("universityusername").value = "";
+                                document.getElementById("username").value = "";
+                                document.getElementById("email").value = "";
+                                document.getElementById("addUserButton").disabled = false;
+                            },
+                        })
+                    }
+                </script>
+            </div>
+        </div>
+    </div>
+{{end}}

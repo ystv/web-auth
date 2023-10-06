@@ -1,402 +1,558 @@
 package views
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/ystv/web-auth/public/templates"
-	"github.com/ystv/web-auth/user"
 	"log"
 	"math"
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
+	"time"
+
+	"github.com/labstack/echo/v4"
+	"github.com/ystv/web-auth/infrastructure/mail"
+	"github.com/ystv/web-auth/templates"
+	"github.com/ystv/web-auth/user"
+	"github.com/ystv/web-auth/utils"
+	"gopkg.in/guregu/null.v4"
 )
 
 type (
 	// UsersTemplate represents the context for the user template
 	UsersTemplate struct {
-		Users                                 []UserStripped
-		UserID                                int
-		CurPage, NextPage, PrevPage, LastPage int
-		ActivePage                            string
-		Sort                                  struct {
-			Pages      int
-			Size       int
-			PageNumber int
-			Column     string
-			Direction  string
-			Search     string
-		}
+		Users    []user.StrippedUser
+		CurPage  int
+		NextPage int
+		PrevPage int
+		LastPage int
+		Sort     Sort
+		TemplateHelper
+	}
+
+	// Sort is the parameters for how to sort a users request
+	Sort struct {
+		Pages      int
+		Size       int
+		PageNumber int
+		Column     string
+		Direction  string
+		Search     string
+		Enabled    string
+		Deleted    string
+	}
+
+	// UserTemplate is for the user front end
+	UserTemplate struct {
+		User user.DetailedUser
+		TemplateHelper
 	}
 )
 
 // UsersFunc handles a users request
-func (v *Views) UsersFunc(w http.ResponseWriter, r *http.Request) {
-	session, _ := v.cookie.Get(r, v.conf.SessionCookieName)
-
-	c := v.getData(session)
+func (v *Views) UsersFunc(c echo.Context) error {
+	c1 := v.getSessionData(c)
 
 	var err error
 
-	if r.Method == "POST" {
-		err = r.ParseForm()
+	if c.Request().Method == "POST" {
+		u, err := url.Parse("/internal/users")
 		if err != nil {
-			err = v.errorHandle(w, err)
-			if err != nil {
-				log.Println(err)
-				return
-			}
+			panic(fmt.Errorf("invalid url: %w", err)) // this panics because if this errors then many other things will be wrong
 		}
 
-		column := r.FormValue("column")
-		direction := r.FormValue("direction")
-		search := r.FormValue("search")
+		q := u.Query()
+
+		column := c.FormValue("column")
+		direction := c.FormValue("direction")
+		search := c.FormValue("search")
+		enabled := c.FormValue("enabled")
+		deleted := c.FormValue("deleted")
 		var size int
-		sizeRaw := r.FormValue("size")
+		sizeRaw := c.FormValue("size")
 		if sizeRaw == "all" {
 			size = 0
 		} else {
 			size, err = strconv.Atoi(sizeRaw)
+			//nolint:gocritic
 			if err != nil {
 				size = 0
 			} else if size <= 0 {
-				err = v.errorHandle(w, fmt.Errorf("invalid size, must be positive"))
-				if err != nil {
-					log.Println(err)
-					return
-				}
+				return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid size, must be positive"))
 			} else if size != 5 && size != 10 && size != 25 && size != 50 && size != 75 && size != 100 {
 				size = 25
 			}
 		}
-		valid := true
-		switch column {
-		case "userId":
-		case "name":
-		case "username":
-		case "email":
-		case "lastLogin":
-			break
-		default:
-			valid = false
+
+		if enabled == "enabled" || enabled == "disabled" {
+			q.Set("enabled", enabled)
+		} else if enabled != "any" {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("enabled must be set to either \"any\", \"enabled\" or \"disabled\""))
 		}
-		switch direction {
-		case "asc":
-		case "desc":
-			break
-		default:
-			valid = false
+
+		if deleted == "deleted" || deleted == "not_deleted" {
+			q.Set("deleted", deleted)
+		} else if deleted != "any" {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("deleted must be set to either \"any\", \"deleted\" or \"not_deleted\""))
 		}
-		r.Method = "GET"
-		if valid {
-			if len(search) > 0 {
-				if size > 0 {
-					http.Redirect(w, r, fmt.Sprintf("/internal/users?column=%s&direction=%s&search=%s&size=%d&page=1", column, direction, url.QueryEscape(search), size), http.StatusFound)
-				} else {
-					http.Redirect(w, r, fmt.Sprintf("/internal/users?column=%s&direction=%s&search=%s", column, direction, url.QueryEscape(search)), http.StatusFound)
-				}
-			} else {
-				if size > 0 {
-					http.Redirect(w, r, fmt.Sprintf("/internal/users?column=%s&direction=%s&size=%d&page=1", column, direction, size), http.StatusFound)
-				} else {
-					http.Redirect(w, r, fmt.Sprintf("/internal/users?column=%s&direction=%s", column, direction), http.StatusFound)
-				}
-			}
-		} else if len(search) > 0 {
-			if size > 0 {
-				http.Redirect(w, r, fmt.Sprintf("/internal/users?search=%s&size=%d&page=1", url.QueryEscape(search), size), http.StatusFound)
-			} else {
-				http.Redirect(w, r, fmt.Sprintf("/internal/users?search=%s", url.QueryEscape(search)), http.StatusFound)
-			}
-		} else {
-			if size > 0 {
-				http.Redirect(w, r, fmt.Sprintf("/internal/users?size=%d&page=1", size), http.StatusFound)
-			} else {
-				r.URL.Query().Del("*")
-				http.Redirect(w, r, "/internal/users", http.StatusFound)
+
+		if column == "userId" || column == "name" || column == "username" || column == "email" || column == "lastLogin" {
+			if direction == "asc" || direction == "desc" {
+				q.Set("column", column)
+				q.Set("direction", direction)
 			}
 		}
-		return
+
+		c.Request().Method = "GET"
+
+		if size > 0 {
+			q.Set("size", strconv.FormatInt(int64(size), 10))
+			q.Set("page", "1")
+		}
+
+		if len(search) > 0 {
+			q.Set("search", url.QueryEscape(search))
+		}
+
+		u.RawQuery = q.Encode()
+		return c.Redirect(http.StatusFound, u.String())
 	}
 
-	column := r.URL.Query().Get("column")
-	direction := r.URL.Query().Get("direction")
-	search := r.URL.Query().Get("search")
-	var size, page, count int
-	sizeRaw := r.URL.Query().Get("size")
+	column := c.QueryParam("column")
+	direction := c.QueryParam("direction")
+	search := c.QueryParam("search")
+	search, err = url.QueryUnescape(search)
+	if err != nil {
+		return fmt.Errorf("failed to unescape query: %w", err)
+	}
+	enabled := c.QueryParam("enabled")
+	deleted := c.QueryParam("deleted")
+	var size, page int
+	sizeRaw := c.QueryParam("size")
 	if sizeRaw == "all" {
 		size = 0
 	} else if len(sizeRaw) != 0 {
-		page, err = strconv.Atoi(r.URL.Query().Get("page"))
+		page, err = strconv.Atoi(c.QueryParam("page"))
 		if err != nil {
-			page = 1
-			log.Println(err)
-			err = v.errorHandle(w, err)
-			if err != nil {
-				log.Println(err)
-				return
-			}
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("unable to parse page for users: %w", err))
 		}
 		size, err = strconv.Atoi(sizeRaw)
+		//nolint:gocritic
 		if err != nil {
 			size = 0
 		} else if size <= 0 {
-			err = v.errorHandle(w, fmt.Errorf("invalid size, must be positive"))
-			if err != nil {
-				log.Println(err)
-				return
-			}
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid size, must be positive"))
 		} else if size != 5 && size != 10 && size != 25 && size != 50 && size != 75 && size != 100 {
 			size = 0
 		}
-
-		count, err = v.user.CountUsers(r.Context())
-		if err != nil {
-			log.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		if count <= size*(page-1) {
-			log.Println("size and page given is not valid")
-			http.Error(w, fmt.Sprintln("size and page given is not valid"), http.StatusBadRequest)
-			return
-		}
 	}
 
-	valid := true
 	switch column {
 	case "userId":
 	case "name":
 	case "username":
 	case "email":
 	case "lastLogin":
+		switch direction {
+		case "asc":
+		case "desc":
+			break
+		default:
+			column = ""
+			direction = ""
+		}
 		break
 	default:
-		valid = false
+		column = ""
+		direction = ""
 	}
-	switch direction {
-	case "asc":
-	case "desc":
-		break
-	default:
-		valid = false
-	}
-	var dbUsers []user.User
-	if valid {
-		if len(search) > 0 {
-			if size > 0 && page > 0 {
-				dbUsers, err = v.user.GetUsersSortedSearchSizePage(r.Context(), column, direction, search, size, page)
-				if err != nil {
-					log.Println(err)
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-				tmp, err := v.user.GetUsersSortedSearch(r.Context(), column, direction, search)
-				if err != nil {
-					log.Println(err)
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-				count = len(tmp)
-			} else {
-				dbUsers, err = v.user.GetUsersSortedSearch(r.Context(), column, direction, search)
-			}
-		} else {
-			if size > 0 && page > 0 {
-				dbUsers, err = v.user.GetUsersSortedSizePage(r.Context(), column, direction, size, page)
-			} else {
-				dbUsers, err = v.user.GetUsersSorted(r.Context(), column, direction)
-			}
-		}
-	} else if len(search) > 0 {
-		if size > 0 && page > 0 {
-			dbUsers, err = v.user.GetUsersSearchSizePage(r.Context(), search, size, page)
-			tmp, err := v.user.GetUsersSearch(r.Context(), search)
-			if err != nil {
-				log.Println(err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			count = len(tmp)
-		} else {
-			dbUsers, err = v.user.GetUsersSearch(r.Context(), search)
-		}
-	} else {
-		if size > 0 && page > 0 {
-			dbUsers, err = v.user.GetUsersSizePage(r.Context(), size, page)
-		} else {
-			dbUsers, err = v.user.GetUsers(r.Context())
-		}
-	}
+
+	dbUsers, fullCount, err := v.user.GetUsers(c.Request().Context(), size, page, search, column, direction, enabled, deleted)
 	if err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return fmt.Errorf("failed to get users for users: %w", err)
 	}
-	tplUsers := DBToTemplateType(&dbUsers)
+
+	if (len(dbUsers) == 0 || fullCount == 0) && size != 0 && page != 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("size and page given is not valid"))
+	}
+
+	tplUsers := DBUsersToUsersTemplateFormat(dbUsers)
 
 	var sum int
 
 	if size == 0 {
 		sum = 0
 	} else {
-		sum = int(math.Ceil(float64(count) / float64(size)))
+		sum = int(math.Ceil(float64(fullCount) / float64(size)))
 	}
 
-	ctx := UsersTemplate{
-		Users:      tplUsers,
-		UserID:     c.User.UserID,
-		ActivePage: "users",
-		Sort: struct {
-			Pages      int
-			Size       int
-			PageNumber int
-			Column     string
-			Direction  string
-			Search     string
-		}{
+	if page <= 0 {
+		page = 25
+	}
+
+	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+	if err != nil {
+		return fmt.Errorf("failed to get user permissions for users: %w", err)
+	}
+
+	data := UsersTemplate{
+		Users: tplUsers,
+		TemplateHelper: TemplateHelper{
+			UserPermissions: p1,
+			ActivePage:      "users",
+			Assumed:         c1.Assumed,
+		},
+		Sort: Sort{
 			Pages:      sum,
 			Size:       size,
 			PageNumber: page,
 			Column:     column,
 			Direction:  direction,
 			Search:     search,
+			Enabled:    enabled,
+			Deleted:    deleted,
 		},
 	}
-	err = v.template.RenderTemplatePagination(w, ctx, templates.UsersTemplate)
-	if err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	return v.template.RenderTemplate(c.Response(), data, templates.UsersTemplate, templates.PaginationType)
 }
 
 // UserFunc handles a users request
-func (v *Views) UserFunc(w http.ResponseWriter, r *http.Request) {
-	session, _ := v.cookie.Get(r, v.conf.SessionCookieName)
+func (v *Views) UserFunc(c echo.Context) error {
+	c1 := v.getSessionData(c)
 
-	c := v.getData(session)
-
-	userString := mux.Vars(r)
-	userID, err := strconv.Atoi(userString["userid"])
+	userID, err := strconv.Atoi(c.Param("userid"))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse userid for user: %w", err))
 	}
-	user1, err := v.user.GetUser(r.Context(), user.User{UserID: userID})
+	userFromDB, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return fmt.Errorf("failed to get user for user: %w", err)
 	}
 
-	perms, err := v.user.GetPermissionsForUser(r.Context(), user1)
+	detailedUser := DBUserToDetailedUser(userFromDB, v.user)
+
+	detailedUser.Permissions, err = v.user.GetPermissionsForUser(c.Request().Context(), user.User{UserID: detailedUser.UserID})
 	if err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return fmt.Errorf("failed to get permissions for user: %w", err)
 	}
 
-	for _, perm := range perms {
-		user1.Permissions = append(user1.Permissions, perm)
-	}
+	detailedUser.Permissions = removeDuplicate(detailedUser.Permissions)
 
-	roles, err := v.user.GetRolesForUser(r.Context(), user1)
+	detailedUser.Roles, err = v.user.GetRolesForUser(c.Request().Context(), user.User{UserID: detailedUser.UserID})
 	if err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return fmt.Errorf("failed to get roles for user: %w", err)
 	}
 
-	for _, role1 := range roles {
-		user1.Roles = append(user1.Roles, role1.Name)
+	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+	if err != nil {
+		return fmt.Errorf("failed to get user permissions for user: %w", err)
 	}
 
-	user1.Permissions = v.removeDuplicate(user1.Permissions)
-
-	var gravatar string
-
-	if user1.UseGravatar {
-		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace(user1.Email))))
-		gravatar = fmt.Sprintf("https://www.gravatar.com/avatar/%s", hex.EncodeToString(hash[:]))
+	data := UserTemplate{
+		User: detailedUser,
+		TemplateHelper: TemplateHelper{
+			UserPermissions: p1,
+			ActivePage:      "user",
+			Assumed:         c1.Assumed,
+		},
 	}
 
-	var createdBy, updatedBy, deletedBy user.User
+	return v.template.RenderTemplate(c.Response(), data, templates.UserTemplate, templates.RegularType)
+}
 
-	if user1.CreatedBy.Valid {
-		createdBy, err = v.user.GetUser(r.Context(), user.User{UserID: int(user1.CreatedBy.Int64)})
+func (v *Views) AssumeUserFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 		if err != nil {
-			log.Println(err)
-			createdBy.UserID = int(user1.CreatedBy.Int64)
-			createdBy.Firstname = ""
-			createdBy.Lastname = ""
+			return fmt.Errorf("error getting session: %w", err)
 		}
-	} else {
-		createdBy.UserID = -1
-		createdBy.Firstname = ""
-		createdBy.Lastname = ""
-	}
 
-	if user1.UpdatedBy.Valid {
-		updatedBy, err = v.user.GetUser(r.Context(), user.User{UserID: int(user1.UpdatedBy.Int64)})
+		c1 := v.getSessionData(c)
+
+		if c1.Assumed {
+			return c.Redirect(http.StatusFound, "/internal")
+		}
+
+		userID, err := strconv.Atoi(c.Param("userid"))
 		if err != nil {
-			log.Println(err)
-			updatedBy.UserID = int(user1.UpdatedBy.Int64)
-			updatedBy.Firstname = ""
-			updatedBy.Lastname = ""
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse userid for user: %w", err))
 		}
-	} else {
-		updatedBy.UserID = -1
-		updatedBy.Firstname = ""
-		updatedBy.Lastname = ""
-	}
 
-	if user1.DeletedBy.Valid {
-		deletedBy, err = v.user.GetUser(r.Context(), user.User{UserID: int(user1.DeletedBy.Int64)})
+		userFromDB, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 		if err != nil {
-			log.Println(err)
-			deletedBy.UserID = int(user1.DeletedBy.Int64)
-			deletedBy.Firstname = ""
-			deletedBy.Lastname = ""
+			return fmt.Errorf("failed to get user for user: %w", err)
 		}
-	} else {
-		deletedBy.UserID = -1
-		deletedBy.Firstname = ""
-		deletedBy.Lastname = ""
-	}
 
-	data := struct {
-		User       user.User
-		UserID     int
-		ActivePage string
-		LastLogin  string
-		Gravatar   string
-		CreatedBy  user.User
-		CreatedAt  string
-		UpdatedBy  user.User
-		UpdatedAt  string
-		DeletedBy  user.User
-		DeletedAt  string
-	}{
-		ActivePage: "user",
-		User:       user1,
-		UserID:     c.User.UserID,
-		LastLogin:  user1.LastLogin.Time.Format("2006-01-02 15:04:05"),
-		Gravatar:   gravatar,
-		CreatedBy:  createdBy,
-		CreatedAt:  user1.CreatedAt.Time.Format("2006-01-02 15:04:05"),
-		UpdatedBy:  updatedBy,
-		UpdatedAt:  user1.UpdatedAt.Time.Format("2006-01-02 15:04:05"),
-		DeletedBy:  deletedBy,
-		DeletedAt:  user1.DeletedAt.Time.Format("2006-01-02 15:04:05"),
-	}
+		userFromDB.Authenticated = true
 
-	err = v.template.RenderTemplate(w, data, templates.UserTemplate)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		userFromDB.LastLogin = null.TimeFrom(time.Now())
+
+		c1.User.AssumedUser = &userFromDB
+
+		session.Values["user"] = c1.User
+
+		err = session.Save(c.Request(), c.Response())
+		if err != nil {
+			return fmt.Errorf("failed to save user session for assume: %w", err)
+		}
+
+		return c.Redirect(http.StatusFound, "/internal")
 	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+}
+
+func (v *Views) ReleaseUserFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+		if err != nil {
+			return fmt.Errorf("error getting session: %w", err)
+		}
+
+		c1 := v.getSessionData(c)
+
+		if !c1.Assumed {
+			return c.Redirect(http.StatusFound, "/internal")
+		}
+
+		var u user.User
+		userValue := session.Values["user"]
+		u, ok := userValue.(user.User)
+		if !ok {
+			u = user.User{Authenticated: false}
+		}
+
+		u.AssumedUser = nil
+
+		session.Values["user"] = u
+
+		err = session.Save(c.Request(), c.Response())
+		if err != nil {
+			return fmt.Errorf("failed to save user session for release: %w", err)
+		}
+
+		return c.Redirect(http.StatusFound, "/internal")
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+}
+
+// UserAddFunc handles an add user request
+func (v *Views) UserAddFunc(c echo.Context) error {
+	c1 := v.getSessionData(c)
+
+	if c.Request().Method == http.MethodGet {
+		p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+		if err != nil {
+			return fmt.Errorf("failed to get user permissions for user: %w", err)
+		}
+
+		data := TemplateHelper{
+			UserPermissions: p1,
+			ActivePage:      "useradd",
+			Assumed:         c1.Assumed,
+		}
+
+		return v.template.RenderTemplate(c.Response(), data, templates.UserAddTemplate, templates.RegularType)
+	} else if c.Request().Method == http.MethodPost {
+		err := c.Request().ParseForm()
+		if err != nil {
+			return fmt.Errorf("failed to parse form for userAdd: %w", err)
+		}
+
+		firstName := c.Request().FormValue("firstname")
+		lastName := c.Request().FormValue("lastname")
+		username := c.Request().FormValue("username")
+		universityUsername := c.Request().FormValue("universityusername")
+		email := c.Request().FormValue("email")
+
+		password, err := utils.GenerateRandom(utils.GeneratePassword)
+		if err != nil {
+			return fmt.Errorf("error generating password: %w", err)
+		}
+		salt, err := utils.GenerateRandom(utils.GenerateSalt)
+		if err != nil {
+			return fmt.Errorf("error generating salt: %w", err)
+		}
+		u := user.User{
+			UserID:             0,
+			Username:           username,
+			UniversityUsername: null.StringFrom(universityUsername),
+			LoginType:          "internal",
+			Firstname:          firstName,
+			Nickname:           firstName,
+			Lastname:           lastName,
+			Password:           null.StringFrom(password),
+			Salt:               null.StringFrom(salt),
+			Email:              email,
+			ResetPw:            true,
+			Enabled:            true,
+		}
+
+		_, err = v.user.AddUser(c.Request().Context(), u, c1.User.UserID)
+		if err != nil {
+			return fmt.Errorf("failed to add user for addUser: %w", err)
+		}
+
+		var message struct {
+			Message string `json:"message"`
+			Error   error  `json:"error"`
+		}
+
+		mailer := v.mailer.ConnectMailer()
+
+		if mailer != nil {
+			template, err := v.template.GetEmailTemplate(templates.SignupEmailTemplate)
+			if err != nil {
+				return fmt.Errorf("failed to get email in addUser: %w", err)
+			}
+
+			file := mail.Mail{
+				Subject: "Welcome to YSTV!",
+				Tpl:     template,
+				To:      u.Email,
+				From:    "YSTV No-Reply <no-reply@ystv.co.uk>",
+				TplData: struct {
+					Name     string
+					Username string
+					Password string
+				}{
+					Name:     firstName,
+					Username: username,
+					Password: password,
+				},
+			}
+
+			err = mailer.SendMail(file)
+			if err != nil {
+				return fmt.Errorf("failed to send email in addUser: %w", err)
+			}
+
+			message.Message = fmt.Sprintf("Successfully sent user email to: \"%s\"", email)
+		} else {
+			message.Message = fmt.Sprintf("No mailer present\nPlease send the username and password to this email: %s, username: %s, password: %s", email, username, password)
+			message.Error = fmt.Errorf("no mailer present")
+			log.Printf("no Mailer present")
+		}
+		log.Printf("created user: %s", u.Username)
+
+		var status int
+
+		return c.JSON(status, message)
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+}
+
+// UserEditFunc handles an edit user request
+func (v *Views) UserEditFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		userID, err := strconv.Atoi(c.Param("userid"))
+		if err != nil {
+			return fmt.Errorf("failed to get userid for editUser: %w", err)
+		}
+
+		user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
+		if err != nil {
+			return fmt.Errorf("failed to get user for editUser: %w", err)
+		}
+
+		err = c.Request().ParseForm()
+		if err != nil {
+			return fmt.Errorf("failed to parse form for userEdit: %w", err)
+		}
+
+		firstName := c.Request().FormValue("firstname")
+		nickname := c.Request().FormValue("nickname")
+		lastName := c.Request().FormValue("lastname")
+		username := c.Request().FormValue("username")
+		universityUsername := c.Request().FormValue("universityusername")
+		LDAPUsername := c.Request().FormValue("ldapusername")
+		email := c.Request().FormValue("email")
+		// login type can't be changed yet but the infrastructure is in
+		loginType := c.Request().FormValue("logintype")
+		_ = loginType
+
+		if firstName != user1.Firstname && len(firstName) > 0 {
+			user1.Firstname = firstName
+		}
+		if nickname != user1.Nickname && len(nickname) > 0 {
+			user1.Nickname = nickname
+		}
+		if lastName != user1.Lastname && len(lastName) > 0 {
+			user1.Lastname = lastName
+		}
+		if username != user1.Username && len(username) > 0 {
+			user1.Username = username
+		}
+		if universityUsername != user1.UniversityUsername.String && len(universityUsername) > 0 {
+			user1.UniversityUsername = null.StringFrom(universityUsername)
+		}
+		if LDAPUsername != user1.LDAPUsername.String && len(LDAPUsername) > 0 {
+			user1.LDAPUsername = null.StringFrom(LDAPUsername)
+		}
+		if email != user1.Email && len(email) > 0 {
+			user1.Email = email
+		}
+
+		err = v.user.EditUser(c.Request().Context(), user1, c1.User.UserID)
+		if err != nil {
+			return fmt.Errorf("failed to edit user for editUser: %w", err)
+		}
+		return c.Redirect(http.StatusOK, fmt.Sprintf("/internal/user/%d", userID))
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+}
+
+// UserToggleEnabledFunc handles an toggle enable user request
+func (v *Views) UserToggleEnabledFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		userID, err := strconv.Atoi(c.Param("userid"))
+		if err != nil {
+			return fmt.Errorf("failed to get userid for toggleUser: %w", err)
+		}
+
+		user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
+		if err != nil {
+			return fmt.Errorf("failed to get user for toggleUser: %w", err)
+		}
+
+		user1.Enabled = !user1.Enabled
+
+		err = v.user.EditUser(c.Request().Context(), user1, c1.User.UserID)
+		if err != nil {
+			return fmt.Errorf("failed to edit user for toggleUser: %w", err)
+		}
+		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/user/%d", userID))
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+}
+
+// UserDeleteFunc handles an delete user request
+func (v *Views) UserDeleteFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		userID, err := strconv.Atoi(c.Param("userid"))
+		if err != nil {
+			return fmt.Errorf("failed to get userid for deleteUser: %w", err)
+		}
+
+		user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
+		if err != nil {
+			return fmt.Errorf("failed to get user for deleteUser: %w", err)
+		}
+
+		err = v.user.RemoveRoleUsers(c.Request().Context(), user1)
+		if err != nil {
+			return fmt.Errorf("failed to delete roleUsers for deleteUser: %w", err)
+		}
+
+		err = v.user.DeleteUser(c.Request().Context(), user1, c1.User.UserID)
+		if err != nil {
+			return fmt.Errorf("failed to delete user for deleteUser: %w", err)
+		}
+		return v.UsersFunc(c)
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }

@@ -1,0 +1,17 @@
+{{define "_navbar"}}
+    <nav class="navbar is-white">
+        <div class="container">
+            <div class="navbar-brand">
+                <img src="/public/ystv-transparent.png" alt="YSTV"
+                     style="max-height: 40px; margin-top: 6px; margin-bottom: 6px; padding-left: 6px; padding-right: 6px;"/>
+                <a class="navbar-item brand-text" href="/internal">web-auth</a>
+                <a class="navbar-item" href="/logout">Logout</a>
+                {{if .Assumed}}
+                    <a class="navbar-item" onclick="document.getElementById('assumeReleaseForm').submit()">Release
+                        assumed user</a>
+                    <form method="post" action="/internal/user/release" id="assumeReleaseForm"></form>
+                {{end}}
+            </div>
+        </div>
+    </nav>
+{{end}}

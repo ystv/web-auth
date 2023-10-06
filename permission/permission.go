@@ -2,28 +2,23 @@ package permission
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/jmoiron/sqlx"
-	"github.com/ystv/web-auth/role"
 )
 
 type (
-	// Repo where all user data is stored
-	Repo interface {
-		GetPermissions(ctx context.Context) ([]Permission, error)
-		GetPermissionsForRole(ctx context.Context, r role.Role) ([]Permission, error)
-		GetPermission(ctx context.Context, p Permission) (Permission, error)
-		AddPermission(ctx context.Context, p Permission) (Permission, error)
-	}
 	// Store stores the dependencies
 	Store struct {
 		db *sqlx.DB
 	}
+
 	// Permission represents relevant permission fields
 	Permission struct {
 		PermissionID int    `db:"permission_id" json:"id"`
 		Name         string `db:"name" json:"name"`
 		Description  string `db:"description" json:"description"`
-		//ParentID     int    `db:"parent_id" json:"parentID"`
+		Roles        int    `db:"roles" json:"roles"`
 	}
 )
 
@@ -40,6 +35,36 @@ func (s *Store) GetPermissions(ctx context.Context) ([]Permission, error) {
 }
 
 // GetPermission returns all permissions of a user
-func (s *Store) GetPermission(ctx context.Context, id int) (Permission, error) {
-	return s.getPermission(ctx, id)
+func (s *Store) GetPermission(ctx context.Context, p Permission) (Permission, error) {
+	return s.getPermission(ctx, p)
+}
+
+// AddPermission returns all permissions of a user
+func (s *Store) AddPermission(ctx context.Context, p Permission) (Permission, error) {
+	return s.addPermission(ctx, p)
+}
+
+// EditPermission returns all permissions of a user
+func (s *Store) EditPermission(ctx context.Context, p Permission) (Permission, error) {
+	permission, err := s.GetPermission(ctx, p)
+	if err != nil {
+		return p, fmt.Errorf("failed to get permission: %w", err)
+	}
+	if p.Name != permission.Name && len(p.Name) > 0 {
+		permission.Name = p.Name
+	}
+	if p.Description != permission.Description && len(p.Description) > 0 {
+		permission.Description = p.Description
+	}
+	return s.editPermission(ctx, permission)
+}
+
+// DeletePermission deletes a permission
+func (s *Store) DeletePermission(ctx context.Context, p Permission) error {
+	return s.deletePermission(ctx, p)
+}
+
+// DeleteRolePermission deletes a rolePermission
+func (s *Store) DeleteRolePermission(ctx context.Context, p Permission) error {
+	return s.deleteRolePermission(ctx, p)
 }

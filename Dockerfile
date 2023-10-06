@@ -1,4 +1,4 @@
-FROM golang:1.20.4-alpine3.18 AS build
+FROM golang:1.21.0-alpine3.18 AS build
 LABEL site="auth"
 LABEL stage="builder"
 
@@ -21,10 +21,10 @@ RUN echo -n "-X 'main.Version=$WAUTH_VERSION_ARG" > ./ldflags && \
     tr -d \\n < ./ldflags > ./temp && mv ./temp ./ldflags && \
     echo -n "'" >> ./ldflags
 
+# Build the executable
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="$(cat ./ldflags)" -o /bin/auth
 
+# Run the executable
 FROM scratch
 LABEL site="auth"
-# Copy binary
-COPY --from=build /bin/auth .
-ENTRYPOINT ["./auth"]
+ENTRYPOINT ["/bin/auth"]

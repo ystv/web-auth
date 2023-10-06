@@ -1,0 +1,112 @@
+{{define "title"}}Internal: Permissions{{end}}
+{{define "content"}}
+    <div class="column is-10" style="min-height: 88vh">
+        <div class="card events-card">
+            <header class="card-header">
+                <p class="card-header-title">Permissions</p>
+            </header>
+            <div class="card" style="margin-bottom: 0">
+                <div class="column">
+                        <div class="field">
+                            <a onclick="addPermissionModal()" class="button is-info"><span class="mdi mdi-key-plus"></span>&ensp;Add Permission</a>
+                        </div>
+                </div>
+            </div>
+            <div class="card-table">
+                <div class="content">
+                    <table class="table is-fullwidth is-hoverable" style="max-height: 90%">
+                        <thead>
+                        <tr>
+                            <th>Permission ID</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Roles</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {{range .Permissions}}
+                            <tr>
+                                <th>{{.PermissionID}}</th>
+                                <td>{{.Name}}</td>
+                                <td>{{.Description}}</td>
+                                <td>{{.Roles}}</td>
+                                <td><a href="/internal/permission/{{.PermissionID}}">View</a></td>
+                            </tr>
+                        {{end}}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>Permission ID</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Roles</th>
+                            <th>Actions</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{template "modal" .}}
+{{end}}
+
+{{define "modal"}}
+    <div id="addPermissionModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title">Add permission</p>
+                            <p>Enter the permission's details below.</p>
+                            <form action="/internal/permission/add" method="post">
+                                <div class="field">
+                                    <label class="label" for="name">Name</label>
+                                    <div class="control">
+                                        <input
+                                                id="name"
+                                                class="input"
+                                                type="text"
+                                                name="name"
+                                                placeholder="Name"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="description">Description</label>
+                                    <div class="control">
+                                        <textarea
+                                                id="description"
+                                                class="input"
+                                                name="description"
+                                                placeholder="Description"
+                                        ></textarea>
+                                    </div>
+                                </div>
+                                <button class="button is-info"><span class="mdi mdi-key-plus"></span>&ensp;Add permission</button>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <script>
+        document.querySelectorAll(
+            ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
+        ).forEach(($el) => {
+            const $modal = $el.closest(".modal");
+            $el.addEventListener("click", () => {
+                $modal.classList.remove("is-active");
+            });
+        });
+
+        function addPermissionModal() {
+            document.getElementById("addPermissionModal").classList.add("is-active");
+        }
+    </script>
+{{end}}

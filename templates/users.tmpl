@@ -1,0 +1,317 @@
+{{define "title"}}Internal: Users{{end}}
+{{define "content"}}
+    {{if ne .Sort.Pages 0}}
+        {{template "_pagination" .}}
+    {{end}}
+    <div class="column is-10" style="min-height: 88vh">
+        <div class="card">
+            <form method="post" action="">
+                <div class="column">
+                    <div class="register" style="padding-top: 0">
+                        <div class="field">
+                            <p class="card-header-title" style="padding: 0 0 12px 0">Search</p>
+                            <label for="search">Enter the text to search</label>
+                            <div class="control has-icons-left">
+                                <input
+                                        id="search"
+                                        class="input"
+                                        type="text"
+                                        name="search"
+                                        value="{{.Sort.Search}}"
+                                        placeholder="Search a user"
+                                />
+                                <span class="icon is-medium is-left">
+                                    <i class="fa fa-search"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <p class="card-header-title" style="padding-left: 0">Sort by</p>
+                        <div class="field">
+                            <label for="column">Select the column to sort</label><br>
+                            <div class="control has-icons-left select">
+                                <select id="column" name="column">
+                                    <option value disabled{{if not .Sort.Column}} selected{{end}}>Please select</option>
+                                    <option value="userId"{{if eq .Sort.Column "userId"}} selected{{end}}>User ID</option>
+                                    <option value="name"{{if eq .Sort.Column "name"}} selected{{end}}>Name</option>
+                                    <option value="username"{{if eq .Sort.Column "username"}} selected{{end}}>Username</option>
+                                    <option value="email"{{if eq .Sort.Column "email"}} selected{{end}}>Email</option>
+                                    <option value="lastLogin"{{if eq .Sort.Column "lastLogin"}} selected{{end}}>Last Login</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="enabled">Enabled?</label><br>
+                            <div class="control has-icons-left select">
+                                <select id="enabled" name="enabled">
+                                    <option value="any"{{if not .Sort.Enabled}} selected{{end}}>Any</option>
+                                    <option value="enabled"{{if eq .Sort.Enabled "enabled"}} selected{{end}}>Enabled</option>
+                                    <option value="disabled"{{if eq .Sort.Enabled "disabled"}} selected{{end}}>Disabled</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="deleted">Deleted?</label><br>
+                            <div class="control has-icons-left select">
+                                <select id="deleted" name="deleted">
+                                    <option value="any"{{if not .Sort.Deleted}} selected{{end}}>Any</option>
+                                    <option value="not_deleted"{{if eq .Sort.Deleted "not_deleted"}} selected{{end}}>Not Deleted</option>
+                                    <option value="deleted"{{if eq .Sort.Deleted "deleted"}} selected{{end}}>Deleted</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="direction">Ascending or Descending</label><br>
+                            <div class="control has-icons-left select">
+                                <select id="direction" name="direction">
+                                    <option value disabled{{if not .Sort.Direction}} selected{{end}}>Please select</option>
+                                    <option value="asc"{{if eq .Sort.Direction "asc"}} selected{{end}}>Ascending</option>
+                                    <option value="desc"{{if eq .Sort.Direction "desc"}} selected{{end}}>Descending</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="size">Page size</label><br>
+                            <div class="control has-icons-left select">
+                                <select id="size" name="size">
+                                    <option value="5"{{if eq .Sort.Size 5}} selected{{end}}>5</option>
+                                    <option value="10"{{if eq .Sort.Size 10}} selected{{end}}>10</option>
+                                    <option value="25"{{if eq .Sort.Size 25}} selected{{end}}>25</option>
+                                    <option value="50"{{if eq .Sort.Size 50}} selected{{end}}>50</option>
+                                    <option value="75"{{if eq .Sort.Size 75}} selected{{end}}>75</option>
+                                    <option value="100"{{if eq .Sort.Size 100}} selected{{end}}>100</option>
+                                    <option value="all"{{if not .Sort.Size}} selected{{end}}>all</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <p class="control">
+                                <input
+                                        class="button is-info"
+                                        type="submit"
+                                        value="Submit"
+                                />
+                                <a class="button is-warning is-outlined" href="/internal/users">Reset all fields</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        {{if gt .Sort.Pages 1}}
+            <div class="card" style="width: 100%; text-align: center">
+                <div id="pagination"></div>
+            </div>
+        {{end}}
+        <div class="card events-card">
+            <header class="card-header">
+                <p class="card-header-title">Users</p>
+            </header>
+            {{$userAdmin := checkPermission $.UserPermissions "ManageMembers.Members.Admin"}}
+            {{if (checkPermission .UserPermissions "ManageMembers.Members.Add")}}
+                <p id="message" style="color: green"></p>
+                <p id="error" style="color: red"></p>
+                <div class="card" style="margin-bottom: 0">
+                    <div class="column">
+                        <div class="field">
+                            <a onclick="addUserModal()" class="button is-info">
+                                <i class="fa-solid fa-user-plus"></i>&ensp;
+                                Add User</a>
+                        </div>
+                        <div class="field">
+                            <a href="/internal/user/add" class="button is-info">
+                                <i class="fa-solid fa-user-plus"></i>&ensp;
+                                Add bulk Users</a>
+                        </div>
+                    </div>
+                </div>
+            {{end}}
+            <div class="card-table">
+                <div class="content">
+                    <table class="table is-fullwidth is-hoverable">
+                        <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Name</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Enabled</th>
+                            <th>Deleted</th>
+                            <th>Last login</th>
+                            {{if $userAdmin}}
+                                <th>View</th>
+                            {{end}}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {{range .Users}}
+                            <tr>
+                                <td>{{.UserID}}</td>
+                                <td>{{.Name}}</td>
+                                <td>{{.Username}}</td>
+                                <td>{{.Email}}</td>
+                                <td>{{if .Enabled}}Enabled{{else}}Disabled{{end}}</td>
+                                <td>{{if .Deleted}}Deleted{{else}}-{{end}}</td>
+                                <td>{{.LastLogin}}</td>
+                                {{if $userAdmin}}
+                                    <td><a href="/internal/user/{{.UserID}}">View</a></td>
+                                {{end}}
+                            </tr>
+                        {{end}}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Name</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Enabled</th>
+                            <th>Deleted</th>
+                            <th>Last login</th>
+                            {{if $userAdmin}}
+                                <th>View</th>
+                            {{end}}
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{if (checkPermission .UserPermissions "ManageMembers.Members.Add")}}
+        {{template "modal" .}}
+    {{end}}
+{{end}}
+
+{{define "modal"}}
+    <div id="addUserModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title">Add user</p>
+                            <p>Enter the user's details below.</p>
+                            <form id="addUserForm">
+                                <div class="field">
+                                    <label class="label" for="firstname">First name</label>
+                                    <div class="control">
+                                        <input
+                                                id="firstname"
+                                                class="input"
+                                                type="text"
+                                                name="firstname"
+                                                placeholder="First name"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="lastname">Last name</label>
+                                    <div class="control">
+                                        <input
+                                                id="lastname"
+                                                class="input"
+                                                type="text"
+                                                name="lastname"
+                                                placeholder="Last name"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="universityusername">University username</label>
+                                    <div class="control">
+                                        <input
+                                                id="universityusername"
+                                                class="input"
+                                                type="text"
+                                                name="universityusername"
+                                                placeholder="abc1234"
+                                                onchange="if (document.getElementById('email').value === '' && this.value.length > 0) document.getElementById('email').value = this.value + '@york.ac.uk'; if (document.getElementById('username').value === '' && this.value.length > 0) document.getElementById('username').value = this.value"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="username">Username</label>
+                                    <div class="control">
+                                        <input
+                                                id="username"
+                                                class="input"
+                                                type="text"
+                                                name="username"
+                                                placeholder="abc123"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="email">Email</label>
+                                    <div class="control">
+                                        <input
+                                                id="email"
+                                                class="input"
+                                                type="email"
+                                                name="email"
+                                                placeholder="abc123@york.ac.uk"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="logintype">Login type (not for change yet)</label>
+                                    <div class="control">
+                                        <input
+                                                id="logintype"
+                                                class="input"
+                                                type="text"
+                                                name="logintype"
+                                                placeholder="internal"
+                                                value="internal"
+                                                disabled
+                                        />
+                                    </div>
+                                </div>
+                                <button class="button is-info" onclick="addUser()" id="addUserButton"><i class="fa-solid fa-user-plus"></i>&ensp;
+                                    Add User</button>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <script>
+        document.querySelectorAll(
+            ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
+        ).forEach(($el) => {
+            const $modal = $el.closest(".modal");
+            $el.addEventListener("click", () => {
+                $modal.classList.remove("is-active");
+            });
+        });
+
+        function addUserModal() {
+            document.getElementById("addUserModal").classList.add("is-active");
+        }
+
+        function addUser() {
+            document.getElementById("addUserButton").disabled = true;
+            $.ajax({
+                url: '/internal/user/add',
+                type: 'post',
+                dataType: 'json',
+                contentType: 'application/x-www-form-urlencoded',
+                data: $('#addUserForm').serialize(),
+                success: function (data) {
+                    $("#message").html(data.message);
+                    $("#error").html(data.error);
+                    document.getElementById("firstname").value = "";
+                    document.getElementById("lastname").value = "";
+                    document.getElementById("universityusername").value = "";
+                    document.getElementById("username").value = "";
+                    document.getElementById("email").value = "";
+                    document.getElementById("addUserButton").disabled = false;
+                    document.getElementById("addUserModal").classList.remove("is-active");
+                },
+            })
+        }
+    </script>
+{{end}}

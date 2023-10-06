@@ -54,6 +54,7 @@ var (
 	WatchAdmin                  Permissions = "Watch.Admin"
 )
 
+// String gets the string value for a Permission
 func (p Permissions) String() string {
 	return string(p)
 }

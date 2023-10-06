@@ -1,0 +1,115 @@
+{{define "title"}}Signup{{end}}
+{{define "content"}}
+    <section class="hero is-fullheight" style="min-height: 95vh">
+        <div class="hero-body">
+            <div class="container">
+                <div class="columns is-centered">
+                    <div class="column is-5-tablet is-4-desktop is-3-widescreen">
+                        <div class="box">
+                            <progress class="progress is-link" value="30" max="90">30%</progress>
+                            <p class="title is-5">Create an account</p>
+                            <p>Fill out this form, and you are on your next step to joining YSTV.</p>
+                        </div>
+                    </div>
+                    <div class="column is-5-tablet is-4-desktop is-3-widescreen">
+                        <form action="" method="POST" class="box">
+                            <div class="field">
+                                <label class="label" for="firstname">First name</label>
+                                <div class="control has-icons-left">
+                                    <input
+                                            id="firstname"
+                                            class="input"
+                                            type="text"
+                                            name="firstname"
+                                            placeholder="John"
+                                    />
+                                    <span class="icon is-small is-left">
+                      <i class="fas fa-user"></i>
+                    </span>
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label class="label" for="lastname">Last name</label>
+                                <div class="control has-icons-left">
+                                    <input
+                                            id="lastname"
+                                            class="input"
+                                            type="text"
+                                            name="lastname"
+                                            placeholder="Smith"
+                                    />
+                                    <span class="icon is-small is-left">
+                      <i class="fas fa-user"></i>
+                    </span>
+                                </div>
+                            </div>
+
+                            <label class="label" for="email">Email address</label>
+                            <div class="field has-addons">
+                                <div class="control has-icons-left">
+                                    <input
+                                            id="email"
+                                            class="input"
+                                            type="text"
+                                            name="email"
+                                            placeholder="abc123"
+                                    />
+                                    <span class="icon is-small is-left">
+                      <i class="fas fa-envelope"></i>
+                    </span>
+                                </div>
+                                <p class="control">
+                                    <a class="button is-static">
+                                        @york.ac.uk
+                                    </a>
+                                </p>
+                            </div>
+
+                            <div class="field">
+                                <label class="label" for="password1">Password</label>
+                                <div class="control has-icons-left">
+                                    <input
+                                            id="password1"
+                                            class="input"
+                                            type="password"
+                                            name="password"
+                                            placeholder="********"
+                                    />
+                                    <span class="icon is-small is-left">
+                      <i class="fa fa-lock"></i>
+                    </span>
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label class="label" for="confirmpassword">Confirm password</label>
+                                <div class="control has-icons-left">
+                                    <input
+                                            id="confirmpassword"
+                                            class="input"
+                                            type="password"
+                                            name="confirmpassword"
+                                            placeholder="********"
+                                    />
+                                    <span class="icon is-small is-left">
+                      <i class="fa fa-lock"></i>
+                    </span>
+                                </div>
+                            </div>
+
+                            <div class="control">
+                                <input class="button is-link" type="submit" value="Signup"/>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {{if .}}
+                    <div class="notification is-danger">
+                        <p>{{.}}</p>
+                    </div>
+                {{end}}
+            </div>
+        </div>
+    </section>
+{{end}}

@@ -1,0 +1,53 @@
+{{define "title"}}Internal{{end}}
+{{define "content"}}
+    <div class="column is-10" style="min-height: 88vh">
+        <section class="hero is-info welcome is-small">
+            <div class="hero-body">
+                <div class="container">
+                    <h1 class="title">Hello, {{.Nickname}}.</h1>
+                    <h2 class="subtitle">Last login: {{.LastLogin}}</h2>
+                </div>
+            </div>
+        </section>
+        <section class="info-tiles">
+            <div class="tile is-ancestor has-text-centered">
+                <div class="tile is-parent">
+                    <article class="tile is-child box">
+                        <p class="title">Welcome to YSTV</p>
+                        <p class="subtitle">Please use the links on the left to use our services</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+        {{if (checkPermission .UserPermissions "ManageMembers.Members.List")}}
+            <section class="info-tiles">
+                <div class="tile is-ancestor has-text-centered">
+                    <div class="tile is-parent">
+                        <article class="tile is-child box">
+                            <p class="title">{{.CountAll.TotalUsers}}</p>
+                            <p class="subtitle">Total users</p>
+                        </article>
+                    </div>
+                    <div class="tile is-parent">
+                        <article class="tile is-child box">
+                            <p class="title">{{.CountAll.ActiveUsers}}</p>
+                            <p class="subtitle">Total active users (enabled and not deleted)</p>
+                        </article>
+                    </div>
+                    <div class="tile is-parent">
+                        <article class="tile is-child box">
+                            <p class="title">{{.CountAll.ActiveUsersPast24Hours}}</p>
+                            <p class="subtitle">Active users in the past 24 hours</p>
+                        </article>
+                    </div>
+                    <div class="tile is-parent">
+                        <article class="tile is-child box">
+                            <p class="title">{{.CountAll.ActiveUsersPastYear}}</p>
+                            <p class="subtitle">Active users in the past year</p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+        {{end}}
+    </div>
+{{end}}

@@ -1,39 +1,192 @@
 package views
 
 import (
-	"github.com/ystv/web-auth/permission"
-	"github.com/ystv/web-auth/public/templates"
-	"log"
+	"fmt"
 	"net/http"
+	"strconv"
+
+	"github.com/labstack/echo/v4"
+
+	"github.com/ystv/web-auth/permission"
+	"github.com/ystv/web-auth/templates"
+	"github.com/ystv/web-auth/user"
 )
 
-// PermissionsFunc handles a permissions request
-func (v *Views) PermissionsFunc(w http.ResponseWriter, r *http.Request) {
-	session, _ := v.cookie.Get(r, v.conf.SessionCookieName)
-
-	c := v.getData(session)
-
-	permissions, err := v.permission.GetPermissions(r.Context())
-	if err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	data := struct {
+type (
+	// PermissionsTemplate is for the permissions front end
+	PermissionsTemplate struct {
 		Permissions []permission.Permission
-		UserID      int
-		ActivePage  string
-	}{
-		Permissions: permissions,
-		UserID:      c.User.UserID,
-		ActivePage:  "permissions",
+		TemplateHelper
 	}
 
-	err = v.template.RenderTemplate(w, data, templates.PermissionsTemplate)
-	if err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	// PermissionTemplate is for the permission front end
+	PermissionTemplate struct {
+		Permission user.PermissionTemplate
+		TemplateHelper
 	}
+)
+
+// bindPermissionToTemplate converts from permission.Permission to user.PermissionTemplate
+func (v *Views) bindPermissionToTemplate(p1 permission.Permission) user.PermissionTemplate {
+	var p = user.PermissionTemplate{}
+	p.PermissionID = p1.PermissionID
+	p.Name = p1.Name
+	p.Description = p1.Description
+	return p
+}
+
+// PermissionsFunc handles a permissions request
+func (v *Views) PermissionsFunc(c echo.Context) error {
+	c1 := v.getSessionData(c)
+
+	permissions, err := v.permission.GetPermissions(c.Request().Context())
+	if err != nil {
+		return fmt.Errorf("failed to get permissions for permissions: %w", err)
+	}
+
+	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+	if err != nil {
+		return fmt.Errorf("failed to get user permissions for permissions: %w", err)
+	}
+
+	data := PermissionsTemplate{
+		Permissions: permissions,
+		TemplateHelper: TemplateHelper{
+			UserPermissions: p1,
+			ActivePage:      "permissions",
+			Assumed:         c1.Assumed,
+		},
+	}
+
+	return v.template.RenderTemplate(c.Response(), data, templates.PermissionsTemplate, templates.RegularType)
+}
+
+// PermissionFunc handles a permission request
+func (v *Views) PermissionFunc(c echo.Context) error {
+	c1 := v.getSessionData(c)
+
+	permissionID, err := strconv.Atoi(c.Param("permissionid"))
+	if err != nil {
+		return fmt.Errorf("failed to parse permissionid for permission: %w", err)
+	}
+
+	permission1, err := v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: permissionID})
+	if err != nil {
+		return fmt.Errorf("failed to get permission for permission: %w", err)
+	}
+
+	permissionTemplate := v.bindPermissionToTemplate(permission1)
+
+	permissionTemplate.Roles, err = v.user.GetRolesForPermission(c.Request().Context(), permission1)
+	if err != nil {
+		return fmt.Errorf("failed to get roles for permission: %w", err)
+	}
+
+	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+	if err != nil {
+		return fmt.Errorf("failed to get user permissions for permission: %w", err)
+	}
+
+	data := PermissionTemplate{
+		Permission: permissionTemplate,
+		TemplateHelper: TemplateHelper{
+			UserPermissions: p1,
+			ActivePage:      "permission",
+			Assumed:         c1.Assumed,
+		},
+	}
+
+	return v.template.RenderTemplate(c.Response(), data, templates.PermissionTemplate, templates.RegularType)
+}
+
+// PermissionAddFunc handles an add permission request
+func (v *Views) PermissionAddFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		name := c.Request().FormValue("name")
+		description := c.Request().FormValue("description")
+
+		p1, err := v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: 0, Name: name})
+		if err == nil && p1.PermissionID > 0 {
+			return fmt.Errorf("permission with name \"%s\" already exists", name)
+		}
+
+		_, err = v.permission.AddPermission(c.Request().Context(), permission.Permission{PermissionID: -1, Name: name, Description: description})
+		if err != nil {
+			return fmt.Errorf("failed to add permission for permissionadd: %w", err)
+		}
+		return v.PermissionsFunc(c)
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+}
+
+// PermissionEditFunc handles an edit permission request
+func (v *Views) PermissionEditFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		permissionID, err := strconv.Atoi(c.Param("permissionid"))
+		if err != nil {
+			return fmt.Errorf("failed to get permissionid for editPermission: %w", err)
+		}
+
+		permission1, err := v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: permissionID})
+		if err != nil {
+			return fmt.Errorf("failed to get permission for editPermission: %w", err)
+		}
+
+		err = c.Request().ParseForm()
+		if err != nil {
+			return fmt.Errorf("failed to parse form for permissionEdit: %w", err)
+		}
+
+		name := c.Request().FormValue("name")
+		description := c.Request().FormValue("description")
+
+		if name != permission1.Name && len(name) > 0 {
+			permission1.Name = name
+		}
+		if description != permission1.Description && len(description) > 0 {
+			permission1.Description = description
+		}
+
+		_, err = v.permission.EditPermission(c.Request().Context(), permission1)
+		if err != nil {
+			return fmt.Errorf("failed to edit permission for editPermission: %w", err)
+		}
+
+		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/permission/%d", permissionID))
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+}
+
+// PermissionDeleteFunc handles a delete permission request
+func (v *Views) PermissionDeleteFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		permissionID, err := strconv.Atoi(c.Param("permissionid"))
+		if err != nil {
+			return fmt.Errorf("failed to get permissionid for permission: %w", err)
+		}
+
+		permission1, err := v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: permissionID})
+		if err != nil {
+			return fmt.Errorf("failed to get permission for deletePermission: %w", err)
+		}
+
+		roles, err := v.user.GetRolesForPermission(c.Request().Context(), permission1)
+		if err != nil {
+			return fmt.Errorf("failed to get roles for deletePermission: %w", err)
+		}
+
+		for _, role1 := range roles {
+			err = v.role.RemovePermissionsForRole(c.Request().Context(), role1)
+			if err != nil {
+				return fmt.Errorf("failed to delete rolePermission for deletePermission: %w", err)
+			}
+		}
+
+		err = v.permission.DeletePermission(c.Request().Context(), permission1)
+		if err != nil {
+			return fmt.Errorf("failed to delete permission for deletePermission: %w", err)
+		}
+		return v.PermissionsFunc(c)
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }

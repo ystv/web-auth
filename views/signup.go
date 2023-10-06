@@ -2,12 +2,11 @@ package views
 
 import (
 	"fmt"
-	"github.com/gorilla/schema"
-	"github.com/ystv/web-auth/public/templates"
-	"log"
 	"net/http"
 
-	"github.com/go-playground/validator/v10"
+	"github.com/gorilla/schema"
+	"github.com/labstack/echo/v4"
+	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 )
 
@@ -23,61 +22,35 @@ type UserSignup struct {
 }
 
 // SignUpFunc will enable new users to sign up to our service
-func (v *Views) SignUpFunc(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
+func (v *Views) SignUpFunc(c echo.Context) error {
+	switch c.Request().Method {
 	case "POST":
-		// Parsing form to struct
-		err := r.ParseForm()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
 		uSignup := UserSignup{}
-		err = decoder.Decode(&uSignup, r.PostForm)
+		err := decoder.Decode(&uSignup, c.Request().PostForm)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to get form values for signup: %w", err))
 		}
 		uSignup.Email += "@york.ac.uk"
 		err = v.validate.Struct(uSignup)
 		if err != nil {
-			if _, ok := err.(*validator.ValidationErrors); ok {
-				err = fmt.Errorf("failed to validate: %w", err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			issues := ""
-			for _, err := range err.(validator.ValidationErrors) {
-				issues += " " + err.Error()
-			}
-			log.Println(issues)
-			v.signupTmplExec(w, issues)
-			return
+			return fmt.Errorf("failed to parse form: %w", err)
 		}
 
 		uNormal := user.User{
 			Email: uSignup.Email,
 		}
 
-		_, err = v.user.GetUser(r.Context(), uNormal)
+		_, err = v.user.GetUser(c.Request().Context(), uNormal)
 		if err == nil {
-			v.signupTmplExec(w, "Account already exists")
-			return
+			return v.template.RenderTemplate(c.Response(), "Account already exists", templates.SignupTemplate, templates.NoNavType)
 		}
-		http.Redirect(w, r, "/", http.StatusFound)
+		return c.Redirect(http.StatusFound, "/")
 
 	case "GET":
-		v.signupTmplExec(w, "")
+		return v.template.RenderTemplate(c.Response(), "", templates.SignupTemplate, templates.NoNavType)
 	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid mthod used"))
 }
 
-func (v *Views) signupTmplExec(w http.ResponseWriter, msg string) {
-	err := v.template.RenderNoNavsTemplate(w, msg, templates.SignupTemplate)
-	//err := v.tpl.ExecuteTemplate(w, "signup.tmpl", msg)
-	if err != nil {
-		err = fmt.Errorf("signup template exec failed: %w", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-//TODO: Implement signup holding page
+//nolint:godox
+// TODO: Implement signup holding page
