@@ -27,4 +27,6 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="$(cat ./ldflags)" -
 # Run the executable
 FROM scratch
 LABEL site="auth"
+# Copy binary
+COPY --from=build /bin/auth /bin/auth
 ENTRYPOINT ["/bin/auth"]
