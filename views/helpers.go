@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	_ "time/tzdata"
+
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/user"
