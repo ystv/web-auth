@@ -18,6 +18,11 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 		if err != nil {
 			log.Printf("failed to get session: %+v", err)
+			session.Options.MaxAge = -1
+			err = session.Save(c.Request(), c.Response())
+			if err != nil {
+				log.Printf("failed to save session for logout: %+v", err)
+			}
 			return c.Redirect(http.StatusFound, "/")
 		}
 		c1 := v.getSessionData(c)
