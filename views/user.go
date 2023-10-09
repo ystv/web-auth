@@ -497,7 +497,7 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to edit user for editUser: %w", err)
 		}
-		return c.Redirect(http.StatusOK, fmt.Sprintf("/internal/user/%d", userID))
+		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/user/%d", userID))
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
