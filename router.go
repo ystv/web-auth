@@ -56,6 +56,13 @@ func (r *Router) middleware() {
 		Skipper:          middleware.DefaultSkipper,
 		AllowOrigins: []string{
 			"https://" + r.config.DomainName,
+			"https://creator." + r.config.BaseDomainName,
+			"https://my." + r.config.BaseDomainName,
+			"https://cobra." + r.config.BaseDomainName,
+			"https://api." + r.config.BaseDomainName,
+			"https://internal." + r.config.BaseDomainName,
+			"https://docs." + r.config.BaseDomainName,
+			"https://history." + r.config.BaseDomainName,
 		},
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAccessControlAllowCredentials, echo.HeaderAccessControlAllowOrigin, echo.HeaderAuthorization},
 		AllowMethods: []string{http.MethodGet, http.MethodPost},
