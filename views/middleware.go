@@ -18,7 +18,10 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 		if err != nil {
 			log.Printf("failed to get session: %+v", err)
-			session.Options.MaxAge = -1
+			session, err = v.cookie.New(c.Request(), v.conf.SessionCookieName)
+			if err != nil {
+				panic(fmt.Errorf("failed to make new session: %w", err))
+			}
 			err = session.Save(c.Request(), c.Response())
 			if err != nil {
 				log.Printf("failed to save session for logout: %+v", err)
