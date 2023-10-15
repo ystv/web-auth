@@ -17,20 +17,26 @@ require (
 	github.com/jinzhu/copier v0.4.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/joho/godotenv v1.5.1
-	github.com/labstack/echo/v4 v4.11.1
+	github.com/korylprince/go-ad-auth/v3 v3.3.0
 	github.com/labstack/echo/v4 v4.11.2
 	github.com/labstack/gommon v0.4.0
 	github.com/lib/pq v1.10.9
+	github.com/mcnijman/go-emailaddress v1.1.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/xhit/go-simple-mail/v2 v2.16.0
 	gopkg.in/guregu/null.v4 v4.0.0
 )
 
 require (
+	github.com/Azure/go-ntlmssp v0.0.0-20221128193559-754e69321358 // indirect
+	github.com/go-asn1-ber/asn1-ber v1.5.5 // indirect
+)
+
+require (
 	github.com/Nerzal/gocloak/v13 v13.8.0 // indirect
 	github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
+	github.com/go-ldap/ldap/v3 v3.4.6
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-resty/resty/v2 v2.10.0 // indirect
