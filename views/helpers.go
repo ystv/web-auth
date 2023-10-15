@@ -50,7 +50,19 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 	session, err := v.cookie.Get(eC.Request(), v.conf.SessionCookieName)
 	if err != nil {
 		log.Printf("error getting session: %+v", err)
-		return nil
+		err = session.Save(eC.Request(), eC.Response())
+		if err != nil {
+			panic(fmt.Errorf("failed to save user session for getSessionData: %w", err))
+		}
+		i := InternalContext{}
+		c := &Context{
+			TitleText: i.TitleText,
+			Message:   i.Message,
+			MsgType:   i.MesType,
+			Callback:  "/internal",
+			Version:   v.conf.Version,
+		}
+		return c
 	}
 
 	var u, actual user.User
