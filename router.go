@@ -56,6 +56,7 @@ func (r *Router) middleware() {
 		Skipper:          middleware.DefaultSkipper,
 		AllowOrigins: []string{
 			"https://" + r.config.DomainName,
+			"https://" + r.config.BaseDomainName,
 			"https://creator." + r.config.BaseDomainName,
 			"https://my." + r.config.BaseDomainName,
 			"https://cobra." + r.config.BaseDomainName,
