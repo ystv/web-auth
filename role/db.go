@@ -72,7 +72,7 @@ func (s *Store) addRole(ctx context.Context, r Role) (Role, error) {
 	return r, nil
 }
 
-// editRole erits an existing Role
+// editRole edits an existing Role
 func (s *Store) editRole(ctx context.Context, r Role) (Role, error) {
 	stmt, err := s.db.NamedExecContext(ctx, `UPDATE people.roles
 		SET name = :name,
