@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -183,11 +182,12 @@ func (s *Store) VerifyUser(ctx context.Context, u User) (User, bool, error) {
 	if user.DeletedBy.Valid {
 		return u, false, fmt.Errorf("user has been deleted, contact Computing Team for help")
 	}
-	if user.ResetPw {
-		u.UserID = user.UserID
-		return user, true, errors.New("password reset required")
-	}
+
 	if utils.HashPass(user.Salt.String+u.Password.String) == user.Password.String {
+		if user.ResetPw {
+			u.UserID = user.UserID
+			return user, true, fmt.Errorf("password reset required")
+		}
 		return user, false, nil
 	}
 	return u, false, fmt.Errorf("invalid credentials")
