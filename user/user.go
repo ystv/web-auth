@@ -153,14 +153,14 @@ func (s *Store) GetUserValid(ctx context.Context, u User) (User, error) {
 		return u, fmt.Errorf("failed to get user: %w", err)
 	}
 	if !user.Enabled {
-		return u, errors.New("user not enabled, contact Computing Team for help")
+		return u, fmt.Errorf("user not enabled, contact Computing Team for help")
 	}
 	if user.DeletedBy.Valid {
-		return u, errors.New("user has been deleted, contact Computing Team for help")
+		return u, fmt.Errorf("user has been deleted, contact Computing Team for help")
 	}
 	if user.ResetPw {
 		u.UserID = user.UserID
-		return u, errors.New("password reset required")
+		return u, fmt.Errorf("password reset required")
 	}
 	return user, nil
 }
@@ -178,10 +178,10 @@ func (s *Store) VerifyUser(ctx context.Context, u User) (User, bool, error) {
 		return u, false, fmt.Errorf("failed to get user: %w", err)
 	}
 	if !user.Enabled {
-		return u, false, errors.New("user not enabled, contact Computing Team for help")
+		return u, false, fmt.Errorf("user not enabled, contact Computing Team for help")
 	}
 	if user.DeletedBy.Valid {
-		return u, false, errors.New("user has been deleted, contact Computing Team for help")
+		return u, false, fmt.Errorf("user has been deleted, contact Computing Team for help")
 	}
 	if user.ResetPw {
 		u.UserID = user.UserID
@@ -190,7 +190,7 @@ func (s *Store) VerifyUser(ctx context.Context, u User) (User, bool, error) {
 	if utils.HashPass(user.Salt.String+u.Password.String) == user.Password.String {
 		return user, false, nil
 	}
-	return u, false, errors.New("invalid credentials")
+	return u, false, fmt.Errorf("invalid credentials")
 }
 
 // AddUser adds a new User
