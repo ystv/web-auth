@@ -40,6 +40,7 @@ func (s *Store) addToken(ctx context.Context, t1 Token) (Token, error) {
 	if err != nil {
 		return Token{}, fmt.Errorf("failed to add token: %w", err)
 	}
+	defer stmt.Close()
 	err = stmt.Get(&t, t1)
 	if err != nil {
 		return Token{}, fmt.Errorf("failed to add token: %w", err)
