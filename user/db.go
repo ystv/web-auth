@@ -37,6 +37,7 @@ func (s *Store) addUser(ctx context.Context, u1 User) (User, error) {
 	if err != nil {
 		return User{}, fmt.Errorf("failed to add user: %w", err)
 	}
+	defer stmt.Close()
 	err = stmt.Get(&u, u1)
 	if err != nil {
 		return User{}, fmt.Errorf("failed to add user: %w", err)
@@ -280,6 +281,7 @@ func (s *Store) addRoleUser(ctx context.Context, ru1 RoleUser) (RoleUser, error)
 	if err != nil {
 		return RoleUser{}, fmt.Errorf("failed to add roleUser: %w", err)
 	}
+	defer stmt.Close()
 	err = stmt.Get(&ru, ru1)
 	if err != nil {
 		return RoleUser{}, fmt.Errorf("failed to add roleUser: %w", err)
@@ -368,6 +370,7 @@ func (s *Store) addRolePermission(ctx context.Context, rp1 RolePermission) (Role
 	if err != nil {
 		return RolePermission{}, fmt.Errorf("failed to add rolePermission: %w", err)
 	}
+	defer stmt.Close()
 	err = stmt.Get(&rp, rp1)
 	if err != nil {
 		return RolePermission{}, fmt.Errorf("failed to add rolePermission: %w", err)
