@@ -72,14 +72,14 @@ func (s *Store) addPermission(ctx context.Context, p Permission) (Permission, er
 
 // editPermission edits an existing permission
 func (s *Store) editPermission(ctx context.Context, p Permission) (Permission, error) {
-	stmt, err := s.db.NamedExecContext(ctx, `UPDATE people.permissions
+	res, err := s.db.NamedExecContext(ctx, `UPDATE people.permissions
 		SET name = :name,
 			description = :description
 		WHERE permission_id = :permission_id`, p)
 	if err != nil {
 		return Permission{}, fmt.Errorf("failed to update permission: %w", err)
 	}
-	rows, err := stmt.RowsAffected()
+	rows, err := res.RowsAffected()
 	if err != nil {
 		return Permission{}, fmt.Errorf("failed to update permission: %w", err)
 	}
