@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	sq "github.com/Masterminds/squirrel"
+	"github.com/jinzhu/copier"
+
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
 	"github.com/ystv/web-auth/utils"
-
-	sq "github.com/Masterminds/squirrel"
-	"github.com/jinzhu/copier"
 )
 
 // countUsersAll will get the number of total users
