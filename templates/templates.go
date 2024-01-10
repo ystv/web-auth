@@ -110,17 +110,11 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 		"thisYear": func() int {
 			return time.Now().Year()
 		},
-		"add": func(a, b int) int {
-			return a + b
-		},
 		"inc": func(a int) int {
 			return a + 1
 		},
 		"dec": func(a int) int {
 			return a - 1
-		},
-		"even": func(a int) bool {
-			return a%2 == 0
 		},
 		"checkPermission": func(perms []permission.Permission, p string) bool {
 			m := permission1.SufficientPermissionsFor(permissions.Permissions(p))
