@@ -5,14 +5,14 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	emailParser "github.com/mcnijman/go-emailaddress"
 	"github.com/patrickmn/go-cache"
-	"github.com/ystv/web-auth/templates"
 	"gopkg.in/guregu/null.v4"
 
+	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 )
 
@@ -30,7 +30,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 
 		// Check if there is a callback request
 		callbackURL, err := url.Parse(c.QueryParam("callback"))
-		if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) && callbackURL.String() != "" {
+		if err == nil && /*strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) &&*/ callbackURL.String() != "" {
 			context.Callback = callbackURL.String()
 		}
 		// Check if authenticated
@@ -54,12 +54,17 @@ func (v *Views) LoginFunc(c echo.Context) error {
 
 		callback := "/internal"
 		callbackURL, err := url.Parse(c.QueryParam("callback"))
-		if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) && callbackURL.String() != "" {
+		if err == nil /*&& strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName)*/ && callbackURL.String() != "" {
 			callback = callbackURL.String()
 		}
 		// Authentication
 		u, resetPw, err := v.user.VerifyUser(c.Request().Context(), u)
 		if err != nil {
+			address, _ := emailParser.Parse(username)
+			if address != nil {
+				u.LDAPUsername = null.StringFrom(address.LocalPart)
+				_, err = v.user.GetUser(c.Request().Context(), u)
+			}
 			log.Printf("failed login for \"%s\": %v", u.Username, err)
 			err = session.Save(c.Request(), c.Response())
 			if err != nil {
@@ -110,6 +115,14 @@ func (v *Views) LoginFunc(c echo.Context) error {
 
 		session.Values["user"] = u
 
+		c.SetCookie(&http.Cookie{
+			Name:     "test-pass",
+			Value:    "hello",
+			MaxAge:   60,
+			Secure:   false,
+			HttpOnly: false,
+		})
+
 		if c.FormValue("remember") != "on" {
 			session.Options.MaxAge = 86400 * 31
 		}
@@ -124,3 +137,71 @@ func (v *Views) LoginFunc(c echo.Context) error {
 	}
 	return fmt.Errorf("failed to parse method")
 }
+
+//func (v *Views) LDAPFunc(username, password string) (bool, error) {
+//	config := &auth.Config{
+//		Server:   v.conf.AD.Server,
+//		Port:     v.conf.AD.Port,
+//		BaseDN:   v.conf.AD.BaseDN,
+//		Security: auth.SecurityType(v.conf.AD.Security),
+//	}
+//
+//	conn, err := config.Connect()
+//	if err != nil {
+//		return false, echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("error connecting to server: %w", err))
+//	}
+//	defer func(Conn *ldap.Conn) {
+//		err = Conn.Close()
+//		if err != nil {
+//			log.Printf("failed to close to LDAP server: %+v", err)
+//		}
+//	}(conn.Conn)
+//
+//	status, err := conn.Bind(v.conf.AD.Bind.Username, v.conf.AD.Bind.Password)
+//	if err != nil {
+//		return false, echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("error binding to server: %w", err))
+//	}
+//
+//	if !status {
+//		return false, echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("error binding to server: invalid credentials"))
+//	}
+//
+//	status1, err := auth.Authenticate(config, username, password)
+//	if err != nil {
+//		return false, echo.NewHTTPError(http.StatusUnauthorized, fmt.Errorf("unable to authenticate %s with error: %w", username, err))
+//	}
+//
+//	if status1 {
+//		var entry *ldap.Entry
+//		if _, err = mail.ParseAddress(username); err == nil {
+//			entry, err = conn.GetAttributes("userPrincipalName", username, []string{"memberOf"})
+//		} else {
+//			entry, err = conn.GetAttributes("samAccountName", username, []string{"memberOf"})
+//		}
+//		if err != nil {
+//			return false, echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("error getting user groups: %w", err))
+//		}
+//
+//		dnGroups := entry.GetAttributeValues("memberOf")
+//
+//		if len(dnGroups) == 0 {
+//			return false, echo.NewHTTPError(http.StatusUnauthorized, fmt.Errorf("BIND_SAM user not member of any groups"))
+//		}
+//
+//		//stv := false
+//
+//		for _, group := range dnGroups {
+//			if group == "CN=STV Admin,CN=Users,DC=ystv,DC=local" {
+//				//stv = true
+//				return true, nil
+//			}
+//		}
+//
+//		//if !stv {
+//		//	return false, echo.NewHTTPError(http.StatusUnauthorized, fmt.Errorf("STV not allowed for %s!\n", username))
+//		//}
+//		log.Printf("%s is authenticated", username)
+//		return true, nil
+//	}
+//	return false, echo.NewHTTPError(http.StatusUnauthorized, fmt.Errorf("user not authenticated: %s", username))
+//}

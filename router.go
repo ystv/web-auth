@@ -64,6 +64,7 @@ func (r *Router) middleware() {
 			"https://internal." + r.config.BaseDomainName,
 			"https://docs." + r.config.BaseDomainName,
 			"https://history." + r.config.BaseDomainName,
+			"http://localhost:*",
 		},
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAccessControlAllowCredentials, echo.HeaderAccessControlAllowOrigin, echo.HeaderAuthorization},
 		AllowMethods: []string{http.MethodGet, http.MethodPost},

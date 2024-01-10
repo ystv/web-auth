@@ -34,6 +34,20 @@ type (
 		SessionCookieName string
 		Mail              SMTPConfig
 		Security          SecurityConfig
+		AD                ADConfig
+	}
+
+	ADConfig struct {
+		Server   string
+		Port     int
+		BaseDN   string
+		Security int
+		Bind     ADBind
+	}
+
+	ADBind struct {
+		Username string
+		Password string
 	}
 
 	// SMTPConfig stores the SMTP Mailer configuration
