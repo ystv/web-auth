@@ -10,11 +10,14 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"gopkg.in/guregu/null.v4"
+
 	"github.com/ystv/web-auth/infrastructure/mail"
+	"github.com/ystv/web-auth/infrastructure/permission"
+	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 	"github.com/ystv/web-auth/utils"
-	"gopkg.in/guregu/null.v4"
 )
 
 type (
@@ -357,11 +360,25 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 			return fmt.Errorf("failed to parse form for userAdd: %w", err)
 		}
 
-		firstName := c.Request().FormValue("firstname")
-		lastName := c.Request().FormValue("lastname")
-		username := c.Request().FormValue("username")
-		universityUsername := c.Request().FormValue("universityusername")
-		email := c.Request().FormValue("email")
+		firstName := c.FormValue("firstname")
+		lastName := c.FormValue("lastname")
+		username := c.FormValue("username")
+		universityUsername := c.FormValue("universityusername")
+		email := c.FormValue("email")
+		tempDisableSendEmail := c.FormValue("disablesendemail")
+		sendEmail := true
+		if tempDisableSendEmail == "on" && func() bool {
+			m := permission.SufficientPermissionsFor(permissions.SuperUser)
+
+			for _, perm := range c1.User.Permissions {
+				if m[perm.Name] {
+					return true
+				}
+			}
+			return false
+		}() {
+			sendEmail = false
+		}
 
 		password, err := utils.GenerateRandom(utils.GeneratePassword)
 		if err != nil {
@@ -398,7 +415,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 
 		mailer := v.mailer.ConnectMailer()
 
-		if mailer != nil {
+		if mailer != nil && sendEmail {
 			template, err := v.template.GetEmailTemplate(templates.SignupEmailTemplate)
 			if err != nil {
 				return fmt.Errorf("failed to get email in addUser: %w", err)
@@ -460,15 +477,15 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 			return fmt.Errorf("failed to parse form for userEdit: %w", err)
 		}
 
-		firstName := c.Request().FormValue("firstname")
-		nickname := c.Request().FormValue("nickname")
-		lastName := c.Request().FormValue("lastname")
-		username := c.Request().FormValue("username")
-		universityUsername := c.Request().FormValue("universityusername")
-		LDAPUsername := c.Request().FormValue("ldapusername")
-		email := c.Request().FormValue("email")
+		firstName := c.FormValue("firstname")
+		nickname := c.FormValue("nickname")
+		lastName := c.FormValue("lastname")
+		username := c.FormValue("username")
+		universityUsername := c.FormValue("universityusername")
+		LDAPUsername := c.FormValue("ldapusername")
+		email := c.FormValue("email")
 		// login type can't be changed yet but the infrastructure is in
-		loginType := c.Request().FormValue("logintype")
+		loginType := c.FormValue("logintype")
 		_ = loginType
 
 		if firstName != user1.Firstname && len(firstName) > 0 {
