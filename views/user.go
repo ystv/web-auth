@@ -58,7 +58,8 @@ func (v *Views) UsersFunc(c echo.Context) error {
 	var err error
 
 	if c.Request().Method == "POST" {
-		u, err := url.Parse("/internal/users")
+		var u *url.URL
+		u, err = url.Parse("/internal/users")
 		if err != nil {
 			panic(fmt.Errorf("invalid url: %w", err)) // this panics because if this errors then many other things will be wrong
 		}

@@ -328,7 +328,7 @@ func (v *Views) TestAPITokenFunc(c echo.Context) error {
 				Message:    "invalid token",
 			}
 			c.Response().WriteHeader(http.StatusBadRequest)
-			err := json.NewEncoder(c.Response()).Encode(status)
+			err = json.NewEncoder(c.Response()).Encode(status)
 			if err != nil {
 				log.Printf("failed to encode json: %+v", err)
 				data := struct {
