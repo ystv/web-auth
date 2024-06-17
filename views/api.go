@@ -147,7 +147,7 @@ func (v *Views) TokenAddFunc(c echo.Context) error {
 		}
 		return v.manageAPIFunc(c, addedJWT)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 // TokenDeleteFunc deletes a token
@@ -175,7 +175,7 @@ func (v *Views) TokenDeleteFunc(c echo.Context) error {
 		}
 		return v.ManageAPIFunc(c)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 // SetTokenHandler sets a valid JWT in a cookie instead of returning a string
@@ -361,7 +361,7 @@ func (v *Views) TestAPITokenFunc(c echo.Context) error {
 			return c.JSON(http.StatusInternalServerError, data)
 		}
 	}
-	return nil
+	return v.invalidMethodUsed(c) // maybe nil
 }
 
 // ValidateToken will validate the token

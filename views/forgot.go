@@ -88,5 +88,5 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 		// User doesn't exist, we'll pretend they've got an email
 		return v.template.RenderTemplate(c.Response().Writer, notification, templates.NotificationTemplate, templates.NoNavType)
 	}
-	return nil
+	return v.invalidMethodUsed(c) // maybe nil
 }

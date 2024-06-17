@@ -301,7 +301,7 @@ func (v *Views) AssumeUserFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, "/internal")
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 func (v *Views) ReleaseUserFunc(c echo.Context) error {
@@ -335,7 +335,7 @@ func (v *Views) ReleaseUserFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, "/internal")
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 // UserAddFunc handles an add user request
@@ -517,7 +517,7 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 		}
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/user/%d", userID))
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 // UserToggleEnabledFunc handles an toggle enable user request
@@ -543,7 +543,7 @@ func (v *Views) UserToggleEnabledFunc(c echo.Context) error {
 		}
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/user/%d", userID))
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 // UserDeleteFunc handles an delete user request
@@ -572,5 +572,5 @@ func (v *Views) UserDeleteFunc(c echo.Context) error {
 		}
 		return v.UsersFunc(c)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return v.invalidMethodUsed(c)
 }

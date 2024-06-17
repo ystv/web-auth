@@ -136,7 +136,7 @@ func (v *Views) RoleAddFunc(c echo.Context) error {
 		}
 		return v.RolesFunc(c)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 // RoleEditFunc handles a role edit request
@@ -174,7 +174,7 @@ func (v *Views) RoleEditFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/role/%d", roleID))
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 // RoleDeleteFunc handles a role delete request
@@ -206,7 +206,7 @@ func (v *Views) RoleDeleteFunc(c echo.Context) error {
 		}
 		return v.RolesFunc(c)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 // RoleAddPermissionFunc handles a rolePermission add request
@@ -248,7 +248,7 @@ func (v *Views) RoleAddPermissionFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/role/%d", roleID))
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 // RoleRemovePermissionFunc handles a rolePermission remove request
@@ -290,7 +290,7 @@ func (v *Views) RoleRemovePermissionFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/role/%d", roleID))
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 // RoleAddUserFunc handles a roleUser add request
@@ -332,7 +332,7 @@ func (v *Views) RoleAddUserFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/role/%d", roleID))
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 // RoleRemoveUserFunc handles a roleUser remove request
@@ -374,5 +374,5 @@ func (v *Views) RoleRemoveUserFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/role/%d", roleID))
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return v.invalidMethodUsed(c)
 }

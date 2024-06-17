@@ -58,5 +58,5 @@ func (v *Views) ChangePasswordFunc(c echo.Context) error {
 		message.Message = "successfully changed password"
 		return c.JSON(status, message)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return v.invalidMethodUsed(c)
 }

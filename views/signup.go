@@ -49,7 +49,7 @@ func (v *Views) SignUpFunc(c echo.Context) error {
 	case "GET":
 		return v.template.RenderTemplate(c.Response(), "", templates.SignupTemplate, templates.NoNavType)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid mthod used"))
+	return v.invalidMethodUsed(c)
 }
 
 //nolint:godox

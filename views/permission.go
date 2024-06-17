@@ -116,7 +116,7 @@ func (v *Views) PermissionAddFunc(c echo.Context) error {
 		}
 		return v.PermissionsFunc(c)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 // PermissionEditFunc handles an edit permission request
@@ -154,7 +154,7 @@ func (v *Views) PermissionEditFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/permission/%d", permissionID))
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 // PermissionDeleteFunc handles a delete permission request
@@ -188,5 +188,5 @@ func (v *Views) PermissionDeleteFunc(c echo.Context) error {
 		}
 		return v.PermissionsFunc(c)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
