@@ -54,78 +54,22 @@ type (
 
 // UsersFunc handles a users request
 func (v *Views) UsersFunc(c echo.Context) error {
-	c1 := v.getSessionData(c)
-
-	var err error
-
-	if c.Request().Method == "POST" {
-		var u *url.URL
-		u, err = url.Parse("/internal/users")
-		if err != nil {
-			panic(fmt.Errorf("invalid url: %w", err)) // this panics because if this errors then many other things will be wrong
-		}
-
-		q := u.Query()
-
-		column := c.FormValue("column")
-		direction := c.FormValue("direction")
-		search := c.FormValue("search")
-		enabled := c.FormValue("enabled")
-		deleted := c.FormValue("deleted")
-		var size int
-		sizeRaw := c.FormValue("size")
-		if sizeRaw == "all" {
-			size = 0
-		} else {
-			size, err = strconv.Atoi(sizeRaw)
-			//nolint:gocritic
-			if err != nil {
-				size = 0
-			} else if size <= 0 {
-				return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid size, must be positive"))
-			} else if size != 5 && size != 10 && size != 25 && size != 50 && size != 75 && size != 100 {
-				size = 25
-			}
-		}
-
-		if enabled == "enabled" || enabled == "disabled" {
-			q.Set("enabled", enabled)
-		} else if enabled != "any" {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("enabled must be set to either \"any\", \"enabled\" or \"disabled\""))
-		}
-
-		if deleted == "deleted" || deleted == "not_deleted" {
-			q.Set("deleted", deleted)
-		} else if deleted != "any" {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("deleted must be set to either \"any\", \"deleted\" or \"not_deleted\""))
-		}
-
-		if column == "userId" || column == "name" || column == "username" || column == "email" || column == "lastLogin" {
-			if direction == "asc" || direction == "desc" {
-				q.Set("column", column)
-				q.Set("direction", direction)
-			}
-		}
-
-		c.Request().Method = "GET"
-
-		if size > 0 {
-			q.Set("size", strconv.FormatInt(int64(size), 10))
-			q.Set("page", "1")
-		}
-
-		if len(search) > 0 {
-			q.Set("search", url.QueryEscape(search))
-		}
-
-		u.RawQuery = q.Encode()
-		return c.Redirect(http.StatusFound, u.String())
+	switch c.Request().Method {
+	case "GET":
+		return v._usersGet(c)
+	case "POST":
+		return v._usersPost(c)
 	}
+	return v.invalidMethodUsed(c)
+}
 
+//gocyclo:ignore
+func (v *Views) _usersGet(c echo.Context) error {
+	c1 := v.getSessionData(c)
 	column := c.QueryParam("column")
 	direction := c.QueryParam("direction")
 	search := c.QueryParam("search")
-	search, err = url.QueryUnescape(search)
+	search, err := url.QueryUnescape(search)
 	if err != nil {
 		return fmt.Errorf("failed to unescape query: %w", err)
 	}
@@ -218,6 +162,70 @@ func (v *Views) UsersFunc(c echo.Context) error {
 		},
 	}
 	return v.template.RenderTemplate(c.Response(), data, templates.UsersTemplate, templates.PaginationType)
+}
+
+//gocyclo:ignore
+func (v *Views) _usersPost(c echo.Context) error {
+	u, err := url.Parse("/internal/users")
+	if err != nil {
+		panic(fmt.Errorf("invalid url: %w", err)) // this panics because if this errors then many other things will be wrong
+	}
+
+	q := u.Query()
+
+	column := c.FormValue("column")
+	direction := c.FormValue("direction")
+	search := c.FormValue("search")
+	enabled := c.FormValue("enabled")
+	deleted := c.FormValue("deleted")
+	var size int
+	sizeRaw := c.FormValue("size")
+	if sizeRaw == "all" {
+		size = 0
+	} else {
+		size, err = strconv.Atoi(sizeRaw)
+		//nolint:gocritic
+		if err != nil {
+			size = 0
+		} else if size <= 0 {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid size, must be positive"))
+		} else if size != 5 && size != 10 && size != 25 && size != 50 && size != 75 && size != 100 {
+			size = 25
+		}
+	}
+
+	if enabled == "enabled" || enabled == "disabled" {
+		q.Set("enabled", enabled)
+	} else if enabled != "any" {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("enabled must be set to either \"any\", \"enabled\" or \"disabled\""))
+	}
+
+	if deleted == "deleted" || deleted == "not_deleted" {
+		q.Set("deleted", deleted)
+	} else if deleted != "any" {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("deleted must be set to either \"any\", \"deleted\" or \"not_deleted\""))
+	}
+
+	if column == "userId" || column == "name" || column == "username" || column == "email" || column == "lastLogin" {
+		if direction == "asc" || direction == "desc" {
+			q.Set("column", column)
+			q.Set("direction", direction)
+		}
+	}
+
+	c.Request().Method = "GET"
+
+	if size > 0 {
+		q.Set("size", strconv.FormatInt(int64(size), 10))
+		q.Set("page", "1")
+	}
+
+	if len(search) > 0 {
+		q.Set("search", url.QueryEscape(search))
+	}
+
+	u.RawQuery = q.Encode()
+	return c.Redirect(http.StatusFound, u.String())
 }
 
 // UserFunc handles a users request
