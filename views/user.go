@@ -500,25 +500,25 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 		loginType := c.FormValue("logintype")
 		_ = loginType
 
-		if firstName != user1.Firstname && len(firstName) > 0 {
+		if len(firstName) > 0 {
 			user1.Firstname = firstName
 		}
-		if nickname != user1.Nickname && len(nickname) > 0 {
+		if len(nickname) > 0 {
 			user1.Nickname = nickname
 		}
-		if lastName != user1.Lastname && len(lastName) > 0 {
+		if len(lastName) > 0 {
 			user1.Lastname = lastName
 		}
-		if username != user1.Username && len(username) > 0 {
+		if len(username) > 0 {
 			user1.Username = username
 		}
-		if universityUsername != user1.UniversityUsername.String && len(universityUsername) > 0 {
+		if len(universityUsername) > 0 {
 			user1.UniversityUsername = null.StringFrom(universityUsername)
 		}
-		if LDAPUsername != user1.LDAPUsername.String && len(LDAPUsername) > 0 {
+		if len(LDAPUsername) > 0 {
 			user1.LDAPUsername = null.StringFrom(LDAPUsername)
 		}
-		if email != user1.Email && len(email) > 0 {
+		if len(email) > 0 {
 			user1.Email = email
 		}
 

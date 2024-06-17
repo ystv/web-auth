@@ -233,31 +233,31 @@ func (s *Store) EditUser(ctx context.Context, u User, userID int) error {
 	if err != nil {
 		return fmt.Errorf("failed to get user for editUser: %w", err)
 	}
-	if u.Username != user.Username && len(u.Username) > 0 {
+	if len(u.Username) > 0 {
 		user.Username = u.Username
 	}
-	if u.UniversityUsername.String != user.UniversityUsername.String && len(u.UniversityUsername.String) > 0 {
+	if len(u.UniversityUsername.String) > 0 {
 		user.UniversityUsername = u.UniversityUsername
 	}
-	if u.LDAPUsername.String != user.LDAPUsername.String && len(u.LDAPUsername.String) > 0 {
+	if len(u.LDAPUsername.String) > 0 {
 		user.LDAPUsername = u.LDAPUsername
 	}
-	if u.LoginType != user.LoginType && len(u.LoginType) > 0 {
+	if len(u.LoginType) > 0 {
 		user.LoginType = u.LoginType
 	}
-	if u.Nickname != user.Nickname && len(u.Nickname) > 0 {
+	if len(u.Nickname) > 0 {
 		user.Nickname = u.Nickname
 	}
-	if u.Firstname != user.Firstname && len(u.Firstname) > 0 {
+	if len(u.Firstname) > 0 {
 		user.Firstname = u.Firstname
 	}
-	if u.Lastname != user.Lastname && len(u.Lastname) > 0 {
+	if len(u.Lastname) > 0 {
 		user.Lastname = u.Lastname
 	}
-	if u.Avatar != user.Avatar && len(u.Avatar) > 0 {
+	if len(u.Avatar) > 0 {
 		user.Avatar = u.Avatar
 	}
-	if u.Email != user.Email && len(u.Email) > 0 {
+	if len(u.Email) > 0 {
 		user.Email = u.Email
 	}
 	if u.ResetPw != user.ResetPw {
