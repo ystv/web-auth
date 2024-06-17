@@ -21,14 +21,14 @@ import (
 func (v *Views) LoginFunc(c echo.Context) error {
 	switch c.Request().Method {
 	case "GET":
-		return v.loginGet(c)
+		return v._loginGet(c)
 	case "POST":
-		return v.loginPost(c)
+		return v._loginPost(c)
 	}
 	return v.invalidMethodUsed(c)
 }
 
-func (v *Views) loginGet(c echo.Context) error {
+func (v *Views) _loginGet(c echo.Context) error {
 	// Data for our HTML template
 	context := v.getSessionData(c)
 
@@ -45,7 +45,7 @@ func (v *Views) loginGet(c echo.Context) error {
 	return v.template.RenderTemplate(c.Response(), context, templates.LoginTemplate, templates.NoNavType)
 }
 
-func (v *Views) loginPost(c echo.Context) error {
+func (v *Views) _loginPost(c echo.Context) error {
 	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 	// We're ignoring the error here since sometimes the cookies keys change, and then we
 	// can overwrite it instead, it does need to stay as it is written to here
