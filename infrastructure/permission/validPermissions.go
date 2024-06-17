@@ -3,6 +3,8 @@ package permission
 import "github.com/ystv/web-auth/permission/permissions"
 
 // SufficientPermissionsFor takes a permission for a task and returns that permission and higher permissions that would be acceptable
+//
+//gocyclo:ignore
 func SufficientPermissionsFor(p permissions.Permissions) (m map[string]bool) {
 	m = make(map[string]bool)
 
