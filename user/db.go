@@ -114,6 +114,44 @@ func (s *Store) getUser(ctx context.Context, u1 User) (User, error) {
 func (s *Store) getUsers(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, int, error) {
 	var u []User
 	var count int
+	builder, err := s._getUsersBuilder(size, page, search, sortBy, direction, enabled, deleted)
+	if err != nil {
+		return nil, -1, fmt.Errorf("failed to build sql for getUsers: %w", err)
+	}
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for getUsers: %w", err))
+	}
+	rows, err := s.db.QueryxContext(ctx, sql, args...)
+	if err != nil {
+		return nil, -1, fmt.Errorf("failed to get db users: %w", err)
+	}
+
+	defer rows.Close()
+
+	type tempStruct struct {
+		User
+		Count int `db:"full_count" json:"fullCount"`
+	}
+
+	for rows.Next() {
+		var u1 User
+		var temp tempStruct
+		err = rows.StructScan(&temp)
+		if err != nil {
+			return nil, -1, fmt.Errorf("failed to get db users: %w", err)
+		}
+		count = temp.Count
+		err = copier.Copy(&u1, &temp)
+		if err != nil {
+			return nil, -1, fmt.Errorf("failed to copy struct: %w", err)
+		}
+		u = append(u, u1)
+	}
+	return u, count, nil
+}
+
+func (s *Store) _getUsersBuilder(size, page int, search, sortBy, direction, enabled, deleted string) (*sq.SelectBuilder, error) {
 	builder := utils.PSQL().Select(
 		"*",
 		"count(*) OVER() AS full_count",
@@ -165,43 +203,14 @@ func (s *Store) getUsers(ctx context.Context, size, page int, search, sortBy, di
 					"CASE WHEN ? = 'lastLogin' THEN last_login END DESC NULLS LAST", sortBy, sortBy, sortBy, sortBy, sortBy, sortBy)
 			break
 		default:
-			return nil, -1, fmt.Errorf("invalid sorting direction, entered \"%s\" of length %d, but expected either \"direction\" or \"desc\"", direction, len(direction))
+			return nil, fmt.Errorf("invalid sorting direction, entered \"%s\" of length %d, but expected either \"direction\" or \"desc\"", direction, len(direction))
 		}
 	}
 	if page >= 1 && size >= 5 && size <= 100 {
 		builder = builder.Limit(uint64(size)).Offset(uint64(size * (page - 1)))
 	}
-	sql, args, err := builder.ToSql()
-	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getUsers: %w", err))
-	}
-	rows, err := s.db.QueryxContext(ctx, sql, args...)
-	if err != nil {
-		return nil, -1, fmt.Errorf("failed to get db users: %w", err)
-	}
 
-	defer rows.Close()
-
-	type tempStruct struct {
-		User
-		Count int `db:"full_count" json:"fullCount"`
-	}
-
-	for rows.Next() {
-		var u1 User
-		var temp tempStruct
-		err = rows.StructScan(&temp)
-		if err != nil {
-			return nil, -1, fmt.Errorf("failed to get db users: %w", err)
-		}
-		count = temp.Count
-		err = copier.Copy(&u1, &temp)
-		if err != nil {
-			return nil, -1, fmt.Errorf("failed to copy struct: %w", err)
-		}
-		u = append(u, u1)
-	}
-	return u, count, nil
+	return &builder, nil
 }
 
 // getPermissionsForUser returns all permissions for a user

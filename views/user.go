@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"math"
 	"net/http"
@@ -340,122 +341,132 @@ func (v *Views) ReleaseUserFunc(c echo.Context) error {
 
 // UserAddFunc handles an add user request
 func (v *Views) UserAddFunc(c echo.Context) error {
-	c1 := v.getSessionData(c)
-
-	if c.Request().Method == http.MethodGet {
-		p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
-		if err != nil {
-			return fmt.Errorf("failed to get user permissions for user: %w", err)
-		}
-
-		data := TemplateHelper{
-			UserPermissions: p1,
-			ActivePage:      "useradd",
-			Assumed:         c1.Assumed,
-		}
-
-		return v.template.RenderTemplate(c.Response(), data, templates.UserAddTemplate, templates.RegularType)
-	} else if c.Request().Method == http.MethodPost {
-		err := c.Request().ParseForm()
-		if err != nil {
-			return fmt.Errorf("failed to parse form for userAdd: %w", err)
-		}
-
-		firstName := c.FormValue("firstname")
-		lastName := c.FormValue("lastname")
-		username := c.FormValue("username")
-		universityUsername := c.FormValue("universityusername")
-		email := c.FormValue("email")
-		tempDisableSendEmail := c.FormValue("disablesendemail")
-		sendEmail := true
-		if tempDisableSendEmail == "on" && func() bool {
-			m := permission.SufficientPermissionsFor(permissions.SuperUser)
-
-			for _, perm := range c1.User.Permissions {
-				if m[perm.Name] {
-					return true
-				}
-			}
-			return false
-		}() {
-			sendEmail = false
-		}
-
-		password, err := utils.GenerateRandom(utils.GeneratePassword)
-		if err != nil {
-			return fmt.Errorf("error generating password: %w", err)
-		}
-		salt, err := utils.GenerateRandom(utils.GenerateSalt)
-		if err != nil {
-			return fmt.Errorf("error generating salt: %w", err)
-		}
-		u := user.User{
-			UserID:             0,
-			Username:           username,
-			UniversityUsername: null.StringFrom(universityUsername),
-			LoginType:          "internal",
-			Firstname:          firstName,
-			Nickname:           firstName,
-			Lastname:           lastName,
-			Password:           null.StringFrom(password),
-			Salt:               null.StringFrom(salt),
-			Email:              email,
-			ResetPw:            true,
-			Enabled:            true,
-		}
-
-		_, err = v.user.AddUser(c.Request().Context(), u, c1.User.UserID)
-		if err != nil {
-			return fmt.Errorf("failed to add user for addUser: %w", err)
-		}
-
-		var message struct {
-			Message string `json:"message"`
-			Error   error  `json:"error"`
-		}
-
-		mailer := v.mailer.ConnectMailer()
-
-		if mailer != nil && sendEmail {
-			template, err := v.template.GetEmailTemplate(templates.SignupEmailTemplate)
-			if err != nil {
-				return fmt.Errorf("failed to get email in addUser: %w", err)
-			}
-
-			file := mail.Mail{
-				Subject: "Welcome to YSTV!",
-				Tpl:     template,
-				To:      u.Email,
-				From:    "YSTV No-Reply <no-reply@ystv.co.uk>",
-				TplData: struct {
-					Name     string
-					Username string
-					Password string
-				}{
-					Name:     firstName,
-					Username: username,
-					Password: password,
-				},
-			}
-
-			err = mailer.SendMail(file)
-			if err != nil {
-				return fmt.Errorf("failed to send email in addUser: %w", err)
-			}
-
-			message.Message = fmt.Sprintf("Successfully sent user email to: \"%s\"", email)
-		} else {
-			message.Message = fmt.Sprintf("No mailer present\nPlease send the username and password to this email: %s, username: %s, password: %s", email, username, password)
-			message.Error = fmt.Errorf("no mailer present")
-			log.Printf("no Mailer present")
-		}
-		log.Printf("created user: %s", u.Username)
-
-		var status int
-
-		return c.JSON(status, message)
+	switch c.Request().Method {
+	case "GET":
+		return v._userAddGet(c)
+	case "POST":
+		return v._userAddPost(c)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return v.invalidMethodUsed(c)
+}
+
+func (v *Views) _userAddGet(c echo.Context) error {
+	c1 := v.getSessionData(c)
+	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+	if err != nil {
+		return fmt.Errorf("failed to get user permissions for user: %w", err)
+	}
+
+	data := TemplateHelper{
+		UserPermissions: p1,
+		ActivePage:      "useradd",
+		Assumed:         c1.Assumed,
+	}
+
+	return v.template.RenderTemplate(c.Response(), data, templates.UserAddTemplate, templates.RegularType)
+}
+
+func (v *Views) _userAddPost(c echo.Context) error {
+	c1 := v.getSessionData(c)
+	err := c.Request().ParseForm()
+	if err != nil {
+		return fmt.Errorf("failed to parse form for userAdd: %w", err)
+	}
+
+	firstName := c.FormValue("firstname")
+	lastName := c.FormValue("lastname")
+	username := c.FormValue("username")
+	universityUsername := c.FormValue("universityusername")
+	email := c.FormValue("email")
+	tempDisableSendEmail := c.FormValue("disablesendemail")
+	sendEmail := true
+	if tempDisableSendEmail == "on" && func() bool {
+		m := permission.SufficientPermissionsFor(permissions.SuperUser)
+
+		for _, perm := range c1.User.Permissions {
+			if m[perm.Name] {
+				return true
+			}
+		}
+		return false
+	}() {
+		sendEmail = false
+	}
+
+	password, err := utils.GenerateRandom(utils.GeneratePassword)
+	if err != nil {
+		return fmt.Errorf("error generating password: %w", err)
+	}
+	salt, err := utils.GenerateRandom(utils.GenerateSalt)
+	if err != nil {
+		return fmt.Errorf("error generating salt: %w", err)
+	}
+	u := user.User{
+		UserID:             0,
+		Username:           username,
+		UniversityUsername: null.StringFrom(universityUsername),
+		LoginType:          "internal",
+		Firstname:          firstName,
+		Nickname:           firstName,
+		Lastname:           lastName,
+		Password:           null.StringFrom(password),
+		Salt:               null.StringFrom(salt),
+		Email:              email,
+		ResetPw:            true,
+		Enabled:            true,
+	}
+
+	_, err = v.user.AddUser(c.Request().Context(), u, c1.User.UserID)
+	if err != nil {
+		return fmt.Errorf("failed to add user for addUser: %w", err)
+	}
+
+	var message struct {
+		Message string `json:"message"`
+		Error   error  `json:"error"`
+	}
+
+	mailer := v.mailer.ConnectMailer()
+
+	if mailer != nil && sendEmail {
+		var tmpl *template.Template
+		tmpl, err = v.template.GetEmailTemplate(templates.SignupEmailTemplate)
+		if err != nil {
+			return fmt.Errorf("failed to get email in addUser: %w", err)
+		}
+
+		file := mail.Mail{
+			Subject: "Welcome to YSTV!",
+			Tpl:     tmpl,
+			To:      u.Email,
+			From:    "YSTV No-Reply <no-reply@ystv.co.uk>",
+			TplData: struct {
+				Name     string
+				Username string
+				Password string
+			}{
+				Name:     firstName,
+				Username: username,
+				Password: password,
+			},
+		}
+
+		err = mailer.SendMail(file)
+		if err != nil {
+			return fmt.Errorf("failed to send email in addUser: %w", err)
+		}
+
+		message.Message = fmt.Sprintf("Successfully sent user email to: \"%s\"", email)
+	} else {
+		message.Message = fmt.Sprintf("No mailer present\nPlease send the username and password to this email: %s, username: %s, password: %s", email, username, password)
+		message.Error = fmt.Errorf("no mailer present")
+		log.Printf("no Mailer present")
+	}
+	log.Printf("created user: %s", u.Username)
+
+	var status int
+
+	return c.JSON(status, message)
 }
 
 // UserEditFunc handles an edit user request
