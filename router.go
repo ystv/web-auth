@@ -163,6 +163,28 @@ func (r *Router) loadRoutes() {
 	user.Match(validMethods, "/assume", r.views.AssumeUserFunc, r.views.RequirePermission(permissions.SuperUser))
 	user.Match(validMethods, "", r.views.UserFunc)
 
+	internal.Match(validMethods, "/officerships", r.views.OfficershipsFunc, r.views.RequirePermission(permissions.ManageMembersOfficers))
+	officershipsRoute := internal.Group("/officership")
+	if !r.config.Debug {
+		officershipsRoute.Use(r.views.RequirePermission(permissions.ManageMembersOfficers))
+	}
+	officershipsRoute.Match(validMethods, "/officers", r.views.OfficersFunc)
+	officershipsRoute.Match(validMethods, "/officer/add", r.views.OfficerAddFunc)
+	officer := officershipsRoute.Group("/officer/:officerid")
+	officer.Match(validMethods, "/edit", r.views.OfficerEditFunc)
+	officer.Match(validMethods, "/delete", r.views.OfficerDeleteFunc)
+	officer.Match(validMethods, "", r.views.OfficerFunc)
+	officershipsRoute.Match(validMethods, "/teams", r.views.OfficershipTeamsFunc)
+	officershipsRoute.Match(validMethods, "/team/add", r.views.OfficershipTeamAddFunc)
+	officershipTeam := officershipsRoute.Group("/team/:officershipteamid")
+	officershipTeam.Match(validMethods, "/edit", r.views.OfficershipTeamEditFunc)
+	officershipTeam.Match(validMethods, "/delete", r.views.OfficershipTeamDeleteFunc)
+	officershipTeam.Match(validMethods, "", r.views.OfficershipTeamFunc)
+	officership := officershipsRoute.Group("/:officerid")
+	officership.Match(validMethods, "/edit", r.views.OfficershipEditFunc)
+	officership.Match(validMethods, "/delete", r.views.OfficershipDeleteFunc)
+	officership.Match(validMethods, "", r.views.OfficershipFunc)
+
 	internalAPI := internal.Group("/api")
 	internalAPI.Match(validMethods, "/set_token", r.views.SetTokenHandler)
 	manage := internalAPI.Group("/manage")
