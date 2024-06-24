@@ -105,7 +105,9 @@ func main() {
 		Views:  v,
 	})
 
+	//nolint:staticcheck
 	err = router.Start()
+	//nolint:staticcheck
 	if err != nil {
 		log.Fatalf("The web server couldn't be started!\n\n%s\n\nExiting!", err)
 	}
