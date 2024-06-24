@@ -44,6 +44,7 @@ func NewRouter(conf *RouterConf) *Router {
 	return r
 }
 
+//nolint:staticcheck
 func (r *Router) Start() error {
 	r.router.Logger.Error(r.router.Start(r.config.Address))
 	return fmt.Errorf("failed to start router on address %s", r.config.Address)
