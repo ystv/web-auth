@@ -193,6 +193,12 @@ var (
 		{"permission.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
 		{"manageAPI.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
 		{"userAdd.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
+		{"officerships.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
+		{"officership.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
+		{"officers.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
+		{"officer.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
+		{"officershipTeams.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
+		{"officershipTeam.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
 	}
 
 	_ = AllTemplates
