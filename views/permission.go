@@ -114,7 +114,8 @@ func (v *Views) PermissionAddFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to add permission for permissionadd: %w", err)
 		}
-		return v.PermissionsFunc(c)
+
+		return c.Redirect(http.StatusFound, "/internal/permissions")
 	}
 	return v.invalidMethodUsed(c)
 }
@@ -186,7 +187,8 @@ func (v *Views) PermissionDeleteFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to delete permission for deletePermission: %w", err)
 		}
-		return v.PermissionsFunc(c)
+
+		return c.Redirect(http.StatusFound, "/internal/permissions")
 	}
 	return v.invalidMethodUsed(c)
 }

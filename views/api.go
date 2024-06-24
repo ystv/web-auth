@@ -145,6 +145,8 @@ func (v *Views) TokenAddFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("error adding token for addToken: %w", err)
 		}
+
+		c.Request().Method = http.MethodGet
 		return v.manageAPIFunc(c, addedJWT)
 	}
 	return v.invalidMethodUsed(c)
@@ -173,7 +175,8 @@ func (v *Views) TokenDeleteFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to delete token in tokenDelete: %w", err)
 		}
-		return v.ManageAPIFunc(c)
+
+		return c.Redirect(http.StatusFound, "/internal/api/manage")
 	}
 	return v.invalidMethodUsed(c)
 }

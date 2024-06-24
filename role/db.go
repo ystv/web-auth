@@ -74,19 +74,26 @@ func (s *Store) addRole(ctx context.Context, r Role) (Role, error) {
 
 // editRole edits an existing Role
 func (s *Store) editRole(ctx context.Context, r Role) (Role, error) {
-	res, err := s.db.NamedExecContext(ctx, `UPDATE people.roles
-		SET name = :name,
-			description = :description
-		WHERE role_id = :role_id`, r)
+	builder := utils.PSQL().Update("people.roles").
+		SetMap(map[string]interface{}{
+			"name":        r.Name,
+			"description": r.Description,
+		}).
+		Where(sq.Eq{"role_id": r.RoleID})
+	sql, args, err := builder.ToSql()
 	if err != nil {
-		return Role{}, fmt.Errorf("failed to update role: %w", err)
+		panic(fmt.Errorf("failed to build sql for editRole: %w", err))
+	}
+	res, err := s.db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return Role{}, fmt.Errorf("failed to edit role: %w", err)
 	}
 	rows, err := res.RowsAffected()
 	if err != nil {
-		return Role{}, fmt.Errorf("failed to update role: %w", err)
+		return Role{}, fmt.Errorf("failed to edit role: %w", err)
 	}
 	if rows < 1 {
-		return Role{}, fmt.Errorf("failed to update role: invalid rows affected: %d", rows)
+		return Role{}, fmt.Errorf("failed to edit role: invalid rows affected: %d", rows)
 	}
 	return r, nil
 }
