@@ -589,7 +589,8 @@ func (v *Views) UserDeleteFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to delete user for deleteUser: %w", err)
 		}
-		return v.UsersFunc(c)
+
+		return c.Redirect(http.StatusFound, "/internal/users")
 	}
 	return v.invalidMethodUsed(c)
 }

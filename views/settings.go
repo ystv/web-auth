@@ -62,8 +62,7 @@ func (v *Views) SettingsFunc(c echo.Context) error {
 			return fmt.Errorf("failed to save user session in settings: %w", err)
 		}
 
-		c.Request().Method = http.MethodGet
-		return v.SettingsFunc(c)
+		return c.Redirect(http.StatusFound, "/internal/settings")
 	}
 
 	lastLogin := time.Now()

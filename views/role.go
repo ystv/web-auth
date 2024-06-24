@@ -134,7 +134,8 @@ func (v *Views) RoleAddFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to add role for addrole: %w", err)
 		}
-		return v.RolesFunc(c)
+
+		return c.Redirect(http.StatusFound, "/internal/roles")
 	}
 	return v.invalidMethodUsed(c)
 }
@@ -204,7 +205,8 @@ func (v *Views) RoleDeleteFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to delete role for deleteRole: %w", err)
 		}
-		return v.RolesFunc(c)
+
+		return c.Redirect(http.StatusFound, "/internal/roles")
 	}
 	return v.invalidMethodUsed(c)
 }
