@@ -48,7 +48,8 @@ func (s *Store) addUser(ctx context.Context, u1 User) (User, error) {
 // editUser will edit a user record by ID
 func (s *Store) editUser(ctx context.Context, u User) error {
 	builder := utils.PSQL().Update("people.users").
-		SetMap(map[string]interface{}{"password": u.Password,
+		SetMap(map[string]interface{}{
+			"password":            u.Password,
 			"salt":                u.Salt,
 			"email":               u.Email,
 			"last_login":          u.LastLogin,
