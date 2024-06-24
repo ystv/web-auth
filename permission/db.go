@@ -72,19 +72,26 @@ func (s *Store) addPermission(ctx context.Context, p Permission) (Permission, er
 
 // editPermission edits an existing permission
 func (s *Store) editPermission(ctx context.Context, p Permission) (Permission, error) {
-	res, err := s.db.NamedExecContext(ctx, `UPDATE people.permissions
-		SET name = :name,
-			description = :description
-		WHERE permission_id = :permission_id`, p)
+	builder := utils.PSQL().Update("people.permissions").
+		SetMap(map[string]interface{}{
+			"name":        p.Name,
+			"description": p.Description,
+		}).
+		Where(sq.Eq{"permission_id": p.PermissionID})
+	sql, args, err := builder.ToSql()
 	if err != nil {
-		return Permission{}, fmt.Errorf("failed to update permission: %w", err)
+		panic(fmt.Errorf("failed to build sql for editPermission: %w", err))
+	}
+	res, err := s.db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return Permission{}, fmt.Errorf("failed to edit permission: %w", err)
 	}
 	rows, err := res.RowsAffected()
 	if err != nil {
-		return Permission{}, fmt.Errorf("failed to update permission: %w", err)
+		return Permission{}, fmt.Errorf("failed to edit permission: %w", err)
 	}
 	if rows < 1 {
-		return Permission{}, fmt.Errorf("failed to update permissions: invalid rows affected: %d", rows)
+		return Permission{}, fmt.Errorf("failed to edit permissions: invalid rows affected: %d", rows)
 	}
 	return p, nil
 }
