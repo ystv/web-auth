@@ -2,10 +2,11 @@ package officership
 
 import (
 	"context"
-	"github.com/ystv/web-auth/user"
 
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v4"
+
+	"github.com/ystv/web-auth/user"
 )
 
 type (

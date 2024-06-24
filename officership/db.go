@@ -3,10 +3,10 @@ package officership
 import (
 	"context"
 	"fmt"
-	"github.com/ystv/web-auth/user"
 
 	sq "github.com/Masterminds/squirrel"
 
+	"github.com/ystv/web-auth/user"
 	"github.com/ystv/web-auth/utils"
 )
 
