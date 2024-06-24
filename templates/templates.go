@@ -149,6 +149,9 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			})
 		},
 		"formatUserNameUserStruct": formatUserName,
+		"formatOfficershipDate": func(t time.Time) string {
+			return t.Format("2006-01-02")
+		},
 	}
 }
 
