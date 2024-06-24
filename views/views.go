@@ -15,6 +15,7 @@ import (
 	"github.com/ystv/web-auth/api"
 	"github.com/ystv/web-auth/infrastructure/db"
 	"github.com/ystv/web-auth/infrastructure/mail"
+	"github.com/ystv/web-auth/officership"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/role"
 	"github.com/ystv/web-auth/templates"
@@ -54,17 +55,18 @@ type (
 
 	// Views encapsulates our view dependencies
 	Views struct {
-		api        *api.Store
-		cache      *cache.Cache
-		conf       *Config
-		cookie     *sessions.CookieStore
-		Mailer     *mail.Mailer
-		permission *permission.Store
-		role       *role.Store
-		template   *templates.Templater
-		user       *user.Store
-		mailer     *mail.MailerInit
-		validate   *validator.Validate
+		api         *api.Store
+		cache       *cache.Cache
+		conf        *Config
+		cookie      *sessions.CookieStore
+		Mailer      *mail.Mailer
+		officership *officership.Store
+		permission  *permission.Store
+		role        *role.Store
+		template    *templates.Templater
+		user        *user.Store
+		mailer      *mail.MailerInit
+		validate    *validator.Validate
 	}
 
 	TemplateHelper struct {
@@ -79,6 +81,7 @@ func New(conf *Config, host string) *Views {
 	v := &Views{}
 	// Connecting to stores
 	dbStore := db.NewStore(conf.DatabaseURL, host)
+	v.officership = officership.NewOfficershipRepo(dbStore)
 	v.permission = permission.NewPermissionRepo(dbStore)
 	v.role = role.NewRoleRepo(dbStore)
 	v.user = user.NewUserRepo(dbStore)
