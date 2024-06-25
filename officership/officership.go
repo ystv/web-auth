@@ -16,8 +16,6 @@ type (
 	}
 
 	// Officership represents relevant officership fields
-	//
-	//nolint:musttag
 	Officership struct {
 		OfficershipID    int         `db:"officer_id" json:"officershipID"`
 		Name             string      `db:"name" json:"name"`
@@ -40,7 +38,7 @@ type (
 
 	// OfficershipTeam represents relevant officership team fields
 	//
-	//nolint:musttag,revive
+	//nolint:revive
 	OfficershipTeam struct {
 		TeamID              int    `db:"team_id" json:"teamID"`
 		Name                string `db:"name" json:"name"`
@@ -53,7 +51,7 @@ type (
 
 	// OfficershipMember represents relevant officership member fields
 	//
-	//nolint:musttag,revive
+	//nolint:revive
 	OfficershipMember struct {
 		OfficershipMemberID int         `db:"officership_member_id" json:"officershipMemberID"`
 		UserID              int         `db:"user_id" json:"userID"`
@@ -68,7 +66,7 @@ type (
 
 	// OfficershipTeamMember represents relevant officership team member fields
 	//
-	//nolint:musttag,revive
+	//nolint:revive
 	OfficershipTeamMember struct {
 		OfficershipTeamMemberID int    `db:"team_id" json:"officershipTeamMemberID"`
 		OfficerID               int    `db:"officer_id" json:"officerID"`
@@ -144,7 +142,8 @@ func (s *Store) DeleteOfficershipTeam(ctx context.Context, t OfficershipTeam) er
 	return s.deleteOfficershipTeam(ctx, t)
 }
 
-func (s *Store) GetOfficershipTeamMembers(ctx context.Context, t *OfficershipTeam, officershipStatus OfficershipsStatus) ([]OfficershipTeamMember, error) {
+func (s *Store) GetOfficershipTeamMembers(ctx context.Context, t *OfficershipTeam,
+	officershipStatus OfficershipsStatus) ([]OfficershipTeamMember, error) {
 	return s.getOfficershipTeamMembers(ctx, t, officershipStatus)
 }
 
@@ -168,7 +167,8 @@ func (s *Store) RemoveTeamForOfficershipMemberTeams(ctx context.Context, t Offic
 	return s.removeTeamForOfficershipMemberTeams(ctx, t)
 }
 
-func (s *Store) GetOfficershipMembers(ctx context.Context, o *Officership, officershipStatus, officershipMemberStatus OfficershipsStatus) ([]OfficershipMember, error) {
+func (s *Store) GetOfficershipMembers(ctx context.Context, o *Officership, officershipStatus,
+	officershipMemberStatus OfficershipsStatus) ([]OfficershipMember, error) {
 	return s.getOfficershipMembers(ctx, o, officershipStatus, officershipMemberStatus)
 }
 

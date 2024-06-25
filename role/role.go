@@ -51,12 +51,15 @@ func (s *Store) EditRole(ctx context.Context, r Role) (Role, error) {
 	if err != nil {
 		return r, fmt.Errorf("failed to get role: %w", err)
 	}
+
 	if r.Name != role.Name && len(r.Name) > 0 {
 		role.Name = r.Name
 	}
+
 	if r.Description != role.Description && len(r.Description) > 0 {
 		role.Description = r.Description
 	}
+
 	return s.editRole(ctx, role)
 }
 

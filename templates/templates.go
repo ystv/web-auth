@@ -8,12 +8,13 @@ import (
 	"log"
 	"time"
 
+	"gopkg.in/guregu/null.v4"
+
 	permission1 "github.com/ystv/web-auth/infrastructure/permission"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/role"
 	"github.com/ystv/web-auth/user"
-	"gopkg.in/guregu/null.v4"
 )
 
 // tmpls are the storage of templates in the executable
@@ -89,17 +90,21 @@ func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Templ
 
 	switch templateType {
 	case NoNavType:
-		t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_bodyNoNavs.tmpl", "_head.tmpl", "_footer.tmpl", mainTmpl.String())
+		t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_bodyNoNavs.tmpl", "_head.tmpl", "_footer.tmpl",
+			mainTmpl.String())
 	case PaginationType:
-		t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl", mainTmpl.String())
+		t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl",
+			"_sidebar.tmpl", "_pagination.tmpl", mainTmpl.String())
 	case RegularType:
-		t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", mainTmpl.String())
+		t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl",
+			"_sidebar.tmpl", mainTmpl.String())
 	default:
 		return fmt.Errorf("unable to parse template, invalid type: %d", templateType)
 	}
 
 	if err != nil {
 		log.Printf("failed to get templates for template(RenderTemplate): %+v", err)
+
 		return err
 	}
 
@@ -130,16 +135,20 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 					return true
 				}
 			}
+
 			return false
 		},
 		"getUserModifierField": func(u user.User, atTime null.String, prefix string) template.HTML {
 			var s string
 			if u.UserID != -1 {
 				if len(u.Firstname) == 0 && len(u.Nickname) == 0 && len(u.Lastname) == 0 {
-					s = fmt.Sprintf("%s by UNKNOWN(%d) at %s<br>", template.HTMLEscapeString(prefix), u.UserID, template.HTMLEscapeString(atTime.String))
+					s = fmt.Sprintf("%s by UNKNOWN(%d) at %s<br>", template.HTMLEscapeString(prefix), u.UserID,
+						template.HTMLEscapeString(atTime.String))
 				} else {
 					name := formatUserName(u)
-					s = fmt.Sprintf("%s by <a href=\"/internal/user/%d\">%s</a> at %s<br>", template.HTMLEscapeString(prefix), u.UserID, template.HTMLEscapeString(name), template.HTMLEscapeString(atTime.String))
+					s = fmt.Sprintf("%s by <a href=\"/internal/user/%d\">%s</a> at %s<br>",
+						template.HTMLEscapeString(prefix), u.UserID, template.HTMLEscapeString(name),
+						template.HTMLEscapeString(atTime.String))
 				}
 			} else if atTime.Valid {
 				s = fmt.Sprintf("%s by UNKNOWN at %s<br>", prefix, atTime.String)
@@ -147,7 +156,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			// #nosec
 			return template.HTML(s)
 		},
-		"formatUserName": func(u user.DetailedUser) (name string) {
+		"formatUserName": func(u user.DetailedUser) string {
 			return formatUserName(user.User{
 				Firstname: u.Firstname,
 				Nickname:  u.Nickname,
@@ -161,44 +170,73 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 	}
 }
 
-func formatUserName(u user.User) (name string) {
+func formatUserName(u user.User) string {
+	var name string
+
 	if u.Firstname != u.Nickname {
 		name = fmt.Sprintf("%s (%s) %s", u.Firstname, u.Nickname, u.Lastname)
 	} else {
 		name = fmt.Sprintf("%s %s", u.Firstname, u.Lastname)
 	}
+
 	return name
 }
 
 // This section is for go template linter
 var (
 	AllTemplates = [][]string{
-		{"forgot.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"404NotFound.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"forgotEmail.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"internal.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"login.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"notification.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"reset.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"error.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"settings.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"signup.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"user.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"users.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"roles.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"role.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"resetEmail.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"permissions.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"signupEmail.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"permission.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"manageAPI.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"userAdd.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"officerships.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"officership.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"officers.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"officer.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"officershipTeams.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
-		{"officershipTeam.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl"},
+		{"forgot.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"404NotFound.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"forgotEmail.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"internal.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"login.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"notification.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"reset.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"error.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"settings.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"signup.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"user.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"users.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"roles.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"role.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"resetEmail.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"permissions.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"signupEmail.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"permission.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"manageAPI.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"userAdd.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"officerships.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"officership.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"officers.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"officer.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl",
+			"_pagination.tmpl"},
+		{"officershipTeams.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl",
+			"_sidebar.tmpl", "_pagination.tmpl"},
+		{"officershipTeam.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl",
+			"_sidebar.tmpl", "_pagination.tmpl"},
 	}
 
 	_ = AllTemplates

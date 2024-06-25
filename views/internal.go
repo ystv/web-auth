@@ -27,6 +27,7 @@ type (
 func (v *Views) InternalFunc(c echo.Context) error {
 	c1 := v.getSessionData(c)
 	lastLogin := time.Now()
+
 	if c1.User.LastLogin.Valid {
 		lastLogin = c1.User.LastLogin.Time
 	}
@@ -51,5 +52,6 @@ func (v *Views) InternalFunc(c echo.Context) error {
 			Assumed:         c1.Assumed,
 		},
 	}
+
 	return v.template.RenderTemplate(c.Response(), ctx, templates.InternalTemplate, templates.RegularType)
 }

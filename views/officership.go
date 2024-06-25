@@ -19,6 +19,7 @@ import (
 func (v *Views) OfficershipsFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodGet {
 		c1 := v.getSessionData(c)
+
 		officerships, err := v.officership.GetOfficerships(c.Request().Context(), officership.Current)
 		if err != nil {
 			return fmt.Errorf("failed to get officerships: %w", err)
@@ -40,8 +41,10 @@ func (v *Views) OfficershipsFunc(c echo.Context) error {
 				Assumed:         c1.Assumed,
 			},
 		}
+
 		return v.template.RenderTemplate(c.Response(), data, templates.OfficershipsTemplate, templates.RegularType)
 	}
+
 	return v.invalidMethodUsed(c)
 }
 
@@ -69,13 +72,20 @@ func (v *Views) OfficersFunc(c echo.Context) error {
 		wg.Add(3)
 
 		var errArr []error
+
 		var officers []officership.OfficershipMember
+
 		var officerships []officership.Officership
+
 		var users []user.User
+
 		go func() {
 			defer wg.Done()
+
 			var err error
-			officers, err = v.officership.GetOfficershipMembers(c.Request().Context(), nil, officership.Current, officership.Current)
+
+			officers, err = v.officership.GetOfficershipMembers(c.Request().Context(), nil, officership.Current,
+				officership.Current)
 			if err != nil {
 				errArr = append(errArr, fmt.Errorf("failed to get officers: %w", err))
 			}
@@ -83,7 +93,9 @@ func (v *Views) OfficersFunc(c echo.Context) error {
 
 		go func() {
 			defer wg.Done()
+
 			var err error
+
 			officerships, err = v.officership.GetOfficerships(c.Request().Context(), officership.Current)
 			if err != nil {
 				errArr = append(errArr, fmt.Errorf("failed to get officerships: %w", err))
@@ -92,18 +104,23 @@ func (v *Views) OfficersFunc(c echo.Context) error {
 
 		go func() {
 			defer wg.Done()
+
 			var err error
+
 			users, _, err = v.user.GetUsers(c.Request().Context(), 0, 0, "", "", "", "enabled", "not_deleted")
 			if errArr != nil {
 				errArr = append(errArr, fmt.Errorf("failed to get users: %w", err))
 			}
 		}()
 		wg.Wait()
+
 		if len(errArr) != 0 {
 			var sb strings.Builder
+
 			for _, err := range errArr {
 				sb.WriteString(err.Error())
 			}
+
 			return fmt.Errorf(sb.String())
 		}
 
@@ -127,8 +144,10 @@ func (v *Views) OfficersFunc(c echo.Context) error {
 				Assumed:         c1.Assumed,
 			},
 		}
+
 		return v.template.RenderTemplate(c.Response(), data, templates.OfficersTemplate, templates.RegularType)
 	}
+
 	return v.invalidMethodUsed(c)
 }
 
@@ -183,6 +202,7 @@ func (v *Views) OfficerAddFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, "/internal/officership/officers")
 	}
+
 	return v.invalidMethodUsed(c)
 }
 
@@ -194,10 +214,12 @@ func (v *Views) OfficerDeleteFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		officerID, err := strconv.Atoi(c.Param("officerid"))
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse officerid for officer delete: %w", err))
+			return echo.NewHTTPError(http.StatusBadRequest,
+				fmt.Errorf("failed to parse officerid for officer delete: %w", err))
 		}
 
-		officer, err := v.officership.GetOfficershipMember(c.Request().Context(), officership.OfficershipMember{OfficershipMemberID: officerID})
+		officer, err := v.officership.GetOfficershipMember(c.Request().Context(),
+			officership.OfficershipMember{OfficershipMemberID: officerID})
 		if err != nil {
 			return fmt.Errorf("failed to get officer for officer delete: %w", err)
 		}
@@ -209,12 +231,14 @@ func (v *Views) OfficerDeleteFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, "/internal/officership/officers")
 	}
+
 	return v.invalidMethodUsed(c)
 }
 
 func (v *Views) OfficershipTeamsFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodGet {
 		c1 := v.getSessionData(c)
+
 		officers, err := v.officership.GetOfficershipTeams(c.Request().Context())
 		if err != nil {
 			return fmt.Errorf("failed to get officershipTeams: %w", err)
@@ -236,8 +260,10 @@ func (v *Views) OfficershipTeamsFunc(c echo.Context) error {
 				Assumed:         c1.Assumed,
 			},
 		}
+
 		return v.template.RenderTemplate(c.Response(), data, templates.OfficershipTeamsTemplate, templates.RegularType)
 	}
+
 	return v.invalidMethodUsed(c)
 }
 
@@ -247,19 +273,23 @@ func (v *Views) OfficershipTeamFunc(c echo.Context) error {
 
 		officershipTeamID, err := strconv.Atoi(c.Param("officershipteamid"))
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse officershipteamid for officership team: %w", err))
+			return echo.NewHTTPError(http.StatusBadRequest,
+				fmt.Errorf("failed to parse officershipteamid for officership team: %w", err))
 		}
-		officershipTeam, err := v.officership.GetOfficershipTeam(c.Request().Context(), officership.OfficershipTeam{TeamID: officershipTeamID})
+
+		officershipTeam, err := v.officership.GetOfficershipTeam(c.Request().Context(),
+			officership.OfficershipTeam{TeamID: officershipTeamID})
 		if err != nil {
 			return fmt.Errorf("failed to get officershipTeam: %w", err)
 		}
 
-		p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+		permissions, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 		if err != nil {
 			return fmt.Errorf("failed to get user permissions for officershipTeam: %w", err)
 		}
 
-		teamMembers, err := v.officership.GetOfficershipTeamMembers(c.Request().Context(), &officershipTeam, officership.Current)
+		teamMembers, err := v.officership.GetOfficershipTeamMembers(c.Request().Context(), &officershipTeam,
+			officership.Current)
 		if err != nil {
 			return fmt.Errorf("failed to get officership team members for officershipTeam: %w", err)
 		}
@@ -291,13 +321,15 @@ func (v *Views) OfficershipTeamFunc(c echo.Context) error {
 				TeamMembers:      teamMembers,
 			},
 			TemplateHelper: TemplateHelper{
-				UserPermissions: p1,
+				UserPermissions: permissions,
 				ActivePage:      "officershipTeam",
 				Assumed:         c1.Assumed,
 			},
 		}
+
 		return v.template.RenderTemplate(c.Response(), data, templates.OfficershipTeamTemplate, templates.RegularType)
 	}
+
 	return v.invalidMethodUsed(c)
 }
 

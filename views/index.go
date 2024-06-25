@@ -24,6 +24,8 @@ func (v *Views) IndexFunc(c echo.Context) error {
 	if c1.User.Authenticated {
 		return c.Redirect(http.StatusFound, c1.Callback)
 	}
+
 	loginCallback := fmt.Sprintf("login?callback=%s", c1.Callback)
+
 	return c.Redirect(http.StatusFound, loginCallback)
 }

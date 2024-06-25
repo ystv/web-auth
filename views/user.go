@@ -55,11 +55,12 @@ type (
 // UsersFunc handles a users request
 func (v *Views) UsersFunc(c echo.Context) error {
 	switch c.Request().Method {
-	case "GET":
+	case http.MethodGet:
 		return v._usersGet(c)
-	case "POST":
+	case http.MethodPost:
 		return v._usersPost(c)
 	}
+
 	return v.invalidMethodUsed(c)
 }
 
@@ -69,21 +70,28 @@ func (v *Views) _usersGet(c echo.Context) error {
 	column := c.QueryParam("column")
 	direction := c.QueryParam("direction")
 	search := c.QueryParam("search")
+
 	search, err := url.QueryUnescape(search)
 	if err != nil {
 		return fmt.Errorf("failed to unescape query: %w", err)
 	}
+
 	enabled := c.QueryParam("enabled")
 	deleted := c.QueryParam("deleted")
+
 	var size, page int
+
 	sizeRaw := c.QueryParam("size")
+
 	if sizeRaw == "all" {
 		size = 0
 	} else if len(sizeRaw) != 0 {
 		page, err = strconv.Atoi(c.QueryParam("page"))
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("unable to parse page for users: %w", err))
+			return echo.NewHTTPError(http.StatusBadRequest,
+				fmt.Errorf("unable to parse page for users: %w", err))
 		}
+
 		size, err = strconv.Atoi(sizeRaw)
 		//nolint:gocritic
 		if err != nil {
@@ -109,13 +117,13 @@ func (v *Views) _usersGet(c echo.Context) error {
 			column = ""
 			direction = ""
 		}
-		break
 	default:
 		column = ""
 		direction = ""
 	}
 
-	dbUsers, fullCount, err := v.user.GetUsers(c.Request().Context(), size, page, search, column, direction, enabled, deleted)
+	dbUsers, fullCount, err := v.user.GetUsers(c.Request().Context(), size, page, search, column, direction, enabled,
+		deleted)
 	if err != nil {
 		return fmt.Errorf("failed to get users for users: %w", err)
 	}
@@ -161,6 +169,7 @@ func (v *Views) _usersGet(c echo.Context) error {
 			Deleted:    deleted,
 		},
 	}
+
 	return v.template.RenderTemplate(c.Response(), data, templates.UsersTemplate, templates.PaginationType)
 }
 
@@ -178,8 +187,11 @@ func (v *Views) _usersPost(c echo.Context) error {
 	search := c.FormValue("search")
 	enabled := c.FormValue("enabled")
 	deleted := c.FormValue("deleted")
+
 	var size int
+
 	sizeRaw := c.FormValue("size")
+
 	if sizeRaw == "all" {
 		size = 0
 	} else {
@@ -197,13 +209,15 @@ func (v *Views) _usersPost(c echo.Context) error {
 	if enabled == "enabled" || enabled == "disabled" {
 		q.Set("enabled", enabled)
 	} else if enabled != "any" {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("enabled must be set to either \"any\", \"enabled\" or \"disabled\""))
+		return echo.NewHTTPError(http.StatusBadRequest,
+			fmt.Errorf("enabled must be set to either \"any\", \"enabled\" or \"disabled\""))
 	}
 
 	if deleted == "deleted" || deleted == "not_deleted" {
 		q.Set("deleted", deleted)
 	} else if deleted != "any" {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("deleted must be set to either \"any\", \"deleted\" or \"not_deleted\""))
+		return echo.NewHTTPError(http.StatusBadRequest,
+			fmt.Errorf("deleted must be set to either \"any\", \"deleted\" or \"not_deleted\""))
 	}
 
 	if column == "userId" || column == "name" || column == "username" || column == "email" || column == "lastLogin" {
@@ -225,6 +239,7 @@ func (v *Views) _usersPost(c echo.Context) error {
 	}
 
 	u.RawQuery = q.Encode()
+
 	return c.Redirect(http.StatusFound, u.String())
 }
 
@@ -236,6 +251,7 @@ func (v *Views) UserFunc(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse userid for user: %w", err))
 	}
+
 	userFromDB, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 	if err != nil {
 		return fmt.Errorf("failed to get user for user: %w", err)
@@ -243,7 +259,8 @@ func (v *Views) UserFunc(c echo.Context) error {
 
 	detailedUser := DBUserToDetailedUser(userFromDB, v.user)
 
-	detailedUser.Permissions, err = v.user.GetPermissionsForUser(c.Request().Context(), user.User{UserID: detailedUser.UserID})
+	detailedUser.Permissions, err = v.user.GetPermissionsForUser(c.Request().Context(),
+		user.User{UserID: detailedUser.UserID})
 	if err != nil {
 		return fmt.Errorf("failed to get permissions for user: %w", err)
 	}
@@ -310,6 +327,7 @@ func (v *Views) AssumeUserFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, "/internal")
 	}
+
 	return v.invalidMethodUsed(c)
 }
 
@@ -327,7 +345,9 @@ func (v *Views) ReleaseUserFunc(c echo.Context) error {
 		}
 
 		var u user.User
+
 		userValue := session.Values["user"]
+
 		u, ok := userValue.(user.User)
 		if !ok {
 			u = user.User{Authenticated: false}
@@ -344,22 +364,25 @@ func (v *Views) ReleaseUserFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, "/internal")
 	}
+
 	return v.invalidMethodUsed(c)
 }
 
 // UserAddFunc handles an add user request
 func (v *Views) UserAddFunc(c echo.Context) error {
 	switch c.Request().Method {
-	case "GET":
+	case http.MethodGet:
 		return v._userAddGet(c)
-	case "POST":
+	case http.MethodPost:
 		return v._userAddPost(c)
 	}
+
 	return v.invalidMethodUsed(c)
 }
 
 func (v *Views) _userAddGet(c echo.Context) error {
 	c1 := v.getSessionData(c)
+
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
 		return fmt.Errorf("failed to get user permissions for user: %w", err)
@@ -376,6 +399,7 @@ func (v *Views) _userAddGet(c echo.Context) error {
 
 func (v *Views) _userAddPost(c echo.Context) error {
 	c1 := v.getSessionData(c)
+
 	err := c.Request().ParseForm()
 	if err != nil {
 		return fmt.Errorf("failed to parse form for userAdd: %w", err)
@@ -388,6 +412,7 @@ func (v *Views) _userAddPost(c echo.Context) error {
 	email := c.FormValue("email")
 	tempDisableSendEmail := c.FormValue("disablesendemail")
 	sendEmail := true
+
 	if tempDisableSendEmail == "on" && func() bool {
 		m := permission.SufficientPermissionsFor(permissions.SuperUser)
 
@@ -396,6 +421,7 @@ func (v *Views) _userAddPost(c echo.Context) error {
 				return true
 			}
 		}
+
 		return false
 	}() {
 		sendEmail = false
@@ -405,10 +431,12 @@ func (v *Views) _userAddPost(c echo.Context) error {
 	if err != nil {
 		return fmt.Errorf("error generating password: %w", err)
 	}
+
 	salt, err := utils.GenerateRandom(utils.GenerateSalt)
 	if err != nil {
 		return fmt.Errorf("error generating salt: %w", err)
 	}
+
 	u := user.User{
 		UserID:             0,
 		Username:           username,
@@ -438,6 +466,7 @@ func (v *Views) _userAddPost(c echo.Context) error {
 
 	if mailer != nil && sendEmail {
 		var tmpl *template.Template
+
 		tmpl, err = v.template.GetEmailTemplate(templates.SignupEmailTemplate)
 		if err != nil {
 			return fmt.Errorf("failed to get email in addUser: %w", err)
@@ -466,10 +495,12 @@ func (v *Views) _userAddPost(c echo.Context) error {
 
 		message.Message = fmt.Sprintf("Successfully sent user email to: \"%s\"", email)
 	} else {
-		message.Message = fmt.Sprintf("No mailer present\nPlease send the username and password to this email: %s, username: %s, password: %s", email, username, password)
+		message.Message = fmt.Sprintf(`No mailer present\nPlease send the username and password to this email: 
+%s, username: %s, password: %s`, email, username, password)
 		message.Error = fmt.Errorf("no mailer present")
 		log.Printf("no Mailer present")
 	}
+
 	log.Printf("created user: %s", u.Username)
 
 	var status int
@@ -511,21 +542,27 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 		if len(firstName) > 0 {
 			user1.Firstname = firstName
 		}
+
 		if len(nickname) > 0 {
 			user1.Nickname = nickname
 		}
+
 		if len(lastName) > 0 {
 			user1.Lastname = lastName
 		}
+
 		if len(username) > 0 {
 			user1.Username = username
 		}
+
 		if len(universityUsername) > 0 {
 			user1.UniversityUsername = null.StringFrom(universityUsername)
 		}
+
 		if len(LDAPUsername) > 0 {
 			user1.LDAPUsername = null.StringFrom(LDAPUsername)
 		}
+
 		if len(email) > 0 {
 			user1.Email = email
 		}
@@ -534,8 +571,10 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to edit user for editUser: %w", err)
 		}
+
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/user/%d", userID))
 	}
+
 	return v.invalidMethodUsed(c)
 }
 
@@ -560,8 +599,10 @@ func (v *Views) UserToggleEnabledFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to edit user for toggleUser: %w", err)
 		}
+
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/user/%d", userID))
 	}
+
 	return v.invalidMethodUsed(c)
 }
 
@@ -592,5 +633,6 @@ func (v *Views) UserDeleteFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, "/internal/users")
 	}
+
 	return v.invalidMethodUsed(c)
 }

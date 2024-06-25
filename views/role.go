@@ -31,11 +31,11 @@ type (
 
 // bindRoleToTemplate converts from role.Role to user.RoleTemplate
 func (v *Views) bindRoleToTemplate(r1 role.Role) user.RoleTemplate {
-	var r user.RoleTemplate
-	r.RoleID = r1.RoleID
-	r.Name = r1.Name
-	r.Description = r1.Description
-	return r
+	return user.RoleTemplate{
+		RoleID:      r1.RoleID,
+		Name:        r1.Name,
+		Description: r1.Description,
+	}
 }
 
 // RolesFunc handles a roles request
@@ -137,6 +137,7 @@ func (v *Views) RoleAddFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, "/internal/roles")
 	}
+
 	return v.invalidMethodUsed(c)
 }
 
@@ -164,6 +165,7 @@ func (v *Views) RoleEditFunc(c echo.Context) error {
 		if name != role1.Name && len(name) > 0 {
 			role1.Name = name
 		}
+
 		if description != role1.Description && len(description) > 0 {
 			role1.Description = description
 		}
@@ -175,6 +177,7 @@ func (v *Views) RoleEditFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/role/%d", roleID))
 	}
+
 	return v.invalidMethodUsed(c)
 }
 
@@ -208,6 +211,7 @@ func (v *Views) RoleDeleteFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, "/internal/roles")
 	}
+
 	return v.invalidMethodUsed(c)
 }
 
@@ -228,6 +232,7 @@ func (v *Views) RoleAddPermissionFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to get permissionid for roleAddPermission: %w", err)
 		}
+
 		_, err = v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: permissionID})
 		if err != nil {
 			return fmt.Errorf("failed to get permission for roleAddPermission: %w", err)
@@ -250,6 +255,7 @@ func (v *Views) RoleAddPermissionFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/role/%d", roleID))
 	}
+
 	return v.invalidMethodUsed(c)
 }
 
@@ -270,6 +276,7 @@ func (v *Views) RoleRemovePermissionFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to get permissionid for roleRemovePermission: %w", err)
 		}
+
 		_, err = v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: permissionID})
 		if err != nil {
 			return fmt.Errorf("failed to get permission for roleRemovePermission: %w", err)
@@ -292,6 +299,7 @@ func (v *Views) RoleRemovePermissionFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/role/%d", roleID))
 	}
+
 	return v.invalidMethodUsed(c)
 }
 
@@ -312,6 +320,7 @@ func (v *Views) RoleAddUserFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to get userID for roleAddUser: %w", err)
 		}
+
 		_, err = v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 		if err != nil {
 			return fmt.Errorf("failed to get user for roleAddUser: %w", err)
@@ -334,6 +343,7 @@ func (v *Views) RoleAddUserFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/role/%d", roleID))
 	}
+
 	return v.invalidMethodUsed(c)
 }
 
@@ -354,6 +364,7 @@ func (v *Views) RoleRemoveUserFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to get userID for roleRemoveUser: %w", err)
 		}
+
 		_, err = v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 		if err != nil {
 			return fmt.Errorf("failed to get user for roleRemoveUser: %w", err)
@@ -376,5 +387,6 @@ func (v *Views) RoleRemoveUserFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/role/%d", roleID))
 	}
+
 	return v.invalidMethodUsed(c)
 }

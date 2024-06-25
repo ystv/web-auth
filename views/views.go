@@ -106,16 +106,22 @@ func New(conf *Config, host string) *Views {
 	if len(authKey) == 0 {
 		authKey = securecookie.GenerateRandomKey(64)
 	}
+
 	encryptionKey, _ := hex.DecodeString(conf.Security.EncryptionKey)
 	if len(encryptionKey) == 0 {
 		encryptionKey = securecookie.GenerateRandomKey(32)
 	}
+
 	v.cookie = sessions.NewCookieStore(
 		authKey,
 		encryptionKey,
 	)
+
+	sixty := 60
+	twentyFour := 24
+
 	v.cookie.Options = &sessions.Options{
-		MaxAge:   60 * 60 * 24,
+		MaxAge:   sixty * sixty * twentyFour,
 		HttpOnly: true,
 		Path:     "/",
 	}
@@ -135,6 +141,7 @@ func New(conf *Config, host string) *Views {
 			if err != nil {
 				log.Printf("failed to delete old token func: %+v", err)
 			}
+
 			time.Sleep(30 * time.Second)
 		}
 	}()

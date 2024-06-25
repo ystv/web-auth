@@ -20,11 +20,12 @@ import (
 // add a cookie to the cookie store for managing authentication
 func (v *Views) LoginFunc(c echo.Context) error {
 	switch c.Request().Method {
-	case "GET":
+	case http.MethodGet:
 		return v._loginGet(c)
-	case "POST":
+	case http.MethodPost:
 		return v._loginPost(c)
 	}
+
 	return v.invalidMethodUsed(c)
 }
 
@@ -53,6 +54,7 @@ func (v *Views) _loginPost(c echo.Context) error {
 	// Parsing form to struct
 	username := c.FormValue("username")
 	password := c.FormValue("password")
+
 	var u user.User
 
 	// Since we let users enter either an email or username, it's easier
@@ -63,6 +65,7 @@ func (v *Views) _loginPost(c echo.Context) error {
 	u.Password = null.StringFrom(password)
 
 	callback := "/internal"
+
 	callbackURL, err := url.Parse(c.QueryParam("callback"))
 	if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) && callbackURL.String() != "" {
 		callback = callbackURL.String()
@@ -71,6 +74,7 @@ func (v *Views) _loginPost(c echo.Context) error {
 	u, resetPw, err := v.user.VerifyUser(c.Request().Context(), u)
 	if err != nil {
 		log.Printf("failed login for \"%s\": %v", u.Username, err)
+
 		err = session.Save(c.Request(), c.Response())
 		if err != nil {
 			return fmt.Errorf("failed to save session for login: %w", err)
@@ -92,10 +96,12 @@ func (v *Views) _loginPost(c echo.Context) error {
 
 			return c.Redirect(http.StatusFound, fmt.Sprintf("https://%s/reset/%s", v.conf.DomainName, url1))
 		}
+
 		ctx := v.getSessionData(c)
 		ctx.Callback = callback
 		ctx.Message = "Invalid username or password"
 		ctx.MsgType = "is-danger"
+
 		err = v.setMessagesInSession(c, ctx)
 		if err != nil {
 			return fmt.Errorf("failed to set message for login: %w", err)
@@ -103,12 +109,14 @@ func (v *Views) _loginPost(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, "/login")
 	}
+
 	prevLogin := u.LastLogin
 	// Update last logged in
 	err = v.user.SetUserLoggedIn(c.Request().Context(), u)
 	if err != nil {
 		return fmt.Errorf("failed to set user logged in for login: %w", err)
 	}
+
 	u.Authenticated = true
 	// This is a bit of a cheat, just so we can have the last login displayed for internal
 	u.LastLogin = prevLogin
@@ -120,8 +128,11 @@ func (v *Views) _loginPost(c echo.Context) error {
 
 	session.Values["user"] = u
 
+	eightySixFourHundred := 86400
+	thirtyOne := 31
+
 	if c.FormValue("remember") != "on" {
-		session.Options.MaxAge = 86400 * 31
+		session.Options.MaxAge = eightySixFourHundred * thirtyOne
 	}
 
 	err = session.Save(c.Request(), c.Response())
@@ -130,5 +141,6 @@ func (v *Views) _loginPost(c echo.Context) error {
 	}
 
 	log.Printf("user \"%s\" is authenticated", u.Username)
+
 	return c.Redirect(http.StatusFound, callback)
 }

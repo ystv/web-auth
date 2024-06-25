@@ -151,20 +151,26 @@ func (s *Store) GetUserValid(ctx context.Context, u User) (User, error) {
 	if err != nil {
 		return u, fmt.Errorf("failed to get user: %w", err)
 	}
+
 	if !user.Enabled {
 		return u, fmt.Errorf("user not enabled, contact Computing Team for help")
 	}
+
 	if user.DeletedBy.Valid {
 		return u, fmt.Errorf("user has been deleted, contact Computing Team for help")
 	}
+
 	if user.ResetPw {
 		u.UserID = user.UserID
+
 		return u, fmt.Errorf("password reset required")
 	}
+
 	return user, nil
 }
 
-func (s *Store) GetUsers(ctx context.Context, size, page int, search, sortBy, direction, enabled, deleted string) ([]User, int, error) {
+func (s *Store) GetUsers(ctx context.Context, size, page int, search, sortBy, direction, enabled,
+	deleted string) ([]User, int, error) {
 	return s.getUsers(ctx, size, page, search, sortBy, direction, enabled, deleted)
 }
 
@@ -176,9 +182,11 @@ func (s *Store) VerifyUser(ctx context.Context, u User) (User, bool, error) {
 	if err != nil {
 		return u, false, fmt.Errorf("failed to get user: %w", err)
 	}
+
 	if !user.Enabled {
 		return u, false, fmt.Errorf("user not enabled, contact Computing Team for help")
 	}
+
 	if user.DeletedBy.Valid {
 		return u, false, fmt.Errorf("user has been deleted, contact Computing Team for help")
 	}
@@ -186,10 +194,13 @@ func (s *Store) VerifyUser(ctx context.Context, u User) (User, bool, error) {
 	if utils.HashPass(user.Salt.String+u.Password.String) == user.Password.String {
 		if user.ResetPw {
 			u.UserID = user.UserID
+
 			return user, true, fmt.Errorf("password reset required")
 		}
+
 		return user, false, nil
 	}
+
 	return u, false, fmt.Errorf("invalid credentials")
 }
 
@@ -199,14 +210,17 @@ func (s *Store) AddUser(ctx context.Context, u User, userID int) (User, error) {
 	if err == nil {
 		return User{}, fmt.Errorf("failed to add user for addUser: user already exists")
 	}
+
 	u.Password = null.StringFrom(utils.HashPass(u.Salt.String + u.Password.String))
 	u.ResetPw = true
 	u.CreatedBy = null.IntFrom(int64(userID))
 	u.CreatedAt = null.TimeFrom(time.Now())
+
 	u, err = s.addUser(ctx, u)
 	if err != nil {
 		return User{}, fmt.Errorf("failed to add user for addUser: %w", err)
 	}
+
 	return u, nil
 }
 
@@ -216,14 +230,17 @@ func (s *Store) EditUserPassword(ctx context.Context, u User) error {
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
 	}
+
 	user.Password = null.StringFrom(utils.HashPass(user.Salt.String + u.Password.String))
 	user.ResetPw = false
 	user.UpdatedBy = null.IntFrom(int64(user.UserID))
 	user.UpdatedAt = null.TimeFrom(time.Now())
+
 	err = s.editUser(ctx, user)
 	if err != nil {
 		return fmt.Errorf("failed to edit user for editUserPassword: %w", err)
 	}
+
 	return nil
 }
 
@@ -233,60 +250,77 @@ func (s *Store) EditUser(ctx context.Context, u User, userID int) error {
 	if err != nil {
 		return fmt.Errorf("failed to get user for editUser: %w", err)
 	}
+
 	if len(u.Username) > 0 {
 		user.Username = u.Username
 	}
+
 	if len(u.UniversityUsername.String) > 0 {
 		user.UniversityUsername = u.UniversityUsername
 	}
+
 	if len(u.LDAPUsername.String) > 0 {
 		user.LDAPUsername = u.LDAPUsername
 	}
+
 	if len(u.LoginType) > 0 {
 		user.LoginType = u.LoginType
 	}
+
 	if len(u.Nickname) > 0 {
 		user.Nickname = u.Nickname
 	}
+
 	if len(u.Firstname) > 0 {
 		user.Firstname = u.Firstname
 	}
+
 	if len(u.Lastname) > 0 {
 		user.Lastname = u.Lastname
 	}
+
 	if len(u.Avatar) > 0 {
 		user.Avatar = u.Avatar
 	}
+
 	if len(u.Email) > 0 {
 		user.Email = u.Email
 	}
+
 	if u.ResetPw != user.ResetPw {
 		user.ResetPw = u.ResetPw
 	}
+
 	if u.Enabled != user.Enabled {
 		user.Enabled = u.Enabled
 	}
+
 	if u.UseGravatar != user.UseGravatar {
 		user.UseGravatar = u.UseGravatar
 	}
+
 	user.UpdatedBy = null.IntFrom(int64(userID))
 	user.UpdatedAt = null.TimeFrom(time.Now())
+
 	err = s.editUser(ctx, user)
 	if err != nil {
 		return fmt.Errorf("failed to edit user: %w", err)
 	}
+
 	return nil
 }
 
 // SetUserLoggedIn will set the last login date to now
 func (s *Store) SetUserLoggedIn(ctx context.Context, u User) error {
 	u.LastLogin = null.TimeFrom(time.Now())
+
 	return s.editUser(ctx, u)
 }
 
 // DeleteUser will soft delete a user
 func (s *Store) DeleteUser(ctx context.Context, u User, userID int) error {
 	now := null.TimeFrom(time.Now())
+
 	u.Enabled = false
 	u.Password = null.NewString("", true)
 	u.Salt = null.NewString("", true)
@@ -294,6 +328,7 @@ func (s *Store) DeleteUser(ctx context.Context, u User, userID int) error {
 	u.UpdatedAt = now
 	u.DeletedBy = null.IntFrom(int64(userID))
 	u.DeletedAt = now
+
 	return s.editUser(ctx, u)
 }
 

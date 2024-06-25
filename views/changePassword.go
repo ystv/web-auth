@@ -32,18 +32,22 @@ func (v *Views) ChangePasswordFunc(c echo.Context) error {
 		_, _, err = v.user.VerifyUser(c.Request().Context(), c1.User)
 		if err != nil {
 			message.Error = "old password is not correct"
+
 			return c.JSON(status, message)
 		}
 
 		password := c.Request().FormValue("newPassword")
+
 		errString := minRequirementsMet(password)
 		if len(errString) > 0 {
 			message.Error = fmt.Sprintf("new password doesn't meet the old requirements: %s", errString)
+
 			return c.JSON(status, message)
 		}
 
 		if password != c.Request().FormValue("confirmationPassword") {
 			message.Error = "new passwords doesn't match"
+
 			return c.JSON(status, message)
 		}
 
@@ -52,11 +56,14 @@ func (v *Views) ChangePasswordFunc(c echo.Context) error {
 		err = v.user.EditUserPassword(c.Request().Context(), c1.User)
 		if err != nil {
 			message.Error = fmt.Sprintf("failed to change password: %+v", err)
+
 			return c.JSON(status, message)
 		}
 
 		message.Message = "successfully changed password"
+
 		return c.JSON(status, message)
 	}
+
 	return v.invalidMethodUsed(c)
 }

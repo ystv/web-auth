@@ -59,6 +59,8 @@ type (
 
 // NewMailer creates a new SMTP client
 func NewMailer(config Config) *MailerInit {
+	ten := 10000000000
+	//nolint:exhaustruct
 	smtpServer := mail.SMTPServer{
 		Host:           config.Host,
 		Port:           config.Port,
@@ -66,8 +68,8 @@ func NewMailer(config Config) *MailerInit {
 		Password:       config.Password,
 		Encryption:     mail.EncryptionSTARTTLS,
 		Authentication: mail.AuthLogin,
-		ConnectTimeout: 10 * time.Second,
-		SendTimeout:    10 * time.Second,
+		ConnectTimeout: time.Duration(ten),
+		SendTimeout:    time.Duration(ten),
 		TLSConfig: &tls.Config{
 			MinVersion: tls.VersionTLS12,
 			ServerName: config.Host,
@@ -86,9 +88,12 @@ func (m *MailerInit) ConnectMailer() *Mailer {
 	smtpClient, err := m.SMTPServer.Connect()
 	if err != nil {
 		log.Printf("mailer failed: %+v", err)
+
 		return nil
 	}
+
 	log.Printf("connected to mailer: %s", m.SMTPServer.Host)
+
 	return &Mailer{smtpClient, m.Defaults, m.DomainName}
 }
 
@@ -97,6 +102,7 @@ func (m *Mailer) CheckSendable(item Mail) error {
 	if item.To == "" {
 		return fmt.Errorf("no To field is set")
 	}
+
 	return nil
 }
 
@@ -106,50 +112,64 @@ func (m *Mailer) SendMail(item Mail) error {
 	if err != nil {
 		return err
 	}
+
 	to, from, cc, bcc := m.setEmailHeader(item)
+
 	body := bytes.Buffer{}
+
 	err = item.Tpl.Execute(&body, item.TplData)
 	if err != nil {
 		return fmt.Errorf("failed to exec tpl: %w", err)
 	}
+
 	email := mail.NewMSG()
 	email.SetFrom(from).AddTo(to).SetSubject(item.Subject)
+
 	if len(item.Cc) != 0 {
 		email.AddCc(cc...)
 	}
+
 	if len(item.Bcc) != 0 {
 		email.AddBcc(bcc...)
 	}
+
 	email.SetBody(mail.TextHTML, body.String())
+
 	if email.Error != nil {
 		return fmt.Errorf("failed to set mail data: %w", email.Error)
 	}
+
 	return email.Send(m.SMTPClient)
 }
 
-func (m *Mailer) setEmailHeader(item Mail) (to, from string, cc, bcc []string) {
+func (m *Mailer) setEmailHeader(item Mail) (string, string, []string, []string) {
+	var mailTo, mailFrom string
+
+	var mailCc, mailBcc []string
+
 	if len(item.To) > 0 {
-		to = item.To
+		mailTo = item.To
 	} else {
-		to = m.Defaults.DefaultTo
+		mailTo = m.Defaults.DefaultTo
 	}
 
 	if len(item.Cc) > 0 {
-		cc = item.Cc
+		mailCc = item.Cc
 	} else {
-		cc = m.Defaults.DefaultCC
+		mailCc = m.Defaults.DefaultCC
 	}
 
 	if len(item.Bcc) > 0 {
-		bcc = item.Bcc
+		mailBcc = item.Bcc
 	} else {
-		bcc = m.Defaults.DefaultBCC
+		mailBcc = m.Defaults.DefaultBCC
 	}
 
 	if len(item.From) > 0 {
-		from = item.From
+		mailFrom = item.From
 	} else {
-		from = m.Defaults.DefaultFrom
+		mailFrom = m.Defaults.DefaultFrom
 	}
-	return
+
+	return mailTo, mailFrom, mailCc, mailBcc
 }

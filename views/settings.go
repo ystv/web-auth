@@ -43,9 +43,11 @@ func (v *Views) SettingsFunc(c echo.Context) error {
 		if firstName != c1.User.Firstname && len(firstName) > 0 {
 			c1.User.Firstname = firstName
 		}
+
 		if nickname != c1.User.Nickname && len(nickname) > 0 {
 			c1.User.Nickname = nickname
 		}
+
 		if lastName != c1.User.Lastname && len(lastName) > 0 {
 			c1.User.Lastname = lastName
 		}

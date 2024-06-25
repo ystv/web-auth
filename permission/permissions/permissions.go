@@ -2,6 +2,7 @@ package permissions
 
 type Permissions string
 
+//nolint:gochecknoglobals
 var (
 	KeyCardAccess               Permissions = "Access.Keycard.Station"
 	BookingsAdmin               Permissions = "BookingsAdmin"
