@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/labstack/echo/v4"
 
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
-
-	"github.com/dustin/go-humanize"
 )
 
 type (

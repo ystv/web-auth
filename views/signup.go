@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/schema"
 	"github.com/labstack/echo/v4"
+
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 )

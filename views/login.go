@@ -10,9 +10,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/patrickmn/go-cache"
-	"github.com/ystv/web-auth/templates"
 	"gopkg.in/guregu/null.v4"
 
+	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 )
 

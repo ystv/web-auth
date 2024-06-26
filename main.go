@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/joho/godotenv"
+
 	"github.com/ystv/web-auth/views"
 )
 
