@@ -1,6 +1,7 @@
 package views
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"log"
@@ -97,7 +98,7 @@ func (v *Views) _usersGet(c echo.Context) error {
 		if err != nil {
 			size = 0
 		} else if size <= 0 {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid size, must be positive"))
+			return echo.NewHTTPError(http.StatusBadRequest, errors.New("invalid size, must be positive"))
 		} else if size != 5 && size != 10 && size != 25 && size != 50 && size != 75 && size != 100 {
 			size = 0
 		}
@@ -129,7 +130,7 @@ func (v *Views) _usersGet(c echo.Context) error {
 	}
 
 	if (len(dbUsers) == 0 || fullCount == 0) && size != 0 && page != 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("size and page given is not valid"))
+		return echo.NewHTTPError(http.StatusBadRequest, errors.New("size and page given is not valid"))
 	}
 
 	tplUsers := DBUsersToUsersTemplateFormat(dbUsers)
@@ -200,7 +201,7 @@ func (v *Views) _usersPost(c echo.Context) error {
 		if err != nil {
 			size = 0
 		} else if size <= 0 {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid size, must be positive"))
+			return echo.NewHTTPError(http.StatusBadRequest, errors.New("invalid size, must be positive"))
 		} else if size != 5 && size != 10 && size != 25 && size != 50 && size != 75 && size != 100 {
 			size = 25
 		}
@@ -210,14 +211,14 @@ func (v *Views) _usersPost(c echo.Context) error {
 		q.Set("enabled", enabled)
 	} else if enabled != "any" {
 		return echo.NewHTTPError(http.StatusBadRequest,
-			fmt.Errorf("enabled must be set to either \"any\", \"enabled\" or \"disabled\""))
+			errors.New("enabled must be set to either \"any\", \"enabled\" or \"disabled\""))
 	}
 
 	if deleted == "deleted" || deleted == "not_deleted" {
 		q.Set("deleted", deleted)
 	} else if deleted != "any" {
 		return echo.NewHTTPError(http.StatusBadRequest,
-			fmt.Errorf("deleted must be set to either \"any\", \"deleted\" or \"not_deleted\""))
+			errors.New("deleted must be set to either \"any\", \"deleted\" or \"not_deleted\""))
 	}
 
 	if column == "userId" || column == "name" || column == "username" || column == "email" || column == "lastLogin" {
@@ -497,7 +498,7 @@ func (v *Views) _userAddPost(c echo.Context) error {
 	} else {
 		message.Message = fmt.Sprintf(`No mailer present\nPlease send the username and password to this email: 
 %s, username: %s, password: %s`, email, username, password)
-		message.Error = fmt.Errorf("no mailer present")
+		message.Error = errors.New("no mailer present")
 		log.Printf("no Mailer present")
 	}
 

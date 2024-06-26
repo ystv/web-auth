@@ -1,6 +1,7 @@
 package views
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -245,7 +246,7 @@ func (v *Views) RoleAddPermissionFunc(c echo.Context) error {
 
 		_, err = v.user.GetRolePermission(c.Request().Context(), rolePermission)
 		if err == nil {
-			return fmt.Errorf("failed to add rolePermisison for roleAddPermission: row already exists")
+			return errors.New("failed to add rolePermission for roleAddPermission: row already exists")
 		}
 
 		_, err = v.user.AddRolePermission(c.Request().Context(), rolePermission)
@@ -333,7 +334,7 @@ func (v *Views) RoleAddUserFunc(c echo.Context) error {
 
 		_, err = v.user.GetRoleUser(c.Request().Context(), roleUser)
 		if err == nil {
-			return fmt.Errorf("failed to add roleUser for roleAddUser: row already exists")
+			return errors.New("failed to add roleUser for roleAddUser: row already exists")
 		}
 
 		_, err = v.user.AddRoleUser(c.Request().Context(), roleUser)

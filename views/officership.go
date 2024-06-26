@@ -1,6 +1,7 @@
 package views
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -121,7 +122,7 @@ func (v *Views) OfficersFunc(c echo.Context) error {
 				sb.WriteString(err.Error())
 			}
 
-			return fmt.Errorf(sb.String())
+			return errors.New(sb.String())
 		}
 
 		p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
@@ -168,7 +169,7 @@ func (v *Views) OfficerAddFunc(c echo.Context) error {
 
 		diff := time.Now().Compare(parse)
 		if diff != 1 {
-			return fmt.Errorf("start date must be before today")
+			return errors.New("start date must be before today")
 		}
 
 		userID, err := strconv.Atoi(tempUserID)

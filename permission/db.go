@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ystv/web-auth/utils"
-
 	sq "github.com/Masterminds/squirrel"
+
+	"github.com/ystv/web-auth/utils"
 )
 
 // getPermissions returns all permissions

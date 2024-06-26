@@ -3,6 +3,7 @@ package views
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -108,7 +109,7 @@ func (v *Views) TokenAddFunc(c echo.Context) error {
 		expiry := c.Request().FormValue("expiry")
 
 		if len(name) < 2 {
-			return fmt.Errorf("token name too short")
+			return errors.New("token name too short")
 		}
 
 		id := uuid.NewString()
@@ -120,7 +121,7 @@ func (v *Views) TokenAddFunc(c echo.Context) error {
 
 		diff := time.Now().Add(2 * time.Hour * 24).Compare(parse)
 		if diff != -1 {
-			return fmt.Errorf("expiry date must be more than 2 days away")
+			return errors.New("expiry date must be more than 2 days away")
 		}
 
 		t := api.Token{
@@ -161,7 +162,7 @@ func (v *Views) TokenDeleteFunc(c echo.Context) error {
 
 		tokenID := c.Param("tokenid")
 		if len(tokenID) != 36 {
-			return fmt.Errorf("failed to parse tokenid for tokenDelete: tokenid is the incorrect length")
+			return errors.New("failed to parse tokenid for tokenDelete: tokenid is the incorrect length")
 		}
 
 		token1, err := v.api.GetToken(c.Request().Context(), api.Token{TokenID: tokenID})
@@ -170,7 +171,7 @@ func (v *Views) TokenDeleteFunc(c echo.Context) error {
 		}
 
 		if token1.UserID != c1.User.UserID {
-			return fmt.Errorf("failed to get token in tokenDelete: unauthorized")
+			return errors.New("failed to get token in tokenDelete: unauthorized")
 		}
 
 		err = v.api.DeleteToken(c.Request().Context(), token1)
@@ -278,7 +279,7 @@ func (v *Views) newJWT(u user.User) (string, error) {
 func (v *Views) newJWTCustom(u user.User, expiry time.Time, tokenID string) (string, error) {
 	compare := expiry.Compare(time.Now().AddDate(1, 0, 0))
 	if compare == 1 {
-		return "", fmt.Errorf("expiration date is more than a year away, can only have a maximum of 1 year")
+		return "", errors.New("expiration date is more than a year away, can only have a maximum of 1 year")
 	}
 
 	perms, err := v.user.GetPermissionsForUser(context.Background(), u)
@@ -402,7 +403,7 @@ func (v *Views) TestAPITokenFunc(c echo.Context) error {
 
 // ValidateToken will validate the token
 func (v *Views) ValidateToken(token string) (bool, *JWTClaims, error) {
-	parsedToken, err := jwt.ParseWithClaims(token, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+	parsedToken, err := jwt.ParseWithClaims(token, &JWTClaims{}, func(_ *jwt.Token) (interface{}, error) {
 		return []byte(v.conf.Security.SigningKey), nil
 	})
 	if err != nil {
@@ -410,12 +411,12 @@ func (v *Views) ValidateToken(token string) (bool, *JWTClaims, error) {
 	}
 
 	if !parsedToken.Valid {
-		return false, nil, fmt.Errorf("failed to validate token: invalid token")
+		return false, nil, errors.New("failed to validate token: invalid token")
 	}
 
 	claims, ok := parsedToken.Claims.(*JWTClaims)
 	if !ok {
-		return false, nil, fmt.Errorf("failed to validate token: invalid token claim")
+		return false, nil, errors.New("failed to validate token: invalid token claim")
 	}
 
 	if len(claims.ID) > 0 {

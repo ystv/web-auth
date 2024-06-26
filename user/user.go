@@ -2,16 +2,17 @@ package user
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
-	"github.com/ystv/web-auth/permission"
-	"github.com/ystv/web-auth/role"
-
 	"github.com/Clarilab/gocloaksession"
 	"github.com/jmoiron/sqlx"
-	"github.com/ystv/web-auth/utils"
 	"gopkg.in/guregu/null.v4"
+
+	"github.com/ystv/web-auth/permission"
+	"github.com/ystv/web-auth/role"
+	"github.com/ystv/web-auth/utils"
 )
 
 type (
@@ -153,17 +154,17 @@ func (s *Store) GetUserValid(ctx context.Context, u User) (User, error) {
 	}
 
 	if !user.Enabled {
-		return u, fmt.Errorf("user not enabled, contact Computing Team for help")
+		return u, errors.New("user not enabled, contact Computing Team for help")
 	}
 
 	if user.DeletedBy.Valid {
-		return u, fmt.Errorf("user has been deleted, contact Computing Team for help")
+		return u, errors.New("user has been deleted, contact Computing Team for help")
 	}
 
 	if user.ResetPw {
 		u.UserID = user.UserID
 
-		return u, fmt.Errorf("password reset required")
+		return u, errors.New("password reset required")
 	}
 
 	return user, nil
@@ -184,31 +185,31 @@ func (s *Store) VerifyUser(ctx context.Context, u User) (User, bool, error) {
 	}
 
 	if !user.Enabled {
-		return u, false, fmt.Errorf("user not enabled, contact Computing Team for help")
+		return u, false, errors.New("user not enabled, contact Computing Team for help")
 	}
 
 	if user.DeletedBy.Valid {
-		return u, false, fmt.Errorf("user has been deleted, contact Computing Team for help")
+		return u, false, errors.New("user has been deleted, contact Computing Team for help")
 	}
 
 	if utils.HashPass(user.Salt.String+u.Password.String) == user.Password.String {
 		if user.ResetPw {
 			u.UserID = user.UserID
 
-			return user, true, fmt.Errorf("password reset required")
+			return user, true, errors.New("password reset required")
 		}
 
 		return user, false, nil
 	}
 
-	return u, false, fmt.Errorf("invalid credentials")
+	return u, false, errors.New("invalid credentials")
 }
 
 // AddUser adds a new User
 func (s *Store) AddUser(ctx context.Context, u User, userID int) (User, error) {
 	_, err := s.GetUser(ctx, u)
 	if err == nil {
-		return User{}, fmt.Errorf("failed to add user for addUser: user already exists")
+		return User{}, errors.New("failed to add user for addUser: user already exists")
 	}
 
 	u.Password = null.StringFrom(utils.HashPass(u.Salt.String + u.Password.String))

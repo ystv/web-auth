@@ -1,11 +1,13 @@
 package views
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+
 	"github.com/ystv/web-auth/infrastructure/permission"
 	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/user"
@@ -137,7 +139,7 @@ func (v *Views) RequirePermission(p permissions.Permissions) echo.MiddlewareFunc
 		return func(c echo.Context) error {
 			c1 := v.getSessionData(c)
 			if c1 == nil {
-				return fmt.Errorf("failed to get session data")
+				return errors.New("failed to get session data")
 			}
 
 			perms, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
@@ -153,7 +155,7 @@ func (v *Views) RequirePermission(p permissions.Permissions) echo.MiddlewareFunc
 				}
 			}
 
-			return echo.NewHTTPError(http.StatusForbidden, fmt.Errorf("you are not authorised for accessing this"))
+			return echo.NewHTTPError(http.StatusForbidden, errors.New("you are not authorised for accessing this"))
 		}
 	}
 }

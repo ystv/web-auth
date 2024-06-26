@@ -15,9 +15,10 @@ import (
 	_ "time/tzdata"
 
 	"github.com/labstack/echo/v4"
+	"gopkg.in/guregu/null.v4"
+
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/user"
-	"gopkg.in/guregu/null.v4"
 )
 
 type (
@@ -283,13 +284,13 @@ func DBUserToDetailedUser(dbUser user.User, store *user.Store) user.DetailedUser
 		u.UseGravatar = true
 		// #nosec
 		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace(u.Email))))
-		u.Avatar = fmt.Sprintf("https://www.gravatar.com/avatar/%s", hex.EncodeToString(hash[:]))
+		u.Avatar = "https://www.gravatar.com/avatar/" + hex.EncodeToString(hash[:])
 	} else {
 		u.UseGravatar = false
 		if len(dbUser.Avatar) == 0 {
 			u.Avatar = "https://placehold.it/128x128"
 		} else {
-			u.Avatar = fmt.Sprintf("/avatar/%s", dbUser.Avatar)
+			u.Avatar = "/avatar/" + dbUser.Avatar
 		}
 	}
 

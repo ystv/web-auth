@@ -53,6 +53,7 @@ func (s *Store) addUser(ctx context.Context, u1 User) (User, error) {
 
 	defer stmt.Close()
 
+	//nolint:musttag
 	err = stmt.Get(&u, u1)
 	if err != nil {
 		return User{}, fmt.Errorf("failed to add user: %w", err)
@@ -128,6 +129,7 @@ func (s *Store) getUser(ctx context.Context, u1 User) (User, error) {
 		panic(fmt.Errorf("failed to build sql for getUser: %w", err))
 	}
 
+	//nolint:musttag
 	err = s.db.GetContext(ctx, &u, sql, args...)
 	if err != nil {
 		return u, fmt.Errorf("failed to get user from db: %w", err)
@@ -159,7 +161,9 @@ func (s *Store) getUsers(ctx context.Context, size, page int, search, sortBy, di
 		return nil, -1, fmt.Errorf("failed to get db users: %w", err)
 	}
 
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	type tempStruct struct {
 		User
@@ -171,6 +175,7 @@ func (s *Store) getUsers(ctx context.Context, size, page int, search, sortBy, di
 
 		var temp tempStruct
 
+		//nolint:musttag
 		err = rows.StructScan(&temp)
 		if err != nil {
 			return nil, -1, fmt.Errorf("failed to get db users: %w", err)
@@ -291,6 +296,7 @@ func (s *Store) getRolesForUser(ctx context.Context, u User) ([]role.Role, error
 func (s *Store) getUsersForRole(ctx context.Context, r role.Role) ([]User, error) {
 	var u []User
 
+	//nolint:musttag
 	err := s.db.SelectContext(ctx, &u, `SELECT u.*
 		FROM people.users u
 		LEFT JOIN people.role_members rm ON rm.user_id = u.user_id
@@ -321,6 +327,7 @@ func (s *Store) getRoleUser(ctx context.Context, ru1 RoleUser) (RoleUser, error)
 func (s *Store) getUsersNotInRole(ctx context.Context, r role.Role) ([]User, error) {
 	var u []User
 
+	//nolint:musttag
 	err := s.db.SelectContext(ctx, &u, `SELECT DISTINCT u.*
 		FROM people.users u
         WHERE user_id NOT IN

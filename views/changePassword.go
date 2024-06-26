@@ -40,7 +40,7 @@ func (v *Views) ChangePasswordFunc(c echo.Context) error {
 
 		errString := minRequirementsMet(password)
 		if len(errString) > 0 {
-			message.Error = fmt.Sprintf("new password doesn't meet the old requirements: %s", errString)
+			message.Error = "new password doesn't meet the old requirements: " + errString
 
 			return c.JSON(status, message)
 		}

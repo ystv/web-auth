@@ -77,7 +77,7 @@ func (v *Views) SettingsFunc(c echo.Context) error {
 	if c1.User.UseGravatar {
 		// #nosec
 		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace(c1.User.Email))))
-		gravatar = fmt.Sprintf("https://www.gravatar.com/avatar/%s", hex.EncodeToString(hash[:]))
+		gravatar = "https://www.gravatar.com/avatar/" + hex.EncodeToString(hash[:])
 	}
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)

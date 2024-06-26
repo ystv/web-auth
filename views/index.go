@@ -1,7 +1,6 @@
 package views
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -25,7 +24,7 @@ func (v *Views) IndexFunc(c echo.Context) error {
 		return c.Redirect(http.StatusFound, c1.Callback)
 	}
 
-	loginCallback := fmt.Sprintf("login?callback=%s", c1.Callback)
+	loginCallback := "login?callback=" + c1.Callback
 
 	return c.Redirect(http.StatusFound, loginCallback)
 }

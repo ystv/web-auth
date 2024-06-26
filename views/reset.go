@@ -1,6 +1,7 @@
 package views
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"log"
@@ -10,10 +11,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/patrickmn/go-cache"
+	"gopkg.in/guregu/null.v4"
+
 	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
-	"gopkg.in/guregu/null.v4"
 )
 
 func (v *Views) ResetURLFunc(c echo.Context) error {
@@ -23,7 +25,7 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 
 	userID, found := v.cache.Get(url)
 	if !found {
-		return fmt.Errorf("failed to get url for reset")
+		return errors.New("failed to get url for reset")
 	}
 
 	originalUser, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID.(int)})
@@ -137,7 +139,7 @@ https://%s/reset/%s`, userFromDB.Email, v.conf.DomainName, url)
 	} else {
 		message.Message = fmt.Sprintf(`No mailer present\nPlease forward the link to this email: %s, 
 reset link: https://%s/reset/%s`, userFromDB.Email, v.conf.DomainName, url)
-		message.Error = fmt.Errorf("no mailer present")
+		message.Error = errors.New("no mailer present")
 		log.Printf("no Mailer present")
 		log.Printf("password reset requested for email: %s by user: %d", userFromDB.Email, c1.User.UserID)
 	}
