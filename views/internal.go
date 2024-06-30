@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/labstack/echo/v4"
 
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
-
-	"github.com/dustin/go-humanize"
 )
 
 type (
@@ -27,6 +26,7 @@ type (
 func (v *Views) InternalFunc(c echo.Context) error {
 	c1 := v.getSessionData(c)
 	lastLogin := time.Now()
+
 	if c1.User.LastLogin.Valid {
 		lastLogin = c1.User.LastLogin.Time
 	}
@@ -51,5 +51,6 @@ func (v *Views) InternalFunc(c echo.Context) error {
 			Assumed:         c1.Assumed,
 		},
 	}
+
 	return v.template.RenderTemplate(c.Response(), ctx, templates.InternalTemplate, templates.RegularType)
 }

@@ -14,6 +14,8 @@ func NewStore(dataSourceName string, host string) *sqlx.DB {
 	if err != nil {
 		log.Fatalf("db failed: %+v", err)
 	}
+
 	log.Printf("connected to db: %s", host)
+
 	return db
 }
