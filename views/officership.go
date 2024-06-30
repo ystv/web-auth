@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -18,10 +19,27 @@ import (
 )
 
 func (v *Views) OfficershipsFunc(c echo.Context) error {
-	if c.Request().Method == http.MethodGet {
+	switch c.Request().Method {
+	case http.MethodGet:
 		c1 := v.getSessionData(c)
 
-		officerships, err := v.officership.GetOfficerships(c.Request().Context(), officership.Current)
+		status := c.QueryParam("status")
+
+		var dbStatus officership.OfficershipsStatus
+		switch status {
+		case "current", "":
+			status = "current"
+			dbStatus = officership.Current
+		case "retired":
+			dbStatus = officership.Retired
+		case "any":
+			dbStatus = officership.Any
+		default:
+			return echo.NewHTTPError(http.StatusBadRequest,
+				errors.New("status must be set to either \"any\", \"current\" or \"retired\""))
+		}
+
+		officerships, err := v.officership.GetOfficerships(c.Request().Context(), dbStatus)
 		if err != nil {
 			return fmt.Errorf("failed to get officerships: %w", err)
 		}
@@ -32,10 +50,12 @@ func (v *Views) OfficershipsFunc(c echo.Context) error {
 		}
 
 		data := struct {
-			Officerships []officership.Officership
+			Officerships          []officership.Officership
+			OfficershipStatusSort string
 			TemplateHelper
 		}{
-			Officerships: officerships,
+			Officerships:          officerships,
+			OfficershipStatusSort: status,
 			TemplateHelper: TemplateHelper{
 				UserPermissions: p1,
 				ActivePage:      "officerships",
@@ -44,6 +64,28 @@ func (v *Views) OfficershipsFunc(c echo.Context) error {
 		}
 
 		return v.template.RenderTemplate(c.Response(), data, templates.OfficershipsTemplate, templates.RegularType)
+	case http.MethodPost:
+		o, err := url.Parse("/internal/officerships")
+		if err != nil {
+			panic(fmt.Errorf("invalid url: %w", err)) // this panics because if this errors then many other things will be wrong
+		}
+
+		q := o.Query()
+
+		status := c.FormValue("status")
+
+		if status == "retired" || status == "any" {
+			q.Set("status", status)
+		} else if status != "current" {
+			return echo.NewHTTPError(http.StatusBadRequest,
+				errors.New("status must be set to either \"any\", \"current\" or \"retired\""))
+		}
+
+		c.Request().Method = "GET"
+
+		o.RawQuery = q.Encode()
+
+		return c.Redirect(http.StatusFound, o.String())
 	}
 
 	return v.invalidMethodUsed(c)
@@ -106,8 +148,39 @@ func (v *Views) OfficershipDeleteFunc(c echo.Context) error {
 }
 
 func (v *Views) OfficersFunc(c echo.Context) error {
-	if c.Request().Method == http.MethodGet {
+	switch c.Request().Method {
+	case http.MethodGet:
 		c1 := v.getSessionData(c)
+
+		officershipStatus := c.QueryParam("officershipStatus")
+		officerStatus := c.QueryParam("officerStatus")
+
+		var dbOfficershipStatus, dbOfficerStatus officership.OfficershipsStatus
+		switch officershipStatus {
+		case "current", "":
+			officershipStatus = "current"
+			dbOfficershipStatus = officership.Current
+		case "retired":
+			dbOfficershipStatus = officership.Retired
+		case "any":
+			dbOfficershipStatus = officership.Any
+		default:
+			return echo.NewHTTPError(http.StatusBadRequest,
+				errors.New("officershipStatus must be set to either \"any\", \"current\" or \"retired\""))
+		}
+
+		switch officerStatus {
+		case "current", "":
+			officerStatus = "current"
+			dbOfficerStatus = officership.Current
+		case "retired":
+			dbOfficerStatus = officership.Retired
+		case "any":
+			dbOfficerStatus = officership.Any
+		default:
+			return echo.NewHTTPError(http.StatusBadRequest,
+				errors.New("officerStatus must be set to either \"any\", \"current\" or \"retired\""))
+		}
 
 		wg := sync.WaitGroup{}
 		wg.Add(3)
@@ -125,8 +198,8 @@ func (v *Views) OfficersFunc(c echo.Context) error {
 
 			var err error
 
-			officers, err = v.officership.GetOfficershipMembers(c.Request().Context(), nil, officership.Current,
-				officership.Current)
+			officers, err = v.officership.GetOfficershipMembers(c.Request().Context(), nil, nil, dbOfficershipStatus,
+				dbOfficerStatus, true)
 			if err != nil {
 				errArr = append(errArr, fmt.Errorf("failed to get officers: %w", err))
 			}
@@ -137,7 +210,7 @@ func (v *Views) OfficersFunc(c echo.Context) error {
 
 			var err error
 
-			officerships, err = v.officership.GetOfficerships(c.Request().Context(), officership.Current)
+			officerships, err = v.officership.GetOfficerships(c.Request().Context(), dbOfficershipStatus)
 			if err != nil {
 				errArr = append(errArr, fmt.Errorf("failed to get officerships: %w", err))
 			}
@@ -171,14 +244,18 @@ func (v *Views) OfficersFunc(c echo.Context) error {
 		}
 
 		data := struct {
-			Officers     []officership.OfficershipMember
-			Officerships []officership.Officership
-			Users        []user.User
+			Officers              []officership.OfficershipMember
+			Officerships          []officership.Officership
+			Users                 []user.User
+			OfficershipStatusSort string
+			OfficerStatusSort     string
 			TemplateHelper
 		}{
-			Officers:     officers,
-			Officerships: officerships,
-			Users:        users,
+			Officers:              officers,
+			Officerships:          officerships,
+			Users:                 users,
+			OfficershipStatusSort: officershipStatus,
+			OfficerStatusSort:     officerStatus,
 			TemplateHelper: TemplateHelper{
 				UserPermissions: p1,
 				ActivePage:      "officers",
@@ -187,6 +264,36 @@ func (v *Views) OfficersFunc(c echo.Context) error {
 		}
 
 		return v.template.RenderTemplate(c.Response(), data, templates.OfficersTemplate, templates.RegularType)
+	case http.MethodPost:
+		o, err := url.Parse("/internal/officership/officers")
+		if err != nil {
+			panic(fmt.Errorf("invalid url: %w", err)) // this panics because if this errors then many other things will be wrong
+		}
+
+		q := o.Query()
+
+		officershipStatus := c.FormValue("officershipStatus")
+		officerStatus := c.FormValue("officerStatus")
+
+		if officershipStatus == "retired" || officershipStatus == "any" {
+			q.Set("officershipStatus", officershipStatus)
+		} else if officershipStatus != "current" {
+			return echo.NewHTTPError(http.StatusBadRequest,
+				errors.New("officershipStatus must be set to either \"any\", \"current\" or \"retired\""))
+		}
+
+		if officerStatus == "retired" || officerStatus == "any" {
+			q.Set("officerStatus", officerStatus)
+		} else if officerStatus != "current" {
+			return echo.NewHTTPError(http.StatusBadRequest,
+				errors.New("officerStatus must be set to either \"any\", \"current\" or \"retired\""))
+		}
+
+		c.Request().Method = "GET"
+
+		o.RawQuery = q.Encode()
+
+		return c.Redirect(http.StatusFound, o.String())
 	}
 
 	return v.invalidMethodUsed(c)
@@ -367,7 +474,7 @@ func (v *Views) OfficershipTeamFunc(c echo.Context) error {
 		}
 
 		teamMembers, err := v.officership.GetOfficershipTeamMembers(c.Request().Context(), &officershipTeam,
-			officership.Current)
+			officership.Any)
 		if err != nil {
 			return fmt.Errorf("failed to get officership team members for officershipTeam: %w", err)
 		}

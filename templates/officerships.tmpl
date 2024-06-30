@@ -1,6 +1,34 @@
 {{define "title"}}Internal: Officerships{{end}}
 {{define "content"}}
     <div class="column is-10" style="min-height: 88vh">
+        <div class="card">
+            <form method="post" action="">
+                <div class="column">
+                    <div class="register" style="padding-top: 0">
+                        <div class="field">
+                            <label for="status">Officership status</label><br>
+                            <div class="control has-icons-left select">
+                                <select id="status" name="status">
+                                    <option value="any"{{if eq .OfficershipStatusSort "any"}} selected{{end}}>Any</option>
+                                    <option value="current"{{if eq .OfficershipStatusSort "current"}} selected{{end}}>Current</option>
+                                    <option value="retired"{{if eq .OfficershipStatusSort "retired"}} selected{{end}}>Retired</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <p class="control">
+                                <input
+                                        class="button is-info"
+                                        type="submit"
+                                        value="Submit"
+                                />
+                                <a class="button is-warning is-outlined" href="/internal/users">Reset all fields</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
         <div class="card events-card">
             <header class="card-header">
                 <p class="card-header-title">Officerships</p>
@@ -12,7 +40,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card-table">
+            <div class="card-table" style="max-height: 100em;">
                 <div class="content">
                     <table class="table is-fullwidth is-hoverable">
                         <thead>
