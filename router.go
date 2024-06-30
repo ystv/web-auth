@@ -203,7 +203,7 @@ func (r *Router) loadRoutes() {
 	officershipTeam.Match(validMethods, "/delete", r.views.OfficershipTeamDeleteFunc)
 	officershipTeam.Match(validMethods, "", r.views.OfficershipTeamFunc)
 
-	officership := officershipsRoute.Group("/:officerid")
+	officership := officershipsRoute.Group("/:officershipid")
 	officership.Match(validMethods, "/edit", r.views.OfficershipEditFunc)
 	officership.Match(validMethods, "/delete", r.views.OfficershipDeleteFunc)
 	officership.Match(validMethods, "", r.views.OfficershipFunc)
