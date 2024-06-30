@@ -77,7 +77,7 @@ func (s *Store) getOfficership(ctx context.Context, o1 Officership) (Officership
 
 	builder := utils.PSQL().Select("o.*", "COUNT(DISTINCT omc.officership_member_id) AS current_officers",
 		"COUNT(DISTINCT omp.officership_member_id) AS previous_officers", "otm.team_id AS team_id",
-		"ot.name AS team_name").
+		"ot.name AS team_name", "otm.is_leader AS is_team_leader", "otm.is_deputy AS is_team_deputy").
 		From("people.officerships o").
 		LeftJoin("people.officership_members omc ON o.officer_id = omc.officer_id AND omc.end_date IS NULL").
 		LeftJoin("people.officership_members omp ON o.officer_id = omp.officer_id AND omp.end_date IS NOT NULL").
@@ -85,7 +85,7 @@ func (s *Store) getOfficership(ctx context.Context, o1 Officership) (Officership
 		LeftJoin("people.officership_teams ot ON ot.team_id = otm.team_id").
 		Where(sq.Or{sq.Eq{"o.officer_id": o1.OfficershipID}, sq.And{sq.Eq{"o.name": o1.Name}, sq.NotEq{"o.name": ""}}}).
 		GroupBy("o", "o.officer_id", "o.name", "o.email_alias", "description", "historywiki_url", "role_id",
-			"is_current", "if_unfilled", "otm.team_id", "ot.name").
+			"is_current", "if_unfilled", "otm.team_id", "ot.name", "otm.is_leader", "otm.is_deputy").
 		OrderBy(`CASE WHEN o.name = 'Station Director' THEN 0
 	WHEN o.name LIKE '%Director%' AND o.name NOT LIKE '%Deputy%' AND o.name NOT LIKE '%Assistant%' THEN 1
 	WHEN o.name LIKE '%Deputy%' THEN 2
@@ -301,7 +301,7 @@ func (s *Store) getOfficershipTeamMembers(ctx context.Context, t1 *OfficershipTe
 
 	builder := utils.PSQL().Select("otm.*", "o.name AS officer_name",
 		"COUNT(DISTINCT omc.officership_member_id) AS current_officers",
-		"COUNT(DISTINCT omp.officership_member_id) AS previous_officers").
+		"COUNT(DISTINCT omp.officership_member_id) AS previous_officers", "o.is_current AS is_current").
 		From("people.officership_team_members otm").
 		LeftJoin("people.officerships o on o.officer_id = otm.officer_id").
 		LeftJoin("people.officership_members omc ON o.officer_id = omc.officer_id AND omc.end_date IS NULL").
@@ -457,8 +457,8 @@ func (s *Store) removeTeamForOfficershipMemberTeams(ctx context.Context, t Offic
 	return nil
 }
 
-func (s *Store) getOfficershipMembers(ctx context.Context, o1 *Officership, officershipStatus OfficershipsStatus,
-	officershipMemberStatus OfficershipsStatus) ([]OfficershipMember, error) {
+func (s *Store) getOfficershipMembers(ctx context.Context, o1 *Officership, u *user.User,
+	officershipStatus OfficershipsStatus, officershipMemberStatus OfficershipsStatus, orderByOfficerName bool) ([]OfficershipMember, error) {
 	var o []OfficershipMember
 
 	builder := utils.PSQL().Select("om.*", "o.name AS officership_name",
@@ -478,6 +478,10 @@ func (s *Store) getOfficershipMembers(ctx context.Context, o1 *Officership, offi
 		})
 	}
 
+	if u != nil {
+		builder = builder.Where(sq.Eq{"u.user_id": u.UserID})
+	}
+
 	switch officershipStatus {
 	case Any:
 	case Current:
@@ -494,14 +498,17 @@ func (s *Store) getOfficershipMembers(ctx context.Context, o1 *Officership, offi
 		builder = builder.Where("om.end_date IS NOT NULL")
 	}
 
-	builder = builder.OrderBy(`CASE WHEN o.name = 'Station Director' THEN 0
-	WHEN o.name LIKE '%Director%' AND o.name NOT LIKE '%Deputy%' THEN 1
-	WHEN o.name LIKE '%Deputy%' THEN 2
-	WHEN o.name = 'Head of Welfare and Training' THEN 3
-	WHEN o.name LIKE '%Head of%' THEN 4
-	ELSE 5 END`,
-		"o.name",
-		"om.start_date")
+	if orderByOfficerName {
+		builder = builder.OrderBy(`CASE WHEN o.name = 'Station Director' THEN 0
+		WHEN o.name LIKE '%Director%' AND o.name NOT LIKE '%Deputy%' THEN 1
+		WHEN o.name LIKE '%Deputy%' THEN 2
+		WHEN o.name = 'Head of Welfare and Training' THEN 3
+		WHEN o.name LIKE '%Head of%' THEN 4
+		ELSE 5 END`,
+			"o.name")
+	}
+
+	builder = builder.OrderBy("om.start_date DESC")
 
 	sql, args, err := builder.ToSql()
 	if err != nil {

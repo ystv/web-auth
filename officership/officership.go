@@ -72,6 +72,7 @@ type (
 		OfficerID               int    `db:"officer_id" json:"officerID"`
 		IsLeader                bool   `db:"is_leader" json:"isLeader"`
 		IsDeputy                bool   `db:"is_deputy" json:"isDeputy"`
+		IsCurrent               bool   `db:"is_current" json:"isCurrent"`
 		OfficerName             string `db:"officer_name" json:"officerName"`
 		CurrentOfficers         int    `db:"current_officers" json:"currentOfficers"`
 		PreviousOfficers        int    `db:"previous_officers" json:"previousOfficers"`
@@ -167,9 +168,9 @@ func (s *Store) RemoveTeamForOfficershipMemberTeams(ctx context.Context, t Offic
 	return s.removeTeamForOfficershipMemberTeams(ctx, t)
 }
 
-func (s *Store) GetOfficershipMembers(ctx context.Context, o *Officership, officershipStatus,
-	officershipMemberStatus OfficershipsStatus) ([]OfficershipMember, error) {
-	return s.getOfficershipMembers(ctx, o, officershipStatus, officershipMemberStatus)
+func (s *Store) GetOfficershipMembers(ctx context.Context, o *Officership, u *user.User, officershipStatus,
+	officershipMemberStatus OfficershipsStatus, orderByOfficerName bool) ([]OfficershipMember, error) {
+	return s.getOfficershipMembers(ctx, o, u, officershipStatus, officershipMemberStatus, orderByOfficerName)
 }
 
 func (s *Store) GetOfficershipMember(ctx context.Context, m OfficershipMember) (OfficershipMember, error) {
