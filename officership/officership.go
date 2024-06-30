@@ -29,8 +29,8 @@ type (
 		PreviousOfficers int         `db:"previous_officers" json:"previousOfficers,omitempty"`
 		TeamID           null.Int    `db:"team_id" json:"teamID"`
 		TeamName         null.String `db:"team_name" json:"teamName"`
-		IsTeamLeader     bool        `db:"is_team_leader" json:"isTeamLeader"`
-		IsTeamDeputy     bool        `db:"is_team_deputy" json:"isTeamDeputy"`
+		IsTeamLeader     null.Bool   `db:"is_team_leader" json:"isTeamLeader"`
+		IsTeamDeputy     null.Bool   `db:"is_team_deputy" json:"isTeamDeputy"`
 	}
 
 	// OfficershipsStatus indicates the state desired for a database get of officers
