@@ -2,6 +2,7 @@ package views
 
 import (
 	"context"
+
 	// #nosec
 	"crypto/md5"
 	"encoding/hex"
@@ -17,6 +18,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"gopkg.in/guregu/null.v4"
 
+	"github.com/ystv/web-auth/officership"
 	"github.com/ystv/web-auth/permission"
 	"github.com/ystv/web-auth/user"
 )
@@ -180,7 +182,7 @@ func DBUsersToUsersTemplateFormat(dbUsers []user.User) []user.StrippedUser {
 }
 
 // DBUserToDetailedUser handles all the little details for the users front end
-func DBUserToDetailedUser(dbUser user.User, store *user.Store) user.DetailedUser {
+func DBUserToDetailedUser(dbUser user.User, store *user.Store, officers []officership.OfficershipMember) user.DetailedUser {
 	var u user.DetailedUser
 
 	var err error
@@ -293,6 +295,24 @@ func DBUserToDetailedUser(dbUser user.User, store *user.Store) user.DetailedUser
 			u.Avatar = "/avatar/" + dbUser.Avatar
 		}
 	}
+
+	officerMembers := make([]user.OfficershipMember, 0)
+
+	for _, o := range officers {
+		officerMembers = append(officerMembers, user.OfficershipMember{
+			OfficershipMemberID: o.OfficershipMemberID,
+			UserID:              o.UserID,
+			OfficerID:           o.OfficerID,
+			StartDate:           o.StartDate,
+			EndDate:             o.EndDate,
+			OfficershipName:     o.OfficershipName,
+			UserName:            o.UserName,
+			TeamID:              o.TeamID,
+			TeamName:            o.TeamName,
+		})
+	}
+
+	u.Officers = officerMembers
 
 	return u
 }

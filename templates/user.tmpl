@@ -102,6 +102,49 @@
                 {{end}}
             </div>
         </div>
+        {{if gt (len .User.Officers) 0}}
+            <div class="card events-card">
+                <header class="card-header">
+                    <p class="card-header-title">Officerships</p>
+                </header>
+                <div class="card-table" style="max-height: 100em;">
+                    <div class="content">
+                        <table class="table is-fullwidth is-hoverable">
+                            <thead>
+                            <tr>
+                                <th>Officer ID</th>
+                                <th>Name</th>
+                                <th>Start date</th>
+                                <th>End date</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {{range .User.Officers}}
+                                <tr>
+                                    <th>{{.OfficershipMemberID}}</th>
+                                    <td>{{.OfficershipName}}</td>
+                                    <td>{{if .StartDate.Valid}}{{formatOfficershipDate .StartDate.Time}}{{else}}UNKNOWN{{end}}</td>
+                                    <td>{{if .EndDate.Valid}}{{formatOfficershipDate .EndDate.Time}}{{else}}Incumbent{{end}}</td>
+                                    <td><a href="/internal/officership/officer/{{.OfficershipMemberID}}">View</a>
+                                    </td>
+                                </tr>
+                            {{end}}
+                            </tbody>
+                            <tfoot>
+                            <tr>
+                                <th>Officer ID</th>
+                                <th>Name</th>
+                                <th>Start date</th>
+                                <th>End date</th>
+                                <th>Actions</th>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {{end}}
     </div>
     {{if not .User.DeletedAt.Valid}}
         {{template "modals" .}}

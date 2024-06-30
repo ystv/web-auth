@@ -16,6 +16,7 @@ import (
 
 	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/infrastructure/permission"
+	"github.com/ystv/web-auth/officership"
 	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
@@ -258,7 +259,12 @@ func (v *Views) UserFunc(c echo.Context) error {
 		return fmt.Errorf("failed to get user for user: %w", err)
 	}
 
-	detailedUser := DBUserToDetailedUser(userFromDB, v.user)
+	officers, err := v.officership.GetOfficershipMembers(c.Request().Context(), nil, &userFromDB, officership.Any, officership.Any, false)
+	if err != nil {
+		return fmt.Errorf("failed to get officers for user: %w", err)
+	}
+
+	detailedUser := DBUserToDetailedUser(userFromDB, v.user, officers)
 
 	detailedUser.Permissions, err = v.user.GetPermissionsForUser(c.Request().Context(),
 		user.User{UserID: detailedUser.UserID})

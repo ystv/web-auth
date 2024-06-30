@@ -90,6 +90,22 @@ type (
 		Gravatar           null.String             `json:"gravatar"`
 		Permissions        []permission.Permission `json:"permissions"`
 		Roles              []role.Role             `json:"roles"`
+		Officers           []OfficershipMember     `json:"officers"`
+	}
+
+	// OfficershipMember represents relevant officership member fields
+	//
+	//nolint:revive
+	OfficershipMember struct {
+		OfficershipMemberID int         `db:"officership_member_id" json:"officershipMemberID"`
+		UserID              int         `db:"user_id" json:"userID"`
+		OfficerID           int         `db:"officer_id" json:"officerID"`
+		StartDate           null.Time   `db:"start_date" json:"startDate"`
+		EndDate             null.Time   `db:"end_date" json:"endDate"`
+		OfficershipName     string      `db:"officership_name" json:"officershipName"`
+		UserName            string      `db:"user_name" json:"userName"`
+		TeamID              null.Int    `db:"team_id" json:"teamID"`
+		TeamName            null.String `db:"team_name" json:"teamName"`
 	}
 
 	CountUsers struct {
