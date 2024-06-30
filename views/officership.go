@@ -50,6 +50,46 @@ func (v *Views) OfficershipsFunc(c echo.Context) error {
 }
 
 func (v *Views) OfficershipFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodGet {
+		c1 := v.getSessionData(c)
+
+		officershipID, err := strconv.Atoi(c.Param("officershipid"))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse officershipid for officership: %w", err))
+		}
+
+		o, err := v.officership.GetOfficership(c.Request().Context(), officership.Officership{OfficershipID: officershipID})
+		if err != nil {
+			return fmt.Errorf("failed to get officership: %w", err)
+		}
+
+		officers, err := v.officership.GetOfficershipMembers(c.Request().Context(), &o, nil, officership.Any, officership.Any, false)
+		if err != nil {
+			return fmt.Errorf("failed to get officership members: %w", err)
+		}
+
+		p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+		if err != nil {
+			return fmt.Errorf("failed to get user permissions for officership: %w", err)
+		}
+
+		data := struct {
+			Officership officership.Officership
+			Officers    []officership.OfficershipMember
+			TemplateHelper
+		}{
+			Officership: o,
+			Officers:    officers,
+			TemplateHelper: TemplateHelper{
+				UserPermissions: p1,
+				ActivePage:      "officership",
+				Assumed:         c1.Assumed,
+			},
+		}
+
+		return v.template.RenderTemplate(c.Response(), data, templates.OfficershipTemplate, templates.RegularType)
+	}
+
 	return v.invalidMethodUsed(c)
 }
 
@@ -153,6 +193,43 @@ func (v *Views) OfficersFunc(c echo.Context) error {
 }
 
 func (v *Views) OfficerFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodGet {
+		c1 := v.getSessionData(c)
+
+		officerID, err := strconv.Atoi(c.Param("officerid"))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse officerid for officer: %w", err))
+		}
+
+		officer, err := v.officership.GetOfficershipMember(c.Request().Context(), officership.OfficershipMember{OfficershipMemberID: officerID})
+		if err != nil {
+			return fmt.Errorf("failed to get officer: %w", err)
+		}
+
+		p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
+		if err != nil {
+			return fmt.Errorf("failed to get user permissions for officer: %w", err)
+		}
+
+		data := struct {
+			Officer officership.OfficershipMember
+			// Officerships []officership.Officership
+			// Users        []user.User
+			TemplateHelper
+		}{
+			Officer: officer,
+			// Officerships: officerships,
+			// Users:        users,
+			TemplateHelper: TemplateHelper{
+				UserPermissions: p1,
+				ActivePage:      "officer",
+				Assumed:         c1.Assumed,
+			},
+		}
+
+		return v.template.RenderTemplate(c.Response(), data, templates.OfficerTemplate, templates.RegularType)
+	}
+
 	return v.invalidMethodUsed(c)
 }
 
