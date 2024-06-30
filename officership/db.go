@@ -44,7 +44,7 @@ func (s *Store) getOfficerships(ctx context.Context, officershipStatus Officersh
 	case Any:
 	case Current:
 		builder = builder.Where("o.is_current = true")
-	case Previous:
+	case Retired:
 		builder = builder.Where("o.is_current = false")
 	}
 
@@ -315,7 +315,7 @@ func (s *Store) getOfficershipTeamMembers(ctx context.Context, t1 *OfficershipTe
 	case Any:
 	case Current:
 		builder = builder.Where("o.is_current = true")
-	case Previous:
+	case Retired:
 		builder = builder.Where("o.is_current = false")
 	}
 
@@ -482,7 +482,7 @@ func (s *Store) getOfficershipMembers(ctx context.Context, o1 *Officership, offi
 	case Any:
 	case Current:
 		builder = builder.Where("o.is_current = true")
-	case Previous:
+	case Retired:
 		builder = builder.Where("o.is_current = false")
 	}
 
@@ -490,7 +490,7 @@ func (s *Store) getOfficershipMembers(ctx context.Context, o1 *Officership, offi
 	case Any:
 	case Current:
 		builder = builder.Where("om.end_date IS NULL")
-	case Previous:
+	case Retired:
 		builder = builder.Where("om.end_date IS NOT NULL")
 	}
 

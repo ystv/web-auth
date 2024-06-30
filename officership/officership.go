@@ -87,7 +87,7 @@ type (
 
 const (
 	Any OfficershipsStatus = iota
-	Previous
+	Retired
 	Current
 )
 
