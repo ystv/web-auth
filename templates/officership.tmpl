@@ -129,98 +129,102 @@
 {{end}}
 
 {{define "modals"}}
-    <div id="editOfficershipModal" class="modal">
-        <div class="modal-background"></div>
-        <div class="modal-content">
-            <div class="box">
-                <article class="media">
-                    <div class="media-content">
-                        <div class="content">
-                            <p class="title">Are you sure you want to edit this officership?</p>
-                            <p><strong>This action can be undone by changing them back but be careful</strong><br>
-                                Use the fields below to modify your details, to not change a field, either leave it as
+    {{with .Officership}}
+        <div id="editOfficershipModal" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-content">
+                <div class="box">
+                    <article class="media">
+                        <div class="media-content">
+                            <div class="content">
+                                <p class="title">Are you sure you want to edit this officership?</p>
                                 is or blank.<br>If you change the SuperUser name then many things will break</p>
-                            <form action="/internal/officership/{{.Officership.OfficershipID}}/edit" method="post">
-                                <div class="field">
-                                    <label class="label" for="name">Name</label>
-                                    <div class="control">
-                                        <input
-                                                id="name"
-                                                class="input"
-                                                type="text"
-                                                name="name"
-                                                placeholder="{{.Officership.Name}}"
-                                                value="{{.Officership.Name}}"
-                                        />
+                                <p><strong>This action can be undone by changing them back but be careful</strong><br>
+                                    Use the fields below to modify your details, to not change a field, either leave it
+                                    as
+                                <form action="/internal/officership/{{.OfficershipID}}/edit" method="post">
+                                    <div class="field">
+                                        <label class="label" for="name">Name</label>
+                                        <div class="control">
+                                            <input
+                                                    id="name"
+                                                    class="input"
+                                                    type="text"
+                                                    name="name"
+                                                    placeholder="{{.Name}}"
+                                                    value="{{.Name}}"
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="field">
-                                    <label class="label" for="emailAlias">Email alias</label>
-                                    <div class="control">
-                                        <input
-                                                id="emailAlias"
-                                                class="input"
-                                                type="text"
-                                                name="emailAlias"
-                                                placeholder="{{.Officership.EmailAlias}}"
-                                                value="{{.Officership.EmailAlias}}"
-                                        />
+                                    <div class="field">
+                                        <label class="label" for="emailAlias">Email alias</label>
+                                        <div class="control">
+                                            <input
+                                                    id="emailAlias"
+                                                    class="input"
+                                                    type="text"
+                                                    name="emailAlias"
+                                                    placeholder="{{.EmailAlias}}"
+                                                    value="{{.EmailAlias}}"
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="field">
-                                    <label class="label" for="description">Description</label>
-                                    <div class="control">
+                                    <div class="field">
+                                        <label class="label" for="description">Description</label>
+                                        <div class="control">
                                         <textarea
                                                 id="description"
                                                 class="input"
                                                 name="description"
                                                 placeholder="Description"
-                                        >{{.Officership.Description}}</textarea>
+                                        >{{.Description}}</textarea>
+                                        </div>
                                     </div>
-                                </div>
-                                {{/*                                <div class="field">*/}}
-                                {{/*                                    <label class="label" for="fullDescription">Full description</label>*/}}
-                                {{/*                                    <div class="control">*/}}
-                                {{/*                                        <textarea*/}}
-                                {{/*                                                id="fullDescription"*/}}
-                                {{/*                                                class="input"*/}}
-                                {{/*                                                name="fullDescription"*/}}
-                                {{/*                                                placeholder="Full description"*/}}
-                                {{/*                                        >{{.Officership.FullDescription}}</textarea>*/}}
-                                {{/*                                    </div>*/}}
-                                {{/*                                </div>*/}}
-                                <button class="button is-danger"><span class="mdi mdi-pencil"></span>&ensp;Edit
-                                    officership
-                                </button>
-                            </form>
+                                    <div class="field">
+                                        <label class="label" for="isCurrent">Is current</label>
+                                        <div class="control">
+                                            <input
+                                                    id="isCurrent"
+                                                    class="checkbox"
+                                                    type="checkbox"
+                                                    name="isCurrent"
+                                                    {{if .IsCurrent}}checked{{end}}
+                                            />
+                                        </div>
+                                    </div>
+                                    <button class="button is-danger"><span class="mdi mdi-pencil"></span>&ensp;Edit
+                                        officership
+                                    </button>
+                                </form>
+                            </div>
                         </div>
-                    </div>
-                </article>
+                    </article>
+                </div>
             </div>
+            <button class="modal-close is-large" aria-label="close"></button>
         </div>
-        <button class="modal-close is-large" aria-label="close"></button>
-    </div>
-    <div id="deleteOfficershipModal" class="modal">
-        <div class="modal-background"></div>
-        <div class="modal-content">
-            <div class="box">
-                <article class="media">
-                    <div class="media-content">
-                        <div class="content">
-                            <p class="title">Are you sure you want to delete this officership?</p>
-                            <p>Be careful! Officers and the public site use this and will have to set back up
-                                manually.</p>
-                            <p>All officers will be removed from this team and will not have a team assigned!</p>
-                            <form action="/internal/officership/{{.Officership.OfficershipID}}/delete" method="post">
-                                <button class="button is-danger">Delete officership</button>
-                            </form>
+        <div id="deleteOfficershipModal" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-content">
+                <div class="box">
+                    <article class="media">
+                        <div class="media-content">
+                            <div class="content">
+                                <p class="title">Are you sure you want to delete this officership?</p>
+                                <p>Be careful! Officers and the public site use this and will have to set back up
+                                    manually.</p>
+                                <p>All officers will be removed from this team and will not have a team assigned!</p>
+                                <form action="/internal/officership/{{.OfficershipID}}/delete" method="post">
+                                    <button class="button is-danger">Delete officership</button>
+                                </form>
+                            </div>
                         </div>
-                    </div>
-                </article>
+                    </article>
+                </div>
             </div>
+            <button class="modal-close is-large" aria-label="close"></button>
         </div>
-        <button class="modal-close is-large" aria-label="close"></button>
-    </div>
+    {{end}}
     <script>
         document.querySelectorAll(
             ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
