@@ -188,6 +188,8 @@ func (r *Router) loadRoutes() {
 		officershipsRoute.Use(r.views.RequirePermission(permissions.ManageMembersOfficers))
 	}
 
+	officershipsRoute.Match(validMethods, "/add", r.views.OfficershipAddFunc)
+
 	officershipsRoute.Match(validMethods, "/officers", r.views.OfficersFunc)
 	officershipsRoute.Match(validMethods, "/officer/add", r.views.OfficerAddFunc)
 
@@ -195,6 +197,7 @@ func (r *Router) loadRoutes() {
 	officer.Match(validMethods, "/edit", r.views.OfficerEditFunc)
 	officer.Match(validMethods, "/delete", r.views.OfficerDeleteFunc)
 	officer.Match(validMethods, "", r.views.OfficerFunc)
+
 	officershipsRoute.Match(validMethods, "/teams", r.views.OfficershipTeamsFunc)
 	officershipsRoute.Match(validMethods, "/team/add", r.views.OfficershipTeamAddFunc)
 
