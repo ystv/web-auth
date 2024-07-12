@@ -555,7 +555,7 @@ func (v *Views) OfficerEditFunc(c echo.Context) error {
 		tempEndDate := c.FormValue("endDate")
 
 		if tempStartDate == "" {
-			return fmt.Errorf("start date cannot be blank")
+			return errors.New("start date cannot be blank")
 		}
 
 		parsedStart, err := time.Parse("02/01/2006", tempStartDate)
