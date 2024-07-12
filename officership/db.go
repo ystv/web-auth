@@ -163,7 +163,7 @@ func (s *Store) editOfficership(ctx context.Context, o Officership) (Officership
 }
 
 func (s *Store) deleteOfficership(ctx context.Context, o Officership) error {
-	builder := utils.PSQL().Delete("people.officership_members").
+	builder := utils.PSQL().Delete("people.officerships").
 		Where(sq.Eq{"officer_id": o.OfficershipID})
 
 	sql, args, err := builder.ToSql()
