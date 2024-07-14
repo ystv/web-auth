@@ -471,15 +471,33 @@ func (v *Views) OfficerAddFunc(c echo.Context) error {
 		tempUserID := c.FormValue("userID")
 		tempOfficershipID := c.FormValue("officershipID")
 		tempStartDate := c.FormValue("startDate")
+		tempEndDate := c.FormValue("endDate")
 
-		parse, err := time.Parse("02/01/2006", tempStartDate)
+		parseStart, err := time.Parse("02/01/2006", tempStartDate)
 		if err != nil {
 			return fmt.Errorf("failed to parse start date: %w", err)
 		}
 
-		diff := time.Now().Compare(parse)
-		if diff != 1 {
+		diffStart := time.Now().Compare(parseStart)
+		if diffStart != 1 {
 			return errors.New("start date must be before today")
+		}
+
+		endDate := null.NewTime(time.Time{}, false)
+
+		if tempEndDate != "" {
+			var parseEnd time.Time
+			parseEnd, err = time.Parse("02/01/2006", tempEndDate)
+			if err != nil {
+				return fmt.Errorf("failed to parse end date: %w", err)
+			}
+
+			diffEnd := time.Now().Compare(parseEnd)
+			if diffEnd != 1 {
+				return errors.New("end date must be before today")
+			}
+
+			endDate = null.TimeFrom(parseEnd)
 		}
 
 		userID, err := strconv.Atoi(tempUserID)
@@ -505,7 +523,8 @@ func (v *Views) OfficerAddFunc(c echo.Context) error {
 		_, err = v.officership.AddOfficershipMember(c.Request().Context(), officership.OfficershipMember{
 			UserID:    u1.UserID,
 			OfficerID: o1.OfficershipID,
-			StartDate: null.TimeFrom(parse),
+			StartDate: null.TimeFrom(parseStart),
+			EndDate:   endDate,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to add officer for officerAdd: %w", err)

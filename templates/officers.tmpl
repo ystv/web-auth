@@ -230,6 +230,16 @@
                                         />
                                     </div>
                                 </div>
+                                <div class="field">
+                                    <label class="label" for="endDate">End date</label>
+                                    <div class="control">
+                                        <input
+                                                type="date"
+                                                id="endDate"
+                                                name="endDate"
+                                        />
+                                    </div>
+                                </div>
                                 <a class="button is-info" onclick="addOfficer()"><span class="mdi mdi-account-plus"></span>&ensp;Add officer</a>
                             </form>
                         </div>
@@ -249,6 +259,33 @@
             });
         });
 
+        function _initStartDate(options) {
+            // Initialise all input of date type.
+            const calendars = bulmaCalendar.attach('[type="date",id="startDate"]', options);
+
+            // Loop on each calendar initialised
+            calendars.forEach(calendar => {
+                // Add listener to select event
+                calendar.on('select', date => {
+                    console.log(date);
+                });
+            });
+        }
+
+        function _initEndDate(options) {
+            options.showClearButton = true;
+            // Initialise all input of date type.
+            const calendars = bulmaCalendar.attach('[type="date",id="endDate"]', options);
+
+            // Loop on each calendar initialised
+            calendars.forEach(calendar => {
+                // Add listener to select event
+                calendar.on('select', date => {
+                    console.log(date);
+                });
+            });
+        }
+
         function addOfficerModal() {
             let date = new Date();
             let day = date.getDate();
@@ -264,16 +301,10 @@
                 displayMode: "dialog",
                 weekStart: 1
             }
-            // Initialize all input of date type.
-            const calendars = bulmaCalendar.attach('[type="date"]', options);
 
-            // Loop on each calendar initialized
-            calendars.forEach(calendar => {
-                // Add listener to select event
-                calendar.on('select', date => {
-                    console.log(date);
-                });
-            });
+            _initStartDate(options)
+            _initEndDate(options)
+
             const elements = document.getElementsByClassName("datetimepicker-clear-button");
             while(elements.length > 0){
                 elements[0].parentNode.removeChild(elements[0]);
