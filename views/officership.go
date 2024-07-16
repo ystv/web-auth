@@ -569,15 +569,15 @@ func (v *Views) OfficerEditFunc(c echo.Context) error {
 			return fmt.Errorf("failed to get user form for editOfficer: %w", err)
 		}
 
-		officerID1, err := strconv.Atoi(c.FormValue("officerID"))
+		officershipID, err := strconv.Atoi(c.FormValue("officershipID"))
 		if err != nil {
-			return fmt.Errorf("failed to get officerID form for editOfficer: %w", err)
+			return fmt.Errorf("failed to get officershipID form for editOfficer: %w", err)
 		}
 
-		_, err = v.officership.GetOfficershipMember(c.Request().Context(),
-			officership.OfficershipMember{OfficershipMemberID: officerID1})
+		_, err = v.officership.GetOfficership(c.Request().Context(),
+			officership.Officership{OfficershipID: officershipID})
 		if err != nil {
-			return fmt.Errorf("failed to get officer form for editOfficer: %w", err)
+			return fmt.Errorf("failed to get officership for editOfficer: %w", err)
 		}
 
 		tempStartDate := c.FormValue("startDate")
@@ -610,7 +610,7 @@ func (v *Views) OfficerEditFunc(c echo.Context) error {
 			endDate = null.TimeFrom(parsedEnd)
 		}
 
-		officer1.OfficerID = officerID1
+		officer1.OfficerID = officershipID
 		officer1.UserID = userID
 		officer1.StartDate = null.TimeFrom(parsedStart)
 		officer1.EndDate = endDate
