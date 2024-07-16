@@ -50,9 +50,9 @@
                         <div class="content">
                             <p class="title">Are you sure you want to edit this officer?</p>
                             <p><strong>This action can be undone by changing them back but be careful</strong><br>
-                                Use the fields below to modify your details, to not change a field, either leave it as
-                                is or blank.<br>If you change the SuperUser name then many things will break</p>
-                            <form action="/internal/officership/officer/{{.Officer.OfficershipMemberID}}/edit"
+                                This will adjust what information is visible on the public site,
+                                proceed with caution.</p>
+                            <form id="editOfficerForm" action="/internal/officership/officer/{{.Officer.OfficershipMemberID}}/edit"
                                   method="post">
                                 {{/*                                <div class="field">*/}}
                                 {{/*                                    <label class="label" for="name">Name</label>*/}}
