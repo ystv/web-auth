@@ -348,7 +348,7 @@ func (v *Views) _officersGet(c echo.Context) error {
 
 		var err error
 
-		users, _, err = v.user.GetUsers(c.Request().Context(), 0, 0, "", "", "", "enabled", "not_deleted")
+		users, _, err = v.user.GetUsers(c.Request().Context(), 0, 0, "", "", "", "", "not_deleted")
 		if errArr != nil {
 			errArr = append(errArr, fmt.Errorf("failed to get users: %w", err))
 		}
