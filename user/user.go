@@ -304,18 +304,9 @@ func (s *Store) EditUser(ctx context.Context, u User, userID int) error {
 		user.Email = u.Email
 	}
 
-	if u.ResetPw != user.ResetPw {
-		user.ResetPw = u.ResetPw
-	}
-
-	if u.Enabled != user.Enabled {
-		user.Enabled = u.Enabled
-	}
-
-	if u.UseGravatar != user.UseGravatar {
-		user.UseGravatar = u.UseGravatar
-	}
-
+	user.ResetPw = u.ResetPw
+	user.Enabled = u.Enabled
+	user.UseGravatar = u.UseGravatar
 	user.UpdatedBy = null.IntFrom(int64(userID))
 	user.UpdatedAt = null.TimeFrom(time.Now())
 
