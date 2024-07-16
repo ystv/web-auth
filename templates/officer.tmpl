@@ -41,6 +41,57 @@
 {{end}}
 
 {{define "modals"}}
+    <style>
+        .dropdown-button {
+            background-color: #3082c5;
+            color: white;
+            padding: 7px 16px 7px 16px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .searchInput {
+            box-sizing: border-box;
+            font-size: 16px;
+            padding: 14px 20px 12px 20px;
+            border: none;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .searchInput:focus {outline: 3px solid #ddd;}
+
+        .dropdown-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f6f6f6;
+            min-width: 230px;
+            overflow: auto;
+            border: 1px solid #ddd;
+            z-index: 1;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .inputHidden {
+            display: none;
+        }
+
+        .dropdown a:hover {background-color: #ddd;}
+
+        .show {display: block;}
+    </style>
     <div id="editOfficerModal" class="modal">
         <div class="modal-background"></div>
         <div class="modal-content">
@@ -48,63 +99,93 @@
                 <article class="media">
                     <div class="media-content">
                         <div class="content">
+                            <div class="notification is-danger" id="editOfficerNotification" hidden="hidden">User, officership and start date must be selected</div>
                             <p class="title">Are you sure you want to edit this officer?</p>
                             <p><strong>This action can be undone by changing them back but be careful</strong><br>
                                 This will adjust what information is visible on the public site,
                                 proceed with caution.</p>
                             <form id="editOfficerForm" action="/internal/officership/officer/{{.Officer.OfficershipMemberID}}/edit"
                                   method="post">
-                                {{/*                                <div class="field">*/}}
-                                {{/*                                    <label class="label" for="name">Name</label>*/}}
-                                {{/*                                    <div class="control">*/}}
-                                {{/*                                        <input*/}}
-                                {{/*                                                id="name"*/}}
-                                {{/*                                                class="input"*/}}
-                                {{/*                                                type="text"*/}}
-                                {{/*                                                name="name"*/}}
-                                {{/*                                                placeholder="{{.Officer.Name}}"*/}}
-                                {{/*                                                value="{{.Officer.Name}}"*/}}
-                                {{/*                                        />*/}}
-                                {{/*                                    </div>*/}}
-                                {{/*                                </div>*/}}
-                                {{/*                                <div class="field">*/}}
-                                {{/*                                    <label class="label" for="emailAlias">Email alias</label>*/}}
-                                {{/*                                    <div class="control">*/}}
-                                {{/*                                        <input*/}}
-                                {{/*                                                id="emailAlias"*/}}
-                                {{/*                                                class="input"*/}}
-                                {{/*                                                type="text"*/}}
-                                {{/*                                                name="emailAlias"*/}}
-                                {{/*                                                placeholder="{{.Officer.EmailAlias}}"*/}}
-                                {{/*                                                value="{{.Officer.EmailAlias}}"*/}}
-                                {{/*                                        />*/}}
-                                {{/*                                    </div>*/}}
-                                {{/*                                </div>*/}}
-                                {{/*                                <div class="field">*/}}
-                                {{/*                                    <label class="label" for="shortDescription">Short description</label>*/}}
-                                {{/*                                    <div class="control">*/}}
-                                {{/*                                        <textarea*/}}
-                                {{/*                                                id="shortDescription"*/}}
-                                {{/*                                                class="input"*/}}
-                                {{/*                                                name="shortDescription"*/}}
-                                {{/*                                                placeholder="Short description"*/}}
-                                {{/*                                        >{{.Officer.ShortDescription}}</textarea>*/}}
-                                {{/*                                    </div>*/}}
-                                {{/*                                </div>*/}}
-                                {{/*                                <div class="field">*/}}
-                                {{/*                                    <label class="label" for="fullDescription">Full description</label>*/}}
-                                {{/*                                    <div class="control">*/}}
-                                {{/*                                        <textarea*/}}
-                                {{/*                                                id="fullDescription"*/}}
-                                {{/*                                                class="input"*/}}
-                                {{/*                                                name="fullDescription"*/}}
-                                {{/*                                                placeholder="Full description"*/}}
-                                {{/*                                        >{{.Officer.FullDescription}}</textarea>*/}}
-                                {{/*                                    </div>*/}}
-                                {{/*                                </div>*/}}
-                                <button class="button is-danger"><span class="mdi mdi-pencil"></span>&ensp;Edit
-                                    officership team
-                                </button>
+                                <div class="field">
+                                    <label class="label" for="user">User</label>
+                                    <div class="control">
+                                        <label for="userNameInput"></label><input
+                                                id="userNameInput"
+                                                class="input"
+                                                type="text"
+                                                placeholder="User"
+                                                readonly
+                                        />
+                                        <label for="userIDInput"></label><input
+                                                id="userIDInput"
+                                                class="input inputHidden"
+                                                type="text"
+                                                name="userID"
+                                                readonly
+                                        />
+                                        <div class="dropdown-container">
+                                            <div onclick="userDropdownShowFunction()" class="dropdown-button">Users dropdown</div>
+                                            <div id="userInnerDropdown" class="dropdown-content">
+                                                <label for="userSearchInput"></label><input type="text" placeholder="Search.." id="userSearchInput" class="searchInput" onkeyup="userFilterFunction()">
+                                                {{range .Users}}
+                                                    {{$userName := formatUserNameUserStruct .}}
+                                                    <a onclick="selectUser({{.UserID}}, '{{$userName}}')">{{$userName}}</a>
+                                                {{end}}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="officership">Officership</label>
+                                    <div class="control">
+                                        <label for="officershipNameInput"></label><input
+                                                id="officershipNameInput"
+                                                class="input"
+                                                type="text"
+                                                placeholder="Officership"
+                                                readonly
+                                        />
+                                        <label for="officershipIDInput"></label><input
+                                                id="officershipIDInput"
+                                                class="input inputHidden"
+                                                type="text"
+                                                name="officershipID"
+                                                readonly
+                                        />
+                                        <div class="dropdown-container">
+                                            <div onclick="officershipDropdownShowFunction()" class="dropdown-button">Officerships dropdown</div>
+                                            <div id="officershipInnerDropdown" class="dropdown-content">
+                                                <label for="officershipSearchInput"></label><input type="text" placeholder="Search.." id="officershipSearchInput" class="searchInput" onkeyup="officershipFilterFunction()">
+                                                {{range .Officerships}}
+                                                    <a onclick="selectOfficership({{.OfficershipID}}, '{{.Name}}')">{{.Name}}</a>
+                                                {{end}}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="startDate">Start date</label>
+                                    <div class="control">
+                                        <input
+                                                type="date"
+                                                id="startDate"
+                                                name="startDate"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="endDate">End date</label>
+                                    <div class="control">
+                                        <input
+                                                type="date"
+                                                id="endDate"
+                                                name="endDate"
+                                        />
+                                    </div>
+                                </div>
+                                <a class="button is-info" onclick="editOfficer()"><span class="mdi mdi-pencil"></span>&ensp;Edit
+                                    officer
+                                </a>
                             </form>
                         </div>
                     </div>
@@ -121,12 +202,11 @@
                     <div class="media-content">
                         <div class="content">
                             <p class="title">Are you sure you want to delete this officer?</p>
-                            <p>Be careful! Officers and the public site use this and will have to set back up
+                            <p>Be careful! Officerships and the public site use this and will have to set back up
                                 manually.</p>
-                            <p>All officers will be removed from this team and will not have a team assigned!</p>
                             <form action="/internal/officership/officer/{{.Officer.OfficershipMemberID}}/delete"
                                   method="post">
-                                <button class="button is-danger">Delete officership team</button>
+                                <button class="button is-danger">Delete officer</button>
                             </form>
                         </div>
                     </div>
@@ -145,12 +225,174 @@
             });
         });
 
+        function selectUser(id, name) {
+            document.getElementById("userNameInput").value = name;
+            document.getElementById("userIDInput").value = id;
+            document.getElementById("userSearchInput").value = "";
+            userDropdownShowFunction();
+            userFilterFunction();
+        }
+
+        function selectOfficership(id, name) {
+            document.getElementById("officershipNameInput").value = name;
+            document.getElementById("officershipIDInput").value = id;
+            document.getElementById("officershipSearchInput").value = "";
+            officershipDropdownShowFunction();
+            officershipFilterFunction();
+        }
+
+        // When the user clicks on the button,
+        // toggle between hiding and showing the dropdown content
+        function userDropdownShowFunction() {
+            document.getElementById("userInnerDropdown").classList.toggle("show");
+        }
+
+        // When the user clicks on the button,
+        // toggle between hiding and showing the dropdown content
+        function officershipDropdownShowFunction() {
+            document.getElementById("officershipInnerDropdown").classList.toggle("show");
+        }
+
+        function userFilterFunction() {
+            const input = document.getElementById("userSearchInput");
+            const filter = input.value.toUpperCase();
+            const div = document.getElementById("userInnerDropdown");
+            const a = div.getElementsByTagName("a");
+            let txtValue;
+            for (let i = 0; i < a.length; i++) {
+                txtValue = a[i].textContent || a[i].innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    a[i].style.display = "";
+                } else {
+                    a[i].style.display = "none";
+                }
+            }
+        }
+
+        function officershipFilterFunction() {
+            const input = document.getElementById("officershipSearchInput");
+            const filter = input.value.toUpperCase();
+            const div = document.getElementById("officershipInnerDropdown");
+            const a = div.getElementsByTagName("a");
+            let txtValue;
+            for (let i = 0; i < a.length; i++) {
+                txtValue = a[i].textContent || a[i].innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    a[i].style.display = "";
+                } else {
+                    a[i].style.display = "none";
+                }
+            }
+        }
+
+        function editOfficer() {
+            if (document.getElementById("userIDInput").value.length > 0 &&
+                document.getElementById("officershipIDInput").value.length > 0) {
+                document.getElementById("editOfficerForm").submit();
+                return;
+            }
+            document.getElementById("editOfficerNotification").hidden = false;
+        }
+
+        function _initStartDate(date1) {
+            const startOptions = {
+                type: "date",
+                maxDate: date1,
+                startDate: date1,
+                dateFormat: 'dd/MM/yyyy',
+                {{if .Officer.StartDate.Valid}}
+                date: new Date("{{formatOfficershipDateCalendar .Officer.StartDate.Time}}"),
+                {{end}}
+                showClearButton: false,
+                showTodayButton: true,
+                displayMode: "dialog",
+                weekStart: 1
+            }
+            // Initialise all input of date type.
+            const calendars = bulmaCalendar.attach('[type="date"]', startOptions);
+
+            // Loop on each calendar initialised
+            calendars.forEach(calendar => {
+                if (calendar.element.id === "startDate") {
+                    // Add listener to select event
+                    calendar.on('select', date => {
+                        console.log(date);
+                    });
+                    calendar.clear();
+                    {{if .Officer.StartDate.Valid}}
+                    calendar.date.start = new Date("{{formatOfficershipDateCalendar .Officer.StartDate.Time}}");
+                    {{end}}
+                    calendar.save();
+                    calendar.refresh();
+                }
+            });
+        }
+
+        function _initEndDate(date1) {
+            const endOptions = {
+                type: "date",
+                maxDate: date1,
+                startDate: date1,
+                {{if .Officer.EndDate.Valid}}
+                date: {{formatOfficershipDateCalendar .Officer.EndDate.Time}},
+                {{end}}
+                dateFormat: 'dd/MM/yyyy',
+                showClearButton: true,
+                showTodayButton: true,
+                displayMode: "dialog",
+                weekStart: 1
+            }
+
+            // Initialise all input of date type.
+            const calendars = bulmaCalendar.attach('[type="date"]', endOptions);
+
+            // Loop on each calendar initialised
+            calendars.forEach(calendar => {
+                if (calendar.element.id === "endDate") {
+                    // Add listener to select event
+                    calendar.on('select', date => {
+                        console.log(date);
+                    });
+                    calendar.clear();
+                    {{if .Officer.EndDate.Valid}}
+                    calendar.date.start = new Date("{{formatOfficershipDateCalendar .Officer.EndDate.Time}}");
+                    {{end}}
+                    calendar.save();
+                    calendar.refresh();
+                }
+            });
+        }
+
         function editOfficerModal() {
             document.getElementById("editOfficerModal").classList.add("is-active");
         }
 
         function deleteOfficerModal() {
             document.getElementById("deleteOfficerModal").classList.add("is-active");
+        }
+
+        selectOfficership({{.Officer.OfficerID}}, '{{.Officer.OfficershipName}}');
+        document.getElementById("officershipInnerDropdown").classList.toggle("show");
+        selectUser({{.Officer.UserID}}, '{{.Officer.UserName}}');
+        document.getElementById("userInnerDropdown").classList.toggle("show");
+
+        let date = new Date();
+        let day = date.getDate();
+        let month = date.getMonth() + 1;
+        let year = date.getFullYear();
+        let date1 = day + "/" + month + "/" + year;
+
+        document.getElementById("endDate").type = "date1";
+
+        _initStartDate(date1)
+
+        document.getElementById("endDate").type = "date";
+
+        _initEndDate(date1)
+
+        const elements = document.getElementsByClassName("datetimepicker-clear-button");
+        while(elements.length > 0){
+            elements[0].parentNode.removeChild(elements[0]);
         }
     </script>
 {{end}}

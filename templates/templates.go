@@ -167,6 +167,9 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 		"formatOfficershipDate": func(t time.Time) string {
 			return t.Format("2006-01-02")
 		},
+		"formatOfficershipDateCalendar": func(t time.Time) string {
+			return t.Format("01/02/2006")
+		},
 	}
 }
 

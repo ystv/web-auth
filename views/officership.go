@@ -439,20 +439,30 @@ func (v *Views) OfficerFunc(c echo.Context) error {
 			return fmt.Errorf("failed to get officer: %w", err)
 		}
 
+		officerships, err := v.officership.GetOfficerships(c.Request().Context(), officership.Any)
+		if err != nil {
+			return fmt.Errorf("failed to get officerships: %w", err)
+		}
+
+		users, _, err := v.user.GetUsers(c.Request().Context(), 0, 0, "", "", "", "", "not_deleted")
+		if err != nil {
+			return fmt.Errorf("failed to get users: %w", err)
+		}
+
 		p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 		if err != nil {
 			return fmt.Errorf("failed to get user permissions for officer: %w", err)
 		}
 
 		data := struct {
-			Officer officership.OfficershipMember
-			// Officerships []officership.Officership
-			// Users        []user.User
+			Officer      officership.OfficershipMember
+			Officerships []officership.Officership
+			Users        []user.User
 			TemplateHelper
 		}{
-			Officer: officer,
-			// Officerships: officerships,
-			// Users:        users,
+			Officer:      officer,
+			Officerships: officerships,
+			Users:        users,
 			TemplateHelper: TemplateHelper{
 				UserPermissions: p1,
 				ActivePage:      "officer",
