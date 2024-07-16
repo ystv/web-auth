@@ -259,30 +259,55 @@
             });
         });
 
-        function _initStartDate(options) {
+        function _initStartDate(date1) {
+            const startOptions = {
+                type: "date",
+                maxDate: date1,
+                startDate: date1,
+                dateFormat: 'dd/MM/yyyy',
+                showClearButton: false,
+                showTodayButton: true,
+                displayMode: "dialog",
+                weekStart: 1
+            }
+
             // Initialise all input of date type.
-            const calendars = bulmaCalendar.attach('[type="date",id="startDate"]', options);
+            const calendars = bulmaCalendar.attach('[type="date"]', startOptions);
 
             // Loop on each calendar initialised
             calendars.forEach(calendar => {
-                // Add listener to select event
-                calendar.on('select', date => {
-                    console.log(date);
-                });
+                if (calendar.element.id === "startDate") {
+                    // Add listener to select event
+                    calendar.on('select', date => {
+                        console.log(date);
+                    });
+                }
             });
         }
 
-        function _initEndDate(options) {
-            options.showClearButton = true;
+        function _initEndDate(date1) {
+            let endOptions = {
+                type: "date",
+                maxDate: date1,
+                startDate: date1,
+                dateFormat: 'dd/MM/yyyy',
+                showClearButton: true,
+                showTodayButton: true,
+                displayMode: "dialog",
+                weekStart: 1
+            }
+
             // Initialise all input of date type.
-            const calendars = bulmaCalendar.attach('[type="date",id="endDate"]', options);
+            const calendars = bulmaCalendar.attach('[type="date"]', endOptions);
 
             // Loop on each calendar initialised
             calendars.forEach(calendar => {
-                // Add listener to select event
-                calendar.on('select', date => {
-                    console.log(date);
-                });
+                if (calendar.element.id === "endDate") {
+                    // Add listener to select event
+                    calendar.on('select', date => {
+                        console.log(date);
+                    });
+                }
             });
         }
 
@@ -291,19 +316,15 @@
             let day = date.getDate();
             let month = date.getMonth() + 1;
             let year = date.getFullYear();
-            const options = {
-                type: "date",
-                maxDate: day + "/" + month + "/" + year,
-                startDate: day + "/" + month + "/" + year,
-                dateFormat: 'dd/MM/yyyy',
-                showClearButton: false,
-                showTodayButton: true,
-                displayMode: "dialog",
-                weekStart: 1
-            }
+            let date1 = day + "/" + month + "/" + year;
 
-            _initStartDate(options)
-            _initEndDate(options)
+            document.getElementById("endDate").type = "date1";
+
+            _initStartDate(date1)
+
+            document.getElementById("endDate").type = "date";
+
+            _initEndDate(date1)
 
             const elements = document.getElementsByClassName("datetimepicker-clear-button");
             while(elements.length > 0){
