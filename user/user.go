@@ -328,13 +328,15 @@ func (s *Store) SetUserLoggedIn(ctx context.Context, u User) error {
 // DeleteUser will soft delete a user
 func (s *Store) DeleteUser(ctx context.Context, u User, userID int) error {
 	now := null.TimeFrom(time.Now())
+	id := null.IntFrom(int64(userID))
+	blank := null.NewString("", true)
 
 	u.Enabled = false
-	u.Password = null.NewString("", true)
-	u.Salt = null.NewString("", true)
-	u.UpdatedBy = null.IntFrom(int64(userID))
+	u.Password = blank
+	u.Salt = blank
+	u.UpdatedBy = id
 	u.UpdatedAt = now
-	u.DeletedBy = null.IntFrom(int64(userID))
+	u.DeletedBy = id
 	u.DeletedAt = now
 
 	return s.editUser(ctx, u)
