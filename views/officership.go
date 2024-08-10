@@ -846,6 +846,11 @@ func (v *Views) OfficershipTeamDeleteFunc(c echo.Context) error {
 			return fmt.Errorf("failed to get team for officer team delete: %w", err)
 		}
 
+		err = v.officership.RemoveTeamForOfficershipTeamMembers(c.Request().Context(), team)
+		if err != nil {
+			return fmt.Errorf("failed to remove officerships from team for officership team delete: %w", err)
+		}
+
 		err = v.officership.DeleteOfficershipTeam(c.Request().Context(), team)
 		if err != nil {
 			return fmt.Errorf("failed to delete officership team for officership team delete: %w", err)
