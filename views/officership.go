@@ -52,10 +52,12 @@ func (v *Views) OfficershipsFunc(c echo.Context) error {
 		data := struct {
 			Officerships          []officership.Officership
 			OfficershipStatusSort string
+			Error                 string
 			TemplateHelper
 		}{
 			Officerships:          officerships,
 			OfficershipStatusSort: status,
+			Error:                 c.QueryParam("error"),
 			TemplateHelper: TemplateHelper{
 				UserPermissions: p1,
 				ActivePage:      "officerships",
@@ -146,6 +148,11 @@ func (v *Views) OfficershipAddFunc(c echo.Context) error {
 
 		if isCurrentTemp == "on" {
 			isCurrent = true
+		}
+
+		if name == "" || emailAlias == "" || description == "" {
+			return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/officerships?error=%s",
+				url.QueryEscape("Name, email alias and description must be filled")))
 		}
 
 		if historyWikiURL != "" {
