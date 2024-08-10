@@ -439,18 +439,18 @@ func (s *Store) deleteOfficershipTeamMember(ctx context.Context, t OfficershipTe
 	return nil
 }
 
-func (s *Store) removeTeamForOfficershipMemberTeams(ctx context.Context, t OfficershipTeam) error {
+func (s *Store) removeTeamForOfficershipTeamMembers(ctx context.Context, t OfficershipTeam) error {
 	builder := utils.PSQL().Delete("people.officership_team_members").
 		Where(sq.Eq{"team_id": t.TeamID})
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for removeTeamForOfficershipMemberTeams: %w", err))
+		panic(fmt.Errorf("failed to build sql for removeTeamForOfficershipTeamMembers: %w", err))
 	}
 
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return fmt.Errorf("failed to delete removeTeamForOfficershipMemberTeams: %w", err)
+		return fmt.Errorf("failed to delete removeTeamForOfficershipTeamMembers: %w", err)
 	}
 
 	return nil

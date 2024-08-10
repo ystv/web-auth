@@ -164,8 +164,8 @@ func (s *Store) DeleteOfficershipTeamMember(ctx context.Context, m OfficershipTe
 	return s.deleteOfficershipTeamMember(ctx, m)
 }
 
-func (s *Store) RemoveTeamForOfficershipMemberTeams(ctx context.Context, t OfficershipTeam) error {
-	return s.removeTeamForOfficershipMemberTeams(ctx, t)
+func (s *Store) RemoveTeamForOfficershipTeamMembers(ctx context.Context, t OfficershipTeam) error {
+	return s.removeTeamForOfficershipTeamMembers(ctx, t)
 }
 
 func (s *Store) GetOfficershipMembers(ctx context.Context, o *Officership, u *user.User, officershipStatus,
