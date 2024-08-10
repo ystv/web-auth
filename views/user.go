@@ -628,7 +628,7 @@ func (v *Views) UserDeleteFunc(c echo.Context) error {
 			return fmt.Errorf("failed to get user for deleteUser: %w", err)
 		}
 
-		err = v.user.RemoveRoleUsers(c.Request().Context(), user1)
+		err = v.user.RemoveUserForRoles(c.Request().Context(), user1)
 		if err != nil {
 			return fmt.Errorf("failed to delete roleUsers for deleteUser: %w", err)
 		}

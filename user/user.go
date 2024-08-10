@@ -375,8 +375,9 @@ func (s *Store) RemoveRoleUser(ctx context.Context, ru RoleUser) error {
 	return s.removeRoleUser(ctx, ru)
 }
 
-func (s *Store) RemoveRoleUsers(ctx context.Context, u User) error {
-	return s.removeRoleUsers(ctx, u)
+// RemoveUserForRoles removes links between a User and Roles
+func (s *Store) RemoveUserForRoles(ctx context.Context, u User) error {
+	return s.removeUserForRoles(ctx, u)
 }
 
 // GetPermissionsForRole returns all permissions for role

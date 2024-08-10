@@ -376,8 +376,8 @@ func (s *Store) removeRoleUser(ctx context.Context, ru RoleUser) error {
 	return nil
 }
 
-// removeRoleUser removes all links between role.Role and a User
-func (s *Store) removeRoleUsers(ctx context.Context, u User) error {
+// removeUserForRoles removes all links between role.Role and a User
+func (s *Store) removeUserForRoles(ctx context.Context, u User) error {
 	_, err := s.db.NamedExecContext(ctx, `DELETE FROM people.role_members WHERE user_id = :user_id`, u)
 	if err != nil {
 		return fmt.Errorf("failed to remove roleUsers: %w", err)
