@@ -788,13 +788,14 @@ func (v *Views) OfficershipTeamAddFunc(c echo.Context) error {
 
 func (v *Views) OfficershipTeamEditFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
-		teamID, err := strconv.Atoi(c.Param("teamid"))
+		officershipTeamID, err := strconv.Atoi(c.Param("officershipteamid"))
 		if err != nil {
-			return fmt.Errorf("failed to get teamid for editOfficershipTeam: %w", err)
+			return echo.NewHTTPError(http.StatusBadRequest,
+				fmt.Errorf("failed to parse officershipteamid for editOfficershipTeam: %w", err))
 		}
 
 		team1, err := v.officership.GetOfficershipTeam(c.Request().Context(),
-			officership.OfficershipTeam{TeamID: teamID})
+			officership.OfficershipTeam{TeamID: officershipTeamID})
 		if err != nil {
 			return fmt.Errorf("failed to get team for editOfficershipTeam: %w", err)
 		}
@@ -825,7 +826,7 @@ func (v *Views) OfficershipTeamEditFunc(c echo.Context) error {
 			return fmt.Errorf("failed to edit team for editOfficershipTeam: %w", err)
 		}
 
-		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/officership/team/%d", teamID))
+		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/officership/team/%d", officershipTeamID))
 	}
 
 	return v.invalidMethodUsed(c)
