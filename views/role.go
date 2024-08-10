@@ -195,12 +195,12 @@ func (v *Views) RoleDeleteFunc(c echo.Context) error {
 			return fmt.Errorf("failed to get role for deleteRole: %w", err)
 		}
 
-		err = v.role.RemovePermissionsForRole(c.Request().Context(), role1)
+		err = v.role.RemoveRoleForPermissions(c.Request().Context(), role1)
 		if err != nil {
 			return fmt.Errorf("failed to delete rolePermission for deleteRole: %w", err)
 		}
 
-		err = v.role.RemoveUsersForRole(c.Request().Context(), role1)
+		err = v.role.RemoveRoleForUsers(c.Request().Context(), role1)
 		if err != nil {
 			return fmt.Errorf("failed to delete roleUser for deleteRole: %w", err)
 		}
