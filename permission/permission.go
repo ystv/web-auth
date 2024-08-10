@@ -67,7 +67,7 @@ func (s *Store) DeletePermission(ctx context.Context, p Permission) error {
 	return s.deletePermission(ctx, p)
 }
 
-// DeleteRolePermission deletes a rolePermission
-func (s *Store) DeleteRolePermission(ctx context.Context, p Permission) error {
-	return s.deleteRolePermission(ctx, p)
+// RemovePermissionForRoles deletes a rolePermission
+func (s *Store) RemovePermissionForRoles(ctx context.Context, p Permission) error {
+	return s.removePermissionForRoles(ctx, p)
 }

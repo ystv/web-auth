@@ -132,14 +132,14 @@ func (s *Store) deletePermission(ctx context.Context, p Permission) error {
 	return nil
 }
 
-// deleteRolePermission deletes the connection between a Role and Permission
-func (s *Store) deleteRolePermission(ctx context.Context, p Permission) error {
+// removePermissionForRoles deletes the connection between a Role and Permission
+func (s *Store) removePermissionForRoles(ctx context.Context, p Permission) error {
 	builder := utils.PSQL().Delete("people.role_permissions").
 		Where(sq.Eq{"permission_id": p.PermissionID})
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for deleteRolePermission: %w", err))
+		panic(fmt.Errorf("failed to build sql for removePermissionForRoles: %w", err))
 	}
 
 	_, err = s.db.ExecContext(ctx, sql, args...)
