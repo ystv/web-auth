@@ -187,8 +187,7 @@ func (s *Store) getOfficershipTeams(ctx context.Context) ([]OfficershipTeam, err
 		From("people.officership_teams ot").
 		LeftJoin("people.officership_team_members otm ON ot.team_id = otm.team_id").
 		LeftJoin("people.officerships o ON otm.officer_id = o.officer_id").
-		LeftJoin("people.officership_members om ON o.officer_id = om.officer_id AND om.end_date IS NULL").
-		Where("o.is_current = true").
+		LeftJoin("people.officership_members om ON o.officer_id = om.officer_id AND om.end_date IS NULL AND o.is_current = true").
 		GroupBy("ot", "ot.team_id", "ot.name", "ot.email_alias", "short_description", "full_description")
 
 	sql, args, err := builder.ToSql()
