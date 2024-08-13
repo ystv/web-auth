@@ -106,20 +106,26 @@ func (s *Store) getOfficership(ctx context.Context, o1 Officership) (Officership
 	return o, nil
 }
 
-func (s *Store) addOfficership(ctx context.Context, o1 Officership) (Officership, error) {
-	var o Officership
+func (s *Store) addOfficership(ctx context.Context, o Officership) (Officership, error) {
+	builder := utils.PSQL().Insert("people.officerships").
+		Columns("name", "email_alias", "description", "historywiki_url", "role_id", "is_current",
+			"if_unfilled").
+		Values(o.Name, o.EmailAlias, o.Description, o.HistoryWikiURL, o.RoleID, o.IsCurrent, o.IfUnfilled).
+		Suffix("RETURNING officer_id")
 
-	stmt, err := s.db.PrepareNamedContext(ctx, `INSERT INTO people.officerships
-    (name, email_alias, description,historywiki_url, role_id, is_current, if_unfilled)
-	VALUES (:name, :email_alias, :description, :historywiki_url, :role_id, :is_current, :if_unfilled)
-	RETURNING officer_id, name, email_alias, description, historywiki_url, role_id, is_current, if_unfilled`)
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for addOfficership: %w", err))
+	}
+
+	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
 		return Officership{}, fmt.Errorf("failed to add officership: %w", err)
 	}
 
 	defer stmt.Close()
 
-	err = stmt.Get(&o, o1)
+	err = stmt.QueryRow(args...).Scan(&o.OfficershipID)
 	if err != nil {
 		return Officership{}, fmt.Errorf("failed to add officership: %w", err)
 	}
@@ -224,22 +230,27 @@ func (s *Store) getOfficershipTeam(ctx context.Context, t1 OfficershipTeam) (Off
 	return t, nil
 }
 
-func (s *Store) addOfficershipTeam(ctx context.Context, t1 OfficershipTeam) (OfficershipTeam, error) {
-	var t OfficershipTeam
+func (s *Store) addOfficershipTeam(ctx context.Context, t OfficershipTeam) (OfficershipTeam, error) {
+	builder := utils.PSQL().Insert("people.officership_teams").
+		Columns("name", "email_alias", "short_description", "full_description").
+		Values(t.Name, t.EmailAlias, t.ShortDescription, t.FullDescription).
+		Suffix("RETURNING team_id")
 
-	stmt, err := s.db.PrepareNamedContext(ctx, `INSERT INTO people.officership_teams
-    (name, email_alias, short_description, full_description)
-	VALUES (:name, :email_alias, :short_description, :full_description)
-	RETURNING team_id, name, email_alias, short_description, full_description`)
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for addOfficershipTeam: %w", err))
+	}
+
+	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
 		return OfficershipTeam{}, fmt.Errorf("failed to add officership team: %w", err)
 	}
 
 	defer stmt.Close()
 
-	err = stmt.Get(&t, t1)
+	err = stmt.QueryRow(args...).Scan(&t.TeamID)
 	if err != nil {
-		return OfficershipTeam{}, fmt.Errorf("failed to add officership team: %w", err)
+		return OfficershipTeam{}, fmt.Errorf("failed to add offciership team: %w", err)
 	}
 
 	return t, nil
@@ -371,19 +382,26 @@ func (s *Store) getOfficershipTeamMember(ctx context.Context, m1 OfficershipTeam
 func (s *Store) addOfficershipTeamMember(ctx context.Context, m1 OfficershipTeamMember) (OfficershipTeamMember, error) {
 	var m OfficershipTeamMember
 
-	stmt, err := s.db.PrepareNamedContext(ctx, `INSERT INTO people.officership_team_members
-    (team_id, officer_id, is_leader, is_deputy)
-	VALUES (:team_id, :officer_id, :is_leader, :is_deputy)
-    RETURNING team_id, officer_id, is_leader, is_deputy`)
+	builder := utils.PSQL().Insert("people.officership_team_members").
+		Columns("team_id", "officer_id", "is_leader", "is_deputy").
+		Values(m1.OfficershipTeamMemberID, m1.OfficerID, m1.IsLeader, m1.IsDeputy).
+		Suffix("RETURNING team_id, officer_id, is_leader, is_deputy")
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for addOfficershipTeamMember: %w", err))
+	}
+
+	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
 		return OfficershipTeamMember{}, fmt.Errorf("failed to add officership team member: %w", err)
 	}
 
 	defer stmt.Close()
 
-	err = stmt.Get(&m, m1)
+	err = stmt.QueryRow(args...).Scan(&m)
 	if err != nil {
-		return OfficershipTeamMember{}, fmt.Errorf("failed to add officership team member: %w", err)
+		return OfficershipTeamMember{}, fmt.Errorf("failed to add offciership team member: %w", err)
 	}
 
 	return m, nil
@@ -450,7 +468,7 @@ func (s *Store) removeTeamForOfficershipTeamMembers(ctx context.Context, t Offic
 
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return fmt.Errorf("failed to delete removeTeamForOfficershipTeamMembers: %w", err)
+		return fmt.Errorf("failed to remove team for officership team members: %w", err)
 	}
 
 	return nil
@@ -548,22 +566,27 @@ func (s *Store) getOfficershipMember(ctx context.Context, m1 OfficershipMember) 
 	return m, nil
 }
 
-func (s *Store) addOfficershipMember(ctx context.Context, m1 OfficershipMember) (OfficershipMember, error) {
-	var m OfficershipMember
+func (s *Store) addOfficershipMember(ctx context.Context, m OfficershipMember) (OfficershipMember, error) {
+	builder := utils.PSQL().Insert("people.officership_members").
+		Columns("user_id", "officer_id", "start_date", "end_date").
+		Values(m.UserID, m.OfficerID, m.StartDate, m.EndDate).
+		Suffix("RETURNING officership_member_id")
 
-	stmt, err := s.db.PrepareNamedContext(ctx, `INSERT INTO people.officership_members
-	(user_id, officer_id, start_date, end_date)
-	VALUES (:user_id, :officer_id, :start_date, :end_date)
-	RETURNING officership_member_id, user_id, officer_id, start_date, end_date`)
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for addOfficershipMember: %w", err))
+	}
+
+	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
 		return OfficershipMember{}, fmt.Errorf("failed to add officership member: %w", err)
 	}
 
 	defer stmt.Close()
 
-	err = stmt.Get(&m, m1)
+	err = stmt.QueryRow(args...).Scan(&m.OfficershipMemberID)
 	if err != nil {
-		return OfficershipMember{}, fmt.Errorf("failed to add officership member: %w", err)
+		return OfficershipMember{}, fmt.Errorf("failed to add offciership member: %w", err)
 	}
 
 	return m, nil
@@ -630,7 +653,7 @@ func (s *Store) removeOfficershipForOfficershipMembers(ctx context.Context, o Of
 
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return fmt.Errorf("failed to delete removeOfficershipForOfficershipMembers: %w", err)
+		return fmt.Errorf("failed to remove officership for officership members: %w", err)
 	}
 
 	return nil
@@ -647,7 +670,7 @@ func (s *Store) removeUserForOfficershipMembers(ctx context.Context, u user.User
 
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return fmt.Errorf("failed to delete removeUsersForOfficershipMembers: %w", err)
+		return fmt.Errorf("failed to remove users for officership members: %w", err)
 	}
 
 	return nil
