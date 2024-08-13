@@ -151,8 +151,8 @@ func (v *Views) OfficershipAddFunc(c echo.Context) error {
 		}
 
 		if name == "" || emailAlias == "" || description == "" {
-			return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/officerships?error=%s",
-				url.QueryEscape("Name, email alias and description must be filled")))
+			return c.Redirect(http.StatusFound, "/internal/officerships?error="+
+				url.QueryEscape("Name, email alias and description must be filled"))
 		}
 
 		if historyWikiURL != "" {
@@ -165,7 +165,7 @@ func (v *Views) OfficershipAddFunc(c echo.Context) error {
 		o1, err := v.officership.GetOfficership(c.Request().Context(),
 			officership.Officership{OfficershipID: 0, Name: name})
 		if err == nil && o1.OfficershipID > 0 {
-			return fmt.Errorf("officership with name \"%s\" already exists", name)
+			return errors.New("officership with name \"" + name + "\" already exists")
 		}
 
 		_, err = v.officership.AddOfficership(c.Request().Context(),

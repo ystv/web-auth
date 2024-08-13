@@ -19,7 +19,8 @@ type inExpr struct {
 	expr   any
 }
 
-func (e inExpr) ToSql() (sql string, args []any, err error) {
+//nolint:revive
+func (e inExpr) ToSql() (sql string, args []interface{}, err error) {
 	switch v := e.expr.(type) {
 	case sq.Sqlizer:
 		sql, args, err = v.ToSql()
@@ -34,30 +35,31 @@ func (e inExpr) ToSql() (sql string, args []any, err error) {
 
 			if reflect.ValueOf(v).Len() == 1 {
 				args = []any{reflect.ValueOf(v).Index(0).Interface()}
-				sql = fmt.Sprintf("%s=?", e.column)
+				sql = e.column + "=?"
 			} else {
 				args = []any{v}
-				sql = fmt.Sprintf("%s=ANY(?)", e.column)
+				sql = e.column + "=ANY(?)"
 			}
 		} else {
 			args = []any{v}
-			sql = fmt.Sprintf("%s=?", e.column)
+			sql = e.column + "=?"
 		}
 	}
 
 	return sql, args, err
 }
 
-// notInExpr helps to use NOT IN in SQL query
-type notInExpr inExpr
+// NotInExpr helps to use NOT IN in SQL query
+type NotInExpr inExpr
 
 // NotIn allows to use NOT IN in SQL query
 // Ex: SelectBuilder.Where(NotIn("id", 1, 2, 3))
-func NotIn(column string, e any) notInExpr {
-	return notInExpr{column, e}
+func NotIn(column string, e any) NotInExpr {
+	return NotInExpr{column, e}
 }
 
-func (e notInExpr) ToSql() (sql string, args []any, err error) {
+//nolint:revive
+func (e NotInExpr) ToSql() (sql string, args []interface{}, err error) {
 	switch v := e.expr.(type) {
 	case sq.Sqlizer:
 		sql, args, err = v.ToSql()
@@ -72,14 +74,14 @@ func (e notInExpr) ToSql() (sql string, args []any, err error) {
 
 			if reflect.ValueOf(v).Len() == 1 {
 				args = []any{reflect.ValueOf(v).Index(0).Interface()}
-				sql = fmt.Sprintf("%s<>?", e.column)
+				sql = e.column + "<>?"
 			} else {
 				args = []any{v}
-				sql = fmt.Sprintf("%s<>ALL(?)", e.column)
+				sql = e.column + "<>ALL(?)"
 			}
 		} else {
 			args = []any{v}
-			sql = fmt.Sprintf("%s<>?", e.column)
+			sql = e.column + "<>?"
 		}
 	}
 

@@ -544,6 +544,7 @@ func (s *Store) getPermissionsNotInRole(ctx context.Context, r role.Role) ([]per
 		panic(fmt.Errorf("failed to build sql for getPermissionsNotInRole: %w", err))
 	}
 
+	//nolint:asasalint
 	err = s.db.SelectContext(ctx, &r, sql, args)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get permissions not in role: %w", err)
