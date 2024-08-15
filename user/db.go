@@ -199,10 +199,7 @@ func (s *Store) getUsers(ctx context.Context, size, page int, search, sortBy, di
 
 func (s *Store) _getUsersBuilder(size, page int, search, sortBy, direction, enabled,
 	deleted string) (*sq.SelectBuilder, error) {
-	builder := utils.PSQL().Select(
-		"*",
-		"count(*) OVER() AS full_count",
-	).
+	builder := utils.PSQL().Select("*", "count(*) OVER() AS full_count").
 		From("people.users")
 
 	if len(search) > 0 {
