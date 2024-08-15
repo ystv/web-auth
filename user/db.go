@@ -268,18 +268,18 @@ func (s *Store) _getUsersBuilder(size, page int, search, sortBy, direction, enab
 func (s *Store) getPermissionsForUser(ctx context.Context, u User) ([]permission.Permission, error) {
 	var p []permission.Permission
 
-	builder := sq.Select("p.*").
+	builder := utils.PSQL().Select("p.*").
 		From("people.permissions p").
 		LeftJoin("people.role_permissions rp ON rp.permission_id = p.permission_id").
 		LeftJoin("people.role_members rm ON rm.role_id = rp.role_id").
 		Where(sq.Eq{"rm.user_id": u.UserID})
 
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getPermissionsForUser: %w", err))
 	}
 
-	err = s.db.SelectContext(ctx, &p, sql)
+	err = s.db.SelectContext(ctx, &p, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get permissions for user: %w", err)
 	}
@@ -291,17 +291,17 @@ func (s *Store) getPermissionsForUser(ctx context.Context, u User) ([]permission
 func (s *Store) getRolesForUser(ctx context.Context, u User) ([]role.Role, error) {
 	var r []role.Role
 
-	builder := sq.Select("r.*").
+	builder := utils.PSQL().Select("r.*").
 		From("people.roles r").
 		LeftJoin("people.role_members rm ON rm.role_id = r.role_id").
 		Where(sq.Eq{"rm.user_id": u.UserID})
 
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getRolesForUser: %w", err))
 	}
 
-	err = s.db.SelectContext(ctx, &r, sql)
+	err = s.db.SelectContext(ctx, &r, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get roles for user: %w", err)
 	}
@@ -313,17 +313,17 @@ func (s *Store) getRolesForUser(ctx context.Context, u User) ([]role.Role, error
 func (s *Store) getUsersForRole(ctx context.Context, r role.Role) ([]User, error) {
 	var u []User
 
-	builder := sq.Select("u.*").
+	builder := utils.PSQL().Select("u.*").
 		From("people.users u").
 		LeftJoin("people.role_members rm ON rm.user_id = u.user_id").
 		Where(sq.Eq{"rm.role_id": r.RoleID})
 
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getUsersForRole: %w", err))
 	}
 
-	err = s.db.SelectContext(ctx, &r, sql)
+	err = s.db.SelectContext(ctx, &r, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users for role: %w", err)
 	}
@@ -365,7 +365,7 @@ func (s *Store) getUsersNotInRole(ctx context.Context, r role.Role) ([]User, err
 		LeftJoin("people.role_members ru on u.user_id = ru.user_id").
 		Where(sq.Eq{"ru.role_id": r.RoleID})
 
-	builder := sq.Select("u.*").
+	builder := utils.PSQL().Select("u.*").
 		Distinct().
 		From("people.users u").
 		Where(sq.And{
@@ -374,12 +374,12 @@ func (s *Store) getUsersNotInRole(ctx context.Context, r role.Role) ([]User, err
 		}).
 		OrderBy("first_name", "last_name")
 
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getRoles: %w", err))
 	}
 
-	err = s.db.SelectContext(ctx, &r, sql)
+	err = s.db.SelectContext(ctx, &r, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get roles: %w", err)
 	}
@@ -459,17 +459,17 @@ func (s *Store) removeUserForRoles(ctx context.Context, u User) error {
 func (s *Store) getPermissionsForRole(ctx context.Context, r role.Role) ([]permission.Permission, error) {
 	var p []permission.Permission
 
-	builder := sq.Select("p.*").
+	builder := utils.PSQL().Select("p.*").
 		From("people.permissions p").
 		LeftJoin("people.role_permissions rp ON p.permission_id = rp.permission_id").
 		Where(sq.Eq{"rp.role_id": r.RoleID})
 
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getPermissionsForRole: %w", err))
 	}
 
-	err = s.db.SelectContext(ctx, &r, sql)
+	err = s.db.SelectContext(ctx, &r, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get permissions for role: %w", err)
 	}
@@ -481,17 +481,17 @@ func (s *Store) getPermissionsForRole(ctx context.Context, r role.Role) ([]permi
 func (s *Store) getRolesForPermission(ctx context.Context, p permission.Permission) ([]role.Role, error) {
 	var r []role.Role
 
-	builder := sq.Select("r.*").
+	builder := utils.PSQL().Select("r.*").
 		From("people.roles r").
 		LeftJoin("people.role_permissions rp ON r.role_id = rp.role_id").
 		Where(sq.Eq{"rp.permission_id": p.PermissionID})
 
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getRolesForPermission: %w", err))
 	}
 
-	err = s.db.SelectContext(ctx, &r, sql)
+	err = s.db.SelectContext(ctx, &r, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get roles for permission: %w", err)
 	}
@@ -545,7 +545,7 @@ func (s *Store) getPermissionsNotInRole(ctx context.Context, r role.Role) ([]per
 	}
 
 	//nolint:asasalint
-	err = s.db.SelectContext(ctx, &r, sql, args)
+	err = s.db.SelectContext(ctx, &r, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get permissions not in role: %w", err)
 	}

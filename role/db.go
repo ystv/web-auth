@@ -13,7 +13,7 @@ import (
 func (s *Store) getRoles(ctx context.Context) ([]Role, error) {
 	var r []Role
 
-	builder := sq.Select("r.*", "COUNT(DISTINCT rm.user_id) AS users",
+	builder := utils.PSQL().Select("r.*", "COUNT(DISTINCT rm.user_id) AS users",
 		"COUNT(DISTINCT rp.permission_id) AS permissions").
 		From("people.roles r").
 		LeftJoin("people.role_members rm ON r.role_id = rm.role_id").
