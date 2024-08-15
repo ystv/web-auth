@@ -331,7 +331,16 @@ func (s *Store) DeleteUser(ctx context.Context, u User, userID int) error {
 	id := null.IntFrom(int64(userID))
 	blank := null.NewString("", true)
 
+	u.Username = fmt.Sprintf("deleted-%d", u.UserID)
+	u.Firstname = "*Deleted*"
+	u.Nickname = ""
+	u.Lastname = "*User*"
+	u.LDAPUsername = null.NewString("", false)
+	u.Email = fmt.Sprintf("noreply+%d@ystv.co.uk", u.UserID)
+	u.UniversityUsername = ""
 	u.Enabled = false
+	u.Avatar = ""
+	u.UseGravatar = false
 	u.Password = blank
 	u.Salt = blank
 	u.UpdatedBy = id
