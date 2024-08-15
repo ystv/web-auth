@@ -57,8 +57,8 @@
                     Last name: {{.Lastname}}<br>
                     Username: {{.Username}}<br>
                     Email: {{.Email}}<br>
-                    {{if .UniversityUsername.Valid}}
-                        University username: {{.UniversityUsername.String}}<br>
+                    {{if gt (len .UniversityUsername) 0}}
+                        University username: {{.UniversityUsername}}<br>
                     {{end}}<br>
                     Enabled: {{.Enabled}}<br>
                     Reset password required: {{.ResetPw}}<br>
@@ -244,7 +244,7 @@
                                                 type="text"
                                                 name="universityusername"
                                                 placeholder="University username"
-                                                value="{{.User.UniversityUsername.String}}"
+                                                value="{{.User.UniversityUsername}}"
                                         />
                                     </div>
                                 </div>

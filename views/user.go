@@ -447,7 +447,7 @@ func (v *Views) _userAddPost(c echo.Context) error {
 	u := user.User{
 		UserID:             0,
 		Username:           username,
-		UniversityUsername: null.StringFrom(universityUsername),
+		UniversityUsername: universityUsername,
 		LoginType:          "internal",
 		Firstname:          firstName,
 		Nickname:           firstName,
@@ -563,7 +563,7 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 		}
 
 		if len(universityUsername) > 0 {
-			user1.UniversityUsername = null.StringFrom(universityUsername)
+			user1.UniversityUsername = universityUsername
 		}
 
 		if len(LDAPUsername) > 0 {

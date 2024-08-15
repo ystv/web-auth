@@ -28,7 +28,7 @@ type (
 	User struct {
 		UserID             int                     `db:"user_id" json:"userID"`
 		Username           string                  `db:"username" json:"username" schema:"username"`
-		UniversityUsername null.String             `db:"university_username" json:"universityUsername"`
+		UniversityUsername string                  `db:"university_username" json:"universityUsername"`
 		LDAPUsername       null.String             `db:"ldap_username" json:"LDAPUsername"`
 		LoginType          string                  `db:"login_type" json:"loginType"`
 		Nickname           string                  `db:"nickname" json:"nickname" schema:"nickname"`
@@ -69,7 +69,7 @@ type (
 	DetailedUser struct {
 		UserID             int                     `json:"id"`
 		Username           string                  `json:"username"`
-		UniversityUsername null.String             `json:"universityUsername"`
+		UniversityUsername string                  `json:"universityUsername"`
 		LDAPUsername       null.String             `json:"LDAPUsername"`
 		LoginType          string                  `json:"loginType"`
 		Nickname           string                  `json:"nickname"`
@@ -272,7 +272,7 @@ func (s *Store) EditUser(ctx context.Context, u User, userID int) error {
 		user.Username = u.Username
 	}
 
-	if len(u.UniversityUsername.String) > 0 {
+	if len(u.UniversityUsername) > 0 {
 		user.UniversityUsername = u.UniversityUsername
 	}
 
