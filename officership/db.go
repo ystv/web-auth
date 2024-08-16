@@ -352,6 +352,42 @@ func (s *Store) getOfficershipTeamMembers(ctx context.Context, t1 *OfficershipTe
 	return m, nil
 }
 
+func (s *Store) getOfficershipsNotInTeam(ctx context.Context, officershipTeam OfficershipTeam) ([]Officership, error) {
+	var o []Officership
+
+	subQuery := utils.PSQL().Select("o.officer_id").
+		From("people.officerships o").
+		LeftJoin("people.officership_team_members otm on o.officer_id = otm.officer_id").
+		Where(sq.Eq{"otm.team_id": officershipTeam.TeamID})
+
+	builder := utils.PSQL().Select("o.*").
+		From("people.officerships o").
+		Where(sq.And{
+			utils.NotIn("o.officer_id", subQuery),
+			utils.StringSQL("o.is_current = true"),
+		}).
+		OrderBy(`CASE WHEN o.name = 'Station Director' THEN 0
+	WHEN o.name LIKE '%Director%' AND o.name NOT LIKE '%Deputy%' AND o.name NOT LIKE '%Assistant%' THEN 1
+	WHEN o.name LIKE '%Deputy%' THEN 2
+	WHEN o.name LIKE '%Assistant%' THEN 3
+	WHEN o.name = 'Head of Welfare and Training' THEN 4
+	WHEN o.name LIKE '%Head of%' THEN 5
+	ELSE 6
+	END`, "o.name")
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for getOfficershipsNotInTeam: %w", err))
+	}
+
+	err = s.db.SelectContext(ctx, &o, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get officerships not in team: %w", err)
+	}
+
+	return o, nil
+}
+
 func (s *Store) getOfficershipTeamMember(ctx context.Context, m1 OfficershipTeamMember) (OfficershipTeamMember, error) {
 	var m OfficershipTeamMember
 

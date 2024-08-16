@@ -95,3 +95,9 @@ func isListType(val any) bool {
 	valVal := reflect.ValueOf(val)
 	return valVal.Kind() == reflect.Array || valVal.Kind() == reflect.Slice
 }
+
+type StringSQL string
+
+func (s StringSQL) ToSql() (sql string, args []interface{}, err error) {
+	return string(s), args, nil
+}

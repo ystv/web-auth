@@ -148,6 +148,10 @@ func (s *Store) GetOfficershipTeamMembers(ctx context.Context, t *OfficershipTea
 	return s.getOfficershipTeamMembers(ctx, t, officershipStatus)
 }
 
+func (s *Store) GetOfficershipsNotInTeam(ctx context.Context, officershipTeam OfficershipTeam) ([]Officership, error) {
+	return s.getOfficershipsNotInTeam(ctx, officershipTeam)
+}
+
 func (s *Store) GetOfficershipTeamMember(ctx context.Context, m OfficershipTeamMember) (OfficershipTeamMember, error) {
 	return s.getOfficershipTeamMember(ctx, m)
 }
