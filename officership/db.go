@@ -362,16 +362,20 @@ func (s *Store) getOfficershipTeamMember(ctx context.Context, m1 OfficershipTeam
 		LeftJoin("people.officerships o on o.officer_id = otm.officer_id").
 		LeftJoin("people.officership_members omc ON o.officer_id = omc.officer_id AND omc.end_date IS NULL").
 		LeftJoin("people.officership_members omp ON o.officer_id = omp.officer_id AND omp.end_date IS NOT NULL").
-		Where(sq.Eq{"otm.team_id": m1.OfficershipTeamMemberID}).
+		Where(sq.And{
+			sq.Eq{"otm.team_id": m1.TeamID},
+			sq.Eq{"otm.officer_id": m1.OfficerID},
+		}).
 		GroupBy("otm", "otm.officer_id", "otm.team_id", "o.officer_id", "name", "email_alias", "description",
-			"historywiki_url", "role_id", "is_current", "if_unfilled")
+			"historywiki_url", "role_id", "is_current", "if_unfilled").
+		Limit(1)
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getOfficershipTeamMember: %w", err))
 	}
 
-	err = s.db.SelectContext(ctx, &m, sql, args...)
+	err = s.db.GetContext(ctx, &m, sql, args...)
 	if err != nil {
 		return OfficershipTeamMember{}, fmt.Errorf("failed to get officership team member: %w", err)
 	}
