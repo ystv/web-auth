@@ -690,6 +690,103 @@ func (v *Views) OfficershipTeamsFunc(c echo.Context) error {
 	return v.invalidMethodUsed(c)
 }
 
+func (v *Views) OfficershipTeamAddOfficershipFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		teamID, err := strconv.Atoi(c.Param("officershipteamid"))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to get team id for officership team add officership: %w", err))
+		}
+
+		_, err = v.officership.GetOfficershipTeam(c.Request().Context(), officership.OfficershipTeam{TeamID: teamID})
+		if err != nil {
+			return fmt.Errorf("failed to get team for officership team add officership: %w", err)
+		}
+
+		officershipID, err := strconv.Atoi(c.Request().FormValue("officershipID"))
+		if err != nil {
+			return fmt.Errorf("failed to get officershipid for officership team add officership: %w", err)
+		}
+
+		_, err = v.officership.GetOfficership(c.Request().Context(), officership.Officership{OfficershipID: officershipID})
+		if err != nil {
+			return fmt.Errorf("failed to get officership for officership team add officership: %w", err)
+		}
+
+		memberLevel := c.FormValue("memberLevel")
+		var isLeader, isDeputy bool
+
+		if memberLevel == "leader" {
+			isLeader = true
+		} else if memberLevel == "deputy" {
+			isDeputy = true
+		}
+
+		officershipTeamMember := officership.OfficershipTeamMember{
+			TeamID:    teamID,
+			OfficerID: officershipID,
+			IsLeader:  isLeader,
+			IsDeputy:  isDeputy,
+		}
+
+		_, err = v.officership.GetOfficershipTeamMember(c.Request().Context(), officershipTeamMember)
+		if err == nil {
+			return errors.New("failed to add officership team member for officership team add officership: row already exists")
+		}
+
+		_, err = v.officership.AddOfficershipTeamMember(c.Request().Context(), officershipTeamMember)
+		if err != nil {
+			return fmt.Errorf("failed to add officership team member for officership team add officership: %w", err)
+		}
+
+		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/officership/team/%d", teamID))
+	}
+
+	return v.invalidMethodUsed(c)
+}
+
+func (v *Views) OfficershipTeamRemoveOfficershipFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		teamID, err := strconv.Atoi(c.Param("officershipteamid"))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to get teamid for officership team remove officership: %w", err))
+		}
+
+		_, err = v.officership.GetOfficershipTeam(c.Request().Context(), officership.OfficershipTeam{TeamID: teamID})
+		if err != nil {
+			return fmt.Errorf("failed to get team for officership team remove officership: %w", err)
+		}
+
+		officershipID, err := strconv.Atoi(c.Param("officershipid"))
+		if err != nil {
+			return fmt.Errorf("failed to get officershipid for officership team remove officership: %w", err)
+		}
+
+		_, err = v.officership.GetOfficership(c.Request().Context(), officership.Officership{OfficershipID: officershipID})
+		if err != nil {
+			return fmt.Errorf("failed to get officership for officership team remove officership: %w", err)
+		}
+
+		officershipTeamMember := officership.OfficershipTeamMember{
+			TeamID:    teamID,
+			OfficerID: officershipID,
+		}
+
+		_, err = v.officership.GetOfficershipTeamMember(c.Request().Context(), officershipTeamMember)
+		if err != nil {
+			return fmt.Errorf("failed to get officership team member for officership team remove officership: %w", err)
+		}
+
+		err = v.officership.DeleteOfficershipTeamMember(c.Request().Context(), officershipTeamMember)
+		if err != nil {
+			return fmt.Errorf("failed to remove officership team member for officership team remove officership: %w", err)
+		}
+
+		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/officership/team/%d", teamID))
+	}
+
+	return v.invalidMethodUsed(c)
+}
+
 func (v *Views) OfficershipTeamFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodGet {
 		c1 := v.getSessionData(c)
