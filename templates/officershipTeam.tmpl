@@ -1,5 +1,62 @@
 {{define "title"}}Internal: Officership Team ({{.OfficershipTeam.Name}}){{end}}
 {{define "content"}}
+    <style>
+        .dropdown-button {
+            background-color: #3082c5;
+            color: white;
+            padding: 7px 16px 7px 16px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .searchInput {
+            box-sizing: border-box;
+            font-size: 16px;
+            padding: 14px 20px 12px 20px;
+            border: none;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .searchInput:focus {
+            outline: 3px solid #ddd;
+        }
+
+        .dropdown-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f6f6f6;
+            min-width: 230px;
+            overflow: auto;
+            border: 1px solid #ddd;
+            z-index: 1;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .inputHidden {
+            display: none;
+        }
+
+        .dropdown a:hover {
+            background-color: #ddd;
+        }
+
+        .show {
+            display: block;
+        }
+    </style>
     <div class="column is-10" style="min-height: 88vh">
         <section class="hero is-info welcome is-small">
             <div class="hero-body">
@@ -33,7 +90,11 @@
                         {{range .TeamMembers}}
                             {{if .IsCurrent}}
                                 <li style='list-style-type: none;'><span class='tab'></span>
-                                    <a href="/internal/officership/{{.OfficerID}}">{{.OfficerName}}</a>{{if .IsLeader}} - Leader{{else if .IsDeputy}} - Deputy{{end}}
+                                    <a href="/internal/officership/{{.OfficerID}}">{{.OfficerName}}</a>{{if .IsLeader}} - Leader{{else if .IsDeputy}}
+                                    - Deputy{{end}}&emsp;<a
+                                            class="button is-danger is-outlined"
+                                            onclick="removeOfficershipFromTeamModal({{.OfficerID}}, '{{.OfficerName}}')">Remove
+                                        officership</a>
                                 </li>
                             {{end}}
                         {{end}}
@@ -43,13 +104,68 @@
                         {{range .TeamMembers}}
                             {{if not .IsCurrent}}
                                 <li style='list-style-type: none;'><span class='tab'></span>
-                                    <a href="/internal/officership/{{.OfficerID}}">{{.OfficerName}}</a>{{if .IsLeader}} - was leader{{else if .IsDeputy}} - was deputy{{end}}
+                                    <a href="/internal/officership/{{.OfficerID}}">{{.OfficerName}}</a>{{if .IsLeader}} - was leader{{else if .IsDeputy}}
+                                    - was deputy{{end}}&emsp;<a
+                                            class="button is-danger is-outlined"
+                                            onclick="removeOfficershipFromTeamModal({{.OfficerID}}, '{{.OfficerName}}')">Remove
+                                        officership</a>
                                 </li>
                             {{end}}
                         {{end}}
                     </ol>
                     {{end}}
                     </p>
+                    {{if gt (len .OfficershipsNotInTeam) 0}}
+                        Use the drop down below to add more officerships to this team.<br>
+                        <form method="post" action="/internal/officership/team/{{.TeamID}}/officership/add">
+                            <div class="field">
+                                <label class="label" for="user">Officership</label>
+                                <div class="control">
+                                    <label for="officershipNameInput"></label><input
+                                            id="officershipNameInput"
+                                            class="input"
+                                            type="text"
+                                            placeholder="Officership"
+                                            readonly
+                                    />
+                                    <label for="officershipIDInput"></label><input
+                                            id="officershipIDInput"
+                                            class="input inputHidden"
+                                            type="text"
+                                            name="officershipID"
+                                            readonly
+                                    />
+                                    <div class="dropdown-container">
+                                        <div onclick="officershipDropdownShowFunction()" class="dropdown-button">
+                                            Officerships dropdown
+                                        </div>
+                                        <div id="officershipInnerDropdown" class="dropdown-content">
+                                            <label for="officershipSearchInput"></label>
+                                            <input type="text" placeholder="Search.."
+                                                   id="officershipSearchInput"
+                                                   class="searchInput"
+                                                   onkeyup="officershipFilterFunction()">
+                                            {{range .OfficershipsNotInTeam}}
+                                                <a onclick="selectOfficership({{.OfficershipID}}, '{{.Name}}')">{{.Name}}</a>
+                                            {{end}}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label for="memberLevel">Member level</label><br>
+                                <div class="control has-icons-left select">
+                                    <select id="memberLevel" name="memberLevel">
+                                        <option value="normal">Normal</option>
+                                        <option value="deputy">Deputy</option>
+                                        <option value="leader">Leader</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <br>
+                            <button class="button is-info">Add officership</button>
+                        </form>
+                    {{end}}
                 {{end}}
             </div>
         </div>
@@ -130,6 +246,24 @@
         </div>
         <button class="modal-close is-large" aria-label="close"></button>
     </div>
+    <div id="removeOfficershipFromTeamModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title" id="removeOfficershipFromTeamModalTitle"></p>
+                            <form method="post" id="removeOfficershipFromTeamModalForm">
+                                <a class="button is-danger" onclick="removeOfficershipFromTeam()">Remove officership</a>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
     <div id="deleteOfficershipTeamModal" class="modal">
         <div class="modal-background"></div>
         <div class="modal-content">
@@ -161,6 +295,49 @@
                 $modal.classList.remove("is-active");
             });
         });
+
+        let officershipID = 0;
+
+        function removeOfficershipFromTeamModal(officershipID1, name) {
+            officershipID = officershipID1;
+            document.getElementById("removeOfficershipFromTeamModal").classList.add("is-active");
+            document.getElementById("removeOfficershipFromTeamModalTitle").innerHTML = "Are you sure you want to remove \"" + name + "\" from this team?";
+        }
+
+        function removeOfficershipFromTeam() {
+            document.getElementById("removeOfficershipFromTeamModalForm").action = "/internal/officership/team/{{$.OfficershipTeam.TeamID}}/officership/remove/" + officershipID;
+            $("#removeOfficershipFromTeamModalForm").submit();
+        }
+
+        function selectOfficership(id, name) {
+            document.getElementById("officershipNameInput").value = name;
+            document.getElementById("officershipIDInput").value = id;
+            document.getElementById("officershipSearchInput").value = "";
+            officershipDropdownShowFunction();
+            officershipFilterFunction();
+        }
+
+        // When the user clicks on the button,
+        // toggle between hiding and showing the dropdown content
+        function officershipDropdownShowFunction() {
+            document.getElementById("officershipInnerDropdown").classList.toggle("show");
+        }
+
+        function officershipFilterFunction() {
+            const input = document.getElementById("officershipSearchInput");
+            const filter = input.value.toUpperCase();
+            const div = document.getElementById("officershipInnerDropdown");
+            const a = div.getElementsByTagName("a");
+            let txtValue;
+            for (let i = 0; i < a.length; i++) {
+                txtValue = a[i].textContent || a[i].innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    a[i].style.display = "";
+                } else {
+                    a[i].style.display = "none";
+                }
+            }
+        }
 
         function editOfficershipTeamModal() {
             document.getElementById("editOfficershipTeamModal").classList.add("is-active");
