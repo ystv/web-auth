@@ -834,7 +834,7 @@ func (v *Views) OfficershipTeamEditFunc(c echo.Context) error {
 
 func (v *Views) OfficershipTeamDeleteFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
-		teamID, err := strconv.Atoi(c.Param("teamid"))
+		teamID, err := strconv.Atoi(c.Param("officershipteamid"))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest,
 				fmt.Errorf("failed to parse teamid for officership team delete: %w", err))
