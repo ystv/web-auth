@@ -411,39 +411,6 @@ func (s *Store) addOfficershipTeamMember(ctx context.Context, m1 OfficershipTeam
 	return m, nil
 }
 
-func (s *Store) editOfficershipTeamMember(ctx context.Context, m OfficershipTeamMember) (OfficershipTeamMember, error) {
-	builder := utils.PSQL().Update("people.officership_team_members").
-		SetMap(map[string]interface{}{
-			"team_id":    m.OfficershipTeamMemberID,
-			"officer_id": m.OfficerID,
-			"is_leader":  m.IsLeader,
-			"is_deputy":  m.IsDeputy,
-		}).
-		Where(sq.And{sq.Eq{"team_id": m.OfficershipTeamMemberID}, sq.Eq{"officer_id": m.OfficerID}})
-
-	sql, args, err := builder.ToSql()
-	if err != nil {
-		panic(fmt.Errorf("failed to build sql for editOfficershipTeamMember: %w", err))
-	}
-
-	res, err := s.db.ExecContext(ctx, sql, args...)
-	if err != nil {
-		return OfficershipTeamMember{}, fmt.Errorf("failed to edit officership team member: %w", err)
-	}
-
-	rows, err := res.RowsAffected()
-	if err != nil {
-		return OfficershipTeamMember{}, fmt.Errorf("failed to edit officership team member: %w", err)
-	}
-
-	if rows < 1 {
-		return OfficershipTeamMember{},
-			fmt.Errorf("failed to edit officerhip team member: invalid rows affected: %d", rows)
-	}
-
-	return m, nil
-}
-
 func (s *Store) deleteOfficershipTeamMember(ctx context.Context, t OfficershipTeamMember) error {
 	builder := utils.PSQL().Delete("people.officership_team_members").
 		Where(sq.And{sq.Eq{"team_id": t.TeamID}, sq.Eq{"officer_id": t.OfficerID}})

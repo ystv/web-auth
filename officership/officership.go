@@ -156,10 +156,6 @@ func (s *Store) AddOfficershipTeamMember(ctx context.Context, m OfficershipTeamM
 	return s.addOfficershipTeamMember(ctx, m)
 }
 
-func (s *Store) EditOfficershipTeamMember(ctx context.Context, m OfficershipTeamMember) (OfficershipTeamMember, error) {
-	return s.editOfficershipTeamMember(ctx, m)
-}
-
 func (s *Store) DeleteOfficershipTeamMember(ctx context.Context, m OfficershipTeamMember) error {
 	return s.deleteOfficershipTeamMember(ctx, m)
 }
