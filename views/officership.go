@@ -717,31 +717,39 @@ func (v *Views) OfficershipTeamFunc(c echo.Context) error {
 			return fmt.Errorf("failed to get officership team members for officershipTeam: %w", err)
 		}
 
+		officershipsNotInTeam, err := v.officership.GetOfficershipsNotInTeam(c.Request().Context(), officershipTeam)
+		if err != nil {
+			return fmt.Errorf("failed to get officerships not in team: %w", err)
+		}
+
 		data := struct {
 			OfficershipTeam struct {
-				TeamID           int
-				Name             string
-				EmailAlias       string
-				ShortDescription string
-				FullDescription  string
-				TeamMembers      []officership.OfficershipTeamMember
+				TeamID                int
+				Name                  string
+				EmailAlias            string
+				ShortDescription      string
+				FullDescription       string
+				TeamMembers           []officership.OfficershipTeamMember
+				OfficershipsNotInTeam []officership.Officership
 			}
 			TemplateHelper
 		}{
 			OfficershipTeam: struct {
-				TeamID           int
-				Name             string
-				EmailAlias       string
-				ShortDescription string
-				FullDescription  string
-				TeamMembers      []officership.OfficershipTeamMember
+				TeamID                int
+				Name                  string
+				EmailAlias            string
+				ShortDescription      string
+				FullDescription       string
+				TeamMembers           []officership.OfficershipTeamMember
+				OfficershipsNotInTeam []officership.Officership
 			}{
-				TeamID:           officershipTeam.TeamID,
-				Name:             officershipTeam.Name,
-				EmailAlias:       officershipTeam.EmailAlias,
-				ShortDescription: officershipTeam.ShortDescription,
-				FullDescription:  officershipTeam.FullDescription,
-				TeamMembers:      teamMembers,
+				TeamID:                officershipTeam.TeamID,
+				Name:                  officershipTeam.Name,
+				EmailAlias:            officershipTeam.EmailAlias,
+				ShortDescription:      officershipTeam.ShortDescription,
+				FullDescription:       officershipTeam.FullDescription,
+				TeamMembers:           teamMembers,
+				OfficershipsNotInTeam: officershipsNotInTeam,
 			},
 			TemplateHelper: TemplateHelper{
 				UserPermissions: permissions,
