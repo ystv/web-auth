@@ -388,7 +388,7 @@ func (s *Store) addOfficershipTeamMember(ctx context.Context, m1 OfficershipTeam
 
 	builder := utils.PSQL().Insert("people.officership_team_members").
 		Columns("team_id", "officer_id", "is_leader", "is_deputy").
-		Values(m1.OfficershipTeamMemberID, m1.OfficerID, m1.IsLeader, m1.IsDeputy).
+		Values(m1.TeamID, m1.OfficerID, m1.IsLeader, m1.IsDeputy).
 		Suffix("RETURNING team_id, officer_id, is_leader, is_deputy")
 
 	sql, args, err := builder.ToSql()
@@ -446,7 +446,7 @@ func (s *Store) editOfficershipTeamMember(ctx context.Context, m OfficershipTeam
 
 func (s *Store) deleteOfficershipTeamMember(ctx context.Context, t OfficershipTeamMember) error {
 	builder := utils.PSQL().Delete("people.officership_team_members").
-		Where(sq.And{sq.Eq{"team_id": t.OfficershipTeamMemberID}, sq.Eq{"officer_id": t.OfficerID}})
+		Where(sq.And{sq.Eq{"team_id": t.TeamID}, sq.Eq{"officer_id": t.OfficerID}})
 
 	sql, args, err := builder.ToSql()
 	if err != nil {

@@ -68,14 +68,14 @@ type (
 	//
 	//nolint:revive
 	OfficershipTeamMember struct {
-		OfficershipTeamMemberID int    `db:"team_id" json:"officershipTeamMemberID"`
-		OfficerID               int    `db:"officer_id" json:"officerID"`
-		IsLeader                bool   `db:"is_leader" json:"isLeader"`
-		IsDeputy                bool   `db:"is_deputy" json:"isDeputy"`
-		IsCurrent               bool   `db:"is_current" json:"isCurrent"`
-		OfficerName             string `db:"officer_name" json:"officerName"`
-		CurrentOfficers         int    `db:"current_officers" json:"currentOfficers"`
-		PreviousOfficers        int    `db:"previous_officers" json:"previousOfficers"`
+		TeamID           int    `db:"team_id" json:"officershipTeamMemberID"`
+		OfficerID        int    `db:"officer_id" json:"officerID"`
+		IsLeader         bool   `db:"is_leader" json:"isLeader"`
+		IsDeputy         bool   `db:"is_deputy" json:"isDeputy"`
+		IsCurrent        bool   `db:"is_current" json:"isCurrent"`
+		OfficerName      string `db:"officer_name" json:"officerName"`
+		CurrentOfficers  int    `db:"current_officers" json:"currentOfficers"`
+		PreviousOfficers int    `db:"previous_officers" json:"previousOfficers"`
 	}
 
 	CountOfficerships struct {
