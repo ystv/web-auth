@@ -407,7 +407,7 @@ func (s *Store) addRoleUser(ctx context.Context, ru1 RoleUser) (RoleUser, error)
 
 	defer stmt.Close()
 
-	err = stmt.QueryRow(args...).Scan(&ru)
+	err = stmt.QueryRow(args...).Scan(&ru.RoleID, &ru.UserID)
 	if err != nil {
 		return RoleUser{}, fmt.Errorf("failed to add role user: %w", err)
 	}
@@ -558,7 +558,8 @@ func (s *Store) addRolePermission(ctx context.Context, rp1 RolePermission) (Role
 
 	builder := utils.PSQL().Insert("people.role_permissions").
 		Columns("role_id ", "permission_id").
-		Values(rp1.RoleID, rp1.PermissionID)
+		Values(rp1.RoleID, rp1.PermissionID).
+		Suffix("RETURNING role_id, permission_id")
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -572,7 +573,7 @@ func (s *Store) addRolePermission(ctx context.Context, rp1 RolePermission) (Role
 
 	defer stmt.Close()
 
-	err = stmt.QueryRow(args...).Scan(&rp)
+	err = stmt.QueryRow(args...).Scan(&rp.RoleID, &rp.PermissionID)
 	if err != nil {
 		return RolePermission{}, fmt.Errorf("failed to add rolePermission: %w", err)
 	}
