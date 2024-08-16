@@ -229,7 +229,7 @@ func (v *Views) RoleAddPermissionFunc(c echo.Context) error {
 			return fmt.Errorf("failed to get role for roleAddPermission: %w", err)
 		}
 
-		permissionID, err := strconv.Atoi(c.Request().FormValue("permission"))
+		permissionID, err := strconv.Atoi(c.Request().FormValue("permissionID"))
 		if err != nil {
 			return fmt.Errorf("failed to get permissionid for roleAddPermission: %w", err)
 		}
@@ -317,7 +317,7 @@ func (v *Views) RoleAddUserFunc(c echo.Context) error {
 			return fmt.Errorf("failed to get user for roleAddUser: %w", err)
 		}
 
-		userID, err := strconv.Atoi(c.Request().FormValue("user"))
+		userID, err := strconv.Atoi(c.Request().FormValue("userID"))
 		if err != nil {
 			return fmt.Errorf("failed to get userID for roleAddUser: %w", err)
 		}
