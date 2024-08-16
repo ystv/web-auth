@@ -403,7 +403,7 @@ func (s *Store) addOfficershipTeamMember(ctx context.Context, m1 OfficershipTeam
 
 	defer stmt.Close()
 
-	err = stmt.QueryRow(args...).Scan(&m)
+	err = stmt.QueryRow(args...).Scan(&m.TeamID, &m.OfficerID, &m.IsLeader, &m.IsDeputy)
 	if err != nil {
 		return OfficershipTeamMember{}, fmt.Errorf("failed to add offciership team member: %w", err)
 	}
