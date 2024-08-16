@@ -320,7 +320,7 @@ func (s *Store) getUsersForRole(ctx context.Context, r role.Role) ([]User, error
 		panic(fmt.Errorf("failed to build sql for getUsersForRole: %w", err))
 	}
 
-	err = s.db.SelectContext(ctx, &r, sql, args...)
+	err = s.db.SelectContext(ctx, &u, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users for role: %w", err)
 	}
@@ -376,7 +376,7 @@ func (s *Store) getUsersNotInRole(ctx context.Context, r role.Role) ([]User, err
 		panic(fmt.Errorf("failed to build sql for getRoles: %w", err))
 	}
 
-	err = s.db.SelectContext(ctx, &r, sql, args...)
+	err = s.db.SelectContext(ctx, &u, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get roles: %w", err)
 	}
@@ -466,7 +466,7 @@ func (s *Store) getPermissionsForRole(ctx context.Context, r role.Role) ([]permi
 		panic(fmt.Errorf("failed to build sql for getPermissionsForRole: %w", err))
 	}
 
-	err = s.db.SelectContext(ctx, &r, sql, args...)
+	err = s.db.SelectContext(ctx, &p, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get permissions for role: %w", err)
 	}
@@ -542,7 +542,7 @@ func (s *Store) getPermissionsNotInRole(ctx context.Context, r role.Role) ([]per
 	}
 
 	//nolint:asasalint
-	err = s.db.SelectContext(ctx, &r, sql, args...)
+	err = s.db.SelectContext(ctx, &p, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get permissions not in role: %w", err)
 	}
