@@ -98,6 +98,7 @@ func isListType(val any) bool {
 
 type StringSQL string
 
+//nolint:revive
 func (s StringSQL) ToSql() (sql string, args []interface{}, err error) {
 	return string(s), args, nil
 }
