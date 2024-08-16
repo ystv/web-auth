@@ -31,7 +31,9 @@
                         HistoryWikiURL: {{if gt (len .HistoryWikiURL) 0}}<a href="{{.HistoryWikiURL}}" target="_blank">{{.HistoryWikiURL}}</a>{{else}}empty{{end}}<br>
                         {{if and .TeamID.Valid .TeamName.Valid}}
                             Team: <a
-                            href="/internal/officership/team/{{.TeamID.Int64}}">{{.TeamName.String}}</a>{{if and .IsTeamLeader.Valid .IsTeamLeader.Bool}} - Leader{{else if and .IsTeamDeputy.Valid .IsTeamDeputy.Bool}} - Deputy{{end}}
+                            href="/internal/officership/team/{{.TeamID.Int64}}">{{.TeamName.String}}</a>{{if .IsCurrent}}
+                                {{if and .IsTeamLeader.Valid .IsTeamLeader.Bool}} - leader{{else if and .IsTeamDeputy.Valid .IsTeamDeputy.Bool}} - deputy{{end}}{{else}}
+                                {{if and .IsTeamLeader.Valid .IsTeamLeader.Bool}} - was leader{{else if and .IsTeamDeputy.Valid .IsTeamDeputy.Bool}} - was deputy{{end}}{{end}}
                             <br>
                         {{end}}
                     </p>
