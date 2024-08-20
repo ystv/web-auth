@@ -204,7 +204,7 @@
                                                    onkeyup="userFilterFunction()">
                                             {{range $.UsersNotInRole}}
                                                 {{$userName := formatUserNameUserStruct .}}
-                                                <a onclick="selectUser({{.UserID}}, '{{$userName}}')">{{$userName}}</a>
+                                                <a onclick="selectUser({{.UserID}}, '{{$userName}}')">{{$userName}} ({{.Username}})</a>
                                             {{end}}
                                         </div>
                                     </div>

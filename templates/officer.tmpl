@@ -129,7 +129,7 @@
                                                 <label for="userSearchInput"></label><input type="text" placeholder="Search.." id="userSearchInput" class="searchInput" onkeyup="userFilterFunction()">
                                                 {{range .Users}}
                                                     {{$userName := formatUserNameUserStruct .}}
-                                                    <a onclick="selectUser({{.UserID}}, '{{$userName}}')">{{$userName}}</a>
+                                                    <a onclick="selectUser({{.UserID}}, '{{$userName}}')">{{$userName}} ({{.Username}})</a>
                                                 {{end}}
                                             </div>
                                         </div>
