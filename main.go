@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/joho/godotenv"
+
 	"github.com/ystv/web-auth/views"
 )
 
@@ -17,6 +18,7 @@ var Version = "unknown"
 
 func main() {
 	var local, global bool
+
 	var err error
 	err = godotenv.Load(".env") // Load .env
 	global = err == nil
@@ -65,9 +67,7 @@ func main() {
 	debug, _ := strconv.ParseBool(os.Getenv("WAUTH_DEBUG"))
 
 	if debug {
-		fmt.Println()
-		log.Println("running in debug mode, do not use in production")
-		fmt.Println()
+		log.Println("***running in debug mode, do not use in production***")
 	}
 
 	address := os.Getenv("WAUTH_ADDRESS")

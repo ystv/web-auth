@@ -1,0 +1,138 @@
+{{define "title"}}Internal: Officership Teams{{end}}
+{{define "content"}}
+    <div class="column is-10" style="min-height: 88vh">
+        <div class="card events-card">
+            <header class="card-header">
+                <p class="card-header-title">Officership Teams</p>
+            </header>
+            <div class="card" style="margin-bottom: 0">
+                <div class="column">
+                    <div class="field">
+                        <a onclick="addOfficershipTeamModal()" class="button is-info"><span class="mdi mdi-account-multiple-plus"></span>&ensp;Add Officership Team</a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-table" style="max-height: 100em;">
+                <div class="content">
+                    <table class="table is-fullwidth is-hoverable">
+                        <thead>
+                        <tr>
+                            <th>Team ID</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Officerships</th>
+                            <th>Officers</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {{range .OfficershipTeams}}
+                            <tr>
+                                <th>{{.TeamID}}</th>
+                                <td>{{.Name}}</td>
+                                <td>{{.ShortDescription}}</td>
+                                <td>{{.CurrentOfficerships}}</td>
+                                <td>{{.CurrentOfficers}}</td>
+                                <td><a href="/internal/officership/team/{{.TeamID}}">View</a></td>
+                            </tr>
+                        {{end}}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>Team ID</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Officerships</th>
+                            <th>Officers</th>
+                            <th>Actions</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{template "modal" .}}
+{{end}}
+
+{{define "modal"}}
+    <div id="addOfficershipTeamModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title">Add officership team</p>
+                            <p>Enter the team's details below.</p>
+                            <form action="/internal/officership/team/add" method="post">
+                                <div class="field">
+                                    <label class="label" for="name">Name</label>
+                                    <div class="control">
+                                        <input
+                                                id="name"
+                                                class="input"
+                                                type="text"
+                                                name="name"
+                                                placeholder="Name"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="emailAlias">Email alias</label>
+                                    <div class="control">
+                                        <input
+                                                id="emailAlias"
+                                                class="input"
+                                                type="text"
+                                                name="emailAlias"
+                                                placeholder="Email alias"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="shortDescription">Short description</label>
+                                    <div class="control">
+                                        <textarea
+                                                id="shortDescription"
+                                                class="input"
+                                                name="shortDescription"
+                                                placeholder="Short description"
+                                        ></textarea>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="fullDescription">Full description</label>
+                                    <div class="control">
+                                        <textarea
+                                                id="fullDescription"
+                                                class="input"
+                                                name="fullDescription"
+                                                placeholder="Full description"
+                                        ></textarea>
+                                    </div>
+                                </div>
+                                <button class="button is-info"><span class="mdi mdi-shield-plus"></span>&ensp;Add officership team</button>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <script>
+        document.querySelectorAll(
+            ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
+        ).forEach(($el) => {
+            const $modal = $el.closest(".modal");
+            $el.addEventListener("click", () => {
+                $modal.classList.remove("is-active");
+            });
+        });
+
+        function addOfficershipTeamModal() {
+            document.getElementById("addOfficershipTeamModal").classList.add("is-active");
+        }
+    </script>
+{{end}}

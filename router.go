@@ -4,10 +4,12 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
 	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/views"
 )
@@ -47,6 +49,7 @@ func NewRouter(conf *RouterConf) *Router {
 //nolint:staticcheck
 func (r *Router) Start() error {
 	r.router.Logger.Error(r.router.Start(r.config.Address))
+
 	return fmt.Errorf("failed to start router on address %s", r.config.Address)
 }
 
@@ -66,7 +69,8 @@ func (r *Router) middleware() {
 			"https://docs." + r.config.BaseDomainName,
 			"https://history." + r.config.BaseDomainName,
 		},
-		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAccessControlAllowCredentials, echo.HeaderAccessControlAllowOrigin, echo.HeaderAuthorization},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept,
+			echo.HeaderAccessControlAllowCredentials, echo.HeaderAccessControlAllowOrigin, echo.HeaderAuthorization},
 		AllowMethods: []string{http.MethodGet, http.MethodPost},
 	}
 
@@ -75,7 +79,9 @@ func (r *Router) middleware() {
 	r.router.Use(middleware.CORSWithConfig(config))
 	r.router.Use(middleware.BodyLimit("15M"))
 	r.router.Use(middleware.GzipWithConfig(middleware.GzipConfig{
-		Level: 5,
+		Skipper:   middleware.DefaultSkipper,
+		Level:     5,
+		MinLength: 0,
 	}))
 }
 
@@ -95,12 +101,14 @@ func (r *Router) loadRoutes() {
 	if !r.router.Debug {
 		internal.Use(r.views.RequiresLogin)
 	}
+
 	internal.GET("", r.views.InternalFunc)
 	internal.Match(validMethods, "/settings", r.views.SettingsFunc)
 
 	// permissions are for listing the permissions
 	if !r.config.Debug {
-		internal.GET("/permissions", r.views.PermissionsFunc, r.views.RequirePermission(permissions.ManageMembersPermissions))
+		internal.GET("/permissions", r.views.PermissionsFunc,
+			r.views.RequirePermission(permissions.ManageMembersPermissions))
 	} else {
 		internal.GET("/permissions", r.views.PermissionsFunc)
 	}
@@ -110,6 +118,7 @@ func (r *Router) loadRoutes() {
 	if !r.config.Debug {
 		permission.Use(r.views.RequirePermission(permissions.ManageMembersPermissions))
 	}
+
 	permission.Match(validMethods, "/add", r.views.PermissionAddFunc)
 	permissionID := permission.Group("/:permissionid")
 	// permissionID is any function to do with a specific permission
@@ -129,6 +138,7 @@ func (r *Router) loadRoutes() {
 	if !r.config.Debug {
 		role.Use(r.views.RequirePermission(permissions.ManageMembersGroup))
 	}
+
 	role.Match(validMethods, "/add", r.views.RoleAddFunc)
 	roleID := role.Group("/:roleid")
 	// roleID is any function to do with a specific role
@@ -137,15 +147,19 @@ func (r *Router) loadRoutes() {
 	rolePermission := roleID.Group("/permission")
 	rolePermission.Match(validMethods, "/add", r.views.RoleAddPermissionFunc)
 	rolePermission.Match(validMethods, "/remove/:permissionid", r.views.RoleRemovePermissionFunc)
+
 	roleUser := roleID.Group("/user")
 	roleUser.Match(validMethods, "/add", r.views.RoleAddUserFunc)
 	roleUser.Match(validMethods, "/remove/:userid", r.views.RoleRemoveUserFunc)
 	roleID.Match(validMethods, "", r.views.RoleFunc)
 
-	// this section of users is a bit weird, users is valid for anyone who can list users and user/add can be used by add users permission
+	// this section of users is a bit weird, users is valid for anyone who can list users and user/add can be used by
+	// add users permission
 	if !r.config.Debug {
-		internal.Match(validMethods, "/users", r.views.UsersFunc, r.views.RequirePermission(permissions.ManageMembersMembersList))
-		internal.Match(validMethods, "/user/add", r.views.UserAddFunc, r.views.RequirePermission(permissions.ManageMembersMembersAdd))
+		internal.Match(validMethods, "/users", r.views.UsersFunc,
+			r.views.RequirePermission(permissions.ManageMembersMembersList))
+		internal.Match(validMethods, "/user/add", r.views.UserAddFunc,
+			r.views.RequirePermission(permissions.ManageMembersMembersAdd))
 	} else {
 		internal.Match(validMethods, "/users", r.views.UsersFunc)
 		internal.Match(validMethods, "/user/add", r.views.UserAddFunc)
@@ -157,12 +171,48 @@ func (r *Router) loadRoutes() {
 	if !r.config.Debug {
 		user.Use(r.views.RequirePermission(permissions.ManageMembersMembersAdmin))
 	}
+
 	user.Match(validMethods, "/edit", r.views.UserEditFunc)
 	user.Match(validMethods, "/delete", r.views.UserDeleteFunc)
 	user.Match(validMethods, "/reset", r.views.ResetUserPasswordFunc)
 	user.Match(validMethods, "/toggle", r.views.UserToggleEnabledFunc)
 	user.Match(validMethods, "/assume", r.views.AssumeUserFunc, r.views.RequirePermission(permissions.SuperUser))
 	user.Match(validMethods, "", r.views.UserFunc)
+
+	internal.Match(validMethods, "/officerships", r.views.OfficershipsFunc,
+		r.views.RequirePermission(permissions.ManageMembersOfficers))
+
+	officershipsRoute := internal.Group("/officership")
+
+	if !r.config.Debug {
+		officershipsRoute.Use(r.views.RequirePermission(permissions.ManageMembersOfficers))
+	}
+
+	officershipsRoute.Match(validMethods, "/add", r.views.OfficershipAddFunc)
+
+	officershipsRoute.Match(validMethods, "/officers", r.views.OfficersFunc)
+	officershipsRoute.Match(validMethods, "/officer/add", r.views.OfficerAddFunc)
+
+	officer := officershipsRoute.Group("/officer/:officerid")
+	officer.Match(validMethods, "/edit", r.views.OfficerEditFunc)
+	officer.Match(validMethods, "/delete", r.views.OfficerDeleteFunc)
+	officer.Match(validMethods, "", r.views.OfficerFunc)
+
+	officershipsRoute.Match(validMethods, "/teams", r.views.OfficershipTeamsFunc)
+	officershipsRoute.Match(validMethods, "/team/add", r.views.OfficershipTeamAddFunc)
+
+	officershipTeam := officershipsRoute.Group("/team/:officershipteamid")
+	officershipTeam.Match(validMethods, "/edit", r.views.OfficershipTeamEditFunc)
+	officershipTeam.Match(validMethods, "/delete", r.views.OfficershipTeamDeleteFunc)
+	officershipTeamOfficer := officershipTeam.Group("/officership")
+	officershipTeamOfficer.Match(validMethods, "/add", r.views.OfficershipTeamAddOfficershipFunc)
+	officershipTeamOfficer.Match(validMethods, "/remove/:officershipid", r.views.OfficershipTeamRemoveOfficershipFunc)
+	officershipTeam.Match(validMethods, "", r.views.OfficershipTeamFunc)
+
+	officership := officershipsRoute.Group("/:officershipid")
+	officership.Match(validMethods, "/edit", r.views.OfficershipEditFunc)
+	officership.Match(validMethods, "/delete", r.views.OfficershipDeleteFunc)
+	officership.Match(validMethods, "", r.views.OfficershipFunc)
 
 	internalAPI := internal.Group("/api")
 	internalAPI.Match(validMethods, "/set_token", r.views.SetTokenHandler)
@@ -182,7 +232,8 @@ func (r *Router) loadRoutes() {
 			Status: http.StatusOK,
 		})
 		if err != nil {
-			fmt.Println(err)
+			log.Printf("failed to marshal health json: %+v", err)
+
 			return &echo.HTTPError{
 				Code:     http.StatusBadRequest,
 				Message:  err.Error(),
@@ -191,6 +242,7 @@ func (r *Router) loadRoutes() {
 		}
 
 		c.Response().Header().Set("Content-Type", "application/json")
+
 		return c.JSON(http.StatusOK, marshal)
 	})
 

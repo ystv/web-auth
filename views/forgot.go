@@ -2,7 +2,9 @@ package views
 
 import (
 	"fmt"
+	"html/template"
 	"log"
+	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -25,15 +27,16 @@ type (
 var notification = Notification{
 	Title:   "Reset code sent",
 	MsgType: "",
-	Message: "Cheers! If your account exists, you should receive a new email from \"YSTV Security\" with a link to reset your password shortly.",
+	Message: `Cheers! If your account exists, you should receive a new email from "YSTV Security" with a link to reset
+your password shortly.`,
 }
 
 // ForgotFunc handles sending a reset email
 func (v *Views) ForgotFunc(c echo.Context) error {
 	switch c.Request().Method {
-	case "GET":
+	case http.MethodGet:
 		return v.template.RenderTemplate(c.Response().Writer, nil, templates.ForgotTemplate, templates.NoNavType)
-	case "POST":
+	case http.MethodPost:
 		u := user.User{Email: c.FormValue("email")}
 
 		if u.Email == "" {
@@ -43,9 +46,12 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 		userFromDB, err := v.user.GetUser(c.Request().Context(), u)
 		if err != nil {
 			// User doesn't exist, we'll pretend they've got an email
-			log.Printf("request for reset on unknown email \"%s\"", userFromDB.Email)
-			return v.template.RenderTemplate(c.Response(), notification, templates.NotificationTemplate, templates.NoNavType)
+			log.Printf("request for reset on unknown email \"%s\"", u.Email)
+
+			return v.template.RenderTemplate(c.Response(), notification, templates.NotificationTemplate,
+				templates.NoNavType)
 		}
+
 		url := uuid.NewString()
 		v.cache.Set(url, userFromDB.UserID, cache.DefaultExpiration)
 
@@ -53,7 +59,9 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 
 		// Valid request, send email with reset code
 		if mailer != nil {
-			emailTemplate, err := v.template.GetEmailTemplate(templates.ForgotEmailTemplate)
+			var emailTemplate *template.Template
+
+			emailTemplate, err = v.template.GetEmailTemplate(templates.ForgotEmailTemplate)
 			if err != nil {
 				return fmt.Errorf("failed to render email for forgot: %w", err)
 			}
@@ -75,8 +83,10 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 			err = mailer.SendMail(file)
 			if err != nil {
 				log.Printf("failed to send mail for forgot: %+v", err)
+
 				return fmt.Errorf("failed to send email for forgot: %w", err)
 			}
+
 			_ = mailer.Close()
 
 			log.Printf("request for password reset email: \"%s\"", userFromDB.Email)
@@ -86,7 +96,9 @@ func (v *Views) ForgotFunc(c echo.Context) error {
 		}
 
 		// User doesn't exist, we'll pretend they've got an email
-		return v.template.RenderTemplate(c.Response().Writer, notification, templates.NotificationTemplate, templates.NoNavType)
+		return v.template.RenderTemplate(c.Response().Writer, notification, templates.NotificationTemplate,
+			templates.NoNavType)
 	}
+
 	return v.invalidMethodUsed(c) // maybe nil
 }
