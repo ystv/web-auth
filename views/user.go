@@ -502,7 +502,7 @@ func (v *Views) _userAddPost(c echo.Context) error {
 
 		message.Message = fmt.Sprintf("Successfully sent user email to: \"%s\"", email)
 	} else {
-		message.Message = fmt.Sprintf(`No mailer present\nPlease send the username and password to this email: 
+		message.Message = fmt.Sprintf(`No mailer present<br>Please send the username and password to this email: 
 %s, username: %s, password: %s`, email, username, password)
 		message.Error = errors.New("no mailer present")
 		log.Printf("no Mailer present")
