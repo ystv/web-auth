@@ -500,6 +500,10 @@ func (v *Views) OfficerAddFunc(c echo.Context) error {
 			return errors.New("start date must be before today")
 		}
 
+		// Add 22 hours to always be at the end of the day when adding vs the midnight for ending,
+		// this takes into consideration daylight savings from the server side
+		parseStart = parseStart.Add(time.Hour * 22)
+
 		endDate := null.NewTime(time.Time{}, false)
 
 		if tempEndDate != "" {
