@@ -56,8 +56,7 @@ func (s *Store) getOfficerships(ctx context.Context, officershipStatus Officersh
 	WHEN o.name LIKE '%Assistant%' THEN 3
 	WHEN o.name = 'Head of Welfare and Training' THEN 4
 	WHEN o.name LIKE '%Head of%' THEN 5
-	ELSE 6
-	END`, "o.name")
+	ELSE 6 END`, "o.name")
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -90,7 +89,9 @@ func (s *Store) getOfficership(ctx context.Context, o1 Officership) (Officership
 	WHEN o.name LIKE '%Director%' AND o.name NOT LIKE '%Deputy%' AND o.name NOT LIKE '%Assistant%' THEN 1
 	WHEN o.name LIKE '%Deputy%' THEN 2
 	WHEN o.name LIKE '%Assistant%' THEN 3
-	WHEN o.name = 'Head of Welfare and Training' THEN 4 WHEN o.name LIKE '%Head of%' THEN 5 ELSE 6 END`, "o.name").
+	WHEN o.name = 'Head of Welfare and Training' THEN 4
+	WHEN o.name LIKE '%Head of%' THEN 5
+	ELSE 6 END`, "o.name").
 		Limit(1)
 
 	sql, args, err := builder.ToSql()
@@ -332,9 +333,10 @@ func (s *Store) getOfficershipTeamMembers(ctx context.Context, t1 *OfficershipTe
 	builder = builder.OrderBy(`CASE WHEN o.name = 'Station Director' THEN 0
 	WHEN o.name LIKE '%Director%' AND o.name NOT LIKE '%Deputy%' THEN 1
 	WHEN o.name LIKE '%Deputy%' THEN 2
-	WHEN o.name = 'Head of Welfare and Training' THEN 3
-	WHEN o.name LIKE '%Head of%' THEN 4
-	ELSE 5 END`,
+	WHEN o.name LIKE '%Assistant%' THEN 3
+	WHEN o.name = 'Head of Welfare and Training' THEN 4
+	WHEN o.name LIKE '%Head of%' THEN 5
+	ELSE 6 END`,
 		"o.name").
 		GroupBy("otm", "otm.officer_id", "otm.team_id", "o.officer_id", "name", "email_alias", "description",
 			"historywiki_url", "role_id", "is_current", "if_unfilled")
@@ -372,8 +374,7 @@ func (s *Store) getOfficershipsNotInTeam(ctx context.Context, officershipTeam Of
 	WHEN o.name LIKE '%Assistant%' THEN 3
 	WHEN o.name = 'Head of Welfare and Training' THEN 4
 	WHEN o.name LIKE '%Head of%' THEN 5
-	ELSE 6
-	END`, "o.name")
+	ELSE 6 END`, "o.name")
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -526,10 +527,10 @@ func (s *Store) getOfficershipMembers(ctx context.Context, o1 *Officership, u *u
 		builder = builder.OrderBy(`CASE WHEN o.name = 'Station Director' THEN 0
 		WHEN o.name LIKE '%Director%' AND o.name NOT LIKE '%Deputy%' THEN 1
 		WHEN o.name LIKE '%Deputy%' THEN 2
-		WHEN o.name = 'Head of Welfare and Training' THEN 3
-		WHEN o.name LIKE '%Head of%' THEN 4
-		ELSE 5 END`,
-			"o.name")
+		WHEN o.name LIKE '%Assistant%' THEN 3
+		WHEN o.name = 'Head of Welfare and Training' THEN 4
+		WHEN o.name LIKE '%Head of%' THEN 5
+		ELSE 6 END`, "o.name")
 	}
 
 	builder = builder.OrderBy("om.start_date DESC")
