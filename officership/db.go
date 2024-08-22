@@ -331,7 +331,7 @@ func (s *Store) getOfficershipTeamMembers(ctx context.Context, t1 *OfficershipTe
 	}
 
 	builder = builder.OrderBy(`CASE WHEN o.name = 'Station Director' THEN 0
-	WHEN o.name LIKE '%Director%' AND o.name NOT LIKE '%Deputy%' THEN 1
+	WHEN o.name LIKE '%Director%' AND o.name NOT LIKE '%Deputy%' AND o.name NOT LIKE '%Assistant%' THEN 1
 	WHEN o.name LIKE '%Deputy%' THEN 2
 	WHEN o.name LIKE '%Assistant%' THEN 3
 	WHEN o.name = 'Head of Welfare and Training' THEN 4
@@ -525,7 +525,7 @@ func (s *Store) getOfficershipMembers(ctx context.Context, o1 *Officership, u *u
 
 	if orderByOfficerName {
 		builder = builder.OrderBy(`CASE WHEN o.name = 'Station Director' THEN 0
-		WHEN o.name LIKE '%Director%' AND o.name NOT LIKE '%Deputy%' THEN 1
+		WHEN o.name LIKE '%Director%' AND o.name NOT LIKE '%Deputy%' AND o.name NOT LIKE '%Assistant%' THEN 1
 		WHEN o.name LIKE '%Deputy%' THEN 2
 		WHEN o.name LIKE '%Assistant%' THEN 3
 		WHEN o.name = 'Head of Welfare and Training' THEN 4
