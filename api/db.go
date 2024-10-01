@@ -75,7 +75,7 @@ func (s *Store) addToken(ctx context.Context, t1 Token) (Token, error) {
 
 	defer stmt.Close()
 
-	err = stmt.QueryRow(args...).Scan(&t)
+	err = stmt.QueryRow(args...).Scan(&t.TokenID, &t.Name, &t.Description, &t.Expiry, &t.UserID)
 	if err != nil {
 		return Token{}, fmt.Errorf("failed to add token: %w", err)
 	}
