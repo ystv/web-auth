@@ -202,6 +202,7 @@ func DBUserToDetailedUser(dbUser user.User, store *user.Store, officers []office
 	u.ResetPw = dbUser.ResetPw
 	u.Enabled = dbUser.Enabled
 	u.CreatedAt = null.StringFrom(dbUser.CreatedAt.Time.In(location).Format("2006-01-02 15:04:05 MST"))
+	u.Avatar = dbUser.Avatar
 
 	if dbUser.CreatedBy.Valid {
 		u.CreatedBy, err = store.GetUser(context.Background(), user.User{UserID: int(dbUser.CreatedBy.Int64)})
