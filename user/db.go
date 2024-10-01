@@ -146,7 +146,9 @@ func (s *Store) getUser(ctx context.Context, u1 User) (User, error) {
 	case u.UseGravatar:
 		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace(u.Email))))
 		u.Avatar = fmt.Sprintf("https://www.gravatar.com/avatar/%s", hex.EncodeToString(hash[:]))
-	case avatar == "", strings.Contains(avatar, s.cdnEndpoint):
+	case avatar == "":
+		u.Avatar = "https://placehold.it/128x128"
+	case strings.Contains(avatar, s.cdnEndpoint):
 	case strings.Contains(avatar, fmt.Sprintf("%d.", u.UserID)):
 		u.Avatar = "https://ystv.co.uk/static/images/members/thumb/" + avatar
 	default:
