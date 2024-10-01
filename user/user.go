@@ -18,8 +18,9 @@ import (
 type (
 	// Store stores the dependencies
 	Store struct {
-		db    *sqlx.DB
-		cloak *gocloaksession.GoCloakSession
+		db          *sqlx.DB
+		cdnEndpoint string
+		cloak       *gocloaksession.GoCloakSession
 	}
 
 	// User represents relevant user fields
@@ -145,10 +146,11 @@ type (
 )
 
 // NewUserRepo stores our dependency
-func NewUserRepo(db *sqlx.DB) *Store {
+func NewUserRepo(db *sqlx.DB, cdnEndpoint string) *Store {
 	return &Store{
-		db:    db,
-		cloak: nil,
+		db:          db,
+		cloak:       nil,
+		cdnEndpoint: cdnEndpoint,
 	}
 }
 

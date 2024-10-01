@@ -2,7 +2,11 @@ package user
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
+	"log"
+	"strings"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -136,6 +140,18 @@ func (s *Store) getUser(ctx context.Context, u1 User) (User, error) {
 	err = s.db.GetContext(ctx, &u, sql, args...)
 	if err != nil {
 		return u, fmt.Errorf("failed to get user from db: %w", err)
+	}
+
+	switch avatar := u.Avatar; {
+	case u.UseGravatar:
+		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace(u.Email))))
+		u.Avatar = fmt.Sprintf("https://www.gravatar.com/avatar/%s", hex.EncodeToString(hash[:]))
+	case avatar == "", strings.Contains(avatar, s.cdnEndpoint):
+	case strings.Contains(avatar, fmt.Sprintf("%d.", u.UserID)):
+		u.Avatar = "https://ystv.co.uk/static/images/members/thumb/" + avatar
+	default:
+		log.Printf("unknown avatar, user id: %d, length: %d, db string: %s, continuing", u.UserID, len(u.Avatar), u.Avatar)
+		u.Avatar = ""
 	}
 
 	return u, nil

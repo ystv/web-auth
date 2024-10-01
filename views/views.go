@@ -33,6 +33,7 @@ type (
 		DomainName        string
 		LogoutEndpoint    string
 		SessionCookieName string
+		CDNEndpoint       string
 		Mail              SMTPConfig
 		Security          SecurityConfig
 	}
@@ -84,7 +85,7 @@ func New(conf *Config, host string) *Views {
 	v.officership = officership.NewOfficershipRepo(dbStore)
 	v.permission = permission.NewPermissionRepo(dbStore)
 	v.role = role.NewRoleRepo(dbStore)
-	v.user = user.NewUserRepo(dbStore)
+	v.user = user.NewUserRepo(dbStore, conf.CDNEndpoint)
 	v.api = api.NewAPIRepo(dbStore)
 
 	v.template = templates.NewTemplate(v.permission, v.role, v.user)

@@ -84,6 +84,7 @@ func main() {
 		DomainName:        domainName,
 		LogoutEndpoint:    os.Getenv("WAUTH_LOGOUT_ENDPOINT"),
 		SessionCookieName: sessionCookieName,
+		CDNEndpoint:       os.Getenv("WAUTH_CDN_ENDPOINT"),
 		Mail: views.SMTPConfig{
 			Host:       os.Getenv("WAUTH_MAIL_HOST"),
 			Username:   os.Getenv("WAUTH_MAIL_USER"),
