@@ -67,6 +67,10 @@ func (v *Views) _loginPost(c echo.Context) error {
 	callback := "/internal"
 
 	callbackURL, err := url.Parse(c.QueryParam("callback"))
+	if err != nil {
+		log.Printf("failed to parse callback url: %+v", err)
+	}
+	fmt.Println(callbackURL.Host)
 	if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) && callbackURL.String() != "" {
 		callback = callbackURL.String()
 	}
