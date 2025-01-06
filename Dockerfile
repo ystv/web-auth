@@ -6,6 +6,7 @@ LABEL stage="builder"
 WORKDIR /src/
 
 ARG WAUTH_VERSION_ARG
+ARG WAUTH_COMMIT_ARG
 
 # Stores our dependencies
 COPY go.mod .
@@ -19,6 +20,8 @@ COPY . .
 
 # Set build variables
 RUN echo -n "-X 'main.Version=$WAUTH_VERSION_ARG" > ./ldflags && \
+    tr -d \\n < ./ldflags > ./temp && mv ./temp ./ldflags && \
+    echo -n "' -X 'main.Commit=$WAUTH_COMMIT_ARG" >> ./ldflags && \
     tr -d \\n < ./ldflags > ./temp && mv ./temp ./ldflags && \
     echo -n "'" >> ./ldflags
 

@@ -26,6 +26,7 @@ type (
 	// Config the global web-auth configuration
 	Config struct {
 		Version           string
+		Commit            string
 		Debug             bool
 		Address           string
 		DatabaseURL       string

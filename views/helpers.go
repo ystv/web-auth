@@ -35,6 +35,7 @@ type (
 		User user.User
 		// Version is the version that is running
 		Version    string
+		Commit     string
 		Assumed    bool
 		actualUser user.User
 	}
@@ -63,6 +64,7 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 			MsgType:   i.MesType,
 			Callback:  "/internal",
 			Version:   v.conf.Version,
+			Commit:    v.conf.Commit,
 		}
 
 		return c
@@ -98,6 +100,7 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 		Callback:   "/internal",
 		User:       u,
 		Version:    v.conf.Version,
+		Commit:     v.conf.Commit,
 		Assumed:    assumed,
 		actualUser: actual,
 	}

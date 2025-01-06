@@ -14,7 +14,10 @@ import (
 //go:generate ./node_modules/.bin/mjml -r ./templates/mjml/forgotEmail.mjml -o ./templates/forgotEmail.tmpl
 //go:generate ./node_modules/.bin/mjml -r ./templates/mjml/resetEmail.mjml -o ./templates/resetEmail.tmpl
 
-var Version = "unknown"
+var (
+	Version = "unknown"
+	Commit  = "unknown"
+)
 
 func main() {
 	var local, global bool
@@ -77,6 +80,7 @@ func main() {
 	// Generate config
 	conf := &views.Config{
 		Version:           Version,
+		Commit:            Commit,
 		Debug:             debug,
 		Address:           address,
 		DatabaseURL:       dbConnectionString,

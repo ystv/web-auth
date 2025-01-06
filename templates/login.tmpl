@@ -77,7 +77,9 @@
                             <p class="has-text-grey">
                                 <a href="/signup">Sign Up</a> &nbsp;·&nbsp;
                                 <a href="/forgot">Forgot Password</a>{{if ne (len .Version) 0}} &nbsp;·&nbsp;
-                            <a href="https://github.com/ystv/web-auth"> Version: {{.Version}} </a>{{end}}
+                                <a href="https://github.com/ystv/web-auth/"
+                                   target="_blank">Version: {{.Version}}</a> &nbsp;·&nbsp; <a href="https://github.com/ystv/web-auth/commit/{{.Commit}}"
+                                                     target="_blank">Commit: {{.Commit}}</a>{{end}}
                             </p>
                         </div>
                     </div>
