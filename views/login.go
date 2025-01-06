@@ -35,11 +35,6 @@ func (v *Views) _loginGet(c echo.Context) error {
 
 	// Check if there is a callback request
 	callbackURL, err := url.Parse(c.QueryParam("callback"))
-	if err != nil {
-		fmt.Println(err)
-		goto after
-	}
-	fmt.Println(callbackURL.Host, strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName), context.User.Authenticated)
 	if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) && callbackURL.String() != "" {
 		context.Callback = callbackURL.String()
 	}
@@ -47,7 +42,6 @@ func (v *Views) _loginGet(c echo.Context) error {
 	if context.User.Authenticated {
 		return c.Redirect(http.StatusFound, context.Callback)
 	}
-after:
 
 	return v.template.RenderTemplate(c.Response(), context, templates.LoginTemplate, templates.NoNavType)
 }
