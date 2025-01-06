@@ -124,6 +124,7 @@ func New(conf *Config, host string) *Views {
 	v.cookie.Options = &sessions.Options{
 		MaxAge:   sixty * sixty * twentyFour,
 		HttpOnly: true,
+		Domain:   "." + conf.DomainName,
 		Path:     "/",
 	}
 
