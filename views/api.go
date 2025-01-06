@@ -350,8 +350,17 @@ func (v *Views) TestAPITokenFunc(c echo.Context) error {
 		}
 
 		valid, claims, err := v.ValidateToken(token)
+		if err != nil {
+			log.Printf("failed to validate bearer token: %+v", err)
 
-		log.Printf("valid: %t - claims: %+v - error: %+v", valid, claims, err)
+			data := struct {
+				Error string `json:"error"`
+			}{
+				Error: fmt.Sprintf("failed to validate bearer token: %+v", err),
+			}
+
+			return c.JSON(http.StatusBadRequest, data)
+		}
 
 		if !valid {
 			status := statusStruct{
@@ -396,6 +405,7 @@ func (v *Views) TestAPITokenFunc(c echo.Context) error {
 
 			return c.JSON(http.StatusInternalServerError, data)
 		}
+		return err
 	}
 
 	return v.invalidMethodUsed(c) // maybe nil
