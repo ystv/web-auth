@@ -39,7 +39,7 @@ func (v *Views) _loginGet(c echo.Context) error {
 		fmt.Println(err)
 		goto after
 	}
-	fmt.Println(callbackURL.Host)
+	fmt.Println(callbackURL.Host, strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName))
 	if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) && callbackURL.String() != "" {
 		context.Callback = callbackURL.String()
 	}
