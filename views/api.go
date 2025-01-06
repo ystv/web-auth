@@ -410,6 +410,10 @@ func (v *Views) ValidateToken(token string) (bool, *JWTClaims, error) {
 		return false, nil, fmt.Errorf("failed to parse token: %w", err)
 	}
 
+	if parsedToken.Method.Alg() != "HS512" {
+		return false, nil, errors.New("failed to validate token:invalid token method")
+	}
+
 	if !parsedToken.Valid {
 		return false, nil, errors.New("failed to validate token: invalid token")
 	}
