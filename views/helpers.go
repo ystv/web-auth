@@ -279,19 +279,19 @@ func DBUserToDetailedUser(dbUser user.User, store *user.Store, officers []office
 		}
 	}
 
-	//if dbUser.UseGravatar {
+	// if dbUser.UseGravatar {
 	//	u.UseGravatar = true
 	//	// #nosec
 	//	hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace(u.Email))))
 	//	u.Avatar = "https://www.gravatar.com/avatar/" + hex.EncodeToString(hash[:])
-	//} else {
+	// } else {
 	//	u.UseGravatar = false
 	//	if len(dbUser.Avatar) == 0 {
 	//		u.Avatar = "https://placehold.it/128x128"
 	//	} else {
 	//		u.Avatar = "/avatar/" + dbUser.Avatar
 	//	}
-	//}
+	// }
 
 	officerMembers := make([]user.OfficershipMember, 0)
 

@@ -2,6 +2,9 @@ package user
 
 import (
 	"context"
+	"strconv"
+
+	//nolint:gosec
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
@@ -144,8 +147,9 @@ func (s *Store) getUser(ctx context.Context, u1 User) (User, error) {
 
 	switch avatar := u.Avatar; {
 	case u.UseGravatar:
+		//nolint:gosec
 		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace(u.Email))))
-		u.Avatar = fmt.Sprintf("https://www.gravatar.com/avatar/%s", hex.EncodeToString(hash[:]))
+		u.Avatar = "https://www.gravatar.com/avatar/" + hex.EncodeToString(hash[:])
 	case avatar == "":
 		u.Avatar = "https://placehold.it/128x128"
 	case strings.Contains(avatar, s.cdnEndpoint):
@@ -273,7 +277,15 @@ func (s *Store) _getUsersBuilder(size, page int, search, sortBy, direction, enab
 	}
 
 	if page >= 1 && size >= 5 && size <= 100 {
-		builder = builder.Limit(uint64(size)).Offset(uint64(size * (page - 1)))
+		parsed1, err := strconv.ParseUint(strconv.Itoa(size), 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf(`invalid value for size in direction "%s"`, direction)
+		}
+		parsed2, err := strconv.ParseUint(strconv.Itoa(size*(page-1)), 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf(`invalid value for page in direction "%s"`, direction)
+		}
+		builder = builder.Limit(parsed1).Offset(parsed2)
 	}
 
 	return &builder, nil
