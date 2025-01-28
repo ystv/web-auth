@@ -35,9 +35,17 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 		return fmt.Errorf("url is invalid, failed to get user : %w", err)
 	}
 
+	data1 := struct {
+		Error string
+		*Context
+	}{
+		Error:   "",
+		Context: c1,
+	}
+
 	switch c.Request().Method {
 	case http.MethodGet:
-		return v.template.RenderTemplate(c.Response(), c1, templates.ResetTemplate, templates.NoNavType)
+		return v.template.RenderTemplate(c.Response(), data1, templates.ResetTemplate, templates.NoNavType)
 	case http.MethodPost:
 		password := c.FormValue("password")
 		if password != c.FormValue("confirmpassword") {
