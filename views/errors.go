@@ -41,7 +41,7 @@ func (v *Views) CustomHTTPErrorHandler(err error, c echo.Context) {
 
 	err1 := v.template.RenderTemplate(c.Response(), data, templates.ErrorTemplate, templates.NoNavType)
 	if err1 != nil {
-		c.Logger().Errorf("failed to render error page: %+v", err1)
+		c.Logger().Errorf("failed to render error page: %+v, original error: %+v", err1, data)
 	}
 }
 
