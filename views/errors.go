@@ -39,7 +39,7 @@ func (v *Views) CustomHTTPErrorHandler(err error, c echo.Context) {
 		Error: message,
 	}
 
-	err1 := v.template.RenderTemplate(c.Response().Writer, data, templates.ErrorTemplate, templates.NoNavType)
+	err1 := v.template.RenderTemplate(c.Response(), data, templates.ErrorTemplate, templates.NoNavType)
 	if err1 != nil {
 		c.Logger().Errorf("failed to render error page: %+v", err1)
 	}
@@ -48,7 +48,7 @@ func (v *Views) CustomHTTPErrorHandler(err error, c echo.Context) {
 func (v *Views) Error404(c echo.Context) error {
 	c.Logger().Warnf("not found, path: %s, method: %s", c.Path(), c.Request().Method)
 
-	return v.template.RenderTemplate(c.Response().Writer, nil, templates.NotFound404Template, templates.NoNavType)
+	return v.template.RenderTemplate(c.Response(), nil, templates.NotFound404Template, templates.NoNavType)
 }
 
 func (v *Views) invalidMethodUsed(c echo.Context) *echo.HTTPError {
