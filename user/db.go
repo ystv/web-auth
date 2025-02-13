@@ -628,3 +628,27 @@ func (s *Store) removeRolePermission(ctx context.Context, rp RolePermission) err
 
 	return nil
 }
+
+func (s *Store) getCrowdApp(ctx context.Context, c1 CrowdApp) (CrowdApp, error) {
+	var c CrowdApp
+
+	builder := utils.PSQL().Select("*").
+		From("web_auth.crowd_apps").
+		Where(sq.Or{
+			sq.Eq{"app_id": c1.AppID},
+			sq.Eq{"name": c1.Name}}).
+		Limit(1)
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for getCrowdApp: %w", err))
+	}
+
+	//nolint:musttag
+	err = s.db.GetContext(ctx, &c, sql, args...)
+	if err != nil {
+		return c, fmt.Errorf("failed to get crowd app from db: %w", err)
+	}
+
+	return c, nil
+}

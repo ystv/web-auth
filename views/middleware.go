@@ -1,12 +1,15 @@
 package views
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
+	"gopkg.in/guregu/null.v4"
 
 	"github.com/ystv/web-auth/infrastructure/permission"
 	"github.com/ystv/web-auth/permission/permissions"
@@ -131,6 +134,126 @@ func (v *Views) RequiresLoginJSON(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		return next(c)
+	}
+}
+
+// RequiresLoginCrowd is a middleware which is used for crowd auth sites like wiki
+func (v *Views) RequiresLoginCrowd(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+		if err != nil {
+			log.Printf("failed to get session for requiresLoginCrowd: %+v", err)
+
+			data := struct {
+				Error error `json:"error"`
+			}{
+				Error: err,
+			}
+
+			return c.JSON(http.StatusInternalServerError, data)
+		}
+
+		c1 := v.getSessionData(c)
+
+		if !c1.User.Authenticated {
+			data := struct {
+				Error string `json:"error"`
+			}{
+				Error: "user not logged in",
+			}
+
+			return c.JSON(http.StatusUnauthorized, data)
+		}
+
+		userFromDB, err := v.user.GetUser(c.Request().Context(), c1.User)
+		if err != nil {
+			log.Printf("failed to get user for requiresLoginCrowd: %+v", err)
+
+			data := struct {
+				Error error `json:"error"`
+			}{
+				Error: fmt.Errorf("failed to get user for requiresLoginCrowd: %w", err),
+			}
+
+			return c.JSON(http.StatusInternalServerError, data)
+		}
+
+		if userFromDB.DeletedBy.Valid || !c1.User.Enabled {
+			session.Values["user"] = &user.User{}
+			session.Options.MaxAge = -1
+
+			err = session.Save(c.Request(), c.Response())
+			if err != nil {
+				log.Printf("failed to save session for requiresLoginCrowd: %+v", err)
+				data := struct {
+					Error error `json:"error"`
+				}{
+					Error: fmt.Errorf("failed to save session for requiresLoginCrowd: %w", err),
+				}
+
+				return c.JSON(http.StatusInternalServerError, data)
+			}
+
+			data := struct {
+				Error string `json:"error"`
+			}{
+				Error: "user deleted or not enabled",
+			}
+
+			return c.JSON(http.StatusUnauthorized, data)
+		}
+
+		auth := c.Request().Header.Get(echo.HeaderAuthorization)
+		l := len("basic")
+
+		if len(auth) > l+1 && strings.EqualFold(auth[:l], "basic") {
+			var b []byte
+			// Invalid base64 shouldn't be treated as error
+			// instead should be treated as invalid client input
+			b, err = base64.StdEncoding.DecodeString(auth[l+1:])
+			if err != nil {
+				return echo.NewHTTPError(http.StatusBadRequest).SetInternal(err)
+			}
+
+			cred := string(b)
+			for i := 0; i < len(cred); i++ {
+				if cred[i] == ':' {
+					var valid bool
+					// Verify credentials
+					valid, err = func(username, password string, c echo.Context) (bool, error) {
+						crowd := user.CrowdApp{
+							Name:     username,
+							Password: null.StringFrom(password),
+						}
+						var crowd1 user.CrowdApp
+						crowd1, err = v.user.VerifyCrowd(c.Request().Context(), crowd)
+						if err != nil {
+							return false, err
+						}
+
+						if crowd1.AppID > 0 {
+							return true, nil
+						}
+
+						return false, echo.NewHTTPError(http.StatusUnauthorized).SetInternal(fmt.Errorf("invalid credential"))
+					}(cred[:i], cred[i+1:], c)
+					if err != nil {
+						return err
+					} else if valid {
+						return next(c)
+					}
+					break
+				}
+			}
+		}
+
+		data := struct {
+			Error string `json:"error"`
+		}{
+			Error: "app not logged in",
+		}
+
+		return c.JSON(http.StatusUnauthorized, data)
 	}
 }
 

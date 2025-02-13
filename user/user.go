@@ -143,6 +143,15 @@ type (
 		RoleID int `db:"role_id" json:"roleID"`
 		UserID int `db:"user_id" json:"userID"`
 	}
+
+	CrowdApp struct {
+		AppID       int         `db:"app_id" json:"appID"`
+		Name        string      `db:"name" json:"name"`
+		Description null.String `db:"description" json:"description,omitempty"`
+		Active      bool        `db:"active" json:"active"`
+		Password    null.String `db:"password" json:"-"`
+		Salt        null.String `db:"salt" json:"-"`
+	}
 )
 
 // NewUserRepo stores our dependency
@@ -421,4 +430,28 @@ func (s *Store) AddRolePermission(ctx context.Context, rp RolePermission) (RoleP
 // RemoveRolePermission removes a link between a role.Role and permission.Permission
 func (s *Store) RemoveRolePermission(ctx context.Context, rp RolePermission) error {
 	return s.removeRolePermission(ctx, rp)
+}
+
+func (s *Store) GetCrowdApp(ctx context.Context, c CrowdApp) (CrowdApp, error) {
+	return s.getCrowdApp(ctx, c)
+}
+
+// VerifyCrowd will check that the password is correct with provided
+// credentials and if verified will return the CrowdApp object
+// returned is the user object
+func (s *Store) VerifyCrowd(ctx context.Context, c CrowdApp) (CrowdApp, error) {
+	crowd, err := s.GetCrowdApp(ctx, c)
+	if err != nil {
+		return c, fmt.Errorf("failed to get crowd app: %w", err)
+	}
+
+	if !crowd.Active {
+		return c, errors.New("crowd app not active")
+	}
+
+	if utils.HashPass(crowd.Salt.String+c.Password.String) == crowd.Password.String {
+		return crowd, nil
+	}
+
+	return c, errors.New("invalid credentials")
 }

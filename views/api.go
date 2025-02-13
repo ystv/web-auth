@@ -3,6 +3,7 @@ package views
 import (
 	"context"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"log"
@@ -38,6 +39,21 @@ type (
 		Tokens   []api.Token
 		AddedJWT string
 		TemplateHelper
+	}
+
+	XMLUser struct {
+		XMLName    xml.Name  `xml:"user"`
+		ID         int       `xml:"id"`
+		FirstName  string    `xml:"first-name"`
+		NickName   *string   `xml:"nick-name"`
+		LastName   string    `xml:"last-name"`
+		ServerName *string   `xml:"server-name"`
+		ITSName    string    `xml:"its-name"`
+		Email      string    `xml:"email"`
+		Groups     *XMLGroup `xml:"groups"`
+	}
+	XMLGroup struct {
+		Group []string `xml:"group"`
 	}
 )
 
@@ -233,6 +249,51 @@ func (v *Views) SetTokenHandler(c echo.Context) error {
 	}
 
 	return nil
+}
+
+// CrowdXMLHandler returns an XML config of the current logged-in user to return to a crowd application
+// the user is stored in cookies and the crowd auth is logged in through basic due to mediawiki
+func (v *Views) CrowdXMLHandler(c echo.Context) error {
+	c1 := v.getSessionData(c)
+
+	xmlUser := &XMLUser{
+		ID:        c1.User.UserID,
+		FirstName: c1.User.Firstname,
+		LastName:  c1.User.Lastname,
+		ITSName:   c1.User.UniversityUsername,
+		Email:     c1.User.Email,
+	}
+
+	if len(c1.User.Nickname) != 0 && c1.User.Nickname != c1.User.Firstname {
+		xmlUser.NickName = &c1.User.Nickname
+	}
+
+	if c1.User.LDAPUsername.Valid && len(c1.User.LDAPUsername.String) != 0 {
+		xmlUser.ServerName = &c1.User.LDAPUsername.String
+	}
+
+	roles, err := v.user.GetRolesForUser(c.Request().Context(), c1.User)
+	if err != nil {
+		log.Printf("failed to get roles for user: %+v", err)
+		data := struct {
+			XMLName xml.Name `xml:"errors"`
+			Error   error    `xml:"error"`
+		}{
+			Error: fmt.Errorf("failed to get roles for user: %w", err),
+		}
+
+		return c.XML(http.StatusInternalServerError, data)
+	}
+
+	var groups []string
+	for _, r := range roles {
+		groups = append(groups, r.Name)
+	}
+	if len(groups) > 0 {
+		xmlUser.Groups = &XMLGroup{Group: groups}
+	}
+
+	return c.XML(http.StatusOK, xmlUser)
 }
 
 // newJWT generates a new jwt token
