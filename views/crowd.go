@@ -8,8 +8,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 
+	"github.com/ystv/web-auth/crowd"
 	"github.com/ystv/web-auth/templates"
-	"github.com/ystv/web-auth/user"
 )
 
 func (v *Views) CrowdAppsFunc(c echo.Context) error {
@@ -19,21 +19,21 @@ func (v *Views) CrowdAppsFunc(c echo.Context) error {
 
 		status := c.QueryParam("status")
 
-		var dbStatus user.CrowdAppStatus
+		var dbStatus crowd.CrowdAppStatus
 		switch status {
 		case "active", "":
 			status = "active"
-			dbStatus = user.Active
+			dbStatus = crowd.Active
 		case "inactive":
-			dbStatus = user.Inactive
+			dbStatus = crowd.Inactive
 		case "any":
-			dbStatus = user.Any
+			dbStatus = crowd.Any
 		default:
 			return echo.NewHTTPError(http.StatusBadRequest,
 				errors.New("status must be set to either \"any\", \"active\" or \"inactive\""))
 		}
 
-		crowdApps, err := v.user.GetCrowdApps(c.Request().Context(), dbStatus)
+		crowdApps, err := v.crowd.GetCrowdApps(c.Request().Context(), dbStatus)
 		if err != nil {
 			return fmt.Errorf("failed to get crowd apps: %w", err)
 		}
@@ -44,7 +44,7 @@ func (v *Views) CrowdAppsFunc(c echo.Context) error {
 		}
 
 		data := struct {
-			CrowdApps           []user.CrowdApp
+			CrowdApps           []crowd.CrowdApp
 			CrowdAppsStatusSort string
 			Error               string
 			TemplateHelper

@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"gopkg.in/guregu/null.v4"
 
+	"github.com/ystv/web-auth/crowd"
 	"github.com/ystv/web-auth/infrastructure/permission"
 	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/user"
@@ -233,17 +234,17 @@ func (v *Views) RequiresLoginCrowd(next echo.HandlerFunc) echo.HandlerFunc {
 					var valid bool
 					// Verify credentials
 					valid, err = func(username, password string, c echo.Context) (bool, error) {
-						crowd := user.CrowdApp{
+						crowd1 := crowd.CrowdApp{
 							Name:     username,
 							Password: null.StringFrom(password),
 						}
-						var crowd1 user.CrowdApp
-						crowd1, err = v.user.VerifyCrowd(c.Request().Context(), crowd)
+						var crowd2 crowd.CrowdApp
+						crowd2, err = v.crowd.VerifyCrowd(c.Request().Context(), crowd1)
 						if err != nil {
 							return false, err
 						}
 
-						if crowd1.AppID > 0 {
+						if crowd2.AppID > 0 {
 							return true, nil
 						}
 

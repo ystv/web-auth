@@ -13,6 +13,7 @@ import (
 	"github.com/patrickmn/go-cache"
 
 	"github.com/ystv/web-auth/api"
+	"github.com/ystv/web-auth/crowd"
 	"github.com/ystv/web-auth/infrastructure/db"
 	"github.com/ystv/web-auth/infrastructure/mail"
 	"github.com/ystv/web-auth/officership"
@@ -61,6 +62,7 @@ type (
 		cache       *cache.Cache
 		conf        *Config
 		cookie      *sessions.CookieStore
+		crowd       crowd.Repo
 		Mailer      *mail.Mailer
 		officership *officership.Store
 		permission  *permission.Store
@@ -88,6 +90,7 @@ func New(conf *Config, host string) *Views {
 	v.role = role.NewRoleRepo(dbStore)
 	v.user = user.NewUserRepo(dbStore, conf.CDNEndpoint)
 	v.api = api.NewAPIRepo(dbStore)
+	v.crowd = crowd.NewCrowdRepo(dbStore)
 
 	v.template = templates.NewTemplate(v.permission, v.role, v.user)
 
