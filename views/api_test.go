@@ -7,6 +7,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
 	"github.com/ystv/web-auth/api"
@@ -14,8 +15,6 @@ import (
 	"github.com/ystv/web-auth/user"
 	mockuser "github.com/ystv/web-auth/user/mocks"
 )
-
-//func TestSetTokenHandler
 
 func TestValidToken(t *testing.T) {
 	tokenID := "testing_token"
@@ -144,9 +143,9 @@ func TestValidToken(t *testing.T) {
 
 			if tc.ExpectedError {
 				fmt.Println(err)
-				assert.NotNil(t, err)
+				require.NoError(t, err)
 			} else {
-				assert.Nil(t, err)
+				require.NoError(t, err)
 			}
 			assert.Equal(t, tc.ExpectedValid, valid)
 			if tc.ExpectedNonNilClaim {

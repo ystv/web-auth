@@ -248,7 +248,7 @@ func (v *Views) RequiresLoginCrowd(next echo.HandlerFunc) echo.HandlerFunc {
 							return true, nil
 						}
 
-						return false, echo.NewHTTPError(http.StatusUnauthorized).SetInternal(fmt.Errorf("invalid credential"))
+						return false, echo.NewHTTPError(http.StatusUnauthorized).SetInternal(errors.New("invalid credential"))
 					}(cred[:i], cred[i+1:], c)
 					if err != nil {
 						log.Printf("invalid app credentials: %+v", err)

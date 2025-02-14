@@ -285,7 +285,7 @@ func (v *Views) CrowdXMLHandler(c echo.Context) error {
 		return c.XML(http.StatusInternalServerError, data)
 	}
 
-	var groups []string
+	groups := make([]string, 0)
 	for _, r := range roles {
 		groups = append(groups, r.Name)
 	}

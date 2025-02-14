@@ -25,6 +25,7 @@ type (
 		db *sqlx.DB
 	}
 
+	//nolint:revive
 	CrowdApp struct {
 		AppID       int         `db:"app_id" json:"appID"`
 		Name        string      `db:"name" json:"name"`
@@ -35,6 +36,7 @@ type (
 	}
 
 	// CrowdAppStatus indicates the state desired for a database get of crowd apps
+	//nolint:revive
 	CrowdAppStatus int
 )
 
