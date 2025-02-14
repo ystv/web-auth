@@ -57,6 +57,7 @@ const (
 	OfficerTemplate          Template = "officer.tmpl"
 	OfficershipTeamsTemplate Template = "officershipTeams.tmpl"
 	OfficershipTeamTemplate  Template = "officershipTeam.tmpl"
+	CrowdAppsTemplate        Template = "crowdApps.tmpl"
 )
 
 type TemplateType int
@@ -245,6 +246,8 @@ var (
 		{"officershipTeams.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl",
 			"_sidebar.tmpl", "_pagination.tmpl"},
 		{"officershipTeam.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl",
+			"_sidebar.tmpl", "_pagination.tmpl"},
+		{"crowdApps.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl",
 			"_sidebar.tmpl", "_pagination.tmpl"},
 	}
 
