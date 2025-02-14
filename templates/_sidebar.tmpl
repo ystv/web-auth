@@ -5,24 +5,83 @@
         <p class="menu-label">General</p>
         <ul class="menu-list">
             <li><a {{if eq $page "dashboard"}}class="is-active"{{end}} href="/internal">Dashboard</a></li>
-            {{if (checkPermission .UserPermissions "ManageMembers.Members.List")}}
+            <li><a {{if eq $page "settings"}}class="is-active"{{end}} href="/internal/settings">Settings</a></li>
+        </ul>
+        {{if (checkPermission .UserPermissions "SuperUser")}}
+            <p class="menu-label">Users and permissions</p>
+            <ul class="menu-list">
                 <li><a {{if eq $page "users"}}class="is-active"{{end}} href="/internal/users">Users</a></li>
-            {{else if (checkPermission .UserPermissions "ManageMembers.Members.Add")}}
-                <li><a {{if eq $page "useradd"}}class="is-active"{{end}} href="/internal/user/add">Add User</a></li>
-            {{end}}
-            {{if (checkPermission .UserPermissions "ManageMembers.Officers")}}
+                <li><a {{if eq $page "roles"}}class="is-active"{{end}} href="/internal/roles">Roles</a></li>
+                <li><a {{if eq $page "permissions"}}class="is-active"{{end}} href="/internal/permissions">Permissions</a></li>
+            </ul>
+            <p class="menu-label">Officer functions</p>
+            <ul class="menu-list">
                 <li><a {{if eq $page "officerships"}}class="is-active"{{end}} href="/internal/officerships">Officerships</a></li>
                 <li><a {{if eq $page "officers"}}class="is-active"{{end}} href="/internal/officership/officers">Officers</a></li>
                 <li><a {{if eq $page "officershipTeams"}}class="is-active"{{end}} href="/internal/officership/teams">Officership Teams</a></li>
+            </ul>
+            <p class="menu-label">SuperUser only functions</p>
+            <ul class="menu-list">
+                <li><a {{if eq $page "crowdapps"}}class="is-active"{{end}} href="/internal/crowdapps">Crowd Apps</a></li>
+            </ul>
+        {{else}}
+            {{if and and (checkPermission .UserPermissions "ManageMembers.Groups") (checkPermission .UserPermissions "ManageMembers.Members.List") (checkPermission .UserPermissions "ManageMembers.Permissions")}}
+                <p class="menu-label">Users and permissions</p>
+                <ul class="menu-list">
+                    <li><a {{if eq $page "users"}}class="is-active"{{end}} href="/internal/users">Users</a></li>
+                    <li><a {{if eq $page "roles"}}class="is-active"{{end}} href="/internal/roles">Roles</a></li>
+                    <li><a {{if eq $page "permissions"}}class="is-active"{{end}} href="/internal/permissions">Permissions</a></li>
+                </ul>
+            {{else if and (checkPermission .UserPermissions "ManageMembers.Members.List") (checkPermission .UserPermissions "ManageMembers.Groups")}}
+                <p class="menu-label">Users and roles</p>
+                <ul class="menu-list">
+                    <li><a {{if eq $page "users"}}class="is-active"{{end}} href="/internal/users">Users</a></li>
+                    <li><a {{if eq $page "roles"}}class="is-active"{{end}} href="/internal/roles">Roles</a></li>
+                </ul>
+            {{else if and (checkPermission .UserPermissions "ManageMembers.Members.List") (checkPermission .UserPermissions "ManageMembers.Permissions")}}
+                <p class="menu-label">Users and permissions</p>
+                <ul class="menu-list">
+                    <li><a {{if eq $page "users"}}class="is-active"{{end}} href="/internal/users">Users</a></li>
+                    <li><a {{if eq $page "permissions"}}class="is-active"{{end}} href="/internal/permissions">Permissions</a></li>
+                </ul>
+            {{else if and (checkPermission .UserPermissions "ManageMembers.Groups") (checkPermission .UserPermissions "ManageMembers.Permissions")}}
+                <p class="menu-label">Roles and permissions</p>
+                <ul class="menu-list">
+                    <li><a {{if eq $page "roles"}}class="is-active"{{end}} href="/internal/roles">Roles</a></li>
+                    <li><a {{if eq $page "permissions"}}class="is-active"{{end}} href="/internal/permissions">Permissions</a></li>
+                </ul>
+            {{else if (checkPermission .UserPermissions "ManageMembers.Members.List")}}
+            <p class="menu-label">Users</p>
+            <ul class="menu-list">
+                    <li><a {{if eq $page "users"}}class="is-active"{{end}} href="/internal/users">Users</a></li>
+            </ul>
+            {{else if (checkPermission .UserPermissions "ManageMembers.Members.Add")}}
+            <p class="menu-label">Users</p>
+            <ul class="menu-list">
+                <li><a {{if eq $page "useradd"}}class="is-active"{{end}} href="/internal/user/add">Add User</a></li>
+            </ul>
+            {{end}}
+            {{if (checkPermission .UserPermissions "ManageMembers.Officers")}}
+            <p class="menu-label">Officer functions</p>
+            <ul class="menu-list">
+                <li><a {{if eq $page "officerships"}}class="is-active"{{end}} href="/internal/officerships">Officerships</a></li>
+                <li><a {{if eq $page "officers"}}class="is-active"{{end}} href="/internal/officership/officers">Officers</a></li>
+                <li><a {{if eq $page "officershipTeams"}}class="is-active"{{end}} href="/internal/officership/teams">Officership Teams</a></li>
+            </ul>
             {{end}}
             {{if (checkPermission .UserPermissions "ManageMembers.Groups")}}
+                <p class="menu-label">Roles</p>
+                <ul class="menu-list">
                 <li><a {{if eq $page "roles"}}class="is-active"{{end}} href="/internal/roles">Roles</a></li>
+                </ul>
             {{end}}
             {{if (checkPermission .UserPermissions "ManageMembers.Permissions")}}
+                <p class="menu-label">Permissions</p>
+                <ul class="menu-list">
                 <li><a {{if eq $page "permissions"}}class="is-active"{{end}} href="/internal/permissions">Permissions</a></li>
+                </ul>
             {{end}}
-            <li><a {{if eq $page "settings"}}class="is-active"{{end}} href="/internal/settings">Settings</a></li>
-        </ul>
+        {{end}}
         <p class="menu-label">API Interactions</p>
         <ul class="menu-list">
             <li><a {{if eq $page "apiManage"}}class="is-active"{{end}} href="/internal/api/manage">Manage API tokens</a></li>
@@ -35,6 +94,7 @@
             <li><a href="https://creator.ystv.co.uk">Creator Studio</a></li>
             {{if (checkPermission .UserPermissions "COBRA")}}
                 <li><a href="https://cobra.ystv.co.uk">COBRA</a></li>
+                <li><a href="https://streamer.dev.ystv.co.uk">Streamer</a></li>
             {{end}}
         </ul>
     </aside>
