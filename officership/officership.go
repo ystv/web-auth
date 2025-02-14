@@ -10,6 +10,33 @@ import (
 )
 
 type (
+	Repo interface {
+		CountOfficerships(context.Context) (CountOfficerships, error)
+		GetOfficerships(context.Context, OfficershipsStatus) ([]Officership, error)
+		GetOfficership(context.Context, Officership) (Officership, error)
+		AddOfficership(context.Context, Officership) (Officership, error)
+		EditOfficership(context.Context, Officership) (Officership, error)
+		DeleteOfficership(context.Context, Officership) error
+		GetOfficershipTeams(context.Context) ([]OfficershipTeam, error)
+		GetOfficershipTeam(context.Context, OfficershipTeam) (OfficershipTeam, error)
+		AddOfficershipTeam(context.Context, OfficershipTeam) (OfficershipTeam, error)
+		EditOfficershipTeam(context.Context, OfficershipTeam) (OfficershipTeam, error)
+		DeleteOfficershipTeam(context.Context, OfficershipTeam) error
+		GetOfficershipTeamMembers(context.Context, *OfficershipTeam, OfficershipsStatus) ([]OfficershipTeamMember, error)
+		GetOfficershipsNotInTeam(context.Context, OfficershipTeam) ([]Officership, error)
+		GetOfficershipTeamMember(context.Context, OfficershipTeamMember) (OfficershipTeamMember, error)
+		AddOfficershipTeamMember(context.Context, OfficershipTeamMember) (OfficershipTeamMember, error)
+		DeleteOfficershipTeamMember(context.Context, OfficershipTeamMember) error
+		RemoveTeamForOfficershipTeamMembers(context.Context, OfficershipTeam) error
+		GetOfficershipMembers(context.Context, *Officership, *user.User, OfficershipsStatus, OfficershipsStatus, bool) ([]OfficershipMember, error)
+		GetOfficershipMember(context.Context, OfficershipMember) (OfficershipMember, error)
+		AddOfficershipMember(context.Context, OfficershipMember) (OfficershipMember, error)
+		EditOfficershipMember(context.Context, OfficershipMember) (OfficershipMember, error)
+		DeleteOfficershipMember(context.Context, OfficershipMember) error
+		RemoveOfficershipForOfficershipMembers(context.Context, Officership) error
+		RemoveUserForOfficershipMembers(context.Context, user.User) error
+	}
+
 	// Store stores the dependencies
 	Store struct {
 		db *sqlx.DB

@@ -15,12 +15,6 @@ type (
 		AddToken(ctx context.Context, t Token) (Token, error)
 		DeleteToken(ctx context.Context, t Token) error
 		DeleteOldToken(ctx context.Context) error
-
-		getTokens(ctx context.Context, userID int) ([]Token, error)
-		getToken(ctx context.Context, t Token) (Token, error)
-		addToken(ctx context.Context, t Token) (Token, error)
-		deleteToken(ctx context.Context, t Token) error
-		deleteOldToken(ctx context.Context) error
 	}
 
 	// Store stores the dependencies

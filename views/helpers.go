@@ -181,7 +181,7 @@ func DBUsersToUsersTemplateFormat(dbUsers []user.User) []user.StrippedUser {
 }
 
 // DBUserToDetailedUser handles all the little details for the users front end
-func DBUserToDetailedUser(dbUser user.User, store *user.Store, officers []officership.OfficershipMember) user.DetailedUser {
+func DBUserToDetailedUser(dbUser user.User, store user.Repo, officers []officership.OfficershipMember) user.DetailedUser {
 	var u user.DetailedUser
 
 	var err error

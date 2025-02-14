@@ -16,6 +16,33 @@ import (
 )
 
 type (
+	Repo interface {
+		CountUsersAll(context.Context) (CountUsers, error)
+		GetUser(context.Context, User) (User, error)
+		GetUserValid(context.Context, User) (User, error)
+		GetUsers(context.Context, int, int, string, string, string, string, string) ([]User, int, error)
+		VerifyUser(context.Context, User) (User, bool, error)
+		AddUser(context.Context, User, int) (User, error)
+		EditUserPassword(context.Context, User) error
+		EditUser(context.Context, User, int) error
+		SetUserLoggedIn(context.Context, User) error
+		DeleteUser(context.Context, User, int) error
+		GetPermissionsForUser(context.Context, User) ([]permission.Permission, error)
+		GetRolesForUser(context.Context, User) ([]role.Role, error)
+		GetUsersForRole(context.Context, role.Role) ([]User, error)
+		GetRoleUser(context.Context, RoleUser) (RoleUser, error)
+		GetUsersNotInRole(context.Context, role.Role) ([]User, error)
+		AddRoleUser(context.Context, RoleUser) (RoleUser, error)
+		RemoveRoleUser(context.Context, RoleUser) error
+		RemoveUserForRoles(context.Context, User) error
+		GetPermissionsForRole(context.Context, role.Role) ([]permission.Permission, error)
+		GetRolesForPermission(context.Context, permission.Permission) ([]role.Role, error)
+		GetRolePermission(context.Context, RolePermission) (RolePermission, error)
+		GetPermissionsNotInRole(context.Context, role.Role) ([]permission.Permission, error)
+		AddRolePermission(context.Context, RolePermission) (RolePermission, error)
+		RemoveRolePermission(context.Context, RolePermission) error
+	}
+
 	// Store stores the dependencies
 	Store struct {
 		db          *sqlx.DB

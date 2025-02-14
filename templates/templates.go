@@ -23,9 +23,9 @@ import (
 var tmpls embed.FS
 
 type Templater struct {
-	Permission *permission.Store
-	Role       *role.Store
-	User       *user.Store
+	Permission permission.Repo
+	Role       role.Repo
+	User       user.Repo
 }
 
 type Template string
@@ -69,7 +69,7 @@ const (
 )
 
 // NewTemplate returns the template format to be used
-func NewTemplate(p *permission.Store, r *role.Store, u *user.Store) *Templater {
+func NewTemplate(p permission.Repo, r role.Repo, u user.Repo) *Templater {
 	return &Templater{
 		Permission: p,
 		Role:       r,

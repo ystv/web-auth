@@ -8,6 +8,15 @@ import (
 )
 
 type (
+	Repo interface {
+		GetPermissions(context.Context) ([]Permission, error)
+		GetPermission(context.Context, Permission) (Permission, error)
+		AddPermission(context.Context, Permission) (Permission, error)
+		EditPermission(context.Context, Permission) (Permission, error)
+		DeletePermission(context.Context, Permission) error
+		RemovePermissionForRoles(context.Context, Permission) error
+	}
+
 	// Store stores the dependencies
 	Store struct {
 		db *sqlx.DB

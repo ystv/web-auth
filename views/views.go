@@ -58,17 +58,17 @@ type (
 
 	// Views encapsulates our view dependencies
 	Views struct {
-		api         *api.Store
+		api         api.Repo
 		cache       *cache.Cache
 		conf        *Config
 		cookie      *sessions.CookieStore
 		crowd       crowd.Repo
 		Mailer      *mail.Mailer
-		officership *officership.Store
-		permission  *permission.Store
-		role        *role.Store
+		officership officership.Repo
+		permission  permission.Repo
+		role        role.Repo
 		template    *templates.Templater
-		user        *user.Store
+		user        user.Repo
 		mailer      *mail.MailerInit
 		validate    *validator.Validate
 	}

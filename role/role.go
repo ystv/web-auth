@@ -8,6 +8,16 @@ import (
 )
 
 type (
+	Repo interface {
+		GetRoles(context.Context) ([]Role, error)
+		GetRole(context.Context, Role) (Role, error)
+		AddRole(context.Context, Role) (Role, error)
+		EditRole(context.Context, Role) (Role, error)
+		DeleteRole(context.Context, Role) error
+		RemoveRoleForPermissions(context.Context, Role) error
+		RemoveRoleForUsers(context.Context, Role) error
+	}
+
 	// Store stores the dependencies
 	Store struct {
 		db *sqlx.DB
