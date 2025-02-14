@@ -270,12 +270,13 @@ func (v *Views) RequiresLoginCrowd(next echo.HandlerFunc) echo.HandlerFunc {
 
 		log.Printf("app not logged in")
 		data := struct {
-			Error string `json:"error"`
+			XMLName xml.Name `xml:"errors"`
+			Error   error    `xml:"error"`
 		}{
-			Error: "app not logged in",
+			Error: errors.New("app not logged in"),
 		}
 
-		return c.JSON(http.StatusUnauthorized, data)
+		return c.XML(http.StatusUnauthorized, data)
 	}
 }
 
