@@ -652,3 +652,32 @@ func (s *Store) getCrowdApp(ctx context.Context, c1 CrowdApp) (CrowdApp, error) 
 
 	return c, nil
 }
+
+func (s *Store) getCrowdApps(ctx context.Context, crowdAppStatus CrowdAppStatus) ([]CrowdApp, error) {
+	var c []CrowdApp
+
+	builder := utils.PSQL().Select("app_id", "name", "description", "active").
+		From("web_auth.crowd_apps")
+
+	switch crowdAppStatus {
+	case Any:
+	case Active:
+		builder = builder.Where("active = true")
+	case Inactive:
+		builder = builder.Where("active = false")
+	}
+
+	builder = builder.OrderBy("name")
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for getCrowdApps: %w", err))
+	}
+
+	err = s.db.SelectContext(ctx, &c, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get crowd apps: %w", err)
+	}
+
+	return c, nil
+}

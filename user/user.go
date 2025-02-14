@@ -152,7 +152,18 @@ type (
 		Password    null.String `db:"password" json:"-"`
 		Salt        null.String `db:"salt" json:"-"`
 	}
+
+	// CrowdAppStatus indicates the state desired for a database get of crowd apps
+	CrowdAppStatus int
 )
+
+const (
+	Any CrowdAppStatus = iota
+	Inactive
+	Active
+)
+
+var _ Repo = &Store{}
 
 // NewUserRepo stores our dependency
 func NewUserRepo(db *sqlx.DB, cdnEndpoint string) *Store {
@@ -434,6 +445,10 @@ func (s *Store) RemoveRolePermission(ctx context.Context, rp RolePermission) err
 
 func (s *Store) GetCrowdApp(ctx context.Context, c CrowdApp) (CrowdApp, error) {
 	return s.getCrowdApp(ctx, c)
+}
+
+func (s *Store) GetCrowdApps(ctx context.Context, crowdAppStatus CrowdAppStatus) ([]CrowdApp, error) {
+	return s.getCrowdApps(ctx, crowdAppStatus)
 }
 
 // VerifyCrowd will check that the password is correct with provided
