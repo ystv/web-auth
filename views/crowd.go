@@ -3,11 +3,13 @@ package views
 import (
 	"errors"
 	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/ystv/web-auth/templates"
-	"github.com/ystv/web-auth/user"
 	"net/http"
 	"net/url"
+
+	"github.com/labstack/echo/v4"
+
+	"github.com/ystv/web-auth/templates"
+	"github.com/ystv/web-auth/user"
 )
 
 func (v *Views) CrowdAppsFunc(c echo.Context) error {
