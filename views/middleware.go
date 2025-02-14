@@ -2,6 +2,7 @@ package views
 
 import (
 	"encoding/base64"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"log"
@@ -143,39 +144,40 @@ func (v *Views) RequiresLoginCrowd(next echo.HandlerFunc) echo.HandlerFunc {
 		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 		if err != nil {
 			log.Printf("failed to get session for requiresLoginCrowd: %+v", err)
-
 			data := struct {
-				Error error `json:"error"`
+				XMLName xml.Name `xml:"errors"`
+				Error   error    `xml:"error"`
 			}{
-				Error: err,
+				Error: fmt.Errorf("failed to get session for requiresLoginCrowd: %w", err),
 			}
 
-			return c.JSON(http.StatusInternalServerError, data)
+			return c.XML(http.StatusInternalServerError, data)
 		}
 
 		c1 := v.getSessionData(c)
 
 		if !c1.User.Authenticated {
 			data := struct {
-				Error string `json:"error"`
+				XMLName xml.Name `xml:"errors"`
+				Error   error    `xml:"error"`
 			}{
-				Error: "user not logged in",
+				Error: errors.New("user not logged in"),
 			}
 
-			return c.JSON(http.StatusUnauthorized, data)
+			return c.XML(http.StatusUnauthorized, data)
 		}
 
 		userFromDB, err := v.user.GetUser(c.Request().Context(), c1.User)
 		if err != nil {
 			log.Printf("failed to get user for requiresLoginCrowd: %+v", err)
-
 			data := struct {
-				Error error `json:"error"`
+				XMLName xml.Name `xml:"errors"`
+				Error   error    `xml:"error"`
 			}{
-				Error: fmt.Errorf("failed to get user for requiresLoginCrowd: %w", err),
+				Error: fmt.Errorf("failed to get roles for user: %w", err),
 			}
 
-			return c.JSON(http.StatusInternalServerError, data)
+			return c.XML(http.StatusInternalServerError, data)
 		}
 
 		if userFromDB.DeletedBy.Valid || !c1.User.Enabled {
@@ -186,21 +188,23 @@ func (v *Views) RequiresLoginCrowd(next echo.HandlerFunc) echo.HandlerFunc {
 			if err != nil {
 				log.Printf("failed to save session for requiresLoginCrowd: %+v", err)
 				data := struct {
-					Error error `json:"error"`
+					XMLName xml.Name `xml:"errors"`
+					Error   error    `xml:"error"`
 				}{
-					Error: fmt.Errorf("failed to save session for requiresLoginCrowd: %w", err),
+					Error: fmt.Errorf("failed to get roles for user: %w", err),
 				}
 
-				return c.JSON(http.StatusInternalServerError, data)
+				return c.XML(http.StatusInternalServerError, data)
 			}
 
 			data := struct {
-				Error string `json:"error"`
+				XMLName xml.Name `xml:"errors"`
+				Error   error    `xml:"error"`
 			}{
-				Error: "user deleted or not enabled",
+				Error: errors.New("user deleted or not enabled"),
 			}
 
-			return c.JSON(http.StatusUnauthorized, data)
+			return c.XML(http.StatusUnauthorized, data)
 		}
 
 		auth := c.Request().Header.Get(echo.HeaderAuthorization)
@@ -212,7 +216,15 @@ func (v *Views) RequiresLoginCrowd(next echo.HandlerFunc) echo.HandlerFunc {
 			// instead should be treated as invalid client input
 			b, err = base64.StdEncoding.DecodeString(auth[l+1:])
 			if err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest).SetInternal(err)
+				log.Printf("failed to decode basic auth header: %+v", err)
+				data := struct {
+					XMLName xml.Name `xml:"errors"`
+					Error   error    `xml:"error"`
+				}{
+					Error: errors.New("failed to decode basic auth header"),
+				}
+
+				return c.XML(http.StatusBadRequest, data)
 			}
 
 			cred := string(b)
@@ -238,7 +250,15 @@ func (v *Views) RequiresLoginCrowd(next echo.HandlerFunc) echo.HandlerFunc {
 						return false, echo.NewHTTPError(http.StatusUnauthorized).SetInternal(fmt.Errorf("invalid credential"))
 					}(cred[:i], cred[i+1:], c)
 					if err != nil {
-						return err
+						log.Printf("invalid app credentials: %+v", err)
+						data := struct {
+							XMLName xml.Name `xml:"errors"`
+							Error   error    `xml:"error"`
+						}{
+							Error: errors.New("invalid app credentials"),
+						}
+
+						return c.XML(http.StatusUnauthorized, data)
 					} else if valid {
 						return next(c)
 					}
@@ -247,6 +267,7 @@ func (v *Views) RequiresLoginCrowd(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 		}
 
+		log.Printf("app not logged in")
 		data := struct {
 			Error string `json:"error"`
 		}{
