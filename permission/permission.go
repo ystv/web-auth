@@ -7,6 +7,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+//go:generate mockgen -destination mocks/mock_permission.go -package mock_permission github.com/ystv/web-auth/permission Repo
+
 type (
 	Repo interface {
 		GetPermissions(context.Context) ([]Permission, error)

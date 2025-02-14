@@ -7,6 +7,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+//go:generate mockgen -destination mocks/mock_role.go -package mock_role github.com/ystv/web-auth/role Repo
+
 type (
 	Repo interface {
 		GetRoles(context.Context) ([]Role, error)

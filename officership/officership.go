@@ -9,6 +9,8 @@ import (
 	"github.com/ystv/web-auth/user"
 )
 
+//go:generate mockgen -destination mocks/mock_officership.go -package mock_officership github.com/ystv/web-auth/officership Repo
+
 type (
 	Repo interface {
 		CountOfficerships(context.Context) (CountOfficerships, error)

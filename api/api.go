@@ -7,6 +7,8 @@ import (
 	"gopkg.in/guregu/null.v4"
 )
 
+//go:generate mockgen -destination mocks/mock_api.go -package mock_api github.com/ystv/web-auth/api Repo
+
 type (
 	// Repo is used for navigating a package
 	Repo interface {

@@ -15,6 +15,8 @@ import (
 	"github.com/ystv/web-auth/utils"
 )
 
+//go:generate mockgen -destination mocks/mock_user.go -package mock_user github.com/ystv/web-auth/user Repo
+
 type (
 	Repo interface {
 		CountUsersAll(context.Context) (CountUsers, error)
