@@ -216,8 +216,13 @@ func (r *Router) loadRoutes() {
 	officership.Match(validMethods, "", r.views.OfficershipFunc)
 
 	crowdRoute := internal.Group("/crowdapp")
+	crowdRoute.Match(validMethods, "/add", r.views.CrowdAppAddFunc)
 
 	crowdRoute.Match(validMethods, "s", r.views.CrowdAppsFunc)
+	crowdAppRoute := crowdRoute.Group("/:crowdappid")
+	crowdAppRoute.Match(validMethods, "/edit", r.views.CrowdAppEditFunc)
+	crowdAppRoute.Match(validMethods, "/delete", r.views.CrowdAppDeleteFunc)
+	crowdAppRoute.Match(validMethods, "", r.views.CrowdAppFunc)
 
 	internalAPI := internal.Group("/api")
 	internalAPI.Match(validMethods, "/set_token", r.views.SetTokenHandler)
