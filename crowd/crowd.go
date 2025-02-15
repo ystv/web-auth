@@ -29,6 +29,7 @@ type (
 	CrowdApp struct {
 		AppID       int         `db:"app_id" json:"appID"`
 		Name        string      `db:"name" json:"name"`
+		Username    string      `db:"username" json:"username"`
 		Description null.String `db:"description" json:"description,omitempty"`
 		Active      bool        `db:"active" json:"active"`
 		Password    null.String `db:"password" json:"-"`

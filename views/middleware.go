@@ -235,7 +235,7 @@ func (v *Views) RequiresLoginCrowd(next echo.HandlerFunc) echo.HandlerFunc {
 					// Verify credentials
 					valid, err = func(username, password string, c echo.Context) (bool, error) {
 						crowd1 := crowd.CrowdApp{
-							Name:     username,
+							Username: username,
 							Password: null.StringFrom(password),
 						}
 						var crowd2 crowd.CrowdApp
