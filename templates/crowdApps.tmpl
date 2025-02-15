@@ -64,19 +64,6 @@
                     </div>
                 </div>
             </form>
-        </div>
-        <div class="card events-card">
-            <header class="card-header">
-                <p class="card-header-title">Crowd Apps</p>
-            </header>
-            {{if gt (len .Error) 0}}<p id="error" style="color: red">{{.Error}}</p>{{end}}
-            <div class="card" style="margin-bottom: 0">
-                <div class="column">
-                    <div class="field">
-                        <a onclick="addCrowdAppModal()" class="button is-info"><span class="mdi mdi-account-plus"></span>&ensp;Add Crowd App</a>
-                    </div>
-                </div>
-            </div>
             <div class="card-table" style="max-height: 100em;">
                 <div class="content">
                     <table class="table is-fullwidth is-hoverable">
@@ -84,6 +71,7 @@
                         <tr>
                             <th>App ID</th>
                             <th>Name</th>
+                            <th>Username</th>
                             <th>Description</th>
                             <th>Active</th>
                             <th>Actions</th>
@@ -94,6 +82,7 @@
                             <tr>
                                 <th>{{.AppID}}</th>
                                 <td>{{.Name}}</td>
+                                <td>{{.Username}}</td>
                                 <td>{{if .Description.Valid}}{{.Description.String}}{{end}}</td>
                                 <td>{{if .Active}}Active{{else}}Inactive{{end}}</td>
                                 <td><a href="/internal/crowdapp/{{.AppID}}">View</a></td>
@@ -104,6 +93,7 @@
                         <tr>
                             <th>App ID</th>
                             <th>Name</th>
+                            <th>Username</th>
                             <th>Description</th>
                             <th>Active</th>
                             <th>Actions</th>
