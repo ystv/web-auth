@@ -1,6 +1,42 @@
 {{define "title"}}Internal: Crowd Apps{{end}}
 {{define "content"}}
     <div class="column is-10" style="min-height: 88vh">
+        <section class="hero is-info welcome is-small">
+            <div class="hero-body">
+                <div class="container">
+                    <h1 class="title">Crowd Apps</h1>
+                </div>
+            </div>
+        </section>
+        <br>
+        <div class="columns box" style="height: fit-content">
+            <div class="column">
+                {{if .AddedCrowdApp}}<label style="color: green">Successfully added the crowd app "{{.AddedCrowdApp.Name}}"!<br
+                    >Copy this username and password as the password is only shown once and cannot be recovered!<br>
+                    <textarea disabled class="input" wrap="hard">Username: {{.AddedCrowdApp.Username}}&#13;&#10;Password: {{.AddedCrowdApp.Password.String}}</textarea><br>
+                    <a class="button is-info" onclick="copyPassword()"><span class="mdi mdi-content-copy"></span>&ensp;Click to copy password</a></label><br><br>
+                <script>
+                    function copyPassword() {
+                        navigator.clipboard.writeText("{{.AddedCrowdApp.Password.String}}");
+                    }
+                    $("textarea").each(function () {
+                        this.setAttribute("style", "height:" + (this.scrollHeight) + "px;overflow-y:hidden;resize:none;");
+                    }).on("input", function () {
+                        this.style.height = 0;
+                        this.style.height = (this.scrollHeight) + "px";
+                    });
+                </script>{{end}}
+                <p>Here you can manage YSTV's crowd apps.<br>
+                    If you are not part of Computing Team,
+                    please do not make any changes without consulting the Computing Team.<br>
+                    <strong>Be warned, these crowd apps will authenticate users and are used by public and internal
+                        sites, any changes could result in failure or service outage
+                        - they can be very powerful!</strong></p>
+                <br>
+                {{if gt (len .Error) 0}}<p id="error" style="color: red">{{.Error}}</p>{{end}}
+                <a onclick="addCrowdAppModal()" class="button is-info"><span class="mdi mdi-account-plus"></span>&ensp;Add Crowd App</a>
+                </div>
+        </div>
         <div class="card">
             <form method="post" action="">
                 <div class="column">
