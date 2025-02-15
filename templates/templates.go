@@ -58,6 +58,7 @@ const (
 	OfficershipTeamsTemplate Template = "officershipTeams.tmpl"
 	OfficershipTeamTemplate  Template = "officershipTeam.tmpl"
 	CrowdAppsTemplate        Template = "crowdApps.tmpl"
+	CrowdAppTemplate         Template = "crowdApp.tmpl"
 )
 
 type TemplateType int

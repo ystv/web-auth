@@ -18,6 +18,9 @@ type (
 		GetCrowdApp(context.Context, CrowdApp) (CrowdApp, error)
 		GetCrowdApps(context.Context, CrowdAppStatus) ([]CrowdApp, error)
 		VerifyCrowd(context.Context, CrowdApp) (CrowdApp, error)
+		AddCrowdApp(context.Context, CrowdApp) (CrowdApp, error)
+		EditCrowdApp(context.Context, CrowdApp) (CrowdApp, error)
+		DeleteCrowdApp(context.Context, CrowdApp) error
 	}
 
 	// Store stores the dependencies
@@ -82,4 +85,17 @@ func (s *Store) VerifyCrowd(ctx context.Context, c CrowdApp) (CrowdApp, error) {
 	}
 
 	return c, errors.New("invalid credentials")
+}
+
+func (s *Store) AddCrowdApp(ctx context.Context, c CrowdApp) (CrowdApp, error) {
+	c.Password = null.StringFrom(utils.HashPass(c.Salt.String + c.Password.String))
+	return s.addCrowdApp(ctx, c)
+}
+
+func (s *Store) EditCrowdApp(ctx context.Context, c CrowdApp) (CrowdApp, error) {
+	return s.editCrowdApp(ctx, c)
+}
+
+func (s *Store) DeleteCrowdApp(ctx context.Context, c CrowdApp) error {
+	return s.deleteCrowdApp(ctx, c)
 }

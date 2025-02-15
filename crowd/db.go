@@ -61,3 +61,77 @@ func (s *Store) getCrowdApps(ctx context.Context, crowdAppStatus CrowdAppStatus)
 
 	return c, nil
 }
+
+func (s *Store) addCrowdApp(ctx context.Context, c CrowdApp) (CrowdApp, error) {
+	builder := utils.PSQL().Insert("web_auth.crowd_apps").
+		Columns("name", "username", "description", "active", "password", "salt").
+		Values(c.Name, c.Username, c.Description, c.Active, c.Password, c.Salt).
+		Suffix("RETURNING app_id")
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for addCrowdApp: %w", err))
+	}
+
+	stmt, err := s.db.PrepareContext(ctx, sql)
+	if err != nil {
+		return CrowdApp{}, fmt.Errorf("failed to add crowd app: %w", err)
+	}
+
+	defer stmt.Close()
+
+	err = stmt.QueryRow(args...).Scan(&c.AppID)
+	if err != nil {
+		return CrowdApp{}, fmt.Errorf("failed to add crowd app: %w", err)
+	}
+
+	return c, nil
+}
+
+func (s *Store) editCrowdApp(ctx context.Context, c CrowdApp) (CrowdApp, error) {
+	builder := utils.PSQL().Update("web_auth.crowd_apps").
+		SetMap(map[string]interface{}{
+			"name":        c.Name,
+			"description": c.Description,
+			"active":      c.Active,
+		}).
+		Where(sq.Eq{"app_id": c.AppID})
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for editCrowdApp: %w", err))
+	}
+
+	res, err := s.db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return CrowdApp{}, fmt.Errorf("failed to edit crowd app: %w", err)
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return CrowdApp{}, fmt.Errorf("failed to edit crowd app: %w", err)
+	}
+
+	if rows < 1 {
+		return CrowdApp{}, fmt.Errorf("failed to edit crowd app: invalid rows affected: %d", rows)
+	}
+
+	return c, nil
+}
+
+func (s *Store) deleteCrowdApp(ctx context.Context, c CrowdApp) error {
+	builder := utils.PSQL().Delete("web_auth.crowd_apps").
+		Where(sq.Eq{"app_id": c.AppID})
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for deleteCrowdApp: %w", err))
+	}
+
+	_, err = s.db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return fmt.Errorf("failed to delete crowd app: %w", err)
+	}
+
+	return nil
+}
