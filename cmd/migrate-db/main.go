@@ -46,18 +46,18 @@ func main() {
 	defer database.Close()
 
 	goose.SetBaseFS(migrations.Migrations)
-	if err := goose.SetDialect("postgres"); err != nil {
+	if err = goose.SetDialect("postgres"); err != nil {
 		log.Fatalf("failed to set dialect: %v", err)
 	}
 
 	if *downOne {
-		if err := goose.Down(database.DB, "."); err != nil {
+		if err = goose.Down(database.DB, "."); err != nil {
 			log.Fatalf("unable to downgrade: %v", err)
 		}
 		return
 	}
 
-	if err := goose.Up(database.DB, "."); err != nil {
+	if err = goose.Up(database.DB, "."); err != nil {
 		log.Fatalf("unable to run migrations: %v", err)
 	}
 
