@@ -104,7 +104,10 @@ func (r *Router) loadRoutes() {
 	}
 
 	internal.GET("", r.views.InternalFunc)
-	internal.Match(validMethods, "/settings", r.views.SettingsFunc)
+	settings := internal.Group("/settings")
+	settings.Match(validMethods, "/uploadavatar", r.views.UploadAvatarFunc)
+	settings.Match(validMethods, "/removeavatar", r.views.RemoveAvatarFunc)
+	settings.Match(validMethods, "", r.views.SettingsFunc)
 
 	// permissions are for listing the permissions
 	if !r.config.Debug {
