@@ -27,23 +27,21 @@ func main() {
 	downOne := flag.Bool("down_one", false, "undo the last migration instead of upgrading - only use for development!")
 	flag.Parse()
 
-	if os.Getenv("WAUTH_DB_HOST") == "" {
+	host := os.Getenv("WAUTH_DB_HOST")
+
+	if host == "" {
 		log.Fatalf("database host not set")
 	}
 	dbConnectionString := fmt.Sprintf(
 		"host=%s port=%s user=%s dbname=%s sslmode=%s password=%s",
-		os.Getenv("WAUTH_DB_HOST"),
+		host,
 		os.Getenv("WAUTH_DB_PORT"),
 		os.Getenv("WAUTH_DB_USER"),
 		os.Getenv("WAUTH_DB_NAME"),
 		os.Getenv("WAUTH_DB_SSLMODE"),
 		os.Getenv("WAUTH_DB_PASS"),
 	)
-	database, err := db.NewStore(dbConnectionString)
-	if err != nil {
-		log.Fatalf("failed to connect to database: %v", err)
-	}
-	defer database.Close()
+	database := db.NewStore(dbConnectionString, host)
 
 	goose.SetBaseFS(migrations.Migrations)
 	if err = goose.SetDialect("postgres"); err != nil {
