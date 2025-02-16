@@ -172,12 +172,6 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 		"formatOfficershipDateCalendar": func(t time.Time) string {
 			return t.Format("01/02/2006")
 		},
-		"isset": func(a interface{}) bool {
-			if a == nil || a == "" || a == 0 {
-				return false
-			}
-			return false
-		},
 	}
 }
 
