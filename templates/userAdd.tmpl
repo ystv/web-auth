@@ -90,6 +90,19 @@
                             />
                         </div>
                     </div>
+                    {{if (checkPermission .UserPermissions "SuperUser")}}
+                    <div class="field">
+                        <label class="label" for="disablesendemail">Disable email sending (WARNING: only select this if you know what you are doing and understand the consequences)</label>
+                        <div class="control">
+                            <input
+                                    id="disablesendemail"
+                                    class="checkbox"
+                                    type="checkbox"
+                                    name="disablesendemail"
+                            />
+                        </div>
+                    </div>
+                    {{end}}
                     <button class="button is-info" onclick="addUser()" id="addUserButton"><i class="fa-solid fa-user-plus"></i>&ensp;
                         Add User</button>
                 </form>

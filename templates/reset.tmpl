@@ -12,7 +12,7 @@
                                 </progress
                                 >
                                 <p class="title is-5">Reset password</p>
-                                {{if .Error}}<div class="notification is-danger is-light">
+                                {{if ne .Error ""}}<div class="notification is-danger is-light">
                                     An error occurred: {{.Error}}.
                                 </div>{{end}}
                                 <p>Fantastic, let's get this password sorted.</p>

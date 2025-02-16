@@ -17,8 +17,9 @@ pipeline {
     stage('Build image') {
       steps {
         script {
+          GIT_COMMIT_HASH = sh (script: "git log -n 1 --pretty=format:'%H' | head -c 7", returnStdout: true)
           docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
-            image = docker.build(imageName, "--build-arg WAUTH_VERSION_ARG=${env.BRANCH_NAME}-${env.BUILD_ID} --no-cache .")
+            image = docker.build(imageName, "--build-arg WAUTH_VERSION_ARG=${env.BRANCH_NAME}-${env.BUILD_ID} --build-arg WAUTH_COMMIT_ARG=${GIT_COMMIT_HASH} --no-cache .")
           }
         }
       }

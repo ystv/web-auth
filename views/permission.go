@@ -28,11 +28,11 @@ type (
 
 // bindPermissionToTemplate converts from permission.Permission to user.PermissionTemplate
 func (v *Views) bindPermissionToTemplate(p1 permission.Permission) user.PermissionTemplate {
-	var p = user.PermissionTemplate{}
-	p.PermissionID = p1.PermissionID
-	p.Name = p1.Name
-	p.Description = p1.Description
-	return p
+	return user.PermissionTemplate{
+		PermissionID: p1.PermissionID,
+		Name:         p1.Name,
+		Description:  p1.Description,
+	}
 }
 
 // PermissionsFunc handles a permissions request
@@ -70,7 +70,8 @@ func (v *Views) PermissionFunc(c echo.Context) error {
 		return fmt.Errorf("failed to parse permissionid for permission: %w", err)
 	}
 
-	permission1, err := v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: permissionID})
+	permission1, err := v.permission.GetPermission(c.Request().Context(),
+		permission.Permission{PermissionID: permissionID})
 	if err != nil {
 		return fmt.Errorf("failed to get permission for permission: %w", err)
 	}
@@ -110,13 +111,16 @@ func (v *Views) PermissionAddFunc(c echo.Context) error {
 			return fmt.Errorf("permission with name \"%s\" already exists", name)
 		}
 
-		_, err = v.permission.AddPermission(c.Request().Context(), permission.Permission{PermissionID: -1, Name: name, Description: description})
+		_, err = v.permission.AddPermission(c.Request().Context(),
+			permission.Permission{PermissionID: -1, Name: name, Description: description})
 		if err != nil {
 			return fmt.Errorf("failed to add permission for permissionadd: %w", err)
 		}
-		return v.PermissionsFunc(c)
+
+		return c.Redirect(http.StatusFound, "/internal/permissions")
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+
+	return v.invalidMethodUsed(c)
 }
 
 // PermissionEditFunc handles an edit permission request
@@ -127,7 +131,8 @@ func (v *Views) PermissionEditFunc(c echo.Context) error {
 			return fmt.Errorf("failed to get permissionid for editPermission: %w", err)
 		}
 
-		permission1, err := v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: permissionID})
+		permission1, err := v.permission.GetPermission(c.Request().Context(),
+			permission.Permission{PermissionID: permissionID})
 		if err != nil {
 			return fmt.Errorf("failed to get permission for editPermission: %w", err)
 		}
@@ -143,6 +148,7 @@ func (v *Views) PermissionEditFunc(c echo.Context) error {
 		if name != permission1.Name && len(name) > 0 {
 			permission1.Name = name
 		}
+
 		if description != permission1.Description && len(description) > 0 {
 			permission1.Description = description
 		}
@@ -154,7 +160,8 @@ func (v *Views) PermissionEditFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/permission/%d", permissionID))
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+
+	return v.invalidMethodUsed(c)
 }
 
 // PermissionDeleteFunc handles a delete permission request
@@ -165,28 +172,24 @@ func (v *Views) PermissionDeleteFunc(c echo.Context) error {
 			return fmt.Errorf("failed to get permissionid for permission: %w", err)
 		}
 
-		permission1, err := v.permission.GetPermission(c.Request().Context(), permission.Permission{PermissionID: permissionID})
+		permission1, err := v.permission.GetPermission(c.Request().Context(),
+			permission.Permission{PermissionID: permissionID})
 		if err != nil {
 			return fmt.Errorf("failed to get permission for deletePermission: %w", err)
 		}
 
-		roles, err := v.user.GetRolesForPermission(c.Request().Context(), permission1)
+		err = v.permission.RemovePermissionForRoles(c.Request().Context(), permission1)
 		if err != nil {
-			return fmt.Errorf("failed to get roles for deletePermission: %w", err)
-		}
-
-		for _, role1 := range roles {
-			err = v.role.RemovePermissionsForRole(c.Request().Context(), role1)
-			if err != nil {
-				return fmt.Errorf("failed to delete rolePermission for deletePermission: %w", err)
-			}
+			return fmt.Errorf("failed to remove role permissions for deletePermission: %w", err)
 		}
 
 		err = v.permission.DeletePermission(c.Request().Context(), permission1)
 		if err != nil {
 			return fmt.Errorf("failed to delete permission for deletePermission: %w", err)
 		}
-		return v.PermissionsFunc(c)
+
+		return c.Redirect(http.StatusFound, "/internal/permissions")
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+
+	return v.invalidMethodUsed(c)
 }

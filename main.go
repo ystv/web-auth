@@ -7,16 +7,22 @@ import (
 	"strconv"
 
 	"github.com/joho/godotenv"
+
+	"github.com/ystv/web-auth/utils"
 	"github.com/ystv/web-auth/views"
 )
 
 //go:generate ./node_modules/.bin/mjml -r ./templates/mjml/forgotEmail.mjml -o ./templates/forgotEmail.tmpl
 //go:generate ./node_modules/.bin/mjml -r ./templates/mjml/resetEmail.mjml -o ./templates/resetEmail.tmpl
 
-var Version = "unknown"
+var (
+	Version = "unknown"
+	Commit  = "unknown"
+)
 
 func main() {
 	var local, global bool
+
 	var err error
 	err = godotenv.Load(".env") // Load .env
 	global = err == nil
@@ -65,14 +71,25 @@ func main() {
 	debug, _ := strconv.ParseBool(os.Getenv("WAUTH_DEBUG"))
 
 	if debug {
-		fmt.Println()
-		log.Println("running in debug mode, do not use in production")
-		fmt.Println()
+		log.Println("***running in debug mode, do not use in production***")
 	}
 
 	address := os.Getenv("WAUTH_ADDRESS")
 
 	domainName := os.Getenv("WAUTH_DOMAIN_NAME")
+
+	// CDN
+	cdnConfig := utils.CDNConfig{
+		Endpoint:        os.Getenv("WAUTH_CDN_ENDPOINT"),
+		Region:          os.Getenv("WAUTH_CDN_REGION"),
+		AccessKeyID:     os.Getenv("WAUTH_CDN_ACCESSKEYID"),
+		SecretAccessKey: os.Getenv("WAUTH_CDN_SECRETACCESSKEY"),
+	}
+	cdn, err := utils.NewCDN(cdnConfig)
+	if err != nil {
+		log.Fatalf("Unable to connect to CDN: %v", err)
+	}
+	log.Printf("Connected to CDN: %s", cdnConfig.Endpoint)
 
 	adPort, err := strconv.Atoi(os.Getenv("WAUTH_AD_PORT"))
 	if err != nil {
@@ -87,6 +104,7 @@ func main() {
 	// Generate config
 	conf := &views.Config{
 		Version:           Version,
+		Commit:            Commit,
 		Debug:             debug,
 		Address:           address,
 		DatabaseURL:       dbConnectionString,
@@ -94,6 +112,7 @@ func main() {
 		DomainName:        domainName,
 		LogoutEndpoint:    os.Getenv("WAUTH_LOGOUT_ENDPOINT"),
 		SessionCookieName: sessionCookieName,
+		CDNEndpoint:       os.Getenv("WAUTH_CDN_ENDPOINT"),
 		Mail: views.SMTPConfig{
 			Host:       os.Getenv("WAUTH_MAIL_HOST"),
 			Username:   os.Getenv("WAUTH_MAIL_USER"),
@@ -118,14 +137,16 @@ func main() {
 		},
 	}
 
-	v := views.New(conf, dbHost)
+	v := views.New(conf, dbHost, cdn)
 
 	router := NewRouter(&RouterConf{
 		Config: conf,
 		Views:  v,
 	})
 
+	//nolint:staticcheck
 	err = router.Start()
+	//nolint:staticcheck
 	if err != nil {
 		log.Fatalf("The web server couldn't be started!\n\n%s\n\nExiting!", err)
 	}

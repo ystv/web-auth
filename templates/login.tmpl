@@ -5,111 +5,86 @@
             <div class="container">
                 <div class="columns">
                     <div class="column is-6 is-offset-3">
-
                         <div class="register">
                             <div class="columns card-title">
                                 <p class="title is-3">YSTV - Login</p>
                             </div>
                             <div class="columns">
-                                {{template "info-panel"}}
-                                {{template "form-panel"}}
+                                <div class="column left">
+                                    <div>
+                                        <p>Provides access to</p>
+                                        <ul class="subtitle is-5">
+                                            <li class="mt-2">• MyTV</li>
+                                            <li class="mt-2">• Creator Studio</li>
+                                            <li class="mt-2">• Clapper</li>
+                                            <li class="mt-2">• Windows AD</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="column right">
+                                    <form action="" method="POST">
+                                        <div class="field">
+                                            <label class="label" for="username">Email / Username</label>
+                                            <div class="control has-icons-left">
+                                                <input
+                                                        id="username"
+                                                        class="input"
+                                                        type="text"
+                                                        name="username"
+                                                        placeholder="e.g. abc123@york.ac.uk"
+                                                />
+                                                <span class="icon is-small is-left"><i class="fas fa-user"></i></span>
+                                            </div>
+                                        </div>
+                                        <div class="field">
+                                            <label class="label" for="password">Password</label>
+                                            <div class="control has-icons-left">
+                                                <input
+                                                        id="password"
+                                                        class="input"
+                                                        type="password"
+                                                        name="password"
+                                                        placeholder="********"
+                                                />
+                                                <span class="icon is-small is-left"><i class="fa fa-lock"></i></span>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="callback" value="{{.Callback}}"/>
+                                        <div class="field is-horizontal" style="justify-content: space-evenly">
+                                            <div class="field">
+                                                <p class="control">
+                                                    <label class="checkbox">
+                                                        <input type="checkbox" name="remember"/>
+                                                        Remember me
+                                                    </label>
+                                                </p>
+                                            </div>
+
+                                            <div class="field">
+                                                <p class="control">
+                                                    <input class="button is-link" type="submit" value="Login"/>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                             {{if .Message}}
                                 <div class="notification {{.MsgType}}">{{.Message}}</div>
                             {{end}}
                         </div>
-                        {{template "footer1" .}}
+                        <div class="column column">
+                            <p class="has-text-grey">
+                                <a href="/signup">Sign Up</a> &nbsp;·&nbsp;
+                                <a href="/forgot">Forgot Password</a>{{if ne (len .Version) 0}} &nbsp;·&nbsp;
+                                <a href="https://github.com/ystv/web-auth/"
+                                   target="_blank">Version: {{.Version}}</a> &nbsp;·&nbsp; <a href="https://github.com/ystv/web-auth/commit/{{.Commit}}"
+                                                     target="_blank">Commit: {{.Commit}}</a>{{end}}
+                            </p>
+                        </div>
                     </div>
-
                 </div>
             </div>
         </div>
     </section>
-{{end}}
-
-{{define "info-panel"}}
-    <div class="column left">
-        <div>
-            <p>Provides access to</p>
-            <ul class="subtitle is-5">
-                <li class="mt-2">• MyTV</li>
-                <li class="mt-2">• Creator Studio</li>
-                <li class="mt-2">• Clapper</li>
-                <li class="mt-2">• Windows AD</li>
-            </ul>
-        </div>
-    </div>
-{{end}}
-
-{{define "form-panel"}}
-    <div class="column right">
-        <form action="" method="POST">
-            <div class="field">
-                <label class="label" for="username">Email / Username</label>
-                <div class="control has-icons-left">
-                    <input
-                            id="username"
-                            class="input"
-                            type="text"
-                            name="username"
-                            placeholder="e.g. abc123@york.ac.uk"
-                    />
-                    <span class="icon is-small is-left">
-                        <i class="fas fa-user"></i>
-                    </span>
-                </div>
-            </div>
-            <div class="field">
-                <label class="label" for="password">Password</label>
-                <div class="control has-icons-left">
-                    <input
-                            id="password"
-                            class="input"
-                            type="password"
-                            name="password"
-                            placeholder="********"
-                    />
-                    <span class="icon is-small is-left">
-                        <i class="fa fa-lock"></i>
-                    </span>
-                </div>
-            </div>
-
-            <input type="hidden" name="callback" value="{{.Callback}}"/>
-
-            <div
-                    class="field is-horizontal"
-                    style="justify-content: space-evenly"
-            >
-                <div class="field">
-                    <p class="control">
-                        <label class="checkbox">
-                            <input type="checkbox" name="remember"/>
-                            Remember me
-                        </label>
-                    </p>
-                </div>
-
-                <div class="field">
-                    <p class="control">
-                        <input
-                                class="button is-link"
-                                type="submit"
-                                value="Login"
-                        />
-                    </p>
-                </div>
-            </div>
-        </form>
-    </div>
-{{end}}
-
-{{define "footer1"}}
-    <div class="column column">
-        <p class="has-text-grey">
-            <a href="/signup">Sign Up</a> &nbsp;·&nbsp;
-            <a href="/forgot">Forgot Password</a>{{if ne (len .Version) 0}} &nbsp;·&nbsp;
-            <a href="https://github.com/ystv/web-auth"> Version: {{.Version}} </a>{{end}}
-        </p>
-    </div>
 {{end}}

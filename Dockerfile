@@ -1,10 +1,12 @@
-FROM golang:1.21.5-alpine3.19 AS build
+FROM golang:1.23.4-alpine3.21 AS build
+
 LABEL site="auth"
 LABEL stage="builder"
 
 WORKDIR /src/
 
 ARG WAUTH_VERSION_ARG
+ARG WAUTH_COMMIT_ARG
 
 # Stores our dependencies
 COPY go.mod .
@@ -19,10 +21,12 @@ COPY . .
 # Set build variables
 RUN echo -n "-X 'main.Version=$WAUTH_VERSION_ARG" > ./ldflags && \
     tr -d \\n < ./ldflags > ./temp && mv ./temp ./ldflags && \
+    echo -n "' -X 'main.Commit=$WAUTH_COMMIT_ARG" >> ./ldflags && \
+    tr -d \\n < ./ldflags > ./temp && mv ./temp ./ldflags && \
     echo -n "'" >> ./ldflags
 
 # Build the executable
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="$(cat ./ldflags)" -o /bin/auth
+RUN GOOS=linux GOARCH=amd64 go build -ldflags="$(cat ./ldflags)" -o /bin/auth
 
 # Run the executable
 FROM scratch

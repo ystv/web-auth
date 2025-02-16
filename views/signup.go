@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/schema"
 	"github.com/labstack/echo/v4"
+
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
 )
@@ -24,13 +25,17 @@ type UserSignup struct {
 // SignUpFunc will enable new users to sign up to our service
 func (v *Views) SignUpFunc(c echo.Context) error {
 	switch c.Request().Method {
-	case "POST":
+	case http.MethodPost:
 		uSignup := UserSignup{}
+
 		err := decoder.Decode(&uSignup, c.Request().PostForm)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to get form values for signup: %w", err))
+			return echo.NewHTTPError(http.StatusBadRequest,
+				fmt.Errorf("failed to get form values for signup: %w", err))
 		}
+
 		uSignup.Email += "@york.ac.uk"
+
 		err = v.validate.Struct(uSignup)
 		if err != nil {
 			return fmt.Errorf("failed to parse form: %w", err)
@@ -42,14 +47,16 @@ func (v *Views) SignUpFunc(c echo.Context) error {
 
 		_, err = v.user.GetUser(c.Request().Context(), uNormal)
 		if err == nil {
-			return v.template.RenderTemplate(c.Response(), "Account already exists", templates.SignupTemplate, templates.NoNavType)
+			return v.template.RenderTemplate(c.Response(), "Account already exists", templates.SignupTemplate,
+				templates.NoNavType)
 		}
-		return c.Redirect(http.StatusFound, "/")
 
-	case "GET":
+		return c.Redirect(http.StatusFound, "/")
+	case http.MethodGet:
 		return v.template.RenderTemplate(c.Response(), "", templates.SignupTemplate, templates.NoNavType)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid mthod used"))
+
+	return v.invalidMethodUsed(c)
 }
 
 //nolint:godox

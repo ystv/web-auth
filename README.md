@@ -10,6 +10,24 @@ Copy the .env file as .env.local and set the variables as required
 
 After all that is set you should be able to visit it at `:8080`.
 
+### Setting up development database
+
+You will need a PostgreSQL server running locally - either install it on your computer or use Docker.
+
+Once you've done that, create a database to work with:
+
+```shell
+$ createdb ystv2020
+# or in Docker
+$ docker run -d --name ystv2020 -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=ystv2020 -p 5432:5432 postgres
+```
+
+Then run the migrations to initialise the tables:
+
+```shell
+$ go run ./cmd/migrate-db
+```
+
 ### Dev side note
 
 If you are trying to connect to a database from your dev machine then I can recommend you use the following command to make your life easier.
@@ -22,7 +40,7 @@ This will prevent the full deploy being your dev environment and is much quicker
 
 Both methods require cloning the repo
 
-`git clone https://github.com/ystv/web-api`
+`git clone https://github.com/ystv/web-auth`
 
 ### Docker
 

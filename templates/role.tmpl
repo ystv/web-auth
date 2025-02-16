@@ -1,6 +1,62 @@
 {{define "title"}}Internal: Role ({{.Role.Name}}){{end}}
 {{define "content"}}
     <style>
+        .dropdown-button {
+            background-color: #3082c5;
+            color: white;
+            padding: 7px 16px 7px 16px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .searchInput {
+            box-sizing: border-box;
+            font-size: 16px;
+            padding: 14px 20px 12px 20px;
+            border: none;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .searchInput:focus {
+            outline: 3px solid #ddd;
+        }
+
+        .dropdown-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f6f6f6;
+            min-width: 230px;
+            overflow: auto;
+            border: 1px solid #ddd;
+            z-index: 1;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .inputHidden {
+            display: none;
+        }
+
+        .dropdown a:hover {
+            background-color: #ddd;
+        }
+
+        .show {
+            display: block;
+        }
+
         .toolbar ol {
             display:table-row;
         }
@@ -78,13 +134,39 @@
                     {{if gt (len $.PermissionsNotInRole) 0}}
                         Use the drop down below to add more permissions to this role.<br>
                         <form method="post" action="/internal/role/{{.RoleID}}/permission/add">
-                            <div class="select">
-                                <select id="permission" name="permission">
-                                    <option value disabled selected>Please select</option>
-                                    {{range $.PermissionsNotInRole}}
-                                        <option value="{{.PermissionID}}">{{.Name}}</option>
-                                    {{end}}
-                                </select>
+                            <div class="field">
+                                <label class="label" for="permission">Permission</label>
+                                <div class="control">
+                                    <label for="permissionNameInput"></label><input
+                                            id="permissionNameInput"
+                                            class="input"
+                                            type="text"
+                                            placeholder="Permission"
+                                            readonly
+                                    />
+                                    <label for="permissionIDInput"></label><input
+                                            id="permissionIDInput"
+                                            class="input inputHidden"
+                                            type="text"
+                                            name="permissionID"
+                                            readonly
+                                    />
+                                    <div class="dropdown-container">
+                                        <div onclick="permissionDropdownShowFunction()" class="dropdown-button">
+                                            Permissions dropdown
+                                        </div>
+                                        <div id="permissionInnerDropdown" class="dropdown-content">
+                                            <label for="permissionSearchInput"></label>
+                                            <input type="text" placeholder="Search.."
+                                                   id="permissionSearchInput"
+                                                   class="searchInput"
+                                                   onkeyup="permissionFilterFunction()">
+                                            {{range $.PermissionsNotInRole}}
+                                                <a onclick="selectPermission({{.PermissionID}}, '{{.Name}}')">{{.Name}}</a>
+                                            {{end}}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <br>
                             <button class="button is-info">Add permission</button>
@@ -93,13 +175,40 @@
                     {{if gt (len $.UsersNotInRole) 0}}
                         Use the drop down below to add more users to this role.<br>
                         <form method="post" action="/internal/role/{{.RoleID}}/user/add">
-                            <div class="select">
-                                <select id="user" name="user">
-                                    <option value disabled selected>Please select</option>
-                                    {{range $.UsersNotInRole}}
-                                        <option value="{{.UserID}}">{{formatUserNameUserStruct .}}</option>
-                                    {{end}}
-                                </select>
+                            <div class="field">
+                                <label class="label" for="user">User</label>
+                                <div class="control">
+                                    <label for="userNameInput"></label><input
+                                            id="userNameInput"
+                                            class="input"
+                                            type="text"
+                                            placeholder="User"
+                                            readonly
+                                    />
+                                    <label for="userIDInput"></label><input
+                                            id="userIDInput"
+                                            class="input inputHidden"
+                                            type="text"
+                                            name="userID"
+                                            readonly
+                                    />
+                                    <div class="dropdown-container">
+                                        <div onclick="userDropdownShowFunction()" class="dropdown-button">
+                                            Users dropdown
+                                        </div>
+                                        <div id="userInnerDropdown" class="dropdown-content">
+                                            <label for="userSearchInput"></label>
+                                            <input type="text" placeholder="Search.."
+                                                   id="userSearchInput"
+                                                   class="searchInput"
+                                                   onkeyup="userFilterFunction()">
+                                            {{range $.UsersNotInRole}}
+                                                {{$userName := formatUserNameUserStruct .}}
+                                                <a onclick="selectUser({{.UserID}}, '{{$userName}}')">{{$userName}} ({{.Username}})</a>
+                                            {{end}}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <br>
                             <button class="button is-info">Add user</button>
@@ -134,7 +243,7 @@
                                                 class="input"
                                                 type="text"
                                                 name="name"
-                                                placeholder="{{.Role.Name}}"
+                                                placeholder="Name"
                                                 value="{{.Role.Name}}"
                                         />
                                     </div>
@@ -147,7 +256,7 @@
                                                 class="input"
                                                 type="text"
                                                 name="description"
-                                                placeholder="{{.Role.Description}}"
+                                                placeholder="Description"
                                                 value="{{.Role.Description}}"
                                         />
                                     </div>
@@ -248,6 +357,66 @@
             userID = userID1
             document.getElementById("removeUserFromRoleModal").classList.add("is-active");
             document.getElementById("removeUserFromRoleModalTitle").innerHTML = 'Are you sure you want to remove "' + name + '" from this role?';
+        }
+
+        function selectUser(id, name) {
+            document.getElementById("userNameInput").value = name;
+            document.getElementById("userIDInput").value = id;
+            document.getElementById("userSearchInput").value = "";
+            userDropdownShowFunction();
+            userFilterFunction();
+        }
+
+        function selectPermission(id, name) {
+            document.getElementById("permissionNameInput").value = name;
+            document.getElementById("permissionIDInput").value = id;
+            document.getElementById("permissionSearchInput").value = "";
+            permissionDropdownShowFunction();
+            permissionFilterFunction();
+        }
+
+        // When the user clicks on the button,
+        // toggle between hiding and showing the dropdown content
+        function userDropdownShowFunction() {
+            document.getElementById("userInnerDropdown").classList.toggle("show");
+        }
+
+        // When the user clicks on the button,
+        // toggle between hiding and showing the dropdown content
+        function permissionDropdownShowFunction() {
+            document.getElementById("permissionInnerDropdown").classList.toggle("show");
+        }
+
+        function userFilterFunction() {
+            const input = document.getElementById("userSearchInput");
+            const filter = input.value.toUpperCase();
+            const div = document.getElementById("userInnerDropdown");
+            const a = div.getElementsByTagName("a");
+            let txtValue;
+            for (let i = 0; i < a.length; i++) {
+                txtValue = a[i].textContent || a[i].innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    a[i].style.display = "";
+                } else {
+                    a[i].style.display = "none";
+                }
+            }
+        }
+
+        function permissionFilterFunction() {
+            const input = document.getElementById("permissionSearchInput");
+            const filter = input.value.toUpperCase();
+            const div = document.getElementById("permissionInnerDropdown");
+            const a = div.getElementsByTagName("a");
+            let txtValue;
+            for (let i = 0; i < a.length; i++) {
+                txtValue = a[i].textContent || a[i].innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    a[i].style.display = "";
+                } else {
+                    a[i].style.display = "none";
+                }
+            }
         }
 
         function removeUserFromRole() {

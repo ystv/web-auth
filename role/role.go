@@ -7,7 +7,19 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+//go:generate mockgen -destination mocks/mock_role.go -package mock_role github.com/ystv/web-auth/role Repo
+
 type (
+	Repo interface {
+		GetRoles(context.Context) ([]Role, error)
+		GetRole(context.Context, Role) (Role, error)
+		AddRole(context.Context, Role) (Role, error)
+		EditRole(context.Context, Role) (Role, error)
+		DeleteRole(context.Context, Role) error
+		RemoveRoleForPermissions(context.Context, Role) error
+		RemoveRoleForUsers(context.Context, Role) error
+	}
+
 	// Store stores the dependencies
 	Store struct {
 		db *sqlx.DB
@@ -51,12 +63,15 @@ func (s *Store) EditRole(ctx context.Context, r Role) (Role, error) {
 	if err != nil {
 		return r, fmt.Errorf("failed to get role: %w", err)
 	}
+
 	if r.Name != role.Name && len(r.Name) > 0 {
 		role.Name = r.Name
 	}
+
 	if r.Description != role.Description && len(r.Description) > 0 {
 		role.Description = r.Description
 	}
+
 	return s.editRole(ctx, role)
 }
 
@@ -65,12 +80,12 @@ func (s *Store) DeleteRole(ctx context.Context, r Role) error {
 	return s.deleteRole(ctx, r)
 }
 
-// RemovePermissionsForRole deletes a rolePermission
-func (s *Store) RemovePermissionsForRole(ctx context.Context, r Role) error {
-	return s.removePermissionsForRole(ctx, r)
+// RemoveRoleForPermissions deletes a rolePermission
+func (s *Store) RemoveRoleForPermissions(ctx context.Context, r Role) error {
+	return s.removeRoleForPermissions(ctx, r)
 }
 
-// RemoveUsersForRole deletes a roleUser
-func (s *Store) RemoveUsersForRole(ctx context.Context, r Role) error {
-	return s.removeUsersForRole(ctx, r)
+// RemoveRoleForUsers deletes a roleUser
+func (s *Store) RemoveRoleForUsers(ctx context.Context, r Role) error {
+	return s.removeRoleForUsers(ctx, r)
 }

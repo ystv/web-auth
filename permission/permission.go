@@ -7,7 +7,18 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+//go:generate mockgen -destination mocks/mock_permission.go -package mock_permission github.com/ystv/web-auth/permission Repo
+
 type (
+	Repo interface {
+		GetPermissions(context.Context) ([]Permission, error)
+		GetPermission(context.Context, Permission) (Permission, error)
+		AddPermission(context.Context, Permission) (Permission, error)
+		EditPermission(context.Context, Permission) (Permission, error)
+		DeletePermission(context.Context, Permission) error
+		RemovePermissionForRoles(context.Context, Permission) error
+	}
+
 	// Store stores the dependencies
 	Store struct {
 		db *sqlx.DB
@@ -50,12 +61,15 @@ func (s *Store) EditPermission(ctx context.Context, p Permission) (Permission, e
 	if err != nil {
 		return p, fmt.Errorf("failed to get permission: %w", err)
 	}
+
 	if p.Name != permission.Name && len(p.Name) > 0 {
 		permission.Name = p.Name
 	}
+
 	if p.Description != permission.Description && len(p.Description) > 0 {
 		permission.Description = p.Description
 	}
+
 	return s.editPermission(ctx, permission)
 }
 
@@ -64,7 +78,7 @@ func (s *Store) DeletePermission(ctx context.Context, p Permission) error {
 	return s.deletePermission(ctx, p)
 }
 
-// DeleteRolePermission deletes a rolePermission
-func (s *Store) DeleteRolePermission(ctx context.Context, p Permission) error {
-	return s.deleteRolePermission(ctx, p)
+// RemovePermissionForRoles deletes a rolePermission
+func (s *Store) RemovePermissionForRoles(ctx context.Context, p Permission) error {
+	return s.removePermissionForRoles(ctx, p)
 }
