@@ -4,11 +4,15 @@ import (
 	"context"
 	"encoding/gob"
 	"encoding/hex"
+	"fmt"
+	"io"
 	"log"
+	"mime/multipart"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/patrickmn/go-cache"
@@ -157,4 +161,60 @@ func New(conf *Config, host string, cdn *s3.S3) *Views {
 	}()
 
 	return v
+}
+
+func (v *Views) fileUpload(file *multipart.FileHeader) (string, []byte, error) {
+	var fileName, fileType string
+	switch file.Header.Get("content-type") {
+	case "application/pdf":
+		fileType = ".pdf"
+		break
+	case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+		fileType = ".docx"
+		break
+	case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+		fileType = ".pptx"
+		break
+	case "text/plain":
+		fileType = ".txt"
+		break
+	case "image/apng":
+		fileType = ".apng"
+		break
+	case "image/avif":
+		fileType = ".avif"
+		break
+	case "image/gif":
+		fileType = ".gif"
+		break
+	case "image/jpeg":
+		fileType = ".jpg"
+		break
+	case "image/png":
+		fileType = ".png"
+		break
+	case "image/svg+xml":
+		fileType = ".svg"
+		break
+	case "image/webp":
+		fileType = ".webp"
+		break
+	default:
+		return "", []byte{}, fmt.Errorf("invalid file type: %s", file.Header.Get("content-type"))
+	}
+
+	fileName = uuid.NewString() + fileType
+
+	src, err := file.Open()
+	if err != nil {
+		return "", []byte{}, fmt.Errorf("failed to open file for fileUpload: %w", err)
+	}
+	defer src.Close()
+
+	bytes, err := io.ReadAll(src)
+	if err != nil {
+		return "", []byte{}, fmt.Errorf("failed to copy file to bytes for fileUpload: %w", err)
+	}
+
+	return fileName, bytes, nil
 }
