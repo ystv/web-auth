@@ -41,6 +41,50 @@ func (m *MockRepo) EXPECT() *MockRepoMockRecorder {
 	return m.recorder
 }
 
+// AddCrowdApp mocks base method.
+func (m *MockRepo) AddCrowdApp(arg0 context.Context, arg1 crowd.CrowdApp) (crowd.CrowdApp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddCrowdApp", arg0, arg1)
+	ret0, _ := ret[0].(crowd.CrowdApp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddCrowdApp indicates an expected call of AddCrowdApp.
+func (mr *MockRepoMockRecorder) AddCrowdApp(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddCrowdApp", reflect.TypeOf((*MockRepo)(nil).AddCrowdApp), arg0, arg1)
+}
+
+// DeleteCrowdApp mocks base method.
+func (m *MockRepo) DeleteCrowdApp(arg0 context.Context, arg1 crowd.CrowdApp) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteCrowdApp", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteCrowdApp indicates an expected call of DeleteCrowdApp.
+func (mr *MockRepoMockRecorder) DeleteCrowdApp(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCrowdApp", reflect.TypeOf((*MockRepo)(nil).DeleteCrowdApp), arg0, arg1)
+}
+
+// EditCrowdApp mocks base method.
+func (m *MockRepo) EditCrowdApp(arg0 context.Context, arg1 crowd.CrowdApp) (crowd.CrowdApp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EditCrowdApp", arg0, arg1)
+	ret0, _ := ret[0].(crowd.CrowdApp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EditCrowdApp indicates an expected call of EditCrowdApp.
+func (mr *MockRepoMockRecorder) EditCrowdApp(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EditCrowdApp", reflect.TypeOf((*MockRepo)(nil).EditCrowdApp), arg0, arg1)
+}
+
 // GetCrowdApp mocks base method.
 func (m *MockRepo) GetCrowdApp(arg0 context.Context, arg1 crowd.CrowdApp) (crowd.CrowdApp, error) {
 	m.ctrl.T.Helper()
