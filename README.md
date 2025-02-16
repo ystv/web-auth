@@ -40,7 +40,7 @@ This will prevent the full deploy being your dev environment and is much quicker
 
 Both methods require cloning the repo
 
-`git clone https://github.com/ystv/web-api`
+`git clone https://github.com/ystv/web-auth`
 
 ### Docker
 

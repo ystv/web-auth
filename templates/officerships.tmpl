@@ -1,0 +1,181 @@
+{{define "title"}}Internal: Officerships{{end}}
+{{define "content"}}
+    <div class="column is-10" style="min-height: 88vh">
+        <div class="card">
+            <form method="post" action="">
+                <div class="column">
+                    <div class="register" style="padding-top: 0">
+                        <div class="field">
+                            <label for="status">Officership status</label><br>
+                            <div class="control has-icons-left select">
+                                <select id="status" name="status">
+                                    <option value="any"{{if eq .OfficershipStatusSort "any"}} selected{{end}}>Any</option>
+                                    <option value="current"{{if eq .OfficershipStatusSort "current"}} selected{{end}}>Current</option>
+                                    <option value="retired"{{if eq .OfficershipStatusSort "retired"}} selected{{end}}>Retired</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <p class="control">
+                                <input
+                                        class="button is-info"
+                                        type="submit"
+                                        value="Submit"
+                                />
+                                <a class="button is-warning is-outlined" href="/internal/officerships">Reset all fields</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="card events-card">
+            <header class="card-header">
+                <p class="card-header-title">Officerships</p>
+            </header>
+            {{if gt (len .Error) 0}}<p id="error" style="color: red">{{.Error}}</p>{{end}}
+            <div class="card" style="margin-bottom: 0">
+                <div class="column">
+                    <div class="field">
+                        <a onclick="addOfficershipModal()" class="button is-info"><span class="mdi mdi-account-plus"></span>&ensp;Add Officership</a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-table" style="max-height: 100em;">
+                <div class="content">
+                    <table class="table is-fullwidth is-hoverable">
+                        <thead>
+                        <tr>
+                            <th>Officership ID</th>
+                            <th>Name</th>
+                            <th>Team</th>
+                            <th>Current Officers</th>
+                            <th>Previous Officers</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {{range .Officerships}}
+                            <tr>
+                                <th>{{.OfficershipID}}</th>
+                                <td>{{.Name}}</td>
+                                <td>{{if .TeamName.Valid}}{{.TeamName.String}}{{else}}UNKNOWN{{end}}</td>
+                                <td>{{.CurrentOfficers}}</td>
+                                <td>{{.PreviousOfficers}}</td>
+                                <td><a href="/internal/officership/{{.OfficershipID}}">View</a></td>
+                            </tr>
+                        {{end}}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>Officership ID</th>
+                            <th>Name</th>
+                            <th>Team</th>
+                            <th>Current Officers</th>
+                            <th>Previous Officers</th>
+                            <th>Actions</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{template "modal" .}}
+{{end}}
+
+{{define "modal"}}
+    <div id="addOfficershipModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title">Add officership</p>
+                            <p>Enter the officership's details below.</p>
+                            <form action="/internal/officership/add" method="post">
+                                <div class="field">
+                                    <label class="label" for="name">Name</label>
+                                    <div class="control">
+                                        <input
+                                                id="name"
+                                                class="input"
+                                                type="text"
+                                                name="name"
+                                                placeholder="Name"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="emailAlias">Email alias</label>
+                                    <div class="control">
+                                        <input
+                                                id="emailAlias"
+                                                class="input"
+                                                type="text"
+                                                name="emailAlias"
+                                                placeholder="Email alias"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="description">Description</label>
+                                    <div class="control">
+                                        <textarea
+                                                id="description"
+                                                class="input"
+                                                name="description"
+                                                placeholder="Description"
+                                        ></textarea>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="historyWikiURL">History wiki URL</label>
+                                    <div class="control">
+                                        <input
+                                                id="historyWikiURL"
+                                                class="input"
+                                                type="text"
+                                                name="historyWikiURL"
+                                                placeholder="History wiki URL"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="isCurrent">Is current</label>
+                                    <div class="control">
+                                        <input
+                                                id="isCurrent"
+                                                class="checkbox"
+                                                type="checkbox"
+                                                name="isCurrent"
+                                        />
+                                    </div>
+                                </div>
+                                <button class="button is-info"><span class="mdi mdi-account-plus"></span>&ensp;Add
+                                    officership
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <script>
+        document.querySelectorAll(
+            ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
+        ).forEach(($el) => {
+            const $modal = $el.closest(".modal");
+            $el.addEventListener("click", () => {
+                $modal.classList.remove("is-active");
+            });
+        });
+
+        function addOfficershipModal() {
+            document.getElementById("addOfficershipModal").classList.add("is-active");
+        }
+    </script>
+{{end}}

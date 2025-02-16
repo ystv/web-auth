@@ -2,6 +2,7 @@ package permissions
 
 type Permissions string
 
+//nolint:gochecknoglobals
 var (
 	KeyCardAccess               Permissions = "Access.Keycard.Station"
 	BookingsAdmin               Permissions = "BookingsAdmin"
@@ -54,6 +55,7 @@ var (
 	WatchAdmin                  Permissions = "Watch.Admin"
 )
 
+// String gets the string value for a Permission
 func (p Permissions) String() string {
 	return string(p)
 }

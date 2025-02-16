@@ -1,0 +1,431 @@
+{{define "title"}}Internal: Role ({{.Role.Name}}){{end}}
+{{define "content"}}
+    <style>
+        .dropdown-button {
+            background-color: #3082c5;
+            color: white;
+            padding: 7px 16px 7px 16px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .searchInput {
+            box-sizing: border-box;
+            font-size: 16px;
+            padding: 14px 20px 12px 20px;
+            border: none;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .searchInput:focus {
+            outline: 3px solid #ddd;
+        }
+
+        .dropdown-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f6f6f6;
+            min-width: 230px;
+            overflow: auto;
+            border: 1px solid #ddd;
+            z-index: 1;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .inputHidden {
+            display: none;
+        }
+
+        .dropdown a:hover {
+            background-color: #ddd;
+        }
+
+        .show {
+            display: block;
+        }
+
+        .toolbar ol {
+            display:table-row;
+        }
+        .toolbar ol li {
+            margin-bottom: 10px;
+            vertical-align: middle;
+        }
+        .toolbar ol li a {
+            vertical-align: middle;
+        }
+    </style>
+    <div class="column is-10" style="min-height: 88vh">
+        <section class="hero is-info welcome is-small">
+            <div class="hero-body">
+                <div class="container">
+                    <h1 class="title">{{.Role.Name}}</h1>
+                </div>
+            </div>
+        </section>
+        <br>
+        <div class="columns box" style="height: fit-content">
+            <div class="column is-2">
+                <div class="buttons" style="display: block">
+                    <a class="button is-warning is-outlined" onclick="editRoleModal()">
+                        <span class="mdi mdi-shield-edit"></span>&ensp;Edit
+                    </a>
+                    <a class="button is-danger is-outlined" onclick="deleteRoleModal()">
+                        <span class="mdi mdi-shield-remove"></span>&ensp;Delete
+                    </a>
+                </div>
+            </div>
+            <div class="column">
+                {{$permissionAdmin := checkPermission .UserPermissions "ManageMembers.Permission"}}
+                {{$userAdmin := checkPermission .UserPermissions "ManageMembers.Members.Admin"}}
+                {{with .Role}}
+                    <p>Role ID: {{.RoleID}}<br>
+                    Name: {{.Name}}<br>
+                    Description: {{.Description}}{{if gt (len .Permissions) 0}}<br><br>
+                    Permissions:
+                    <ol>
+                        {{range .Permissions}}
+                            <li style='list-style-type: none;'><span class='tab'></span>
+                                {{if $permissionAdmin}}
+                                    <a href="/internal/permission/{{.PermissionID}}">{{.Name}}</a>&emsp;<a
+                                            class="button is-danger is-outlined"
+                                            onclick="removePermissionFromRoleModal({{.PermissionID}}, '{{.Name}}')">Remove
+                                        permission</a>
+                                {{else}}
+                                    {{.Name}}&emsp;<a class="button is-danger is-outlined"
+                                                      onclick="removePermissionFromRoleModal({{.PermissionID}}, '{{.Name}}')">Remove
+                                        permission</a>
+                                {{end}}
+                            </li>
+                        {{end}}
+                    </ol>
+                    {{end}}
+                    {{if gt (len .Users) 0}}<br><br>
+                    Inherited by:
+                    <ol>
+                        {{range .Users}}
+                            <li style='list-style-type: none;'><span class='tab'></span>
+                                {{if $userAdmin}}
+                                    <a href="/internal/user/{{.UserID}}">{{formatUserNameUserStruct .}}</a>&emsp;<a
+                                            class="button is-danger is-outlined"
+                                            onclick="removeUserFromRoleModal({{.UserID}}, '{{formatUserNameUserStruct .}}')">Remove user</a>
+                                {{else}}
+                                    {{formatUserNameUserStruct .}}&emsp;<a
+                                            class="button is-danger is-outlined"
+                                            onclick="removeUserFromRoleModal({{.UserID}}, '{{formatUserNameUserStruct .}}')">Remove user</a>
+                                {{end}}
+                            </li>
+                        {{end}}
+                    </ol>
+                    {{end}}<br><br>
+                    {{if gt (len $.PermissionsNotInRole) 0}}
+                        Use the drop down below to add more permissions to this role.<br>
+                        <form method="post" action="/internal/role/{{.RoleID}}/permission/add">
+                            <div class="field">
+                                <label class="label" for="permission">Permission</label>
+                                <div class="control">
+                                    <label for="permissionNameInput"></label><input
+                                            id="permissionNameInput"
+                                            class="input"
+                                            type="text"
+                                            placeholder="Permission"
+                                            readonly
+                                    />
+                                    <label for="permissionIDInput"></label><input
+                                            id="permissionIDInput"
+                                            class="input inputHidden"
+                                            type="text"
+                                            name="permissionID"
+                                            readonly
+                                    />
+                                    <div class="dropdown-container">
+                                        <div onclick="permissionDropdownShowFunction()" class="dropdown-button">
+                                            Permissions dropdown
+                                        </div>
+                                        <div id="permissionInnerDropdown" class="dropdown-content">
+                                            <label for="permissionSearchInput"></label>
+                                            <input type="text" placeholder="Search.."
+                                                   id="permissionSearchInput"
+                                                   class="searchInput"
+                                                   onkeyup="permissionFilterFunction()">
+                                            {{range $.PermissionsNotInRole}}
+                                                <a onclick="selectPermission({{.PermissionID}}, '{{.Name}}')">{{.Name}}</a>
+                                            {{end}}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <br>
+                            <button class="button is-info">Add permission</button>
+                        </form>
+                    {{end}}<br><br>
+                    {{if gt (len $.UsersNotInRole) 0}}
+                        Use the drop down below to add more users to this role.<br>
+                        <form method="post" action="/internal/role/{{.RoleID}}/user/add">
+                            <div class="field">
+                                <label class="label" for="user">User</label>
+                                <div class="control">
+                                    <label for="userNameInput"></label><input
+                                            id="userNameInput"
+                                            class="input"
+                                            type="text"
+                                            placeholder="User"
+                                            readonly
+                                    />
+                                    <label for="userIDInput"></label><input
+                                            id="userIDInput"
+                                            class="input inputHidden"
+                                            type="text"
+                                            name="userID"
+                                            readonly
+                                    />
+                                    <div class="dropdown-container">
+                                        <div onclick="userDropdownShowFunction()" class="dropdown-button">
+                                            Users dropdown
+                                        </div>
+                                        <div id="userInnerDropdown" class="dropdown-content">
+                                            <label for="userSearchInput"></label>
+                                            <input type="text" placeholder="Search.."
+                                                   id="userSearchInput"
+                                                   class="searchInput"
+                                                   onkeyup="userFilterFunction()">
+                                            {{range $.UsersNotInRole}}
+                                                {{$userName := formatUserNameUserStruct .}}
+                                                <a onclick="selectUser({{.UserID}}, '{{$userName}}')">{{$userName}} ({{.Username}})</a>
+                                            {{end}}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <br>
+                            <button class="button is-info">Add user</button>
+                        </form>
+                    {{end}}
+                    </p>
+                {{end}}
+            </div>
+        </div>
+    </div>
+    {{template "modals" .}}
+{{end}}
+
+{{define "modals"}}
+    <div id="editRoleModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title">Are you sure you want to edit this role?</p>
+                            <p><strong>This action can be undone by changing them back but be careful</strong><br>
+                                Use the fields below to modify your details, to not change a field, either leave it as
+                                is or blank.<br>If you change some of the names, many things can break</p>
+                            <form action="/internal/role/{{.Role.RoleID}}/edit" method="post">
+                                <div class="field">
+                                    <label class="label" for="name">Name</label>
+                                    <div class="control">
+                                        <input
+                                                id="name"
+                                                class="input"
+                                                type="text"
+                                                name="name"
+                                                placeholder="Name"
+                                                value="{{.Role.Name}}"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="description">Description</label>
+                                    <div class="control">
+                                        <input
+                                                id="description"
+                                                class="input"
+                                                type="text"
+                                                name="description"
+                                                placeholder="Description"
+                                                value="{{.Role.Description}}"
+                                        />
+                                    </div>
+                                </div>
+                                <button class="button is-danger"><span class="mdi mdi-shield-edit"></span>&ensp;Edit role</button>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <div id="removePermissionFromRoleModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title" id="removePermissionFromRoleModalTitle"></p>
+                            <p>Be careful! Removing permissions can have unintended consequences.</p>
+                            <form method="post" id="removePermissionFromRoleModalForm">
+                                <a class="button is-danger" onclick="removePermissionFromRole()">Remove permission</a>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <div id="removeUserFromRoleModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title" id="removeUserFromRoleModalTitle"></p>
+                            <form method="post" id="removeUserFromRoleModalForm">
+                                <a class="button is-danger" onclick="removeUserFromRole()">Remove user</a>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <div id="deleteRoleModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title">Are you sure you want to delete this role?</p>
+                            <p>Be careful! If any users or permissions use this role, it will be removed.</p>
+                            <form action="/internal/role/{{.Role.RoleID}}/delete" method="post">
+                                <button class="button is-danger"><span class="mdi mdi-shield-remove"></span>&ensp;Delete role</button>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <script>
+        document.querySelectorAll(
+            ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
+        ).forEach(($el) => {
+            const $modal = $el.closest(".modal");
+            $el.addEventListener("click", () => {
+                $modal.classList.remove("is-active");
+            });
+        });
+
+        function editRoleModal() {
+            document.getElementById("editRoleModal").classList.add("is-active");
+        }
+
+        let permissionID = 0, userID = 0;
+
+        function removePermissionFromRoleModal(permissionID1, name) {
+            permissionID = permissionID1
+            document.getElementById("removePermissionFromRoleModal").classList.add("is-active");
+            document.getElementById("removePermissionFromRoleModalTitle").innerHTML = 'Are you sure you want to remove "' + name + '" from this role?';
+        }
+
+        function removePermissionFromRole() {
+            document.getElementById("removePermissionFromRoleModalForm").action = "/internal/role/{{$.Role.RoleID}}/permission/remove/" + permissionID;
+            $('#removePermissionFromRoleModalForm').submit();
+        }
+
+        function removeUserFromRoleModal(userID1, name) {
+            userID = userID1
+            document.getElementById("removeUserFromRoleModal").classList.add("is-active");
+            document.getElementById("removeUserFromRoleModalTitle").innerHTML = 'Are you sure you want to remove "' + name + '" from this role?';
+        }
+
+        function selectUser(id, name) {
+            document.getElementById("userNameInput").value = name;
+            document.getElementById("userIDInput").value = id;
+            document.getElementById("userSearchInput").value = "";
+            userDropdownShowFunction();
+            userFilterFunction();
+        }
+
+        function selectPermission(id, name) {
+            document.getElementById("permissionNameInput").value = name;
+            document.getElementById("permissionIDInput").value = id;
+            document.getElementById("permissionSearchInput").value = "";
+            permissionDropdownShowFunction();
+            permissionFilterFunction();
+        }
+
+        // When the user clicks on the button,
+        // toggle between hiding and showing the dropdown content
+        function userDropdownShowFunction() {
+            document.getElementById("userInnerDropdown").classList.toggle("show");
+        }
+
+        // When the user clicks on the button,
+        // toggle between hiding and showing the dropdown content
+        function permissionDropdownShowFunction() {
+            document.getElementById("permissionInnerDropdown").classList.toggle("show");
+        }
+
+        function userFilterFunction() {
+            const input = document.getElementById("userSearchInput");
+            const filter = input.value.toUpperCase();
+            const div = document.getElementById("userInnerDropdown");
+            const a = div.getElementsByTagName("a");
+            let txtValue;
+            for (let i = 0; i < a.length; i++) {
+                txtValue = a[i].textContent || a[i].innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    a[i].style.display = "";
+                } else {
+                    a[i].style.display = "none";
+                }
+            }
+        }
+
+        function permissionFilterFunction() {
+            const input = document.getElementById("permissionSearchInput");
+            const filter = input.value.toUpperCase();
+            const div = document.getElementById("permissionInnerDropdown");
+            const a = div.getElementsByTagName("a");
+            let txtValue;
+            for (let i = 0; i < a.length; i++) {
+                txtValue = a[i].textContent || a[i].innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    a[i].style.display = "";
+                } else {
+                    a[i].style.display = "none";
+                }
+            }
+        }
+
+        function removeUserFromRole() {
+            document.getElementById("removeUserFromRoleModalForm").action = "/internal/role/{{$.Role.RoleID}}/user/remove/" + userID;
+            $('#removeUserFromRoleModalForm').submit();
+        }
+
+        function deleteRoleModal() {
+            document.getElementById("deleteRoleModal").classList.add("is-active");
+        }
+    </script>
+{{end}}

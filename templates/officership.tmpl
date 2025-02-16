@@ -1,0 +1,260 @@
+{{define "title"}}Internal: Officership ({{.Officership.Name}}){{end}}
+{{define "content"}}
+    <div class="column is-10" style="min-height: 88vh">
+        <section class="hero is-info welcome is-small">
+            <div class="hero-body">
+                <div class="container">
+                    <h1 class="title">{{.Officership.Name}}</h1>
+                </div>
+            </div>
+        </section>
+        <br>
+        <div class="columns box" style="height: fit-content">
+            <div class="column is-2">
+                <div class="buttons" style="display: block">
+                    <a class="button is-warning is-outlined" onclick="editOfficershipModal()">
+                        <span class="mdi mdi-pencil"></span>&ensp;Edit
+                    </a>
+                    <a class="button is-danger is-outlined" onclick="deleteOfficershipModal()">
+                        <span class="mdi mdi-account-multiple-minus"></span>&ensp;Delete
+                    </a>
+                </div>
+            </div>
+            <div class="column">
+                {{with .Officership}}
+                    <p>
+                        Officership ID: {{.OfficershipID}}<br>
+                        Name: {{.Name}}<br>
+                        Email alias: {{.EmailAlias}}<br>
+                        Current Officership: {{if .IsCurrent}}current{{else}}retired{{end}}<br><br>
+                        Description: {{.Description}}<br><br>
+                        HistoryWikiURL: {{if gt (len .HistoryWikiURL) 0}}<a href="{{.HistoryWikiURL}}" target="_blank">{{.HistoryWikiURL}}</a>{{else}}empty{{end}}<br>
+                        {{if and .TeamID.Valid .TeamName.Valid}}
+                            Team: <a
+                            href="/internal/officership/team/{{.TeamID.Int64}}">{{.TeamName.String}}</a>{{if .IsCurrent}}
+                                {{if and .IsTeamLeader.Valid .IsTeamLeader.Bool}} - leader{{else if and .IsTeamDeputy.Valid .IsTeamDeputy.Bool}} - deputy{{end}}{{else}}
+                                {{if and .IsTeamLeader.Valid .IsTeamLeader.Bool}} - was leader{{else if and .IsTeamDeputy.Valid .IsTeamDeputy.Bool}} - was deputy{{end}}{{end}}
+                            <br>
+                        {{end}}
+                    </p>
+                {{end}}
+            </div>
+        </div>
+        {{if gt .Officership.CurrentOfficers 0}}
+            <div class="card events-card">
+                <header class="card-header">
+                    <p class="card-header-title">Current officer(s)</p>
+                </header>
+                <div class="card-table" style="max-height: 100em;">
+                    <div class="content">
+                        <table class="table is-fullwidth is-hoverable">
+                            <thead>
+                            <tr>
+                                <th>Officer ID</th>
+                                <th>Name</th>
+                                <th>Start date</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {{range .Officers}}
+                                {{if not .EndDate.Valid}}
+                                    <tr>
+                                        <th>{{.OfficershipMemberID}}</th>
+                                        <td>{{.UserName}}</td>
+                                        <td>{{if .StartDate.Valid}}{{formatOfficershipDate .StartDate.Time}}{{else}}UNKNOWN{{end}}</td>
+                                        <td><a href="/internal/officership/officer/{{.OfficershipMemberID}}">View</a>
+                                    </tr>
+                                {{end}}
+                            {{end}}
+                            </tbody>
+                            <tfoot>
+                            <tr>
+                                <th>Officer ID</th>
+                                <th>Name</th>
+                                <th>Start date</th>
+                                <th>Actions</th>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {{end}}
+        {{if gt .Officership.PreviousOfficers 0}}
+            <div class="card events-card">
+                <header class="card-header">
+                    <p class="card-header-title">Previous officer(s)</p>
+                </header>
+                <div class="card-table" style="max-height: 100em;">
+                    <div class="content">
+                        <table class="table is-fullwidth is-hoverable">
+                            <thead>
+                            <tr>
+                                <th>Officer ID</th>
+                                <th>Name</th>
+                                <th>Start date</th>
+                                <th>End date</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {{range .Officers}}
+                                {{if .EndDate.Valid}}
+                                    <tr>
+                                        <th>{{.OfficershipMemberID}}</th>
+                                        <td>{{.UserName}}</td>
+                                        <td>{{if .StartDate.Valid}}{{formatOfficershipDate .StartDate.Time}}{{else}}UNKNOWN{{end}}</td>
+                                        <td>{{formatOfficershipDate .EndDate.Time}}</td>
+                                        <td><a href="/internal/officership/officer/{{.OfficershipMemberID}}">View</a>
+                                        </td>
+                                    </tr>
+                                {{end}}
+                            {{end}}
+                            </tbody>
+                            <tfoot>
+                            <tr>
+                                <th>Officer ID</th>
+                                <th>Name</th>
+                                <th>Start date</th>
+                                <th>End date</th>
+                                <th>Actions</th>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {{end}}
+    </div>
+    {{template "modals" .}}
+{{end}}
+
+{{define "modals"}}
+    {{with .Officership}}
+        <div id="editOfficershipModal" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-content">
+                <div class="box">
+                    <article class="media">
+                        <div class="media-content">
+                            <div class="content">
+                                <p class="title">Are you sure you want to edit this officership?</p>
+                                <p><strong>This action can be undone by changing them back but be careful</strong><br>
+                                    Modifications may be visible from the public site, proceed with caution<br>
+                                    Use the fields below to modify the details</p>
+                                <form action="/internal/officership/{{.OfficershipID}}/edit" method="post">
+                                    <div class="field">
+                                        <label class="label" for="name">Name</label>
+                                        <div class="control">
+                                            <input
+                                                    id="name"
+                                                    class="input"
+                                                    type="text"
+                                                    name="name"
+                                                    placeholder="Name"
+                                                    value="{{.Name}}"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div class="field">
+                                        <label class="label" for="emailAlias">Email alias</label>
+                                        <div class="control">
+                                            <input
+                                                    id="emailAlias"
+                                                    class="input"
+                                                    type="text"
+                                                    name="emailAlias"
+                                                    placeholder="Email alias"
+                                                    value="{{.EmailAlias}}"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div class="field">
+                                        <label class="label" for="description">Description</label>
+                                        <div class="control">
+                                        <textarea
+                                                id="description"
+                                                class="input"
+                                                name="description"
+                                                placeholder="Description"
+                                        >{{.Description}}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="field">
+                                        <label class="label" for="historyWikiURL">History wiki URL</label>
+                                        <div class="control">
+                                            <input
+                                                    id="historyWikiURL"
+                                                    class="input"
+                                                    type="text"
+                                                    name="historyWikiURL"
+                                                    placeholder="History wiki URL"
+                                                    value="{{.HistoryWikiURL}}"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div class="field">
+                                        <label class="label" for="isCurrent">Is current</label>
+                                        <div class="control">
+                                            <input
+                                                    id="isCurrent"
+                                                    class="checkbox"
+                                                    type="checkbox"
+                                                    name="isCurrent"
+                                                    {{if .IsCurrent}}checked{{end}}
+                                            />
+                                        </div>
+                                    </div>
+                                    <button class="button is-danger"><span class="mdi mdi-pencil"></span>&ensp;Edit
+                                        officership
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+            <button class="modal-close is-large" aria-label="close"></button>
+        </div>
+        <div id="deleteOfficershipModal" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-content">
+                <div class="box">
+                    <article class="media">
+                        <div class="media-content">
+                            <div class="content">
+                                <p class="title">Are you sure you want to delete this officership?</p>
+                                <p>Be careful! Officers and the public site use this and will have to set back up
+                                    manually.</p>
+                                <p>All officers will be removed from this team and will not have a team assigned!</p>
+                                <form action="/internal/officership/{{.OfficershipID}}/delete" method="post">
+                                    <button class="button is-danger">Delete officership</button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+            <button class="modal-close is-large" aria-label="close"></button>
+        </div>
+    {{end}}
+    <script>
+        document.querySelectorAll(
+            ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
+        ).forEach(($el) => {
+            const $modal = $el.closest(".modal");
+            $el.addEventListener("click", () => {
+                $modal.classList.remove("is-active");
+            });
+        });
+
+        function editOfficershipModal() {
+            document.getElementById("editOfficershipModal").classList.add("is-active");
+        }
+
+        function deleteOfficershipModal() {
+            document.getElementById("deleteOfficershipModal").classList.add("is-active");
+        }
+    </script>
+{{end}}

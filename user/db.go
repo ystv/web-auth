@@ -2,374 +2,629 @@ package user
 
 import (
 	"context"
+	"strconv"
+
+	//nolint:gosec
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
-	"github.com/ystv/web-auth/role"
+	"log"
+	"strings"
 	"time"
+
+	sq "github.com/Masterminds/squirrel"
+	"github.com/jinzhu/copier"
+
+	"github.com/ystv/web-auth/permission"
+	"github.com/ystv/web-auth/role"
+	"github.com/ystv/web-auth/utils"
 )
 
-// countUsers will get the number of total users
-func (s *Store) countUsers(ctx context.Context) (int, error) {
-	count := 0
-	err := s.db.GetContext(ctx, &count,
-		`SELECT COUNT(*)
-		FROM people.users;`)
+// countUsersAll will get the number of total users
+func (s *Store) countUsersAll(ctx context.Context) (CountUsers, error) {
+	var countUsers CountUsers
+
+	err := s.db.GetContext(ctx, &countUsers,
+		`SELECT
+		(SELECT COUNT(*) FROM people.users) as total_users,
+		(SELECT COUNT(*) FROM people.users WHERE enabled = true AND deleted_by IS NULL AND deleted_at IS NULL)
+		    AS active_users,
+		(SELECT COUNT(*) FROM people.users WHERE last_login > TO_TIMESTAMP($1, 'YYYY-MM-DD HH24:MI:SS'))
+		    AS active_users_past_24_hours,
+		(SELECT COUNT(*) FROM people.users WHERE last_login > TO_TIMESTAMP($2, 'YYYY-MM-DD HH24:MI:SS'))
+		    AS active_users_past_year;`,
+		time.Now().AddDate(0, 0, -1).Format("2006-01-02 15:04:05"),
+		time.Now().AddDate(-1, 0, 0).Format("2006-01-02 15:04:05"))
+
 	if err != nil {
-		return count, fmt.Errorf("failed to count users from db: %w", err)
+		return countUsers, fmt.Errorf("failed to count users all from db: %w", err)
 	}
-	return count, nil
+
+	return countUsers, nil
 }
 
-// countUsers24Hours will get the number of users in the last 24 hours
-func (s *Store) countUsers24Hours(ctx context.Context) (int, error) {
-	count := 0
-	err := s.db.GetContext(ctx, &count,
-		`SELECT COUNT(*)
-		FROM people.users
-		WHERE last_login > TO_TIMESTAMP($1, 'YYYY-MM-DD HH24:MI:SS');`, time.Now().AddDate(0, 0, -1).Format("2006-01-02 15:04:05"))
+// addUser will add a user
+func (s *Store) addUser(ctx context.Context, u User) (User, error) {
+	builder := utils.PSQL().Insert("people.users").
+		Columns("username", "university_username", "email", "first_name", "last_name", "nickname",
+			"login_type", "password", "salt", "reset_pw", "enabled", "created_at", "created_by").
+		Values(u.Username, u.UniversityUsername, u.Email, u.Firstname, u.Lastname, u.Nickname, u.LoginType, u.Password,
+			u.Salt, u.ResetPw, u.Enabled, u.CreatedAt, u.CreatedBy).
+		Suffix("RETURNING user_id")
+
+	sql, args, err := builder.ToSql()
 	if err != nil {
-		return count, fmt.Errorf("failed to count users 24 hours from db: %w", err)
+		panic(fmt.Errorf("failed to build sql for addUser: %w", err))
 	}
-	return count, nil
+
+	stmt, err := s.db.PrepareContext(ctx, sql)
+	if err != nil {
+		return User{}, fmt.Errorf("failed to add user: %w", err)
+	}
+
+	defer stmt.Close()
+
+	err = stmt.QueryRow(args...).Scan(&u.UserID)
+	if err != nil {
+		return User{}, fmt.Errorf("failed to add user: %w", err)
+	}
+
+	return u, nil
 }
 
-// countUsersPastYear will get the number of users in the last 24 hours
-func (s *Store) countUsersPastYear(ctx context.Context) (int, error) {
-	count := 0
-	err := s.db.GetContext(ctx, &count,
-		`SELECT COUNT(*)
-		FROM people.users
-		WHERE last_login > TO_TIMESTAMP($1, 'YYYY-MM-DD HH24:MI:SS');`, time.Now().AddDate(-1, 0, 0).Format("2006-01-02 15:04:05"))
-	if err != nil {
-		return count, fmt.Errorf("failed to count users past year from db: %w", err)
-	}
-	return count, nil
-}
+// editUser will edit a user record by ID
+func (s *Store) editUser(ctx context.Context, u User) error {
+	builder := utils.PSQL().Update("people.users").
+		SetMap(map[string]interface{}{
+			"password":            u.Password,
+			"salt":                u.Salt,
+			"email":               u.Email,
+			"last_login":          u.LastLogin,
+			"reset_pw":            u.ResetPw,
+			"avatar":              u.Avatar,
+			"use_gravatar":        u.UseGravatar,
+			"first_name":          u.Firstname,
+			"nickname":            u.Nickname,
+			"last_name":           u.Lastname,
+			"username":            u.Username,
+			"university_username": u.UniversityUsername,
+			"ldap_username":       u.LDAPUsername,
+			"login_type":          u.LoginType,
+			"enabled":             u.Enabled,
+			"updated_by":          u.UpdatedBy,
+			"updated_at":          u.UpdatedAt,
+			"deleted_by":          u.DeletedBy,
+			"deleted_at":          u.DeletedAt,
+		}).
+		Where(sq.Eq{"user_id": u.UserID})
 
-// updateUser will update a user record by ID
-func (s *Store) updateUser(ctx context.Context, user User) error {
-	_, err := s.db.ExecContext(ctx,
-		`UPDATE people.users
-		SET password = $1,
-			salt = $2,
-			email = $3,
-			last_login = $4,
-			reset_pw = $5,
-			avatar = $6,
-			use_gravatar = $7,
-			first_name = $8,
-			last_name = $9,
-			nickname = $10
-		WHERE user_id = $11;`, user.Password, user.Salt, user.Email, user.LastLogin, user.ResetPw, user.Avatar, user.UseGravatar, user.Firstname, user.Lastname, user.Nickname, user.UserID)
+	sql, args, err := builder.ToSql()
 	if err != nil {
-		return err
+		panic(fmt.Errorf("failed to build sql for editUser: %w", err))
 	}
+
+	res, err := s.db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return fmt.Errorf("failed to edit user: %w", err)
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to edit user: %w", err)
+	}
+
+	if rows < 1 {
+		return fmt.Errorf("failed to edit user: invalid rows affected: %d, this user may not exist: %d",
+			rows, u.UserID)
+	}
+
 	return nil
 }
 
 // getUser will get a user using any unique identity fields for a user
-func (s *Store) getUser(ctx context.Context, user User) (User, error) {
-	u := User{}
-	err := s.db.GetContext(ctx, &u,
-		`SELECT *
-		FROM people.users
-		WHERE (username = $1 AND username != '') OR (email = $2 AND email != '') OR (ldap_username = $3 AND ldap_username != '') OR user_id = $4
-		LIMIT 1;`, user.Username, user.Email, user.LDAPUsername, user.UserID)
+func (s *Store) getUser(ctx context.Context, u1 User) (User, error) {
+	var u User
+
+	builder := utils.PSQL().Select("*").
+		From("people.users").
+		Where(sq.Or{
+			sq.And{sq.Eq{"username": u1.Username}, sq.NotEq{"username": ""}},
+			sq.And{sq.Eq{"email": u1.Email}, sq.NotEq{"email": ""}},
+			sq.And{sq.Eq{"ldap_username": u1.LDAPUsername}, sq.NotEq{"ldap_username": ""}},
+			sq.Eq{"user_id": u1.UserID}}).
+		Limit(1)
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for getUser: %w", err))
+	}
+
+	//nolint:musttag
+	err = s.db.GetContext(ctx, &u, sql, args...)
 	if err != nil {
 		return u, fmt.Errorf("failed to get user from db: %w", err)
 	}
+
+	switch avatar := u.Avatar; {
+	case u.UseGravatar:
+		//nolint:gosec
+		hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace(u.Email))))
+		u.Avatar = "https://www.gravatar.com/avatar/" + hex.EncodeToString(hash[:])
+	case avatar == "":
+		u.Avatar = "/public/ystv-colour-white.png"
+	case strings.Contains(avatar, s.cdnEndpoint):
+	case strings.Contains(avatar, fmt.Sprintf("%d.", u.UserID)):
+		u.Avatar = "https://ystv.co.uk/static/images/members/thumb/" + avatar
+	default:
+		log.Printf("unknown avatar, user id: %d, length: %d, db string: %s, continuing", u.UserID, len(u.Avatar), u.Avatar)
+		u.Avatar = ""
+	}
+
 	return u, nil
 }
 
-// getUsers will get users
-func (s *Store) getUsers(ctx context.Context) ([]User, error) {
+// getUsers will get users search with sorting with size and page, enabled and deleted
+// Use the parameter direction for determining of the sorting will be ascending(asc) or descending(desc)
+func (s *Store) getUsers(ctx context.Context, size, page int, search, sortBy, direction, enabled,
+	deleted string) ([]User, int, error) {
 	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
-		FROM people.users;`)
+
+	var count int
+
+	builder, err := s._getUsersBuilder(size, page, search, sortBy, direction, enabled, deleted)
 	if err != nil {
-		return nil, err
+		return nil, -1, fmt.Errorf("failed to build sql for getUsers: %w", err)
 	}
-	return u, nil
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for getUsers: %w", err))
+	}
+
+	rows, err := s.db.QueryxContext(ctx, sql, args...)
+	if err != nil {
+		return nil, -1, fmt.Errorf("failed to get db users: %w", err)
+	}
+
+	defer func() {
+		_ = rows.Close()
+	}()
+
+	type tempStruct struct {
+		User
+		Count int `db:"full_count" json:"fullCount"`
+	}
+
+	for rows.Next() {
+		var u1 User
+
+		var temp tempStruct
+
+		//nolint:musttag
+		err = rows.StructScan(&temp)
+		if err != nil {
+			return nil, -1, fmt.Errorf("failed to get db users: %w", err)
+		}
+
+		count = temp.Count
+
+		err = copier.Copy(&u1, &temp)
+		if err != nil {
+			return nil, -1, fmt.Errorf("failed to copy struct: %w", err)
+		}
+
+		u = append(u, u1)
+	}
+
+	return u, count, nil
 }
 
-// getUsersSizePage will get users with page size.
-// Size is specified by the users page, size of list, from 5 to all items.
-// Page is the page number displayed, this is for the UI users page
-func (s *Store) getUsersSizePage(ctx context.Context, size, page int) ([]User, error) {
-	var u []User
-	// SELECT u.*, COUNT(*) / $1 AS pages
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT u.*
-		FROM people.users u
--- 		GROUP BY u, user_id, username, university_username, email, first_name, last_name, nickname, login_type, password, salt, avatar, last_login, reset_pw, enabled, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by, use_gravatar, ldap_username
-		LIMIT $1
-		OFFSET $2;`, size, size*(page-1))
-	if err != nil {
-		return nil, err
-	}
-	return u, nil
-}
+func (s *Store) _getUsersBuilder(size, page int, search, sortBy, direction, enabled,
+	deleted string) (*sq.SelectBuilder, error) {
+	builder := utils.PSQL().Select("*", "count(*) OVER() AS full_count").
+		From("people.users")
 
-// getUsersSearch will get users search
-func (s *Store) getUsersSearch(ctx context.Context, search string) ([]User, error) {
-	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
-		FROM people.users
-		WHERE (CAST(user_id AS TEXT) LIKE '%' || $1 || '%')
-		   OR (username LIKE '%' || $1 || '%')
-		   OR (nickname LIKE '%' || $1 || '%')
-		   OR (first_name LIKE '%' || $1 || '%')
-		   or (last_name LIKE '%' || $1 || '%')
-		   OR (email LIKE '%' || $1 || '%')
-		   OR (first_name || ' ' || last_name LIKE '%' || $1 || '%');`, search)
-	if err != nil {
-		return nil, err
+	if len(search) > 0 {
+		builder = builder.Where(
+			"(CAST(user_id AS TEXT) LIKE '%' || ? || '%' "+
+				"OR LOWER(username) LIKE LOWER('%' || ? || '%') "+
+				"OR LOWER(nickname) LIKE LOWER('%' || ? || '%') "+
+				"OR LOWER(first_name) LIKE LOWER('%' || ? || '%') "+
+				"OR LOWER(last_name) LIKE LOWER('%' || ? || '%') "+
+				"OR LOWER(email) LIKE LOWER('%' || ? || '%') "+
+				"OR LOWER(first_name || ' ' || last_name) LIKE LOWER('%' || ? || '%'))",
+			search, search, search, search, search, search, search)
 	}
-	return u, nil
-}
 
-// getUsersSearchSizePage will get users search with size and page
-// Size is specified by the users page, size of list, from 5 to all items.
-// Page is the page number displayed, this is for the UI users page
-func (s *Store) getUsersSearchSizePage(ctx context.Context, search string, size, page int) ([]User, error) {
-	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
-		FROM people.users
-		WHERE (CAST(user_id AS TEXT) LIKE '%' || $1 || '%')
-		   OR (username LIKE '%' || $1 || '%')
-		   OR (nickname LIKE '%' || $1 || '%')
-		   OR (first_name LIKE '%' || $1 || '%')
-		   or (last_name LIKE '%' || $1 || '%')
-		   OR (email LIKE '%' || $1 || '%')
-		   OR (first_name || ' ' || last_name LIKE '%' || $1 || '%')
--- 		GROUP BY u, user_id, username, university_username, email, first_name, last_name, nickname, login_type, password, salt, avatar, last_login, reset_pw, enabled, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by, use_gravatar, ldap_username
-		LIMIT $2
-		OFFSET $3;`, search, size, size*(page-1))
-	if err != nil {
-		return nil, err
+	switch enabled {
+	case "enabled":
+		builder = builder.Where(sq.Eq{"enabled": true})
+	case "disabled":
+		builder = builder.Where(sq.Eq{"enabled": false})
 	}
-	return u, nil
-}
 
-// getUsersOptionsDesc will get users sorting asc
-func (s *Store) getUsersOptionsAsc(ctx context.Context, sortBy string) ([]User, error) {
-	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
-		FROM people.users
-		ORDER BY
-		    CASE WHEN $1 = 'userId' THEN user_id END ASC,
-		    CASE WHEN $1 = 'name' THEN first_name END ASC,
-			CASE WHEN $1 = 'name' THEN last_name END ASC,
-		    CASE WHEN $1 = 'username' THEN username END ASC,
-		    CASE WHEN $1 = 'email' THEN email END ASC,
-		    CASE WHEN $1 = 'lastLogin' THEN last_login END ASC NULLS FIRST;`, sortBy)
-	if err != nil {
-		return nil, err
+	switch deleted {
+	case "not_deleted":
+		builder = builder.Where(sq.Eq{"deleted_by": nil})
+	case "deleted":
+		builder = builder.Where(sq.NotEq{"deleted_by": nil})
 	}
-	return u, nil
-}
 
-// getUsersOptionsDescSizePage will get users sorting asc with size and page
-// Size is specified by the users page, size of list, from 5 to all items.
-// Page is the page number displayed, this is for the UI users page
-func (s *Store) getUsersOptionsAscSizePage(ctx context.Context, sortBy string, size, page int) ([]User, error) {
-	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
-		FROM people.users
-		ORDER BY
-		    CASE WHEN $1 = 'userId' THEN user_id END ASC,
-		    CASE WHEN $1 = 'name' THEN first_name END ASC,
-			CASE WHEN $1 = 'name' THEN last_name END ASC,
-		    CASE WHEN $1 = 'username' THEN username END ASC,
-		    CASE WHEN $1 = 'email' THEN email END ASC,
-		    CASE WHEN $1 = 'lastLogin' THEN last_login END ASC NULLS FIRST
-		LIMIT $2
-		OFFSET $3;`, sortBy, size, size*(page-1))
-	if err != nil {
-		return nil, err
+	if len(sortBy) > 0 && len(direction) > 0 {
+		switch direction {
+		case "asc":
+			builder = builder.OrderByClause(
+				"CASE WHEN ? = 'userId' THEN user_id END ASC, "+
+					"CASE WHEN ? = 'name' THEN first_name END ASC, "+
+					"CASE WHEN ? = 'name' THEN last_name END ASC, "+
+					"CASE WHEN ? = 'username' THEN username END ASC, "+
+					"CASE WHEN ? = 'email' THEN email END ASC, "+
+					"CASE WHEN ? = 'lastLogin' THEN last_login END ASC NULLS FIRST",
+				sortBy, sortBy, sortBy, sortBy, sortBy, sortBy)
+		case "desc":
+			builder = builder.OrderByClause(
+				"CASE WHEN ? = 'userId' THEN user_id END DESC, "+
+					"CASE WHEN ? = 'name' THEN first_name END DESC, "+
+					"CASE WHEN ? = 'name' THEN last_name END DESC, "+
+					"CASE WHEN ? = 'username' THEN username END DESC, "+
+					"CASE WHEN ? = 'email' THEN email END DESC, "+
+					"CASE WHEN ? = 'lastLogin' THEN last_login END DESC NULLS LAST",
+				sortBy, sortBy, sortBy, sortBy, sortBy, sortBy)
+		default:
+			return nil, fmt.Errorf(`invalid sorting direction, entered "%s" of length %d, but expected either 
+"direction" or "desc"`, direction, len(direction))
+		}
 	}
-	return u, nil
-}
 
-// getUsersSearchOptionsAsc will get users search with sorting asc
-func (s *Store) getUsersSearchOptionsAsc(ctx context.Context, search, sortBy string) ([]User, error) {
-	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
-		FROM people.users
-		WHERE (CAST(user_id AS TEXT) LIKE '%' || $1 || '%')
-		   OR (username LIKE '%' || $1 || '%')
-		   OR (nickname LIKE '%' || $1 || '%')
-		   OR (first_name LIKE '%' || $1 || '%')
-		   or (last_name LIKE '%' || $1 || '%')
-		   OR (email LIKE '%' || $1 || '%')
-		   OR (first_name || ' ' || last_name LIKE '%' || $1 || '%')
-		ORDER BY
-		    CASE WHEN $2 = 'userId' THEN user_id END ASC,
-		    CASE WHEN $2 = 'name' THEN first_name END ASC,
-			CASE WHEN $2 = 'name' THEN last_name END ASC,
-		    CASE WHEN $2 = 'username' THEN username END ASC,
-		    CASE WHEN $2 = 'email' THEN email END ASC,
-		    CASE WHEN $2 = 'lastLogin' THEN last_login END ASC NULLS FIRST;`, search, sortBy)
-	if err != nil {
-		return nil, err
+	if page >= 1 && size >= 5 && size <= 100 {
+		parsed1, err := strconv.ParseUint(strconv.Itoa(size), 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf(`invalid value for size in direction "%s"`, direction)
+		}
+		parsed2, err := strconv.ParseUint(strconv.Itoa(size*(page-1)), 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf(`invalid value for page in direction "%s"`, direction)
+		}
+		builder = builder.Limit(parsed1).Offset(parsed2)
 	}
-	return u, nil
-}
 
-// getUsersSearchOptionsAscSizePage will get users search with sorting asc with size and page
-// Size is specified by the users page, size of list, from 5 to all items.
-// Page is the page number displayed, this is for the UI users page
-func (s *Store) getUsersSearchOptionsAscSizePage(ctx context.Context, search, sortBy string, size, page int) ([]User, error) {
-	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
-		FROM people.users
-		WHERE (CAST(user_id AS TEXT) LIKE '%' || $1 || '%')
-		   OR (username LIKE '%' || $1 || '%')
-		   OR (nickname LIKE '%' || $1 || '%')
-		   OR (first_name LIKE '%' || $1 || '%')
-		   or (last_name LIKE '%' || $1 || '%')
-		   OR (email LIKE '%' || $1 || '%')
-		   OR (first_name || ' ' || last_name LIKE '%' || $1 || '%')
-		ORDER BY
-		    CASE WHEN $2 = 'userId' THEN user_id END ASC,
-		    CASE WHEN $2 = 'name' THEN first_name END ASC,
-			CASE WHEN $2 = 'name' THEN last_name END ASC,
-		    CASE WHEN $2 = 'username' THEN username END ASC,
-		    CASE WHEN $2 = 'email' THEN email END ASC,
-		    CASE WHEN $2 = 'lastLogin' THEN last_login END ASC NULLS FIRST
-		LIMIT $3
-		OFFSET $4;`, search, sortBy, size, size*(page-1))
-	if err != nil {
-		return nil, err
-	}
-	return u, nil
-}
-
-// getUsersOptionsDesc will get users sorting desc
-func (s *Store) getUsersOptionsDesc(ctx context.Context, sortBy string) ([]User, error) {
-	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
-		FROM people.users
-		ORDER BY
-		    CASE WHEN $1 = 'userId' THEN user_id END DESC,
-		    CASE WHEN $1 = 'name' THEN first_name END DESC,
-			CASE WHEN $1 = 'name' THEN last_name END DESC,
-		    CASE WHEN $1 = 'username' THEN username END DESC,
-		    CASE WHEN $1 = 'email' THEN email END DESC,
-		    CASE WHEN $1 = 'lastLogin' THEN last_login END DESC NULLS LAST;`, sortBy)
-	if err != nil {
-		return nil, err
-	}
-	return u, nil
-}
-
-// getUsersOptionsDescSizePage will get users sorting desc with size and page
-// Size is specified by the users page, size of list, from 5 to all items.
-// Page is the page number displayed, this is for the UI users page
-func (s *Store) getUsersOptionsDescSizePage(ctx context.Context, sortBy string, size, page int) ([]User, error) {
-	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
-		FROM people.users
-		ORDER BY
-		    CASE WHEN $1 = 'userId' THEN user_id END DESC,
-		    CASE WHEN $1 = 'name' THEN first_name END DESC,
-			CASE WHEN $1 = 'name' THEN last_name END DESC,
-		    CASE WHEN $1 = 'username' THEN username END DESC,
-		    CASE WHEN $1 = 'email' THEN email END DESC,
-		    CASE WHEN $1 = 'lastLogin' THEN last_login END DESC NULLS LAST
-		LIMIT $2
-		OFFSET $3;`, sortBy, size, size*(page-1))
-	if err != nil {
-		return nil, err
-	}
-	return u, nil
-}
-
-// getUsersSearchOptionsDesc will get users search with sorting desc
-func (s *Store) getUsersSearchOptionsDesc(ctx context.Context, search, sortBy string) ([]User, error) {
-	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
-		FROM people.users
-		WHERE (CAST(user_id AS TEXT) LIKE '%' || $1 || '%')
-		   OR (username LIKE '%' || $1 || '%')
-		   OR (nickname LIKE '%' || $1 || '%')
-		   OR (first_name LIKE '%' || $1 || '%')
-		   or (last_name LIKE '%' || $1 || '%')
-		   OR (email LIKE '%' || $1 || '%')
-		   OR (first_name || ' ' || last_name LIKE '%' || $1 || '%')
-		ORDER BY
-		    CASE WHEN $2 = 'userId' THEN user_id END DESC,
-		    CASE WHEN $2 = 'name' THEN first_name END DESC,
-			CASE WHEN $2 = 'name' THEN last_name END DESC,
-		    CASE WHEN $2 = 'username' THEN username END DESC,
-		    CASE WHEN $2 = 'email' THEN email END DESC,
-		    CASE WHEN $2 = 'lastLogin' THEN last_login END DESC NULLS LAST;`, search, sortBy)
-	if err != nil {
-		return nil, err
-	}
-	return u, nil
-}
-
-// getUsersSearchOptionsDescSizePage will get users search with sorting desc with size and page
-// Size is specified by the users page, size of list, from 5 to all items.
-// Page is the page number displayed, this is for the UI users page
-func (s *Store) getUsersSearchOptionsDescSizePage(ctx context.Context, search, sortBy string, size, page int) ([]User, error) {
-	var u []User
-	err := s.db.SelectContext(ctx, &u,
-		`SELECT *
-		FROM people.users
-		WHERE (CAST(user_id AS TEXT) LIKE '%' || $1 || '%')
-		   OR (username LIKE '%' || $1 || '%')
-		   OR (nickname LIKE '%' || $1 || '%')
-		   OR (first_name LIKE '%' || $1 || '%')
-		   or (last_name LIKE '%' || $1 || '%')
-		   OR (email LIKE '%' || $1 || '%')
-		   OR (first_name || ' ' || last_name LIKE '%' || $1 || '%')
-		ORDER BY
-		    CASE WHEN $2 = 'userId' THEN user_id END DESC,
-		    CASE WHEN $2 = 'name' THEN first_name END DESC,
-			CASE WHEN $2 = 'name' THEN last_name END DESC,
-		    CASE WHEN $2 = 'username' THEN username END DESC,
-		    CASE WHEN $2 = 'email' THEN email END DESC,
-		    CASE WHEN $2 = 'lastLogin' THEN last_login END DESC NULLS LAST
-		LIMIT $3
-		OFFSET $4;`, search, sortBy, size, size*(page-1))
-	if err != nil {
-		return nil, err
-	}
-	return u, nil
+	return &builder, nil
 }
 
 // getPermissionsForUser returns all permissions for a user
-func (s *Store) getPermissionsForUser(ctx context.Context, u User) (p []string, err error) {
-	err = s.db.SelectContext(ctx, &p, `SELECT p.name
-		FROM people.permissions p
-		INNER JOIN people.role_permissions rp ON rp.permission_id = p.permission_id
-		INNER JOIN people.role_members rm ON rm.role_id = rp.role_id
-		WHERE rm.user_id = $1;`, u.UserID)
+func (s *Store) getPermissionsForUser(ctx context.Context, u User) ([]permission.Permission, error) {
+	var p []permission.Permission
+
+	builder := utils.PSQL().Select("p.*").
+		From("people.permissions p").
+		LeftJoin("people.role_permissions rp ON rp.permission_id = p.permission_id").
+		LeftJoin("people.role_members rm ON rm.role_id = rp.role_id").
+		Where(sq.Eq{"rm.user_id": u.UserID})
+
+	sql, args, err := builder.ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get user permissions: %w", err)
+		panic(fmt.Errorf("failed to build sql for getPermissionsForUser: %w", err))
 	}
+
+	err = s.db.SelectContext(ctx, &p, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get permissions for user: %w", err)
+	}
+
 	return p, nil
 }
 
 // getRolesForUser returns all roles for a user
-func (s *Store) getRolesForUser(ctx context.Context, u User) (r []role.Role, err error) {
-	err = s.db.SelectContext(ctx, &r, `SELECT r.*
-		FROM people.roles r
-		INNER JOIN people.role_members rm ON rm.role_id = r.role_id
-		WHERE rm.user_id = $1;`, u.UserID)
+func (s *Store) getRolesForUser(ctx context.Context, u User) ([]role.Role, error) {
+	var r []role.Role
+
+	builder := utils.PSQL().Select("r.*").
+		From("people.roles r").
+		LeftJoin("people.role_members rm ON rm.role_id = r.role_id").
+		Where(sq.Eq{"rm.user_id": u.UserID})
+
+	sql, args, err := builder.ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get user roles: %w", err)
+		panic(fmt.Errorf("failed to build sql for getRolesForUser: %w", err))
 	}
+
+	err = s.db.SelectContext(ctx, &r, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get roles for user: %w", err)
+	}
+
 	return r, nil
+}
+
+// getUsersForRole returns all users for a role - moved here for cycle import reasons
+func (s *Store) getUsersForRole(ctx context.Context, r role.Role) ([]User, error) {
+	var u []User
+
+	builder := utils.PSQL().Select("u.*").
+		From("people.users u").
+		LeftJoin("people.role_members rm ON rm.user_id = u.user_id").
+		Where(sq.Eq{"rm.role_id": r.RoleID})
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for getUsersForRole: %w", err))
+	}
+
+	//nolint:musttag
+	err = s.db.SelectContext(ctx, &u, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get users for role: %w", err)
+	}
+
+	return u, nil
+}
+
+// getRoleUser returns a role user - moved here for cycle import reasons
+func (s *Store) getRoleUser(ctx context.Context, ru1 RoleUser) (RoleUser, error) {
+	var ru RoleUser
+
+	builder := utils.PSQL().Select("*").
+		From("people.role_members").
+		Where(sq.And{
+			sq.Eq{"role_id": ru1.RoleID},
+			sq.Eq{"user_id": ru1.UserID},
+		}).
+		Limit(1)
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for getRoleUser: %w", err))
+	}
+
+	err = s.db.GetContext(ctx, &ru, sql, args...)
+	if err != nil {
+		return RoleUser{}, fmt.Errorf("failed to get role user: %w", err)
+	}
+
+	return ru, nil
+}
+
+// getUsersNotInRole returns all the users not currently in the role.Role to be added
+func (s *Store) getUsersNotInRole(ctx context.Context, r role.Role) ([]User, error) {
+	var u []User
+
+	subQuery := utils.PSQL().Select("u.user_id").
+		From("people.users u").
+		LeftJoin("people.role_members ru on u.user_id = ru.user_id").
+		Where(sq.Eq{"ru.role_id": r.RoleID})
+
+	builder := utils.PSQL().Select("u.*").
+		Distinct().
+		From("people.users u").
+		Where(sq.And{
+			utils.NotIn("user_id", subQuery),
+			sq.Eq{"deleted_by": nil},
+		}).
+		OrderBy("first_name", "last_name")
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for getRoles: %w", err))
+	}
+
+	//nolint:musttag
+	err = s.db.SelectContext(ctx, &u, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get roles: %w", err)
+	}
+
+	return u, nil
+}
+
+// addRoleUser creates a link between a role.Role and User
+func (s *Store) addRoleUser(ctx context.Context, ru1 RoleUser) (RoleUser, error) {
+	var ru RoleUser
+
+	builder := utils.PSQL().Insert("people.role_members").
+		Columns("role_id", "user_id").
+		Values(ru1.RoleID, ru1.UserID).
+		Suffix("RETURNING role_id, user_id")
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for addRoleUser: %w", err))
+	}
+
+	stmt, err := s.db.PrepareContext(ctx, sql)
+	if err != nil {
+		return RoleUser{}, fmt.Errorf("failed to add role user: %w", err)
+	}
+
+	defer stmt.Close()
+
+	err = stmt.QueryRow(args...).Scan(&ru.RoleID, &ru.UserID)
+	if err != nil {
+		return RoleUser{}, fmt.Errorf("failed to add role user: %w", err)
+	}
+
+	return ru, nil
+}
+
+// removeRoleUser removes a link between a role.Role and User
+func (s *Store) removeRoleUser(ctx context.Context, ru RoleUser) error {
+	builder := utils.PSQL().Delete("people.role_members").
+		Where(sq.And{
+			sq.Eq{"role_id": ru.RoleID},
+			sq.Eq{"user_id": ru.UserID},
+		})
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for removeRoleUser: %w", err))
+	}
+
+	_, err = s.db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return fmt.Errorf("failed to remove role user: %w", err)
+	}
+
+	return nil
+}
+
+// removeUserForRoles removes all links between role.Role and a User
+func (s *Store) removeUserForRoles(ctx context.Context, u User) error {
+	builder := utils.PSQL().Delete("people.role_members").
+		Where(sq.Eq{"user_id": u.UserID})
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for removeUserForRoles: %w", err))
+	}
+
+	_, err = s.db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return fmt.Errorf("failed to remove user for roles: %w", err)
+	}
+
+	return nil
+}
+
+// getPermissionsForRole returns all permissions for a role - moved here for cycle import reasons
+func (s *Store) getPermissionsForRole(ctx context.Context, r role.Role) ([]permission.Permission, error) {
+	var p []permission.Permission
+
+	builder := utils.PSQL().Select("p.*").
+		From("people.permissions p").
+		LeftJoin("people.role_permissions rp ON p.permission_id = rp.permission_id").
+		Where(sq.Eq{"rp.role_id": r.RoleID})
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for getPermissionsForRole: %w", err))
+	}
+
+	err = s.db.SelectContext(ctx, &p, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get permissions for role: %w", err)
+	}
+
+	return p, nil
+}
+
+// getRolesForPermission returns all roles for a permission - moved here for cycle import reasons
+func (s *Store) getRolesForPermission(ctx context.Context, p permission.Permission) ([]role.Role, error) {
+	var r []role.Role
+
+	builder := utils.PSQL().Select("r.*").
+		From("people.roles r").
+		LeftJoin("people.role_permissions rp ON r.role_id = rp.role_id").
+		Where(sq.Eq{"rp.permission_id": p.PermissionID})
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for getRolesForPermission: %w", err))
+	}
+
+	err = s.db.SelectContext(ctx, &r, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get roles for permission: %w", err)
+	}
+
+	return r, nil
+}
+
+// getRolePermission returns a role permission - moved here for cycle import reasons
+func (s *Store) getRolePermission(ctx context.Context, rp1 RolePermission) (RolePermission, error) {
+	var rp RolePermission
+
+	builder := utils.PSQL().Select("*").
+		From("people.role_permissions").
+		Where(sq.And{
+			sq.Eq{"role_id": rp1.RoleID},
+			sq.Eq{"permission_id": rp1.PermissionID},
+		}).
+		Limit(1)
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for getRolePermission: %w", err))
+	}
+
+	err = s.db.GetContext(ctx, &rp, sql, args...)
+	if err != nil {
+		return RolePermission{}, fmt.Errorf("failed to get role permission: %w", err)
+	}
+
+	return rp, nil
+}
+
+// getPermissionsNotInRole returns all the permissions not currently in the role.Role to be added
+func (s *Store) getPermissionsNotInRole(ctx context.Context, r role.Role) ([]permission.Permission, error) {
+	var p []permission.Permission
+
+	subQuery := utils.PSQL().Select("p.permission_id").
+		From("people.permissions p").
+		LeftJoin("people.role_permissions rp on p.permission_id = rp.permission_id").
+		Where(sq.Eq{"rp.role_id": r.RoleID})
+
+	builder := utils.PSQL().Select("p.*").
+		Distinct().
+		From("people.permissions p").
+		Where(utils.NotIn("permission_id", subQuery)).
+		OrderBy("name")
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for getPermissionsNotInRole: %w", err))
+	}
+
+	//nolint:asasalint
+	err = s.db.SelectContext(ctx, &p, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get permissions not in role: %w", err)
+	}
+
+	return p, nil
+}
+
+// addRolePermission creates a link between a role.Role and permission.Permission
+func (s *Store) addRolePermission(ctx context.Context, rp1 RolePermission) (RolePermission, error) {
+	var rp RolePermission
+
+	builder := utils.PSQL().Insert("people.role_permissions").
+		Columns("role_id ", "permission_id").
+		Values(rp1.RoleID, rp1.PermissionID).
+		Suffix("RETURNING role_id, permission_id")
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for addRolePermission: %w", err))
+	}
+
+	stmt, err := s.db.PrepareContext(ctx, sql)
+	if err != nil {
+		return RolePermission{}, fmt.Errorf("failed to add rolePermission: %w", err)
+	}
+
+	defer stmt.Close()
+
+	err = stmt.QueryRow(args...).Scan(&rp.RoleID, &rp.PermissionID)
+	if err != nil {
+		return RolePermission{}, fmt.Errorf("failed to add rolePermission: %w", err)
+	}
+
+	return rp, nil
+}
+
+// removeRolePermission removes a link between a role.Role and permission.Permission
+func (s *Store) removeRolePermission(ctx context.Context, rp RolePermission) error {
+	builder := utils.PSQL().Delete("people.role_permissions").
+		Where(sq.And{sq.Eq{"role_id": rp.RoleID}, sq.Eq{"permission_id": rp.PermissionID}})
+
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for removeRolePermission: %w", err))
+	}
+
+	_, err = s.db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return fmt.Errorf("failed to delete rolePermission: %w", err)
+	}
+
+	return nil
 }
