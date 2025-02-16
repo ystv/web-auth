@@ -28,6 +28,7 @@ type (
 		EditUserPassword(context.Context, User) error
 		EditUser(context.Context, User, int) error
 		SetUserLoggedIn(context.Context, User) error
+		EditUserAvatar(context.Context, User) error
 		DeleteUser(context.Context, User, int) error
 		GetPermissionsForUser(context.Context, User) ([]permission.Permission, error)
 		GetRolesForUser(context.Context, User) ([]role.Role, error)
@@ -359,6 +360,20 @@ func (s *Store) SetUserLoggedIn(ctx context.Context, u User) error {
 	u.LastLogin = null.TimeFrom(time.Now())
 
 	return s.editUser(ctx, u)
+}
+
+func (s *Store) EditUserAvatar(ctx context.Context, userParam User) error {
+	user, err := s.getUser(ctx, userParam)
+	if err != nil {
+		return fmt.Errorf("failed to get user: %w", err)
+	}
+	user.UseGravatar = userParam.UseGravatar
+	user.Avatar = userParam.Avatar
+	err = s.editUser(ctx, user)
+	if err != nil {
+		return fmt.Errorf("failed to edit user for edit user password: %w", err)
+	}
+	return nil
 }
 
 // DeleteUser will soft delete a user
