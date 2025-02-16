@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
@@ -60,6 +61,7 @@ type (
 	Views struct {
 		api         api.Repo
 		cache       *cache.Cache
+		cdn         *s3.S3
 		conf        *Config
 		cookie      *sessions.CookieStore
 		crowd       crowd.Repo
@@ -81,7 +83,7 @@ type (
 )
 
 // New initialises connections, templates, and cookies
-func New(conf *Config, host string) *Views {
+func New(conf *Config, host string, cdn *s3.S3) *Views {
 	v := &Views{}
 	// Connecting to stores
 	dbStore := db.NewStore(conf.DatabaseURL, host)
@@ -91,6 +93,8 @@ func New(conf *Config, host string) *Views {
 	v.user = user.NewUserRepo(dbStore, conf.CDNEndpoint)
 	v.api = api.NewAPIRepo(dbStore)
 	v.crowd = crowd.NewCrowdRepo(dbStore)
+
+	v.cdn = cdn
 
 	v.template = templates.NewTemplate(v.permission, v.role, v.user)
 

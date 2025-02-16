@@ -8,6 +8,7 @@ import (
 
 	"github.com/joho/godotenv"
 
+	"github.com/ystv/web-auth/utils"
 	"github.com/ystv/web-auth/views"
 )
 
@@ -77,6 +78,19 @@ func main() {
 
 	domainName := os.Getenv("WAUTH_DOMAIN_NAME")
 
+	// CDN
+	cdnConfig := utils.CDNConfig{
+		Endpoint:        os.Getenv("WAUTH_CDN_ENDPOINT"),
+		Region:          os.Getenv("WAUTH_CDN_REGION"),
+		AccessKeyID:     os.Getenv("WAUTH_CDN_ACCESSKEYID"),
+		SecretAccessKey: os.Getenv("WAUTH_CDN_SECRETACCESSKEY"),
+	}
+	cdn, err := utils.NewCDN(cdnConfig)
+	if err != nil {
+		log.Fatalf("Unable to connect to CDN: %v", err)
+	}
+	log.Printf("Connected to CDN: %s", cdnConfig.Endpoint)
+
 	// Generate config
 	conf := &views.Config{
 		Version:           Version,
@@ -103,7 +117,7 @@ func main() {
 		},
 	}
 
-	v := views.New(conf, dbHost)
+	v := views.New(conf, dbHost, cdn)
 
 	router := NewRouter(&RouterConf{
 		Config: conf,
