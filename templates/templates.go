@@ -250,6 +250,8 @@ var (
 			"_sidebar.tmpl", "_pagination.tmpl"},
 		{"crowdApps.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl",
 			"_sidebar.tmpl", "_pagination.tmpl"},
+		{"crowdApp.tmpl", "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl",
+			"_sidebar.tmpl", "_pagination.tmpl"},
 	}
 
 	_ = AllTemplates
