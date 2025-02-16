@@ -8,9 +8,10 @@ require (
 	github.com/Clarilab/gocloaksession v1.14.0
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/Nerzal/gocloak/v8 v8.6.0
+	github.com/aws/aws-sdk-go v1.55.6
 	github.com/balacode/zr-whirl v1.0.2
 	github.com/dustin/go-humanize v1.0.1
-	github.com/go-playground/validator/v10 v10.24.0
+	github.com/go-playground/validator/v10 v10.25.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/schema v1.4.1
@@ -38,6 +39,7 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-test/deep v1.1.1 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
