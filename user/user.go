@@ -251,6 +251,9 @@ func (s *Store) VerifyUser(ctx context.Context, u User) (User, bool, error) {
 		return user, false, nil
 	}
 
+	u.UseGravatar = user.UseGravatar
+	u.Avatar = user.Avatar
+
 	return u, false, errors.New("invalid credentials")
 }
 

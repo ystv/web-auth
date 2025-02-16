@@ -14,8 +14,10 @@
             <div class="column is-3">
                 <figure class="avatar">
                     {{if .User.UseGravatar}}<img src="{{.Gravatar}}" alt="placeholder" width="192px"
-                                                 height="192px"/>{{else}}
-                        <img src="https://placehold.it/192x192" alt="placeholder"/>{{end}}
+                                                 height="192px"/>{{else if gt (len .User.Avatar) 0}}
+                        <img src="{{.User.Avatar}}" alt="placeholder" style="max-width:192px; max-height:192px"/>{{else}}
+                        <img src="/public/ystv-colour-white.png" alt="placeholder" width="192px"
+                             height="192px"/>{{end}}
                 </figure>
                 <div class="buttons">
                     <a class="button is-info is-outlined" onclick="changePasswordModal()">
