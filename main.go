@@ -89,7 +89,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to connect to CDN: %v", err)
 	}
-	log.Printf("Connected to CDN: %s", cdnConfig.Endpoint)
+	log.Printf("connected to CDN: %s", cdnConfig.Endpoint)
 
 	// Generate config
 	conf := &views.Config{
