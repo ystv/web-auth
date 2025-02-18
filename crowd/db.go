@@ -16,7 +16,7 @@ func (s *Store) getCrowdApp(ctx context.Context, c1 CrowdApp) (CrowdApp, error) 
 		From("web_auth.crowd_apps").
 		Where(sq.Or{
 			sq.Eq{"app_id": c1.AppID},
-			sq.Eq{"username": c1.Name}}).
+			sq.Eq{"username": c1.Username}}).
 		Limit(1)
 
 	sql, args, err := builder.ToSql()
