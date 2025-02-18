@@ -87,7 +87,7 @@ func main() {
 	}
 	cdn, err := utils.NewCDN(cdnConfig)
 	if err != nil {
-		log.Fatalf("Unable to connect to CDN: %v", err)
+		log.Fatalf("unable to connect to CDN: %v", err)
 	}
 	log.Printf("connected to CDN: %s", cdnConfig.Endpoint)
 
@@ -128,6 +128,6 @@ func main() {
 	err = router.Start()
 	//nolint:staticcheck
 	if err != nil {
-		log.Fatalf("The web server couldn't be started!\n\n%s\n\nExiting!", err)
+		log.Fatalf("the web server couldn't be started!\n\n%s\n\nexiting!", err)
 	}
 }
