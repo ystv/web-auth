@@ -87,9 +87,9 @@ func main() {
 	}
 	cdn, err := utils.NewCDN(cdnConfig)
 	if err != nil {
-		log.Fatalf("unable to connect to CDN: %v", err)
+		log.Fatalf("unable to connect to cdn: %v", err)
 	}
-	log.Printf("connected to CDN: %s", cdnConfig.Endpoint)
+	log.Printf("connected to cdn: %s", cdnConfig.Endpoint)
 
 	// Generate config
 	conf := &views.Config{
