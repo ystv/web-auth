@@ -1,17 +1,27 @@
 {{define "title"}}Internal: Officership Teams{{end}}
 {{define "content"}}
     <div class="column is-10" style="min-height: 88vh">
-        <div class="card events-card">
-            <header class="card-header">
-                <p class="card-header-title">Officership Teams</p>
-            </header>
-            <div class="card" style="margin-bottom: 0">
-                <div class="column">
-                    <div class="field">
-                        <a onclick="addOfficershipTeamModal()" class="button is-info"><span class="mdi mdi-account-multiple-plus"></span>&ensp;Add Officership Team</a>
-                    </div>
+        <section class="hero is-info welcome is-small">
+            <div class="hero-body">
+                <div class="container">
+                    <h1 class="title">Officership Teams</h1>
                 </div>
             </div>
+        </section>
+        <br>
+        <div class="columns box" style="height: fit-content">
+            <div class="column">
+                <p>Here you can manage YSTV's officership teams.<br>
+                    If you are not part of Computing Team,
+                    please do not make any changes without consulting the Computing Team.<br>
+                    <strong>Be warned,
+                        these changes will be shown on the public site and can affect multiple other areas
+                        - they can be very powerful!</strong></p>
+                <br>
+                <a onclick="addOfficershipTeamModal()" class="button is-info"><span class="mdi mdi-account-multiple-plus"></span>&ensp;Add Officership Team</a>
+            </div>
+        </div>
+        <div class="card events-card">
             <div class="card-table" style="max-height: 100em;">
                 <div class="content">
                     <table class="table is-fullwidth is-hoverable">

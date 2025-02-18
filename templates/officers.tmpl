@@ -1,6 +1,26 @@
 {{define "title"}}Internal: Officers{{end}}
 {{define "content"}}
     <div class="column is-10" style="min-height: 88vh">
+        <section class="hero is-info welcome is-small">
+            <div class="hero-body">
+                <div class="container">
+                    <h1 class="title">Officers</h1>
+                </div>
+            </div>
+        </section>
+        <br>
+        <div class="columns box" style="height: fit-content">
+            <div class="column">
+                <p>Here you can manage YSTV's officers.<br>
+                    If you are not part of Computing or Admin Team, please do not make any changes without consulting
+                    the Computing and Admin Team.<br>
+                    <strong>Be warned,
+                        these changes will be shown on the public site and can affect multiple other areas
+                        - they can be very powerful!</strong></p>
+                <br>
+                <a onclick="addOfficerModal()" class="button is-info"><span class="mdi mdi-account-plus"></span>&ensp;Add Officer</a>
+            </div>
+        </div>
         <div class="card">
             <form method="post" action="">
                 <div class="column">
@@ -42,18 +62,6 @@
                     </div>
                 </div>
             </form>
-        </div>
-        <div class="card events-card">
-            <header class="card-header">
-                <p class="card-header-title">Officers</p>
-            </header>
-            <div class="card" style="margin-bottom: 0">
-                <div class="column">
-                    <div class="field">
-                        <a onclick="addOfficerModal()" class="button is-info"><span class="mdi mdi-account-plus"></span>&ensp;Add Officer</a>
-                    </div>
-                </div>
-            </div>
             <div class="card-table" style="max-height: 100em;">
                 <div class="content">
                     <table class="table is-fullwidth is-hoverable">

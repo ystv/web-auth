@@ -4,6 +4,40 @@
         {{template "_pagination" .}}
     {{end}}
     <div class="column is-10" style="min-height: 88vh">
+        <section class="hero is-info welcome is-small">
+            <div class="hero-body">
+                <div class="container">
+                    <h1 class="title">Users</h1>
+                </div>
+            </div>
+        </section>
+        <br>
+        <div class="columns box" style="height: fit-content">
+            <div class="column">
+                <p>Here you can manage YSTV's users.<br>
+                    If you are not part of Computing or Admin Team, please do not make any changes without consulting
+                    the Computing and Admin Team.<br>
+                    <strong>Be warned, these changes can break user access - they can be very powerful!</strong></p>
+                <br>
+                {{$userAdmin := checkPermission $.UserPermissions "ManageMembers.Members.Admin"}}
+                {{if (checkPermission .UserPermissions "ManageMembers.Members.Add")}}
+                    <p id="message" style="color: green"></p>
+                    <p id="error" style="color: red"></p>
+                        <div class="column" style="padding: 0;">
+                            <div class="field">
+                                <a onclick="addUserModal()" class="button is-info">
+                                    <i class="fa-solid fa-user-plus"></i>&ensp;
+                                    Add User</a>
+                            </div>
+                            <div class="field">
+                                <a href="/internal/user/add" class="button is-info">
+                                    <i class="mdi mdi-account-multiple-plus"></i>&ensp;
+                                    Add bulk Users</a>
+                            </div>
+                        </div>
+                {{end}}
+            </div>
+        </div>
         <div class="card">
             <form method="post" action="">
                 <div class="column">
@@ -96,35 +130,11 @@
                     </div>
                 </div>
             </form>
-        </div>
         {{if gt .Sort.Pages 1}}
-            <div class="card" style="width: 100%; text-align: center">
+            <div class="content" style="width: 100%; text-align: center">
                 <div id="pagination"></div>
             </div>
         {{end}}
-        <div class="card events-card">
-            <header class="card-header">
-                <p class="card-header-title">Users</p>
-            </header>
-            {{$userAdmin := checkPermission $.UserPermissions "ManageMembers.Members.Admin"}}
-            {{if (checkPermission .UserPermissions "ManageMembers.Members.Add")}}
-                <p id="message" style="color: green"></p>
-                <p id="error" style="color: red"></p>
-                <div class="card" style="margin-bottom: 0">
-                    <div class="column">
-                        <div class="field">
-                            <a onclick="addUserModal()" class="button is-info">
-                                <i class="fa-solid fa-user-plus"></i>&ensp;
-                                Add User</a>
-                        </div>
-                        <div class="field">
-                            <a href="/internal/user/add" class="button is-info">
-                                <i class="mdi mdi-account-multiple-plus"></i>&ensp;
-                                Add bulk Users</a>
-                        </div>
-                    </div>
-                </div>
-            {{end}}
             <div class="card-table">
                 <div class="content">
                     <table class="table is-fullwidth is-hoverable">

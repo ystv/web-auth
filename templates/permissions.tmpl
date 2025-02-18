@@ -1,17 +1,25 @@
 {{define "title"}}Internal: Permissions{{end}}
 {{define "content"}}
     <div class="column is-10" style="min-height: 88vh">
-        <div class="card events-card">
-            <header class="card-header">
-                <p class="card-header-title">Permissions</p>
-            </header>
-            <div class="card" style="margin-bottom: 0">
-                <div class="column">
-                        <div class="field">
-                            <a onclick="addPermissionModal()" class="button is-info"><span class="mdi mdi-key-plus"></span>&ensp;Add Permission</a>
-                        </div>
+        <section class="hero is-info welcome is-small">
+            <div class="hero-body">
+                <div class="container">
+                    <h1 class="title">Permissions</h1>
                 </div>
             </div>
+        </section>
+        <br>
+        <div class="columns box" style="height: fit-content">
+            <div class="column">
+                <p>Here you can manage YSTV's permissions.<br>
+                    If you are not part of Computing Team, please do not make any changes without consulting
+                    the Computing Team.<br>
+                    <strong>Be warned, these changes can break may areas - they can be very powerful!</strong></p>
+                <br>
+                <a onclick="addPermissionModal()" class="button is-info"><span class="mdi mdi-key-plus"></span>&ensp;Add Permission</a>
+            </div>
+        </div>
+        <div class="card events-card">
             <div class="card-table">
                 <div class="content">
                     <table class="table is-fullwidth is-hoverable" style="max-height: 90%">

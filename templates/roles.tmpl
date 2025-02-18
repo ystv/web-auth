@@ -1,17 +1,25 @@
 {{define "title"}}Internal: Roles{{end}}
 {{define "content"}}
     <div class="column is-10" style="min-height: 88vh">
-        <div class="card events-card">
-            <header class="card-header">
-                <p class="card-header-title">Roles</p>
-            </header>
-            <div class="card" style="margin-bottom: 0">
-                <div class="column">
-                    <div class="field">
-                        <a onclick="addRoleModal()" class="button is-info"><span class="mdi mdi-shield-plus"></span>&ensp;Add Role</a>
-                    </div>
+        <section class="hero is-info welcome is-small">
+            <div class="hero-body">
+                <div class="container">
+                    <h1 class="title">Roles</h1>
                 </div>
             </div>
+        </section>
+        <br>
+        <div class="columns box" style="height: fit-content">
+            <div class="column">
+                <p>Here you can manage YSTV's roles.<br>
+                    If you are not part of Computing Team, please do not make any changes without consulting
+                    the Computing Team.<br>
+                    <strong>Be warned, these changes can break may areas - they can be very powerful!</strong></p>
+                <br>
+                <a onclick="addRoleModal()" class="button is-info"><span class="mdi mdi-shield-plus"></span>&ensp;Add Role</a>
+            </div>
+        </div>
+        <div class="card events-card">
             <div class="card-table">
                 <div class="content">
                     <table class="table is-fullwidth is-hoverable">
