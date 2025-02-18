@@ -293,6 +293,8 @@ func (v *Views) CrowdXMLHandler(c echo.Context) error {
 		xmlUser.Groups = &XMLGroup{Group: groups}
 	}
 
+	log.Printf("user \"%s\" is authenticated via crowd auth", c1.User.Username)
+
 	return c.XML(http.StatusOK, xmlUser)
 }
 
