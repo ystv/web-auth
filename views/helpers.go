@@ -112,7 +112,7 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 func (v *Views) setMessagesInSession(eC echo.Context, c *Context) error {
 	session, err := v.cookie.Get(eC.Request(), v.conf.SessionCookieName)
 	if err != nil {
-		return fmt.Errorf("error getting session: %w", err)
+		return fmt.Errorf("failed to get session for set message: %w", err)
 	}
 
 	session.Values["internalContext"] = InternalContext{
@@ -132,7 +132,7 @@ func (v *Views) setMessagesInSession(eC echo.Context, c *Context) error {
 func (v *Views) clearMessagesInSession(eC echo.Context) error {
 	session, err := v.cookie.Get(eC.Request(), v.conf.SessionCookieName)
 	if err != nil {
-		return fmt.Errorf("error getting session: %w", err)
+		return fmt.Errorf("failed to get session for clear message: %w", err)
 	}
 
 	session.Values["internalContext"] = InternalContext{}

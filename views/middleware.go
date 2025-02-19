@@ -24,17 +24,17 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 		if err != nil {
-			log.Printf("failed to get session: %+v", err)
+			log.Printf("failed to get session for requires login: %+v", err)
 
 			session, err = v.cookie.New(c.Request(), v.conf.SessionCookieName)
 			if err != nil {
-				log.Printf("failed to make new session: %+v", err)
+				log.Printf("failed to make new session for requires login: %+v", err)
 				return v.LogoutFunc(c)
 			}
 
 			err = session.Save(c.Request(), c.Response())
 			if err != nil {
-				log.Printf("failed to save session for logout: %+v", err)
+				log.Printf("failed to save session for requires login: %+v", err)
 			}
 
 			return c.Redirect(http.StatusFound, "/")

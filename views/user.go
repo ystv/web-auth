@@ -300,7 +300,7 @@ func (v *Views) AssumeUserFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 		if err != nil {
-			return fmt.Errorf("error getting session: %w", err)
+			return fmt.Errorf("failed to get session for assume user: %w", err)
 		}
 
 		c1 := v.getSessionData(c)
@@ -342,7 +342,7 @@ func (v *Views) ReleaseUserFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 		if err != nil {
-			return fmt.Errorf("error getting session: %w", err)
+			return fmt.Errorf("failed to get session for release user: %w", err)
 		}
 
 		c1 := v.getSessionData(c)
