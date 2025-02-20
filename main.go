@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/joho/godotenv"
+	_ "golang.org/x/crypto/x509roots/fallback" // CA bundle for FROM Scratch
 
 	"github.com/ystv/web-auth/utils"
 	"github.com/ystv/web-auth/views"

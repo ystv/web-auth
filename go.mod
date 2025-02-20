@@ -1,8 +1,6 @@
 module github.com/ystv/web-auth
 
-go 1.23
-
-toolchain go1.23.4
+go 1.23.4
 
 require (
 	github.com/Clarilab/gocloaksession v1.14.0
@@ -27,6 +25,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/xhit/go-simple-mail/v2 v2.16.0
 	go.uber.org/mock v0.5.0
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20250214233241-911360c8a4f4
 	gopkg.in/guregu/null.v4 v4.0.0
 )
 
@@ -63,7 +62,7 @@ require (
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/time v0.10.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250212204824-5a70512c5d8b // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250219182151-9fdb1cabc7b2 // indirect
 	google.golang.org/grpc v1.70.0 // indirect
 	google.golang.org/protobuf v1.36.5 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

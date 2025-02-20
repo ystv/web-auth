@@ -8,6 +8,8 @@ WORKDIR /src/
 ARG WAUTH_VERSION_ARG
 ARG WAUTH_COMMIT_ARG
 
+RUN apk --no-cache add ca-certificates
+
 # Stores our dependencies
 COPY go.mod .
 COPY go.sum .
