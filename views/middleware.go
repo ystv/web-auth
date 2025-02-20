@@ -29,7 +29,6 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 			session, err = v.cookie.New(c.Request(), v.conf.SessionCookieName)
 			if err != nil {
 				log.Printf("failed to make new session for requires login: %+v", err)
-				return v.LogoutFunc(c)
 			}
 
 			err = session.Save(c.Request(), c.Response())
