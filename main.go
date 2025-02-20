@@ -91,6 +91,16 @@ func main() {
 	}
 	log.Printf("connected to cdn: %s", cdnConfig.Endpoint)
 
+	adPort, err := strconv.Atoi(os.Getenv("WAUTH_AD_PORT"))
+	if err != nil {
+		log.Fatalf("failed to get ad port env: %+v", err)
+	}
+
+	adSecurity, err := strconv.Atoi(os.Getenv("WAUTH_AD_SECURITY"))
+	if err != nil {
+		log.Fatalf("failed to get ad security env: %+v", err)
+	}
+
 	// Generate config
 	conf := &views.Config{
 		Version:           Version,
@@ -114,6 +124,16 @@ func main() {
 			EncryptionKey:     os.Getenv("WAUTH_ENCRYPTION_KEY"),
 			AuthenticationKey: os.Getenv("WAUTH_AUTHENTICATION_KEY"),
 			SigningKey:        signingKey,
+		},
+		AD: views.ADConfig{
+			Server:   os.Getenv("WAUTH_AD_SERVER"),
+			Port:     adPort,
+			BaseDN:   os.Getenv("WAUTH_AD_BASE_DN"),
+			Security: adSecurity,
+			Bind: views.ADBind{
+				Username: os.Getenv("WAUTH_AD_BIND_USERNAME"),
+				Password: os.Getenv("WAUTH_AD_BIND_PASSWORD"),
+			},
 		},
 	}
 

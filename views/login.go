@@ -1,14 +1,19 @@
 package views
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"net/mail"
 	"net/url"
 	"strings"
 
+	"github.com/go-ldap/ldap/v3"
 	"github.com/google/uuid"
+	auth "github.com/korylprince/go-ad-auth/v3"
 	"github.com/labstack/echo/v4"
+	emailParser "github.com/mcnijman/go-emailaddress"
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/guregu/null.v4"
 
@@ -76,6 +81,23 @@ func (v *Views) _loginPost(c echo.Context) error {
 	// Authentication
 	u, resetPw, err := v.user.VerifyUser(c.Request().Context(), u)
 	if err != nil {
+		address, _ := emailParser.Parse(username)
+		if address != nil {
+			u.LDAPUsername = null.StringFrom(address.LocalPart)
+			ldapUser, err := v.user.GetUser(c.Request().Context(), u)
+			if err != nil {
+				return fmt.Errorf("failed to get user ldap: %w", err)
+			}
+			if !ldapUser.LDAPUsername.Valid {
+				return errors.New("failed to get user LDAP username")
+			}
+			valid, err := v.LDAPFunc(ldapUser.LDAPUsername.String, password)
+			if err != nil {
+				return fmt.Errorf("failed to call LDAP function: %w", err)
+			}
+
+			fmt.Println("LDAP: ", valid)
+		}
 		log.Printf("failed login for \"%s\": %v", u.Username, err)
 
 		err = session.Save(c.Request(), c.Response())
@@ -146,4 +168,67 @@ func (v *Views) _loginPost(c echo.Context) error {
 	log.Printf("user \"%s\" is authenticated", u.Username)
 
 	return c.Redirect(http.StatusFound, callback)
+}
+
+func (v *Views) LDAPFunc(username, password string) (bool, error) {
+	config := &auth.Config{
+		Server:   v.conf.AD.Server,
+		Port:     v.conf.AD.Port,
+		BaseDN:   v.conf.AD.BaseDN,
+		Security: auth.SecurityType(v.conf.AD.Security),
+	}
+
+	conn, err := config.Connect()
+	if err != nil {
+		return false, echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("error connecting to server: %w", err))
+	}
+	defer conn.Conn.Close()
+
+	status, err := conn.Bind(v.conf.AD.Bind.Username, v.conf.AD.Bind.Password)
+	if err != nil {
+		return false, echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("error binding to server: %w", err))
+	}
+
+	if !status {
+		return false, echo.NewHTTPError(http.StatusInternalServerError, errors.New("error binding to server: invalid credentials"))
+	}
+
+	status1, err := auth.Authenticate(config, username, password)
+	if err != nil {
+		return false, echo.NewHTTPError(http.StatusUnauthorized, fmt.Errorf("unable to authenticate %s with error: %w", username, err))
+	}
+
+	if status1 {
+		var entry *ldap.Entry
+		if _, err = mail.ParseAddress(username); err == nil {
+			entry, err = conn.GetAttributes("userPrincipalName", username, []string{"memberOf"})
+		} else {
+			entry, err = conn.GetAttributes("samAccountName", username, []string{"memberOf"})
+		}
+		if err != nil {
+			return false, echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("error getting user groups: %w", err))
+		}
+
+		dnGroups := entry.GetAttributeValues("memberOf")
+
+		if len(dnGroups) == 0 {
+			return false, echo.NewHTTPError(http.StatusUnauthorized, errors.New("BIND_SAM user not member of any groups"))
+		}
+
+		// stv := false
+
+		for _, group := range dnGroups {
+			if group == "CN=STV Admin,CN=Users,DC=ystv,DC=local" {
+				// stv = true
+				return true, nil
+			}
+		}
+
+		// if !stv {
+		//	return false, echo.NewHTTPError(http.StatusUnauthorized, fmt.Errorf("STV not allowed for %s!\n", username))
+		// }
+		log.Printf("%s is authenticated", username)
+		return true, nil
+	}
+	return false, echo.NewHTTPError(http.StatusUnauthorized, fmt.Errorf("user not authenticated: %s", username))
 }

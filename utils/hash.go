@@ -8,6 +8,7 @@ import (
 	"math/big"
 
 	whirl "github.com/balacode/zr-whirl"
+	"golang.org/x/crypto/scrypt"
 )
 
 type (
@@ -48,6 +49,14 @@ func HashPass(password string) string {
 	}
 
 	return next
+}
+
+func HashPassScrypt(password, salt []byte) (string, error) {
+	hash, err := scrypt.Key(password, salt, 32768, 16, 2, 64)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate hash: %w", err)
+	}
+	return hex.EncodeToString(hash), nil
 }
 
 func GenerateRandomLength(length int, randomType Type) (string, error) {

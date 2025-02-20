@@ -233,6 +233,47 @@ func (v *Views) SetTokenHandler(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
+	/*
+		_ = tokenByte
+
+			callback := ""
+			callbackURL, err := url.Parse(c.QueryParam("callback"))
+			fmt.Println(callbackURL.String(), err)
+			if err == nil && strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) && callbackURL.String() != "" {
+			callback = callbackURL.String()
+		}
+		// c.Response().Header().Set("Content-Type", "application/json")
+		c.Response().Header().Set("Authorization", "Bearer "+tokenString)
+		cookie := new(http.Cookie)
+		cookie.Name = "token"
+		cookie.Expires = time.Now().Add(30 * time.Second)
+		cookie.Value = tokenString
+		cookie.Secure = false
+		cookie.HttpOnly = false
+		cookie.Domain = "localhost"
+		c.SetCookie(cookie)
+		http.SetCookie(c.Response().Writer, cookie)
+		c.Response().Committed = false
+		// c.Response().Write(tokenByte)
+		// _, err = c.Response().Write(tokenByte)
+		// if err != nil {
+		//	log.Printf("failed to write token to http body: %+v", err)
+		//	data := struct {
+		//		Error error `json:"error"`
+		//	}{
+		//		Error: fmt.Errorf("failed to write token to http body: %w", err),
+		//	}
+		//	return c.JSON(http.StatusInternalServerError, data)
+		// }
+		if len(callback) > 0 {
+			// c.Response().Header().Set("Location", callback)
+			// c.Response().WriteHeader(http.StatusFound)
+			return c.Redirect(http.StatusFound, callback+"?token="+tokenString)
+			// c.Redirect()
+		}
+		return nil
+	*/
+
 	c.Response().Header().Set("Content-Type", "application/json")
 	c.Response().WriteHeader(http.StatusCreated)
 
