@@ -36,20 +36,20 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 				log.Printf("failed to save session for requires login: %+v", err)
 			}
 
-			return c.Redirect(http.StatusFound, "/")
+			return c.Redirect(http.StatusFound, "/login")
 		}
 
 		c1 := v.getSessionData(c)
 
 		if !c1.User.Authenticated {
-			return c.Redirect(http.StatusFound, "/")
+			return c.Redirect(http.StatusFound, "/login")
 		}
 
 		userFromDB, err := v.user.GetUser(c.Request().Context(), c1.User)
 		if err != nil {
 			log.Printf("failed to get user from db: %+v", err)
 
-			return c.Redirect(http.StatusFound, "/")
+			return c.Redirect(http.StatusFound, "/login")
 		}
 
 		if userFromDB.DeletedBy.Valid || !c1.User.Enabled {
@@ -61,7 +61,7 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 				return fmt.Errorf("failed to save session for requiresLogin: %w", err)
 			}
 
-			return c.Redirect(http.StatusFound, "/")
+			return c.Redirect(http.StatusFound, "/login")
 		}
 
 		return next(c)
