@@ -275,11 +275,9 @@ func (v *Views) CrowdXMLHandler(c echo.Context) error {
 	roles, err := v.user.GetRolesForUser(c.Request().Context(), c1.User)
 	if err != nil {
 		log.Printf("failed to get roles for user: %+v", err)
-		data := struct {
-			XMLName xml.Name `xml:"errors"`
-			Error   error    `xml:"error"`
-		}{
-			Error: fmt.Errorf("failed to get roles for user: %w", err),
+		data := XMLError{
+			Reason:  "USER_ERROR",
+			Message: fmt.Sprintf("failed to get roles for user: %+v", err),
 		}
 
 		return c.XML(http.StatusInternalServerError, data)

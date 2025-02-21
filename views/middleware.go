@@ -2,7 +2,6 @@ package views
 
 import (
 	"encoding/base64"
-	"encoding/xml"
 	"errors"
 	"fmt"
 	"log"
@@ -145,11 +144,9 @@ func (v *Views) RequiresLoginCrowd(next echo.HandlerFunc) echo.HandlerFunc {
 		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 		if err != nil {
 			log.Printf("failed to get session for requiresLoginCrowd: %+v", err)
-			data := struct {
-				XMLName xml.Name `xml:"errors"`
-				Error   error    `xml:"error"`
-			}{
-				Error: fmt.Errorf("failed to get session for requiresLoginCrowd: %w", err),
+			data := XMLError{
+				Message: fmt.Sprintf("failed to get session for requiresLoginCrowd: %+v", err),
+				Reason:  "USER_NOT_FOUND",
 			}
 
 			return c.XML(http.StatusInternalServerError, data)
@@ -158,11 +155,9 @@ func (v *Views) RequiresLoginCrowd(next echo.HandlerFunc) echo.HandlerFunc {
 		c1 := v.getSessionData(c)
 
 		if !c1.User.Authenticated {
-			data := struct {
-				XMLName xml.Name `xml:"errors"`
-				Error   error    `xml:"error"`
-			}{
-				Error: errors.New("user not logged in"),
+			data := XMLError{
+				Message: "user not logged in",
+				Reason:  "USER_NOT_FOUND",
 			}
 
 			return c.XML(http.StatusUnauthorized, data)
@@ -171,11 +166,9 @@ func (v *Views) RequiresLoginCrowd(next echo.HandlerFunc) echo.HandlerFunc {
 		userFromDB, err := v.user.GetUser(c.Request().Context(), c1.User)
 		if err != nil {
 			log.Printf("failed to get user for requiresLoginCrowd: %+v", err)
-			data := struct {
-				XMLName xml.Name `xml:"errors"`
-				Error   error    `xml:"error"`
-			}{
-				Error: fmt.Errorf("failed to get roles for user: %w", err),
+			data := XMLError{
+				Message: fmt.Sprintf("failed to get roles for user: %+v", err),
+				Reason:  "USER_NOT_FOUND",
 			}
 
 			return c.XML(http.StatusInternalServerError, data)
@@ -188,21 +181,17 @@ func (v *Views) RequiresLoginCrowd(next echo.HandlerFunc) echo.HandlerFunc {
 			err = session.Save(c.Request(), c.Response())
 			if err != nil {
 				log.Printf("failed to save session for requiresLoginCrowd: %+v", err)
-				data := struct {
-					XMLName xml.Name `xml:"errors"`
-					Error   error    `xml:"error"`
-				}{
-					Error: fmt.Errorf("failed to get roles for user: %w", err),
+				data := XMLError{
+					Message: fmt.Sprintf("failed to get roles for user: %+v", err),
+					Reason:  "USER_NOT_FOUND",
 				}
 
 				return c.XML(http.StatusInternalServerError, data)
 			}
 
-			data := struct {
-				XMLName xml.Name `xml:"errors"`
-				Error   error    `xml:"error"`
-			}{
-				Error: errors.New("user deleted or not enabled"),
+			data := XMLError{
+				Message: "user deleted or not enabled",
+				Reason:  "USER_NOT_ENABLED",
 			}
 
 			return c.XML(http.StatusUnauthorized, data)
@@ -218,11 +207,9 @@ func (v *Views) RequiresLoginCrowd(next echo.HandlerFunc) echo.HandlerFunc {
 			b, err = base64.StdEncoding.DecodeString(auth[l+1:])
 			if err != nil {
 				log.Printf("failed to decode basic auth header: %+v", err)
-				data := struct {
-					XMLName xml.Name `xml:"errors"`
-					Error   error    `xml:"error"`
-				}{
-					Error: errors.New("failed to decode basic auth header"),
+				data := XMLError{
+					Message: "failed to decode basic auth header",
+					Reason:  "CROWD_NOT_VALID",
 				}
 
 				return c.XML(http.StatusBadRequest, data)
@@ -248,15 +235,13 @@ func (v *Views) RequiresLoginCrowd(next echo.HandlerFunc) echo.HandlerFunc {
 							return true, nil
 						}
 
-						return false, echo.NewHTTPError(http.StatusUnauthorized).SetInternal(errors.New("invalid credential"))
+						return false, errors.New("invalid credential")
 					}(cred[:i], cred[i+1:], c)
 					if err != nil {
 						log.Printf("invalid app credentials: %+v", err)
-						data := struct {
-							XMLName xml.Name `xml:"errors"`
-							Error   error    `xml:"error"`
-						}{
-							Error: errors.New("invalid app credentials"),
+						data := XMLError{
+							Message: "invalid app credentials",
+							Reason:  "CROWD_NOT_VALID",
 						}
 
 						return c.XML(http.StatusUnauthorized, data)
@@ -269,11 +254,9 @@ func (v *Views) RequiresLoginCrowd(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		log.Printf("app not logged in")
-		data := struct {
-			XMLName xml.Name `xml:"errors"`
-			Error   error    `xml:"error"`
-		}{
-			Error: errors.New("app not logged in"),
+		data := XMLError{
+			Message: "app not logged in",
+			Reason:  "CROWD_NOT_FOUND",
 		}
 
 		return c.XML(http.StatusUnauthorized, data)
