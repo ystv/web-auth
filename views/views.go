@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/gob"
 	"encoding/hex"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"log"
@@ -83,6 +84,12 @@ type (
 		UserPermissions []permission.Permission
 		ActivePage      string
 		Assumed         bool
+	}
+
+	XMLError struct {
+		XMLName xml.Name `xml:"error"`
+		Reason  string   `xml:"reason"`
+		Message string   `xml:"message"`
 	}
 )
 
