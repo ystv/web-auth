@@ -106,11 +106,7 @@ func (v *Views) _usersGet(c echo.Context) error {
 	}
 
 	switch column {
-	case "userId":
-	case "name":
-	case "username":
-	case "email":
-	case "lastLogin":
+	case "userId", "name", "username", "email", "lastLogin":
 		switch direction {
 		case "asc":
 		case "desc":
