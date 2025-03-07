@@ -33,6 +33,8 @@ type (
 		Callback string
 		// User is the stored logged-in user
 		User user.User
+		// JWT is the string used for API communication
+		JWT string
 		// Version is the version that is running
 		Version    string
 		Commit     string
@@ -72,13 +74,17 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 	}
 
 	var u, actual user.User
+	var j string
 
 	userValue := session.Values["user"]
+	jwtValue := session.Values["jwt"]
 
 	u, ok := userValue.(user.User)
 	if !ok {
 		u = user.User{Authenticated: false}
 	}
+
+	j, _ = jwtValue.(string)
 
 	var assumed bool
 	if u.AssumedUser != nil {
@@ -100,6 +106,7 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 		MsgType:    i.MesType,
 		Callback:   "/internal",
 		User:       u,
+		JWT:        j,
 		Version:    v.conf.Version,
 		Commit:     v.conf.Commit,
 		Assumed:    assumed,

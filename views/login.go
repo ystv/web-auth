@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -132,11 +133,33 @@ func (v *Views) _loginPost(c echo.Context) error {
 	session.Values["user"] = u
 
 	eightySixFourHundred := 86400
+	twentyFour := 24
 	thirtyOne := 31
+
+	cookie := new(http.Cookie)
+	cookie.Expires = time.Now().Add(time.Duration(twentyFour) * time.Hour)
+	cookie.HttpOnly = true
+	cookie.Secure = true
+
+	expiration := time.Now().Add(time.Duration(twentyFour) * time.Hour)
 
 	if c.FormValue("remember") != "on" {
 		session.Options.MaxAge = eightySixFourHundred * thirtyOne
+		cookie.Expires = time.Now().Add(time.Duration(thirtyOne) * time.Duration(twentyFour) * time.Hour)
+		expiration = time.Now().Add(time.Duration(thirtyOne) * time.Duration(twentyFour) * time.Hour)
 	}
+
+	tokenString, err := v.newJWTExpiry(u, expiration)
+	if err != nil {
+		return fmt.Errorf("failed to set cookie: %w", err)
+	}
+
+	cookie.Name = v.conf.JWTCookieName
+	cookie.Value = tokenString
+
+	c.SetCookie(cookie)
+
+	session.Values["jwt"] = tokenString
 
 	err = session.Save(c.Request(), c.Response())
 	if err != nil {

@@ -53,6 +53,11 @@ func main() {
 		sessionCookieName = "session"
 	}
 
+	jwtCookieName := os.Getenv("WAUTH_JWT_COOKIE_NAME")
+	if jwtCookieName == "" {
+		jwtCookieName = "session_jwt"
+	}
+
 	dbPort := os.Getenv("WAUTH_DB_PORT")
 
 	dbConnectionString := fmt.Sprintf(
@@ -102,6 +107,7 @@ func main() {
 		BaseDomainName:    os.Getenv("WAUTH_BASE_DOMAIN_NAME"),
 		DomainName:        domainName,
 		LogoutEndpoint:    os.Getenv("WAUTH_LOGOUT_ENDPOINT"),
+		JWTCookieName:     jwtCookieName,
 		SessionCookieName: sessionCookieName,
 		CDNEndpoint:       os.Getenv("WAUTH_CDN_ENDPOINT"),
 		Mail: views.SMTPConfig{

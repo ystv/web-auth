@@ -40,6 +40,7 @@ type (
 		BaseDomainName    string
 		DomainName        string
 		LogoutEndpoint    string
+		JWTCookieName     string
 		SessionCookieName string
 		CDNEndpoint       string
 		Mail              SMTPConfig
