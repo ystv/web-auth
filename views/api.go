@@ -296,11 +296,18 @@ func (v *Views) CrowdXMLHandler(c echo.Context) error {
 	return c.XML(http.StatusOK, xmlUser)
 }
 
+func (v *Views) newJWTExpiry(u user.User, expiration time.Time) (string, error) {
+	return v._newJWT(u, expiration)
+}
+
 // newJWT generates a new jwt token
 func (v *Views) newJWT(u user.User) (string, error) {
-	five := 300000000000
-	expirationTime := time.Now().Add(time.Duration(five))
+	ten := 10
+	expirationTime := time.Now().Add(time.Duration(ten) * time.Minute)
+	return v._newJWT(u, expirationTime)
+}
 
+func (v *Views) _newJWT(u user.User, expiration time.Time) (string, error) {
 	perms, err := v.user.GetPermissionsForUser(context.Background(), u)
 	if err != nil {
 		return "", fmt.Errorf("failed to get user permissions: %w", err)
@@ -318,7 +325,7 @@ func (v *Views) newJWT(u user.User) (string, error) {
 		Permissions: p2,
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  &jwt.NumericDate{Time: time.Now()},
-			ExpiresAt: &jwt.NumericDate{Time: expirationTime},
+			ExpiresAt: &jwt.NumericDate{Time: expiration},
 		},
 	}
 
