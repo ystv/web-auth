@@ -21,12 +21,12 @@ func (s *Store) getRoles(ctx context.Context) ([]Role, error) {
 		GroupBy("r", "r.role_id", "name", "description").
 		OrderBy("r.name")
 
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getRoles: %w", err))
 	}
 
-	err = s.db.SelectContext(ctx, &r, sql)
+	err = s.db.SelectContext(ctx, &r, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get roles: %w", err)
 	}

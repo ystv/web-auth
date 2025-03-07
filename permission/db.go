@@ -19,12 +19,12 @@ func (s *Store) getPermissions(ctx context.Context) ([]Permission, error) {
 		GroupBy("p", "p.permission_id", "name", "description").
 		OrderBy("p.name")
 
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getPermissions: %w", err))
 	}
 
-	err = s.db.SelectContext(ctx, &p, sql)
+	err = s.db.SelectContext(ctx, &p, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get permissions: %w", err)
 	}
