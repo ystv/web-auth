@@ -132,7 +132,7 @@ func (s *Store) deletePermission(ctx context.Context, p Permission) error {
 	return nil
 }
 
-// removePermissionForRoles deletes the connection between a Role and Permission
+// removePermissionForRoles deletes the connection between multiple role.Role and a Permission
 func (s *Store) removePermissionForRoles(ctx context.Context, p Permission) error {
 	builder := utils.PSQL().Delete("people.role_permissions").
 		Where(sq.Eq{"permission_id": p.PermissionID})
