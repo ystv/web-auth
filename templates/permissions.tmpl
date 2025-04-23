@@ -39,7 +39,12 @@
                                 <td>{{.Name}}</td>
                                 <td>{{.Description}}</td>
                                 <td>{{.Roles}}</td>
-                                <td><a href="/internal/permission/{{.PermissionID}}">View</a></td>
+                                <td>
+                                    <a class="button is-info is-outlined"
+                                       href="/internal/permission/{{.PermissionID}}">
+                                        <span class="mdi mdi-eye-arrow-right-outline"></span>&ensp;View
+                                    </a>
+                                </td>
                             </tr>
                         {{end}}
                         </tbody>

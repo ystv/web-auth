@@ -43,7 +43,12 @@
                                 <td>{{.ShortDescription}}</td>
                                 <td>{{.CurrentOfficerships}}</td>
                                 <td>{{.CurrentOfficers}}</td>
-                                <td><a href="/internal/officership/team/{{.TeamID}}">View</a></td>
+                                <td>
+                                    <a class="button is-info is-outlined"
+                                       href="/internal/officership/team/{{.TeamID}}">
+                                        <span class="mdi mdi-eye-arrow-right-outline"></span>&ensp;View
+                                    </a>
+                                </td>
                             </tr>
                         {{end}}
                         </tbody>

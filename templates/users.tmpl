@@ -163,7 +163,12 @@
                                 <td>{{if .Deleted}}Deleted{{else}}-{{end}}</td>
                                 <td>{{.LastLogin}}</td>
                                 {{if $userAdmin}}
-                                    <td><a href="/internal/user/{{.UserID}}">View</a></td>
+                                    <td>
+                                        <a class="button is-info is-outlined"
+                                           href="/internal/user/{{.UserID}}">
+                                            <span class="mdi mdi-eye-arrow-right-outline"></span>&ensp;View
+                                        </a>
+                                    </td>
                                 {{end}}
                             </tr>
                         {{end}}

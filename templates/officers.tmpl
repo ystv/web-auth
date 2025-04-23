@@ -85,7 +85,12 @@
                                 <td>{{if .TeamName.Valid}}{{.TeamName.String}}{{else}}UNKNOWN{{end}}</td>
                                 <td>{{if .StartDate.Valid}}{{formatOfficershipDate .StartDate.Time}}{{else}}UNKNOWN{{end}}</td>
                                 <td>{{if .EndDate.Valid}}{{formatOfficershipDate .EndDate.Time}}{{else}}Incumbent{{end}}</td>
-                                <td><a href="/internal/officership/officer/{{.OfficershipMemberID}}">View</a></td>
+                                <td>
+                                    <a class="button is-info is-outlined"
+                                       href="/internal/officership/officer/{{.OfficershipMemberID}}">
+                                        <span class="mdi mdi-eye-arrow-right-outline"></span>&ensp;View
+                                    </a>
+                                </td>
                             </tr>
                         {{end}}
                         </tbody>

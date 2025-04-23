@@ -68,7 +68,10 @@
                                 <td>{{if .TeamName.Valid}}{{.TeamName.String}}{{else}}UNKNOWN{{end}}</td>
                                 <td>{{.CurrentOfficers}}</td>
                                 <td>{{.PreviousOfficers}}</td>
-                                <td><a href="/internal/officership/{{.OfficershipID}}">View</a></td>
+                                <td><a class="button is-info is-outlined"
+                                   href="/internal/officership/{{.OfficershipID}}">
+                                    <span class="mdi mdi-eye-arrow-right-outline"></span>&ensp;View
+                                </a></td>
                             </tr>
                         {{end}}
                         </tbody>

@@ -85,7 +85,12 @@
                                 <td>{{.Username}}</td>
                                 <td>{{if .Description.Valid}}{{.Description.String}}{{end}}</td>
                                 <td>{{if .Active}}Active{{else}}Inactive{{end}}</td>
-                                <td><a href="/internal/crowdapp/{{.AppID}}">View</a></td>
+                                <td>
+                                    <a class="button is-info is-outlined"
+                                       href="/internal/crowdapp/{{.AppID}}">
+                                        <span class="mdi mdi-eye-arrow-right-outline"></span>&ensp;View
+                                    </a>
+                                </td>
                             </tr>
                         {{end}}
                         </tbody>
