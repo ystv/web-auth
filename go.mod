@@ -6,11 +6,11 @@ require (
 	github.com/Clarilab/gocloaksession v1.14.0
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/Nerzal/gocloak/v8 v8.6.0
-	github.com/aws/aws-sdk-go v1.55.6
+	github.com/aws/aws-sdk-go v1.55.7
 	github.com/balacode/zr-whirl v1.0.2
 	github.com/dustin/go-humanize v1.0.1
-	github.com/go-playground/validator/v10 v10.25.0
-	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/go-playground/validator/v10 v10.26.0
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/schema v1.4.1
 	github.com/gorilla/securecookie v1.1.2
@@ -21,11 +21,11 @@ require (
 	github.com/labstack/echo/v4 v4.13.3
 	github.com/lib/pq v1.10.9
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/pressly/goose/v3 v3.24.1
+	github.com/pressly/goose/v3 v3.24.2
 	github.com/stretchr/testify v1.10.0
 	github.com/xhit/go-simple-mail/v2 v2.16.0
-	go.uber.org/mock v0.5.0
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20250306185146-6b853fbea37a
+	go.uber.org/mock v0.5.1
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20250418111936-9c1aa6af88df
 	gopkg.in/guregu/null.v4 v4.0.0
 )
 
@@ -35,7 +35,7 @@ require (
 	github.com/Nerzal/gocloak/v13 v13.9.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.9 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-test/deep v1.1.1 // indirect
@@ -56,14 +56,14 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.36.0 // indirect
-	golang.org/x/net v0.37.0 // indirect
-	golang.org/x/sync v0.12.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
+	golang.org/x/crypto v0.37.0 // indirect
+	golang.org/x/net v0.39.0 // indirect
+	golang.org/x/sync v0.13.0 // indirect
+	golang.org/x/sys v0.32.0 // indirect
+	golang.org/x/text v0.24.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250303144028-a0af3efb3deb // indirect
-	google.golang.org/grpc v1.71.0 // indirect
-	google.golang.org/protobuf v1.36.5 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250422160041-2d3770c4ea7f // indirect
+	google.golang.org/grpc v1.72.0 // indirect
+	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
