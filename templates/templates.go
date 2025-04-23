@@ -131,29 +131,27 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 		},
 		"checkPermission": func(perms []permission.Permission, p string) bool {
 			m := permission1.SufficientPermissionsFor(permissions.Permissions(p))
-
 			for _, perm := range perms {
 				if m[perm.Name] {
 					return true
 				}
 			}
-
 			return false
 		},
 		"getUserModifierField": func(u user.User, atTime null.String, prefix string) template.HTML {
 			var s string
 			if u.UserID != -1 {
 				if len(u.Firstname) == 0 && len(u.Nickname) == 0 && len(u.Lastname) == 0 {
-					s = fmt.Sprintf("%s by UNKNOWN(%d) at %s<br>", template.HTMLEscapeString(prefix), u.UserID,
-						template.HTMLEscapeString(atTime.String))
+					s = fmt.Sprintf("<p>%s by UNKNOWN(%d) at %s</p><br>", template.HTMLEscapeString(prefix),
+						u.UserID, template.HTMLEscapeString(atTime.String))
 				} else {
 					name := formatUserName(u)
-					s = fmt.Sprintf("%s by <a href=\"/internal/user/%d\">%s</a> at %s<br>",
+					s = fmt.Sprintf("<p>%s by <a href=\"/internal/user/%d\">%s</a> at %s</p><br>",
 						template.HTMLEscapeString(prefix), u.UserID, template.HTMLEscapeString(name),
 						template.HTMLEscapeString(atTime.String))
 				}
 			} else if atTime.Valid {
-				s = fmt.Sprintf("%s by UNKNOWN at %s<br>", prefix, atTime.String)
+				s = fmt.Sprintf("<p>%s by UNKNOWN at %s</p><br>", prefix, atTime.String)
 			}
 			// #nosec
 			return template.HTML(s)
