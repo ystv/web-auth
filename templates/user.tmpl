@@ -49,26 +49,115 @@
                 {{$roleAdmin := checkPermission .UserPermissions "ManageMembers.Group"}}
                 {{$permissionAdmin := checkPermission .UserPermissions "ManageMembers.Permission"}}
                 {{with .User}}
-                    <p>
                     {{getUserModifierField .DeletedBy .DeletedAt "Deleted"}}
-                    User ID: {{.UserID}}<br>
-                    First name: {{.Firstname}}<br>
-                    Nickname: {{.Nickname}}<br>
-                    Last name: {{.Lastname}}<br>
-                    Username: {{.Username}}<br>
-                    Email: {{.Email}}<br>
-                    {{if gt (len .UniversityUsername) 0}}
-                        University username: {{.UniversityUsername}}<br>
-                    {{end}}<br>
-                    Enabled: {{.Enabled}}<br>
-                    Reset password required: {{.ResetPw}}<br>
-                    Login type: {{.LoginType}}<br>
-                    {{if .LDAPUsername.Valid}}
-                        LDAP (Active Directory) username: {{.LDAPUsername.String}}<br>
-                    {{end}}
-                    Avatar source: {{if .UseGravatar}}Using gravatar{{else}}Using local file{{end}}<br><br>
+                    <table style="border-collapse: collapse; padding-left: 10px;">
+                        <tbody>
+                        <tr style="border: none; padding-bottom: 5px;">
+                            <td style="border: none; padding-right: 20px;">
+                                User ID
+                            </td>
+                            <td style="border: none;">
+                                {{.UserID}}
+                            </td>
+                        </tr>
+                        <tr style="border: none; padding-bottom: 5px;">
+                            <td style="border: none; padding-right: 20px;">
+                                First name
+                            </td>
+                            <td style="border: none;">
+                                {{.Firstname}}
+                            </td>
+                        </tr>
+                        <tr style="border: none; padding-bottom: 5px;">
+                            <td style="border: none; padding-right: 20px;">
+                                Nickname
+                            </td>
+                            <td style="border: none;">
+                                {{.Nickname}}
+                            </td>
+                        </tr>
+                        <tr style="border: none; padding-bottom: 5px;">
+                            <td style="border: none; padding-right: 20px;">
+                                Last name
+                            </td>
+                            <td style="border: none;">
+                                {{.Lastname}}
+                            </td>
+                        </tr>
+                        <tr style="border: none; padding-bottom: 5px;">
+                            <td style="border: none; padding-right: 20px;">
+                                Username
+                            </td>
+                            <td style="border: none;">
+                                {{.Username}}
+                            </td>
+                        </tr>
+                        <tr style="border: none; padding-bottom: 5px;">
+                            <td style="border: none; padding-right: 20px;">
+                                Email
+                            </td>
+                            <td style="border: none;">
+                                {{.Email}}
+                            </td>
+                        </tr>
+                        {{if gt (len .UniversityUsername) 0}}
+                            <tr style="border: none; padding-bottom: 5px;">
+                                <td style="border: none; padding-right: 20px;">
+                                    University username
+                                </td>
+                                <td style="border: none;">
+                                    {{.UniversityUsername}}
+                                </td>
+                            </tr>
+                        {{end}}<br>
+                        <tr style="border: none; padding-bottom: 5px;">
+                            <td style="border: none; padding-right: 20px;">
+                                Enabled
+                            </td>
+                            <td style="border: none;">
+                                {{.Enabled}}
+                            </td>
+                        </tr>
+                        <tr style="border: none; padding-bottom: 5px;">
+                            <td style="border: none; padding-right: 20px;">
+                                Reset password required
+                            </td>
+                            <td style="border: none;">
+                                {{.ResetPw}}
+                            </td>
+                        </tr>
+                        <tr style="border: none; padding-bottom: 5px;">
+                            <td style="border: none; padding-right: 20px;">
+                                Login type
+                            </td>
+                            <td style="border: none;">
+                                {{.LoginType}}
+                            </td>
+                        </tr>
+                        {{if .LDAPUsername.Valid}}
+                            <tr style="border: none; padding-bottom: 5px;">
+                                <td style="border: none; padding-right: 20px;">
+                                    LDAP (Active Directory) username
+                                </td>
+                                <td style="border: none;">
+                                    {{.LDAPUsername.String}}
+                                </td>
+                            </tr>
+                        {{end}}
+                        <tr style="border: none; padding-bottom: 5px;">
+                            <td style="border: none; padding-right: 20px;">
+                                Avatar source
+                            </td>
+                            <td style="border: none;">
+                                {{if .UseGravatar}}Using gravatar{{else}}Using local file{{end}}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <br>
                     {{if gt (len .Permissions) 0}}
-                        Permissions: <ol>
+                        Permissions:
+                        <ol>
                             {{range .Permissions}}
                                 <li style='list-style-type: none;'><span class='tab'></span>
                                     {{if $permissionAdmin}}
@@ -81,7 +170,8 @@
                         </ol><br>
                     {{end}}
                     {{if gt (len .Roles) 0}}
-                        Roles: <ol>
+                        Roles:
+                        <ol>
                             {{range .Roles}}
                                 <li style='list-style-type: none;'><span class='tab'></span>
                                     {{if $roleAdmin}}
@@ -96,6 +186,7 @@
                     {{if .LastLogin.Valid}}
                         Last login at {{.LastLogin.String}}<br>
                     {{end}}
+                    <p>
                     {{getUserModifierField .CreatedBy .CreatedAt "Created"}}
                     {{getUserModifierField .UpdatedBy .UpdatedAt "Updated"}}
                     </p>
@@ -126,7 +217,11 @@
                                     <td>{{.OfficershipName}}</td>
                                     <td>{{if .StartDate.Valid}}{{formatOfficershipDate .StartDate.Time}}{{else}}UNKNOWN{{end}}</td>
                                     <td>{{if .EndDate.Valid}}{{formatOfficershipDate .EndDate.Time}}{{else}}Incumbent{{end}}</td>
-                                    <td><a href="/internal/officership/officer/{{.OfficershipMemberID}}">View</a>
+                                    <td>
+                                        <a class="button is-info is-outlined"
+                                           href="/internal/officership/officer/{{.OfficershipMemberID}}">
+                                            <span class="mdi mdi-eye-arrow-right-outline"></span>&ensp;View
+                                        </a>
                                     </td>
                                 </tr>
                             {{end}}

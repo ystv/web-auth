@@ -58,12 +58,14 @@
         }
 
         .toolbar ol {
-            display:table-row;
+            display: table-row;
         }
+
         .toolbar ol li {
             margin-bottom: 10px;
             vertical-align: middle;
         }
+
         .toolbar ol li a {
             vertical-align: middle;
         }
@@ -92,45 +94,102 @@
                 {{$permissionAdmin := checkPermission .UserPermissions "ManageMembers.Permission"}}
                 {{$userAdmin := checkPermission .UserPermissions "ManageMembers.Members.Admin"}}
                 {{with .Role}}
-                    <p>Role ID: {{.RoleID}}<br>
-                    Name: {{.Name}}<br>
-                    Description: {{.Description}}{{if gt (len .Permissions) 0}}<br><br>
-                    Permissions:
-                    <ol>
-                        {{range .Permissions}}
-                            <li style='list-style-type: none;'><span class='tab'></span>
+                    <table style="border-collapse: collapse; padding-left: 10px;">
+                        <tbody>
+                        <tr style="border: none;">
+                            <td style="border: none; padding-right: 20px; padding-bottom: 10px;">
+                                Role ID
+                            </td>
+                            <td style="border: none; padding-bottom: 10px;">
+                                {{.RoleID}}
+                            </td>
+                        </tr>
+                        <tr style="border: none;">
+                            <td style="border: none; padding-right: 20px; padding-bottom: 10px;">
+                                Name
+                            </td>
+                            <td style="border: none; padding-bottom: 10px;">
+                                {{.Name}}
+                            </td>
+                        </tr>
+                        <tr style="border: none;">
+                            <td style="border: none; padding-right: 20px; padding-bottom: 10px;">
+                                Description
+                            </td>
+                            <td style="border: none; padding-bottom: 10px;">
+                                {{.Description}}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <table style="border-collapse: collapse; width: 100%;">
+                        <tbody>
+                        {{if gt (len .Permissions) 0}}
+                            <tr style="border: none;">
+                                <th colspan="2" style="padding: 10px 0 10px 0;">
+                                    Permissions
+                                </th>
+                            </tr>
+                            {{range .Permissions}}
                                 {{if $permissionAdmin}}
-                                    <a href="/internal/permission/{{.PermissionID}}">{{.Name}}</a>&emsp;<a
-                                            class="button is-danger is-outlined"
-                                            onclick="removePermissionFromRoleModal({{.PermissionID}}, '{{.Name}}')">Remove
-                                        permission</a>
+                                    <tr style="border: none;">
+                                        <td style="border: none; padding-left: 2em;">
+                                            <a href="/internal/permission/{{.PermissionID}}">{{.Name}}</a>
+                                        </td>
+                                        <td style="border: none;">
+                                            <a class="button is-danger is-outlined"
+                                               onclick="removePermissionFromRoleModal({{.PermissionID}}, '{{.Name}}')">Remove
+                                                permission</a>
+                                        </td>
+                                    </tr>
                                 {{else}}
-                                    {{.Name}}&emsp;<a class="button is-danger is-outlined"
-                                                      onclick="removePermissionFromRoleModal({{.PermissionID}}, '{{.Name}}')">Remove
-                                        permission</a>
+                                    <td style="border: none; padding-left: 2em;">
+                                        {{.Name}}
+                                    </td>
+                                    <td style="border: none;">
+                                        <a class="button is-danger is-outlined"
+                                           onclick="removePermissionFromRoleModal({{.PermissionID}}, '{{.Name}}')">Remove
+                                            permission</a>
+                                    </td>
                                 {{end}}
-                            </li>
+                            {{end}}
                         {{end}}
-                    </ol>
-                    {{end}}
-                    {{if gt (len .Users) 0}}<br><br>
-                    Inherited by:
-                    <ol>
-                        {{range .Users}}
-                            <li style='list-style-type: none;'><span class='tab'></span>
+                        {{if gt (len .Users) 0}}
+                            <tr style="border: none;">
+                                <th colspan="2" style="padding: 10px 0 10px 0;">
+                                    Inherited by
+                                </th>
+                            </tr>
+                            {{range .Users}}
                                 {{if $userAdmin}}
-                                    <a href="/internal/user/{{.UserID}}">{{formatUserNameUserStruct .}}</a>&emsp;<a
-                                            class="button is-danger is-outlined"
-                                            onclick="removeUserFromRoleModal({{.UserID}}, '{{formatUserNameUserStruct .}}')">Remove user</a>
+                                    <tr style="border: none;">
+                                        <td style="border: none; padding-left: 2em;">
+                                            <a href="/internal/user/{{.UserID}}">{{formatUserNameUserStruct .}}</a>
+                                        </td>
+                                        <td style="border: none;">
+                                            <a
+                                                    class="button is-danger is-outlined"
+                                                    onclick="removeUserFromRoleModal({{.UserID}}, '{{formatUserNameUserStruct .}}')">Remove
+                                                user</a>
+                                        </td>
+                                    </tr>
                                 {{else}}
-                                    {{formatUserNameUserStruct .}}&emsp;<a
-                                            class="button is-danger is-outlined"
-                                            onclick="removeUserFromRoleModal({{.UserID}}, '{{formatUserNameUserStruct .}}')">Remove user</a>
+                                    <tr style="border: none;">
+                                        <td style="border: none;">
+                                            {{formatUserNameUserStruct .}}
+                                        </td>
+                                        <td style="border: none;">
+                                            <a
+                                                    class="button is-danger is-outlined"
+                                                    onclick="removeUserFromRoleModal({{.UserID}}, '{{formatUserNameUserStruct .}}')">Remove
+                                                user</a>
+                                        </td>
+                                    </tr>
                                 {{end}}
-                            </li>
+                            {{end}}
                         {{end}}
-                    </ol>
-                    {{end}}<br><br>
+                        </tbody>
+                    </table>
                     {{if gt (len $.PermissionsNotInRole) 0}}
                         Use the drop down below to add more permissions to this role.<br>
                         <form method="post" action="/internal/role/{{.RoleID}}/permission/add">
@@ -204,7 +263,8 @@
                                                    onkeyup="userFilterFunction()">
                                             {{range $.UsersNotInRole}}
                                                 {{$userName := formatUserNameUserStruct .}}
-                                                <a onclick="selectUser({{.UserID}}, '{{$userName}}')">{{$userName}} ({{.Username}})</a>
+                                                <a onclick="selectUser({{.UserID}}, '{{$userName}}')">{{$userName}}
+                                                    ({{.Username}})</a>
                                             {{end}}
                                         </div>
                                     </div>
@@ -214,7 +274,6 @@
                             <button class="button is-info">Add user</button>
                         </form>
                     {{end}}
-                    </p>
                 {{end}}
             </div>
         </div>
@@ -261,7 +320,9 @@
                                         />
                                     </div>
                                 </div>
-                                <button class="button is-danger"><span class="mdi mdi-shield-edit"></span>&ensp;Edit role</button>
+                                <button class="button is-danger"><span class="mdi mdi-shield-edit"></span>&ensp;Edit
+                                    role
+                                </button>
                             </form>
                         </div>
                     </div>
@@ -317,7 +378,9 @@
                             <p class="title">Are you sure you want to delete this role?</p>
                             <p>Be careful! If any users or permissions use this role, it will be removed.</p>
                             <form action="/internal/role/{{.Role.RoleID}}/delete" method="post">
-                                <button class="button is-danger"><span class="mdi mdi-shield-remove"></span>&ensp;Delete role</button>
+                                <button class="button is-danger"><span class="mdi mdi-shield-remove"></span>&ensp;Delete
+                                    role
+                                </button>
                             </form>
                         </div>
                     </div>
@@ -343,20 +406,20 @@
         let permissionID = 0, userID = 0;
 
         function removePermissionFromRoleModal(permissionID1, name) {
-            permissionID = permissionID1
+            permissionID = permissionID1;
             document.getElementById("removePermissionFromRoleModal").classList.add("is-active");
-            document.getElementById("removePermissionFromRoleModalTitle").innerHTML = 'Are you sure you want to remove "' + name + '" from this role?';
+            document.getElementById("removePermissionFromRoleModalTitle").innerHTML = "Are you sure you want to remove \"" + name + "\" from this role?";
         }
 
         function removePermissionFromRole() {
             document.getElementById("removePermissionFromRoleModalForm").action = "/internal/role/{{$.Role.RoleID}}/permission/remove/" + permissionID;
-            $('#removePermissionFromRoleModalForm').submit();
+            $("#removePermissionFromRoleModalForm").submit();
         }
 
         function removeUserFromRoleModal(userID1, name) {
-            userID = userID1
+            userID = userID1;
             document.getElementById("removeUserFromRoleModal").classList.add("is-active");
-            document.getElementById("removeUserFromRoleModalTitle").innerHTML = 'Are you sure you want to remove "' + name + '" from this role?';
+            document.getElementById("removeUserFromRoleModalTitle").innerHTML = "Are you sure you want to remove \"" + name + "\" from this role?";
         }
 
         function selectUser(id, name) {
@@ -421,7 +484,7 @@
 
         function removeUserFromRole() {
             document.getElementById("removeUserFromRoleModalForm").action = "/internal/role/{{$.Role.RoleID}}/user/remove/" + userID;
-            $('#removeUserFromRoleModalForm').submit();
+            $("#removeUserFromRoleModalForm").submit();
         }
 
         function deleteRoleModal() {

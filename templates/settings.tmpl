@@ -38,13 +38,58 @@
                 <p id="message" style="color: green"></p>
                 <p id="error" style="color: red"></p>
                 {{with .User}}
-                    <p>Your current information...<br>
-                        First name: {{.Firstname}}<br>
-                        Last name: {{.Lastname}}<br>
-                        Nickname: {{.Nickname}}<br>
-                        Username: {{.Username}}<br>
-                        Email: {{.Email}}<br>
-                        Avatar source: {{if .UseGravatar}}Using gravatar{{else if gt (len .Avatar) 0}}Using local file{{else}}None{{end}}<br><br></p>
+                    <table style="border-collapse: collapse; padding-left: 10px;">
+                        <tbody>
+                        <tr style="border: none;">
+                            <td style="border: none; padding-right: 20px; padding-bottom: 10px;">
+                                First name
+                            </td>
+                            <td style="border: none; padding-bottom: 10px;">
+                                {{.Firstname}}
+                            </td>
+                        </tr>
+                        <tr style="border: none;">
+                            <td style="border: none; padding-right: 20px; padding-bottom: 10px;">
+                                Last name
+                            </td>
+                            <td style="border: none; padding-bottom: 10px;">
+                                {{.Lastname}}
+                            </td>
+                        </tr>
+                        <tr style="border: none;">
+                            <td style="border: none; padding-right: 20px; padding-bottom: 10px;">
+                                Nickname
+                            </td>
+                            <td style="border: none; padding-bottom: 10px;">
+                                {{.Nickname}}
+                            </td>
+                        </tr>
+                        <tr style="border: none;">
+                            <td style="border: none; padding-right: 20px; padding-bottom: 10px;">
+                                Username
+                            </td>
+                            <td style="border: none; padding-bottom: 10px;">
+                                {{.Username}}
+                            </td>
+                        </tr>
+                        <tr style="border: none;">
+                            <td style="border: none; padding-right: 20px; padding-bottom: 10px;">
+                                Email
+                            </td>
+                            <td style="border: none; padding-bottom: 10px;">
+                                {{.Email}}
+                            </td>
+                        </tr>
+                        <tr style="border: none;">
+                            <td style="border: none; padding-right: 20px; padding-bottom: 10px;">
+                                Avatar source
+                            </td>
+                            <td style="border: none; padding-bottom: 10px;">
+                                {{if .UseGravatar}}Using gravatar{{else if gt (len .Avatar) 0}}Using local file{{else}}None{{end}}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
                 {{end}}
             </div>
         </div>

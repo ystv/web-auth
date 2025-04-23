@@ -22,17 +22,66 @@
             </div>
             <div class="column">
                 {{with .Officer}}
-                    <p>Officer ID: {{.OfficershipMemberID}}<br>
-                        User: <a href="/internal/user/{{.UserID}}">{{.UserName}}</a><br>
-                        Officership: <a href="/internal/officership/{{.OfficerID}}">{{.OfficershipName}}</a><br>
-                        Team: {{if and .TeamID.Valid .TeamName.Valid}}<a href="/internal/officership/team/{{.TeamID.Int64}}">{{.TeamName.String}}</a>{{else}}UNKNOWN{{end}}<br>
-                        Start date: {{if .StartDate.Valid}}{{formatOfficershipDate .StartDate.Time}}{{else}}UNKNOWN{{end}}<br>
-                        {{if .EndDate.Valid}}
-                            End date: {{formatOfficershipDate .EndDate.Time}}<br>
-                        {{else}}
-                            Incumbent officer<br>
-                        {{end}}
-                    </p>
+                <table style="border-collapse: collapse; padding-left: 10px;">
+                    <tbody>
+                    <tr style="border: none; padding-bottom: 5px;">
+                        <td style="border: none; padding-right: 20px; padding-bottom: 5px;">
+                            Officer ID
+                        </td>
+                        <td style="border: none;">
+                            {{.OfficershipMemberID}}
+                        </td>
+                    </tr>
+                    <tr style="border: none; padding-bottom: 5px;">
+                        <td style="border: none; padding-right: 20px; padding-bottom: 5px;">
+                            User
+                        </td>
+                        <td style="border: none;">
+                            <a href="/internal/user/{{.UserID}}">{{.UserName}}</a>
+                        </td>
+                    </tr>
+                    <tr style="border: none; padding-bottom: 5px;">
+                        <td style="border: none; padding-right: 20px; padding-bottom: 5px;">
+                            Officership
+                        </td>
+                        <td style="border: none;">
+                            <a href="/internal/officership/{{.OfficerID}}">{{.OfficershipName}}</a>
+                        </td>
+                    </tr>
+                    <tr style="border: none; padding-bottom: 5px;">
+                        <td style="border: none; padding-right: 20px; padding-bottom: 5px;">
+                            Team
+                        </td>
+                        <td style="border: none;">
+                            {{if and .TeamID.Valid .TeamName.Valid}}<a href="/internal/officership/team/{{.TeamID.Int64}}">{{.TeamName.String}}</a>{{else}}UNKNOWN{{end}}
+                        </td>
+                    </tr>
+                    <tr style="border: none; padding-bottom: 5px;">
+                        <td style="border: none; padding-right: 20px; padding-bottom: 5px;">
+                            Start date
+                        </td>
+                        <td style="border: none;">
+                            {{if .StartDate.Valid}}{{formatOfficershipDate .StartDate.Time}}{{else}}UNKNOWN{{end}}
+                        </td>
+                    </tr>
+                    {{if .EndDate.Valid}}
+                        <tr style="border: none; padding-bottom: 5px;">
+                            <td style="border: none; padding-right: 20px; padding-bottom: 5px;">
+                                End date
+                            </td>
+                            <td style="border: none;">
+                                {{formatOfficershipDate .EndDate.Time}}
+                            </td>
+                        </tr>
+                    {{else}}
+                        <tr style="border: none; padding-bottom: 5px;">
+                            <td style="border: none;">
+                                Incumbent officer
+                            </td>
+                        </tr>
+                    {{end}}
+                    </tbody>
+                </table>
                 {{end}}
             </div>
         </div>

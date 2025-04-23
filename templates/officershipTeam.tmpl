@@ -79,44 +79,104 @@
             </div>
             <div class="column">
                 {{with .OfficershipTeam}}
-                    <p>Team ID: {{.TeamID}}<br>
-                    Name: {{.Name}}<br>
-                    Email alias: {{.EmailAlias}}<br><br>
-                    Short description: {{.ShortDescription}}<br><br>
-                    Full description: {{.FullDescription}}
-                    {{if gt (len .TeamMembers) 0}}<br><br>
-                    Officership team members:
-                    <ol>
+                <table style="border-collapse: collapse; padding-left: 10px;">
+                    <tbody>
+                    <tr style="border: none;">
+                        <td style="border: none; padding-right: 20px; padding-bottom: 10px;">
+                            Team ID
+                        </td>
+                        <td style="border: none; padding-bottom: 10px;">
+                            {{.TeamID}}
+                        </td>
+                    </tr>
+                    <tr style="border: none;">
+                        <td style="border: none; padding-right: 20px; padding-bottom: 10px;">
+                            Name
+                        </td>
+                        <td style="border: none; padding-bottom: 10px;">
+                            {{.Name}}
+                        </td>
+                    </tr>
+                    <tr style="border: none;">
+                        <td style="border: none; padding-right: 20px; padding-bottom: 10px;">
+                            Email alias
+                        </td>
+                        <td style="border: none; padding-bottom: 10px;">
+                            {{.EmailAlias}}
+                        </td>
+                    </tr>
+                    <tr style="border: none;">
+                        <td style="border: none; padding-right: 20px; padding-bottom: 10px;">
+                            Short description
+                        </td>
+                        <td style="border: none; padding-bottom: 10px;">
+                            {{.ShortDescription}}
+                        </td>
+                    </tr>
+                    <tr style="border: none;">
+                        <td style="border: none; padding-right: 20px; padding-bottom: 10px;">
+                            Full Description
+                        </td>
+                        <td style="border: none; padding-bottom: 10px;">
+                            {{.FullDescription}}
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                {{if gt (len .TeamMembers) 0}}<br>
+                    <table style="border-collapse: collapse; width: 100%;">
+                        <tbody>
+                        <tr style="border: none;">
+                            <th colspan="3" style="padding: 10px 0 10px 0;">
+                            Officership team members
+                            </th>
+                        </tr>
                         {{range .TeamMembers}}
                             {{if .IsCurrent}}
-                                <li style='list-style-type: none;'><span class='tab'></span>
-                                    <a href="/internal/officership/{{.OfficerID}}">{{.OfficerName}}</a>{{if .IsLeader}} - Leader{{else if .IsDeputy}}
-                                    - Deputy{{end}}&emsp;<a
-                                            class="button is-danger is-outlined"
-                                            onclick="removeOfficershipFromTeamModal({{.OfficerID}}, '{{.OfficerName}}')">Remove
-                                        officership</a>
-                                </li>
+                                <tr style="border: none;">
+                                    <td style="border: none; padding-left: 2em;">
+                                        <a href="/internal/officership/{{.OfficerID}}">{{.OfficerName}}</a>
+                                    </td>
+                                    <td style="border: none;">
+                                        {{if .IsLeader}}Leader{{else if .IsDeputy}}Deputy{{end}}
+                                    </td>
+                                    <td style="border: none;">
+                                        <a class="button is-danger is-outlined"
+                                           onclick="removeOfficershipFromTeamModal({{.OfficerID}}, '{{.OfficerName}}')">
+                                            Remove officership
+                                        </a>
+                                    </td>
+                                </tr>
                             {{end}}
                         {{end}}
-                    </ol><br>
-                    Retired officership team members:
-                    <ol>
+                        <tr style="border: none;">
+                            <th colspan="3" style="padding: 10px 0 10px 0;">
+                                Retired officership team members
+                            </th>
+                        </tr>
                         {{range .TeamMembers}}
                             {{if not .IsCurrent}}
-                                <li style='list-style-type: none;'><span class='tab'></span>
-                                    <a href="/internal/officership/{{.OfficerID}}">{{.OfficerName}}</a>{{if .IsLeader}} - was leader{{else if .IsDeputy}}
-                                    - was deputy{{end}}&emsp;<a
-                                            class="button is-danger is-outlined"
-                                            onclick="removeOfficershipFromTeamModal({{.OfficerID}}, '{{.OfficerName}}')">Remove
-                                        officership</a>
-                                </li>
+                                <tr style="border: none;">
+                                    <td style="border: none; padding-left: 2em;">
+                                        <a href="/internal/officership/{{.OfficerID}}">{{.OfficerName}}</a>
+                                    </td>
+                                    <td style="border: none;">
+                                        {{if .IsLeader}}was leader{{else if .IsDeputy}}was deputy{{end}}
+                                    </td>
+                                    <td style="border: none;">
+                                        <a class="button is-danger is-outlined"
+                                           onclick="removeOfficershipFromTeamModal({{.OfficerID}}, '{{.OfficerName}}')">
+                                            Remove officership
+                                        </a>
+                                    </td>
+                                </tr>
                             {{end}}
                         {{end}}
-                    </ol>
+                        </tbody>
+                    </table>
                     {{end}}
-                    </p>
                     {{if gt (len .OfficershipsNotInTeam) 0}}
-                        Use the drop down below to add more officerships to this team.<br>
+                        <p>Use the drop down below to add more officerships to this team.</p><br>
                         <form method="post" action="/internal/officership/team/{{.TeamID}}/officership/add">
                             <div class="field">
                                 <label class="label" for="officership">Officership</label>

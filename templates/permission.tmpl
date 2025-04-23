@@ -25,22 +25,56 @@
             <div class="column">
                 {{$roleAdmin := checkPermission .UserPermissions "ManageMembers.Group"}}
                 {{with .Permission}}
-                    <p>Permission ID: {{.PermissionID}}<br>
-                    Name: {{.Name}}<br>
-                    Description: {{.Description}}{{if gt (len .Roles) 0}}<br><br>
-                        Inherited by: <ol>
-                        {{range .Roles}}
-                            <li style='list-style-type: none;'><span class='tab'></span>
-                                {{if $roleAdmin}}
-                                    <a href="/internal/role/{{.RoleID}}">{{.Name}}</a>
-                                {{else}}
-                                    {{.Name}}
-                                {{end}}
-                            </li>
+                    <table style="border-collapse: collapse; padding-left: 10px;">
+                        <tbody>
+                        <tr style="border: none;">
+                            <td style="border: none; padding-right: 20px; padding-bottom: 10px;">
+                                Permission ID
+                            </td>
+                            <td style="border: none; padding-bottom: 10px;">
+                                {{.PermissionID}}
+                            </td>
+                        </tr>
+                        <tr style="border: none;">
+                            <td style="border: none; padding-right: 20px; padding-bottom: 10px;">
+                                Name
+                            </td>
+                            <td style="border: none; padding-bottom: 10px;">
+                                {{.Name}}
+                            </td>
+                        </tr>
+                        <tr style="border: none;">
+                            <td style="border: none; padding-right: 20px; padding-bottom: 10px;">
+                                Description
+                            </td>
+                            <td style="border: none; padding-bottom: 10px;">
+                                {{.Description}}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <table style="border-collapse: collapse; width: 100%;">
+                        <tbody>
+                        {{if gt (len .Roles) 0}}
+                            <tr style="border: none;">
+                                <th colspan="2" style="padding: 10px 0 10px 0;">
+                                    Permissions
+                                </th>
+                            </tr>
+                            {{range .Roles}}
+                                <tr style="border: none;">
+                                    {{if $roleAdmin}}
+                                        <td style="border: none; padding-left: 2em;">
+                                            <a href="/internal/role/{{.RoleID}}">{{.Name}}</a>
+                                        </td>
+                                    {{else}}
+                                        {{.Name}}
+                                    {{end}}
+                                </tr>
+                            {{end}}
                         {{end}}
-                        </ol>
-                    {{end}}
-                    </p>
+                        </tbody>
+                    </table>
                 {{end}}
             </div>
         </div>
@@ -108,7 +142,9 @@
                                         />
                                     </div>
                                 </div>
-                                <button class="button is-danger"><span class="mdi mdi-pencil"></span>&ensp;Edit permission</button>
+                                <button class="button is-danger"><span class="mdi mdi-pencil"></span>&ensp;Edit
+                                    permission
+                                </button>
                             </form>
                         </div>
                     </div>
@@ -126,10 +162,13 @@
                         <div class="content">
                             <p class="title">Are you sure you want to delete this permission?</p>
                             <p><strong>This can be undone{{if eq .Permission.Name "SuperUser"}}<br>
-                            Be very careful, this is the most powerful permission and will break many, many things!<br>
-                            {{end}}</strong></p>
+                                Be very careful, this is the most powerful permission and will break many, many things!
+                                <br>
+                                    {{end}}</strong></p>
                             <form action="/internal/permission/{{.Permission.PermissionID}}/delete" method="post">
-                                <button class="button is-danger"><span class="mdi mdi-key-remove"></span>&ensp;Delete permission</button>
+                                <button class="button is-danger"><span class="mdi mdi-key-remove"></span>&ensp;Delete
+                                    permission
+                                </button>
                             </form>
                         </div>
                     </div>
