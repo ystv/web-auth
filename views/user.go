@@ -1,16 +1,21 @@
 package views
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"html/template"
 	"log"
 	"math"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/labstack/echo/v4"
 	"gopkg.in/guregu/null.v4"
 
@@ -637,5 +642,157 @@ func (v *Views) UserDeleteFunc(c echo.Context) error {
 		return c.Redirect(http.StatusFound, "/internal/users")
 	}
 
+	return v.invalidMethodUsed(c)
+}
+
+func (v *Views) UploadAvatarUserFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+		c1 := v.getSessionData(c)
+
+		userID, err := strconv.Atoi(c.Param("userid"))
+		if err != nil {
+			return fmt.Errorf("failed to get userid for deleteUser: %w", err)
+		}
+
+		user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
+		if err != nil {
+			return fmt.Errorf("failed to get user for deleteUser: %w", err)
+		}
+
+		data := struct {
+			Error string `json:"error"`
+		}{}
+
+		useGravatarTemp := c.FormValue("useGravatar")
+		useGravatar := false
+
+		if useGravatarTemp == "on" {
+			useGravatar = true
+		}
+
+		if !useGravatar {
+			var file *multipart.FileHeader
+			file, err = c.FormFile("upload")
+			if err != nil {
+				//return fmt.Errorf("failed to get file for uploadAvatar: %w", err)
+				log.Printf("failed to get file for uploadAvatar, user id: %d, error: %+v", user1.UserID, err)
+				data.Error = fmt.Sprintf("failed to get file for uploadAvatar: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+
+			var fileName string
+			var fileBytes []byte
+			fileName, fileBytes, err = v.fileUpload(file)
+			if err != nil {
+				//return fmt.Errorf("failed to upload file for uploadAvatar: %w", err)
+				log.Printf("failed to upload file for uploadAvatar, user id: %d, error: %+v", user1.UserID, err)
+				data.Error = fmt.Sprintf("failed to upload file for uploadAvatar: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+
+			buf := bytes.NewReader(fileBytes)
+
+			// This uploads the contents of the buffer to S3
+			_, err = v.cdn.PutObjectWithContext(c.Request().Context(), &s3.PutObjectInput{
+				Bucket: aws.String("avatars"),
+				Key:    aws.String(fileName),
+				Body:   buf,
+			})
+			if err != nil {
+				//return fmt.Errorf("failed to upload file to cdn for uploadAvatar: %w", err)
+				log.Printf("failed to upload file to cdn for uploadAvatar, user id: %d, error: %+v", user1.UserID, err)
+				data.Error = fmt.Sprintf("failed to upload file to cdn for uploadAvatar: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+
+			user1.Avatar = fmt.Sprintf("%s/avatars/%s", v.conf.CDNEndpoint, fileName)
+		}
+
+		user1.UseGravatar = useGravatar
+
+		err = v.user.EditUserAvatarUser(c.Request().Context(), user1, c1.User.UserID)
+		if err != nil {
+			//return fmt.Errorf("failed to edit user for uploadAvatar: %w", err)
+			log.Printf("failed to edit user for uploadAvatar, user id: %d, error: %+v", user1.UserID, err)
+			data.Error = fmt.Sprintf("failed to edit user for uploadAvatar: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		c1.Message = "successfully uploaded avatar"
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for uploadAvatar, user id: %d, error: %+v", c1.User.UserID, err)
+		}
+
+		err = session.Save(c.Request(), c.Response())
+		if err != nil {
+			return fmt.Errorf("failed to save user session in settings: %w", err)
+		}
+
+		return c.JSON(http.StatusOK, data)
+	}
+	return v.invalidMethodUsed(c)
+}
+
+func (v *Views) RemoveAvatarUserFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+		c1 := v.getSessionData(c)
+
+		userID, err := strconv.Atoi(c.Param("userid"))
+		if err != nil {
+			return fmt.Errorf("failed to get userid for deleteUser: %w", err)
+		}
+
+		user1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
+		if err != nil {
+			return fmt.Errorf("failed to get user for deleteUser: %w", err)
+		}
+
+		data := struct {
+			Error string `json:"error"`
+		}{}
+
+		if len(user1.Avatar) > 0 && strings.Contains(user1.Avatar, v.conf.CDNEndpoint) {
+			split := strings.Split(user1.Avatar, "/")
+			key := split[len(split)-1]
+			_, err = v.cdn.DeleteObject(&s3.DeleteObjectInput{
+				Bucket: aws.String("avatars"),
+				Key:    aws.String(key),
+			})
+			if err != nil {
+				//return fmt.Errorf("failed to delete file from cdn for removeAvatar: %w", err)
+				log.Printf("failed to delete file from cdn for removeAvatar, user id: %d, error: %+v", c1.User.UserID, err)
+				data.Error = fmt.Sprintf("failed to delete file from cdn for removeAvatar: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+		}
+
+		user1.Avatar = ""
+
+		err = v.user.EditUserAvatarUser(c.Request().Context(), user1, c1.User.UserID)
+		if err != nil {
+			//return fmt.Errorf("failed to edit user for removeAvatar: %w", err)
+			log.Printf("failed to edit user for removeAvatar, user id: %d, error: %+v", c1.User.UserID, err)
+			data.Error = fmt.Sprintf("failed to edit user for removeAvatar: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		c1.Message = "successfully removed image"
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for removedAvatar, user id: %d, error: %+v", c1.User.UserID, err)
+		}
+
+		err = session.Save(c.Request(), c.Response())
+		if err != nil {
+			return fmt.Errorf("failed to save user session in settings: %w", err)
+		}
+
+		return c.JSON(http.StatusOK, data)
+	}
 	return v.invalidMethodUsed(c)
 }

@@ -181,6 +181,8 @@ func (r *Router) loadRoutes() {
 	user.Match(validMethods, "/reset", r.views.ResetUserPasswordFunc)
 	user.Match(validMethods, "/toggle", r.views.UserToggleEnabledFunc)
 	user.Match(validMethods, "/assume", r.views.AssumeUserFunc, r.views.RequirePermission(permissions.SuperUser))
+	user.Match(validMethods, "/uploadavatar", r.views.UploadAvatarUserFunc)
+	user.Match(validMethods, "/removeavatar", r.views.RemoveAvatarUserFunc)
 	user.Match(validMethods, "", r.views.UserFunc)
 
 	internal.Match(validMethods, "/officerships", r.views.OfficershipsFunc,
