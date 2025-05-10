@@ -419,7 +419,7 @@ func (v *Views) _userAddPost(c echo.Context) error {
 	universityUsername := c.FormValue("universityusername")
 	email := c.FormValue("email")
 	tempDisableSendEmail := c.FormValue("disablesendemail")
-	sendEmail := true
+	var sendEmail = true
 
 	if tempDisableSendEmail == "on" && func() bool {
 		m := permission.SufficientPermissionsFor(permissions.SuperUser)
@@ -675,7 +675,7 @@ func (v *Views) UploadAvatarUserFunc(c echo.Context) error {
 			var file *multipart.FileHeader
 			file, err = c.FormFile("upload")
 			if err != nil {
-				//return fmt.Errorf("failed to get file for uploadAvatar: %w", err)
+				// return fmt.Errorf("failed to get file for uploadAvatar: %w", err)
 				log.Printf("failed to get file for uploadAvatar, user id: %d, error: %+v", user1.UserID, err)
 				data.Error = fmt.Sprintf("failed to get file for uploadAvatar: %+v", err)
 				return c.JSON(http.StatusOK, data)
@@ -685,7 +685,7 @@ func (v *Views) UploadAvatarUserFunc(c echo.Context) error {
 			var fileBytes []byte
 			fileName, fileBytes, err = v.fileUpload(file)
 			if err != nil {
-				//return fmt.Errorf("failed to upload file for uploadAvatar: %w", err)
+				// return fmt.Errorf("failed to upload file for uploadAvatar: %w", err)
 				log.Printf("failed to upload file for uploadAvatar, user id: %d, error: %+v", user1.UserID, err)
 				data.Error = fmt.Sprintf("failed to upload file for uploadAvatar: %+v", err)
 				return c.JSON(http.StatusOK, data)
@@ -700,7 +700,7 @@ func (v *Views) UploadAvatarUserFunc(c echo.Context) error {
 				Body:   buf,
 			})
 			if err != nil {
-				//return fmt.Errorf("failed to upload file to cdn for uploadAvatar: %w", err)
+				// return fmt.Errorf("failed to upload file to cdn for uploadAvatar: %w", err)
 				log.Printf("failed to upload file to cdn for uploadAvatar, user id: %d, error: %+v", user1.UserID, err)
 				data.Error = fmt.Sprintf("failed to upload file to cdn for uploadAvatar: %+v", err)
 				return c.JSON(http.StatusOK, data)
@@ -713,7 +713,7 @@ func (v *Views) UploadAvatarUserFunc(c echo.Context) error {
 
 		err = v.user.EditUserAvatarUser(c.Request().Context(), user1, c1.User.UserID)
 		if err != nil {
-			//return fmt.Errorf("failed to edit user for uploadAvatar: %w", err)
+			// return fmt.Errorf("failed to edit user for uploadAvatar: %w", err)
 			log.Printf("failed to edit user for uploadAvatar, user id: %d, error: %+v", user1.UserID, err)
 			data.Error = fmt.Sprintf("failed to edit user for uploadAvatar: %+v", err)
 			return c.JSON(http.StatusOK, data)
@@ -763,7 +763,7 @@ func (v *Views) RemoveAvatarUserFunc(c echo.Context) error {
 				Key:    aws.String(key),
 			})
 			if err != nil {
-				//return fmt.Errorf("failed to delete file from cdn for removeAvatar: %w", err)
+				// return fmt.Errorf("failed to delete file from cdn for removeAvatar: %w", err)
 				log.Printf("failed to delete file from cdn for removeAvatar, user id: %d, error: %+v", c1.User.UserID, err)
 				data.Error = fmt.Sprintf("failed to delete file from cdn for removeAvatar: %+v", err)
 				return c.JSON(http.StatusOK, data)
@@ -774,7 +774,7 @@ func (v *Views) RemoveAvatarUserFunc(c echo.Context) error {
 
 		err = v.user.EditUserAvatarUser(c.Request().Context(), user1, c1.User.UserID)
 		if err != nil {
-			//return fmt.Errorf("failed to edit user for removeAvatar: %w", err)
+			// return fmt.Errorf("failed to edit user for removeAvatar: %w", err)
 			log.Printf("failed to edit user for removeAvatar, user id: %d, error: %+v", c1.User.UserID, err)
 			data.Error = fmt.Sprintf("failed to edit user for removeAvatar: %+v", err)
 			return c.JSON(http.StatusOK, data)

@@ -720,9 +720,10 @@ func (v *Views) OfficershipTeamAddOfficershipFunc(c echo.Context) error {
 		memberLevel := c.FormValue("memberLevel")
 		var isLeader, isDeputy bool
 
-		if memberLevel == "leader" {
+		switch memberLevel {
+		case "leader":
 			isLeader = true
-		} else if memberLevel == "deputy" {
+		case "deputy":
 			isDeputy = true
 		}
 
