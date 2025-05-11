@@ -1,6 +1,6 @@
 # web-auth
 
-A basic auth package, allowing people to signup, reset passwords, generating API tokens, and view an internal page.
+A basic auth package, allowing people to sign up, reset passwords, generate API tokens, and view an internal page.
 
 ## Usage
 
