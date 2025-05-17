@@ -167,6 +167,10 @@ func DBUsersToUsersTemplateFormat(dbUsers []user.User) []user.StrippedUser {
 			strippedUser.Name = fmt.Sprintf("%s %s", dbUser.Firstname, dbUser.Lastname)
 		}
 
+		if dbUser.Pronouns.Valid {
+			strippedUser.Pronouns = dbUser.Pronouns.String
+		}
+
 		strippedUser.Email = dbUser.Email
 		strippedUser.Enabled = dbUser.Enabled
 
@@ -208,6 +212,7 @@ func DBUserToDetailedUser(dbUser user.User, store user.Repo, officers []officers
 	u.Firstname = dbUser.Firstname
 	u.Lastname = dbUser.Lastname
 	u.Email = dbUser.Email
+	u.Pronouns = dbUser.Pronouns
 	u.LastLogin = null.NewString(dbUser.LastLogin.Time.In(location).Format("2006-01-02 15:04:05 MST"),
 		dbUser.LastLogin.Valid)
 	u.ResetPw = dbUser.ResetPw

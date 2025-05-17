@@ -66,6 +66,7 @@ type (
 		Nickname           string                  `db:"nickname" json:"nickname" schema:"nickname"`
 		Firstname          string                  `db:"first_name" json:"firstName" schema:"firstname"`
 		Lastname           string                  `db:"last_name" json:"lastName" schema:"lastname"`
+		Pronouns           null.String             `db:"pronouns" json:"pronouns,omitempty"`
 		Password           null.String             `db:"password" json:"-" schema:"password"`
 		Salt               null.String             `db:"salt" json:"-"`
 		Avatar             string                  `db:"avatar" json:"avatar" schema:"avatar"`
@@ -91,6 +92,7 @@ type (
 		UserID    int
 		Username  string
 		Name      string
+		Pronouns  string
 		Email     string
 		LastLogin string
 		Enabled   bool
@@ -107,6 +109,7 @@ type (
 		Nickname           string                  `json:"nickname"`
 		Firstname          string                  `json:"firstName"`
 		Lastname           string                  `json:"lastName"`
+		Pronouns           null.String             `json:"pronouns,omitempty"`
 		Avatar             string                  `json:"avatar"`
 		UseGravatar        bool                    `json:"useGravatar"`
 		Email              string                  `json:"email"`
