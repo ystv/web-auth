@@ -3,12 +3,12 @@ package main
 import (
 	"embed"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/pkg/errors"
 
 	"github.com/ystv/web-auth/permission/permissions"
 	"github.com/ystv/web-auth/views"
@@ -36,6 +36,7 @@ func NewRouter(conf *RouterConf) *Router {
 		views:  conf.Views,
 	}
 	r.router.HideBanner = true
+	r.router.HidePort = true
 
 	r.router.Debug = r.config.Debug
 
@@ -46,11 +47,10 @@ func NewRouter(conf *RouterConf) *Router {
 	return r
 }
 
-//nolint:staticcheck
 func (r *Router) Start() error {
-	r.router.Logger.Error(r.router.Start(r.config.Address))
-
-	return fmt.Errorf("failed to start router on address %s", r.config.Address)
+	return errors.Errorf("failed to start router on address %s: %+v",
+		r.config.Address,
+		r.router.Start(r.config.Address))
 }
 
 // middleware initialises web server middleware
@@ -77,6 +77,7 @@ func (r *Router) middleware() {
 
 	r.router.Pre(middleware.RemoveTrailingSlash())
 	r.router.Use(middleware.Recover())
+	r.router.Use(r.config.Logger.Middleware())
 	r.router.Use(middleware.CORSWithConfig(config))
 	r.router.Use(middleware.BodyLimit("15M"))
 	r.router.Use(middleware.GzipWithConfig(middleware.GzipConfig{

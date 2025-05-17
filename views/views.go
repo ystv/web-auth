@@ -27,6 +27,7 @@ import (
 	"github.com/ystv/web-auth/role"
 	"github.com/ystv/web-auth/templates"
 	"github.com/ystv/web-auth/user"
+	"github.com/ystv/web-auth/utils"
 )
 
 type (
@@ -45,6 +46,7 @@ type (
 		CDNEndpoint       string
 		Mail              SMTPConfig
 		Security          SecurityConfig
+		Logger            *utils.Logger
 	}
 
 	// SMTPConfig stores the SMTP Mailer configuration
@@ -98,7 +100,7 @@ type (
 func New(conf *Config, host string, cdn *s3.S3) *Views {
 	v := &Views{}
 	// Connecting to stores
-	dbStore := db.NewStore(conf.DatabaseURL, host)
+	dbStore := db.NewStore(conf.DatabaseURL, host, conf.Logger)
 	v.officership = officership.NewOfficershipRepo(dbStore)
 	v.permission = permission.NewPermissionRepo(dbStore)
 	v.role = role.NewRoleRepo(dbStore)

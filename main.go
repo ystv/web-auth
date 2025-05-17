@@ -2,11 +2,14 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 
 	"github.com/joho/godotenv"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
+	zlog "github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/pkgerrors"
 	_ "golang.org/x/crypto/x509roots/fallback" // CA bundle for FROM Scratch
 
 	"github.com/ystv/web-auth/utils"
@@ -24,6 +27,15 @@ var (
 func main() {
 	var local, global bool
 
+	//nolint:reassign
+	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
+
+	logger := utils.NewLogger(zlog.With().
+		Str("service", "web-auth").
+		Str("version", Version).
+		Str("commit", Commit).
+		Logger(), utils.DefaultSkipper)
+
 	var err error
 	err = godotenv.Load(".env") // Load .env
 	global = err == nil
@@ -35,17 +47,17 @@ func main() {
 	dbHost := os.Getenv("WAUTH_DB_HOST")
 
 	if !local && !global && signingKey == "" && dbHost == "" {
-		log.Fatal("unable to find env files and no env variables have been supplied")
+		logger.Fatal(nil, errors.New("unable to find env files and no env variables have been supplied"))
 	}
 	//nolint:gocritic
 	if !local && !global {
-		log.Println("using env variables")
+		logger.Debug(nil, "using env variables")
 	} else if local && global {
-		log.Println("using global and local env files")
+		logger.Debug(nil, "using global and local env files")
 	} else if !local {
-		log.Println("using global env file")
+		logger.Debug(nil, "using global env file")
 	} else {
-		log.Println("using local env file")
+		logger.Debug(nil, "using local env file")
 	}
 
 	sessionCookieName := os.Getenv("WAUTH_SESSION_COOKIE_NAME")
@@ -70,14 +82,22 @@ func main() {
 		os.Getenv("WAUTH_DB_PASS"),
 	)
 
-	log.Printf("web-auth version: %s\n", Version)
+	logger.Info(nil, "web-auth version: %s", Version)
 
 	mailPort, _ := strconv.Atoi(os.Getenv("WAUTH_MAIL_PORT"))
 
 	debug, _ := strconv.ParseBool(os.Getenv("WAUTH_DEBUG"))
 
 	if debug {
-		log.Println("***running in debug mode, do not use in production***")
+		kv := []utils.KVAny{
+			{Key: "dbHost", Any: dbHost},
+			{Key: "dbPort", Any: dbPort},
+			{Key: "sessionCookieName", Any: sessionCookieName},
+			{Key: "jwtCookieName", Any: jwtCookieName},
+			{Key: "mailPort", Any: mailPort},
+			{Key: "debug", Any: debug},
+		}
+		logger.Warn(&kv, "***running in debug mode, do not use in production***")
 	}
 
 	address := os.Getenv("WAUTH_ADDRESS")
@@ -93,9 +113,9 @@ func main() {
 	}
 	cdn, err := utils.NewCDN(cdnConfig)
 	if err != nil {
-		log.Fatalf("unable to connect to cdn: %v", err)
+		logger.Fatal(nil, fmt.Errorf("unable to connect to cdn: %w", err))
 	}
-	log.Printf("connected to cdn: %s", cdnConfig.Endpoint)
+	logger.Debug(nil, "connected to cdn: %s", cdnConfig.Endpoint)
 
 	// Generate config
 	conf := &views.Config{
@@ -122,6 +142,7 @@ func main() {
 			AuthenticationKey: os.Getenv("WAUTH_AUTHENTICATION_KEY"),
 			SigningKey:        signingKey,
 		},
+		Logger: logger,
 	}
 
 	v := views.New(conf, dbHost, cdn)
@@ -133,8 +154,7 @@ func main() {
 
 	//nolint:staticcheck
 	err = router.Start()
-	//nolint:staticcheck
 	if err != nil {
-		log.Fatalf("the web server couldn't be started!\n\n%s\n\nexiting!", err)
+		logger.Fatal(nil, err)
 	}
 }

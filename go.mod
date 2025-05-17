@@ -1,6 +1,6 @@
 module github.com/ystv/web-auth
 
-go 1.24.2
+go 1.24
 
 require (
 	github.com/Clarilab/gocloaksession v1.14.0
@@ -21,11 +21,13 @@ require (
 	github.com/labstack/echo/v4 v4.13.3
 	github.com/lib/pq v1.10.9
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/pressly/goose/v3 v3.24.2
+	github.com/pkg/errors v0.9.1
+	github.com/pressly/goose/v3 v3.24.3
+	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.10.0
 	github.com/xhit/go-simple-mail/v2 v2.16.0
 	go.uber.org/mock v0.5.2
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20250505184708-aae6e6107042
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20250515174705-ebc8e4631531
 	gopkg.in/guregu/null.v4 v4.0.0
 )
 
@@ -48,7 +50,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
@@ -62,8 +63,8 @@ require (
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250505200425-f936aa4a68b2 // indirect
-	google.golang.org/grpc v1.72.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250512202823-5a2f75b736a9 // indirect
+	google.golang.org/grpc v1.72.1 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
