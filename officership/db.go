@@ -2,9 +2,9 @@ package officership
 
 import (
 	"context"
-	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/pkg/errors"
 
 	"github.com/ystv/web-auth/user"
 	"github.com/ystv/web-auth/utils"
@@ -20,7 +20,7 @@ func (s *Store) countOfficerships(ctx context.Context) (CountOfficerships, error
 		(SELECT COUNT(*) FROM people.officership_members) as total_officers,
 		(SELECT COUNT(*) FROM people.officership_members WHERE end_date IS NULL) as current_officers;`)
 	if err != nil {
-		return countOfficerships, fmt.Errorf("failed to count officerships all from db: %w", err)
+		return countOfficerships, errors.Errorf("failed to count officerships all from db: %+v", err)
 	}
 
 	return countOfficerships, nil
@@ -60,12 +60,12 @@ func (s *Store) getOfficerships(ctx context.Context, officershipStatus Officersh
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getOfficerships: %w", err))
+		panic(errors.Errorf("failed to build sql for getOfficerships: %+v", err))
 	}
 
 	err = s.db.SelectContext(ctx, &o, sql, args...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get officerships: %w", err)
+		return nil, errors.Errorf("failed to get officerships: %+v", err)
 	}
 
 	return o, nil
@@ -96,12 +96,12 @@ func (s *Store) getOfficership(ctx context.Context, o1 Officership) (Officership
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getOfficership: %w", err))
+		panic(errors.Errorf("failed to build sql for getOfficership: %+v", err))
 	}
 
 	err = s.db.GetContext(ctx, &o, sql, args...)
 	if err != nil {
-		return Officership{}, fmt.Errorf("failed to get officership: %w", err)
+		return Officership{}, errors.Errorf("failed to get officership: %+v", err)
 	}
 
 	return o, nil
@@ -116,19 +116,19 @@ func (s *Store) addOfficership(ctx context.Context, o Officership) (Officership,
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for addOfficership: %w", err))
+		panic(errors.Errorf("failed to build sql for addOfficership: %+v", err))
 	}
 
 	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
-		return Officership{}, fmt.Errorf("failed to add officership: %w", err)
+		return Officership{}, errors.Errorf("failed to add officership: %+v", err)
 	}
 
 	defer stmt.Close()
 
 	err = stmt.QueryRow(args...).Scan(&o.OfficershipID)
 	if err != nil {
-		return Officership{}, fmt.Errorf("failed to add officership: %w", err)
+		return Officership{}, errors.Errorf("failed to add officership: %+v", err)
 	}
 
 	return o, nil
@@ -149,21 +149,21 @@ func (s *Store) editOfficership(ctx context.Context, o Officership) (Officership
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for editOfficership: %w", err))
+		panic(errors.Errorf("failed to build sql for editOfficership: %+v", err))
 	}
 
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return Officership{}, fmt.Errorf("failed to edit officership: %w", err)
+		return Officership{}, errors.Errorf("failed to edit officership: %+v", err)
 	}
 
 	rows, err := res.RowsAffected()
 	if err != nil {
-		return Officership{}, fmt.Errorf("failed to edit officership: %w", err)
+		return Officership{}, errors.Errorf("failed to edit officership: %+v", err)
 	}
 
 	if rows < 1 {
-		return Officership{}, fmt.Errorf("failed to edit officerhip: invalid rows affected: %d", rows)
+		return Officership{}, errors.Errorf("failed to edit officerhip: invalid rows affected: %d", rows)
 	}
 
 	return o, nil
@@ -175,12 +175,12 @@ func (s *Store) deleteOfficership(ctx context.Context, o Officership) error {
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for deleteOfficership: %w", err))
+		panic(errors.Errorf("failed to build sql for deleteOfficership: %+v", err))
 	}
 
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return fmt.Errorf("failed to delete officership: %w", err)
+		return errors.Errorf("failed to delete officership: %+v", err)
 	}
 
 	return nil
@@ -199,12 +199,12 @@ func (s *Store) getOfficershipTeams(ctx context.Context) ([]OfficershipTeam, err
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getOfficershipTeams: %w", err))
+		panic(errors.Errorf("failed to build sql for getOfficershipTeams: %+v", err))
 	}
 
 	err = s.db.SelectContext(ctx, &t, sql, args...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get officership teams: %w", err)
+		return nil, errors.Errorf("failed to get officership teams: %+v", err)
 	}
 
 	return t, nil
@@ -220,12 +220,12 @@ func (s *Store) getOfficershipTeam(ctx context.Context, t1 OfficershipTeam) (Off
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getOfficershipTeam: %w", err))
+		panic(errors.Errorf("failed to build sql for getOfficershipTeam: %+v", err))
 	}
 
 	err = s.db.GetContext(ctx, &t, sql, args...)
 	if err != nil {
-		return OfficershipTeam{}, fmt.Errorf("failed to get officership team: %w", err)
+		return OfficershipTeam{}, errors.Errorf("failed to get officership team: %+v", err)
 	}
 
 	return t, nil
@@ -239,19 +239,19 @@ func (s *Store) addOfficershipTeam(ctx context.Context, t OfficershipTeam) (Offi
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for addOfficershipTeam: %w", err))
+		panic(errors.Errorf("failed to build sql for addOfficershipTeam: %+v", err))
 	}
 
 	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
-		return OfficershipTeam{}, fmt.Errorf("failed to add officership team: %w", err)
+		return OfficershipTeam{}, errors.Errorf("failed to add officership team: %+v", err)
 	}
 
 	defer stmt.Close()
 
 	err = stmt.QueryRow(args...).Scan(&t.TeamID)
 	if err != nil {
-		return OfficershipTeam{}, fmt.Errorf("failed to add offciership team: %w", err)
+		return OfficershipTeam{}, errors.Errorf("failed to add offciership team: %+v", err)
 	}
 
 	return t, nil
@@ -269,21 +269,21 @@ func (s *Store) editOfficershipTeam(ctx context.Context, t OfficershipTeam) (Off
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for editOfficershipTeam: %w", err))
+		panic(errors.Errorf("failed to build sql for editOfficershipTeam: %+v", err))
 	}
 
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return OfficershipTeam{}, fmt.Errorf("failed to edit officership team: %w", err)
+		return OfficershipTeam{}, errors.Errorf("failed to edit officership team: %+v", err)
 	}
 
 	rows, err := res.RowsAffected()
 	if err != nil {
-		return OfficershipTeam{}, fmt.Errorf("failed to edit officership team: %w", err)
+		return OfficershipTeam{}, errors.Errorf("failed to edit officership team: %+v", err)
 	}
 
 	if rows < 1 {
-		return OfficershipTeam{}, fmt.Errorf("failed to edit officerhip team: invalid rows affected: %d", rows)
+		return OfficershipTeam{}, errors.Errorf("failed to edit officerhip team: invalid rows affected: %d", rows)
 	}
 
 	return t, nil
@@ -295,12 +295,12 @@ func (s *Store) deleteOfficershipTeam(ctx context.Context, t OfficershipTeam) er
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for deleteOfficershipTeam: %w", err))
+		panic(errors.Errorf("failed to build sql for deleteOfficershipTeam: %+v", err))
 	}
 
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return fmt.Errorf("failed to delete officership team: %w", err)
+		return errors.Errorf("failed to delete officership team: %+v", err)
 	}
 
 	return nil
@@ -343,12 +343,12 @@ func (s *Store) getOfficershipTeamMembers(ctx context.Context, t1 *OfficershipTe
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getOfficershipTeamMembers: %w", err))
+		panic(errors.Errorf("failed to build sql for getOfficershipTeamMembers: %+v", err))
 	}
 
 	err = s.db.SelectContext(ctx, &m, sql, args...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get officership team members: %w", err)
+		return nil, errors.Errorf("failed to get officership team members: %+v", err)
 	}
 
 	return m, nil
@@ -378,12 +378,12 @@ func (s *Store) getOfficershipsNotInTeam(ctx context.Context, officershipTeam Of
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getOfficershipsNotInTeam: %w", err))
+		panic(errors.Errorf("failed to build sql for getOfficershipsNotInTeam: %+v", err))
 	}
 
 	err = s.db.SelectContext(ctx, &o, sql, args...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get officerships not in team: %w", err)
+		return nil, errors.Errorf("failed to get officerships not in team: %+v", err)
 	}
 
 	return o, nil
@@ -409,12 +409,12 @@ func (s *Store) getOfficershipTeamMember(ctx context.Context, m1 OfficershipTeam
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getOfficershipTeamMember: %w", err))
+		panic(errors.Errorf("failed to build sql for getOfficershipTeamMember: %+v", err))
 	}
 
 	err = s.db.GetContext(ctx, &m, sql, args...)
 	if err != nil {
-		return OfficershipTeamMember{}, fmt.Errorf("failed to get officership team member: %w", err)
+		return OfficershipTeamMember{}, errors.Errorf("failed to get officership team member: %+v", err)
 	}
 
 	return m, nil
@@ -430,19 +430,19 @@ func (s *Store) addOfficershipTeamMember(ctx context.Context, m1 OfficershipTeam
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for addOfficershipTeamMember: %w", err))
+		panic(errors.Errorf("failed to build sql for addOfficershipTeamMember: %+v", err))
 	}
 
 	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
-		return OfficershipTeamMember{}, fmt.Errorf("failed to add officership team member: %w", err)
+		return OfficershipTeamMember{}, errors.Errorf("failed to add officership team member: %+v", err)
 	}
 
 	defer stmt.Close()
 
 	err = stmt.QueryRow(args...).Scan(&m.TeamID, &m.OfficerID, &m.IsLeader, &m.IsDeputy)
 	if err != nil {
-		return OfficershipTeamMember{}, fmt.Errorf("failed to add offciership team member: %w", err)
+		return OfficershipTeamMember{}, errors.Errorf("failed to add offciership team member: %+v", err)
 	}
 
 	return m, nil
@@ -454,12 +454,12 @@ func (s *Store) deleteOfficershipTeamMember(ctx context.Context, t OfficershipTe
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for deleteOfficershipTeam: %w", err))
+		panic(errors.Errorf("failed to build sql for deleteOfficershipTeam: %+v", err))
 	}
 
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return fmt.Errorf("failed to delete officership team: %w", err)
+		return errors.Errorf("failed to delete officership team: %+v", err)
 	}
 
 	return nil
@@ -471,12 +471,12 @@ func (s *Store) removeTeamForOfficershipTeamMembers(ctx context.Context, t Offic
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for removeTeamForOfficershipTeamMembers: %w", err))
+		panic(errors.Errorf("failed to build sql for removeTeamForOfficershipTeamMembers: %+v", err))
 	}
 
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return fmt.Errorf("failed to remove team for officership team members: %w", err)
+		return errors.Errorf("failed to remove team for officership team members: %+v", err)
 	}
 
 	return nil
@@ -537,12 +537,12 @@ func (s *Store) getOfficershipMembers(ctx context.Context, o1 *Officership, u *u
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getOfficershipMembers: %w", err))
+		panic(errors.Errorf("failed to build sql for getOfficershipMembers: %+v", err))
 	}
 
 	err = s.db.SelectContext(ctx, &o, sql, args...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get officership members: %w", err)
+		return nil, errors.Errorf("failed to get officership members: %+v", err)
 	}
 
 	return o, nil
@@ -563,12 +563,12 @@ func (s *Store) getOfficershipMember(ctx context.Context, m1 OfficershipMember) 
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getOfficershipMember: %w", err))
+		panic(errors.Errorf("failed to build sql for getOfficershipMember: %+v", err))
 	}
 
 	err = s.db.GetContext(ctx, &m, sql, args...)
 	if err != nil {
-		return OfficershipMember{}, fmt.Errorf("failed to get officership member: %w", err)
+		return OfficershipMember{}, errors.Errorf("failed to get officership member: %+v", err)
 	}
 
 	return m, nil
@@ -582,19 +582,19 @@ func (s *Store) addOfficershipMember(ctx context.Context, m OfficershipMember) (
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for addOfficershipMember: %w", err))
+		panic(errors.Errorf("failed to build sql for addOfficershipMember: %+v", err))
 	}
 
 	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
-		return OfficershipMember{}, fmt.Errorf("failed to add officership member: %w", err)
+		return OfficershipMember{}, errors.Errorf("failed to add officership member: %+v", err)
 	}
 
 	defer stmt.Close()
 
 	err = stmt.QueryRow(args...).Scan(&m.OfficershipMemberID)
 	if err != nil {
-		return OfficershipMember{}, fmt.Errorf("failed to add offciership member: %w", err)
+		return OfficershipMember{}, errors.Errorf("failed to add offciership member: %+v", err)
 	}
 
 	return m, nil
@@ -612,22 +612,22 @@ func (s *Store) editOfficershipMember(ctx context.Context, m OfficershipMember) 
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for editOfficershipMember: %w", err))
+		panic(errors.Errorf("failed to build sql for editOfficershipMember: %+v", err))
 	}
 
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return OfficershipMember{}, fmt.Errorf("failed to edit officership member: %w", err)
+		return OfficershipMember{}, errors.Errorf("failed to edit officership member: %+v", err)
 	}
 
 	rows, err := res.RowsAffected()
 	if err != nil {
-		return OfficershipMember{}, fmt.Errorf("failed to edit officership member: %w", err)
+		return OfficershipMember{}, errors.Errorf("failed to edit officership member: %+v", err)
 	}
 
 	if rows < 1 {
 		return OfficershipMember{},
-			fmt.Errorf("failed to edit officerhip member: invalid rows affected: %d", rows)
+			errors.Errorf("failed to edit officerhip member: invalid rows affected: %d", rows)
 	}
 
 	return m, nil
@@ -639,12 +639,12 @@ func (s *Store) deleteOfficershipMember(ctx context.Context, m OfficershipMember
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for deleteOfficershipMember: %w", err))
+		panic(errors.Errorf("failed to build sql for deleteOfficershipMember: %+v", err))
 	}
 
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return fmt.Errorf("failed to delete officership member: %w", err)
+		return errors.Errorf("failed to delete officership member: %+v", err)
 	}
 
 	return nil
@@ -656,12 +656,12 @@ func (s *Store) removeOfficershipForOfficershipMembers(ctx context.Context, o Of
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for removeOfficershipForOfficershipMembers: %w", err))
+		panic(errors.Errorf("failed to build sql for removeOfficershipForOfficershipMembers: %+v", err))
 	}
 
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return fmt.Errorf("failed to remove officership for officership members: %w", err)
+		return errors.Errorf("failed to remove officership for officership members: %+v", err)
 	}
 
 	return nil
@@ -673,12 +673,12 @@ func (s *Store) removeUserForOfficershipMembers(ctx context.Context, u user.User
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for removeUsersForOfficershipMembers: %w", err))
+		panic(errors.Errorf("failed to build sql for removeUsersForOfficershipMembers: %+v", err))
 	}
 
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return fmt.Errorf("failed to remove users for officership members: %w", err)
+		return errors.Errorf("failed to remove users for officership members: %+v", err)
 	}
 
 	return nil

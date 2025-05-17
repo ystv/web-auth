@@ -1,7 +1,6 @@
 package views
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -11,6 +10,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/pkg/errors"
 	"gopkg.in/guregu/null.v4"
 
 	"github.com/ystv/web-auth/officership"
@@ -41,12 +41,12 @@ func (v *Views) OfficershipsFunc(c echo.Context) error {
 
 		officerships, err := v.officership.GetOfficerships(c.Request().Context(), dbStatus)
 		if err != nil {
-			return fmt.Errorf("failed to get officerships: %w", err)
+			return errors.Errorf("failed to get officerships: %+v", err)
 		}
 
 		p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 		if err != nil {
-			return fmt.Errorf("failed to get user permissions for officerships: %w", err)
+			return errors.Errorf("failed to get user permissions for officerships: %+v", err)
 		}
 
 		data := struct {
@@ -69,7 +69,7 @@ func (v *Views) OfficershipsFunc(c echo.Context) error {
 	case http.MethodPost:
 		o, err := url.Parse("/internal/officerships")
 		if err != nil {
-			panic(fmt.Errorf("invalid url: %w", err)) // this panics because if this errors then many other things will be wrong
+			panic(errors.Errorf("invalid url: %+v", err)) // this panics because if this errors then many other things will be wrong
 		}
 
 		q := o.Query()
@@ -99,22 +99,22 @@ func (v *Views) OfficershipFunc(c echo.Context) error {
 
 		officershipID, err := strconv.Atoi(c.Param("officershipid"))
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse officershipid for officership: %w", err))
+			return echo.NewHTTPError(http.StatusBadRequest, errors.Errorf("failed to parse officershipid for officership: %+v", err))
 		}
 
 		o, err := v.officership.GetOfficership(c.Request().Context(), officership.Officership{OfficershipID: officershipID})
 		if err != nil {
-			return fmt.Errorf("failed to get officership: %w", err)
+			return errors.Errorf("failed to get officership: %+v", err)
 		}
 
 		officers, err := v.officership.GetOfficershipMembers(c.Request().Context(), &o, nil, officership.Any, officership.Any, false)
 		if err != nil {
-			return fmt.Errorf("failed to get officership members: %w", err)
+			return errors.Errorf("failed to get officership members: %+v", err)
 		}
 
 		p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 		if err != nil {
-			return fmt.Errorf("failed to get user permissions for officership: %w", err)
+			return errors.Errorf("failed to get user permissions for officership: %+v", err)
 		}
 
 		data := struct {
@@ -158,7 +158,7 @@ func (v *Views) OfficershipAddFunc(c echo.Context) error {
 		if historyWikiURL != "" {
 			_, err := url.ParseRequestURI(historyWikiURL)
 			if err != nil {
-				return fmt.Errorf("failed to parse historyWikiURL: %w", err)
+				return errors.Errorf("failed to parse historyWikiURL: %+v", err)
 			}
 		}
 
@@ -177,7 +177,7 @@ func (v *Views) OfficershipAddFunc(c echo.Context) error {
 				IsCurrent:      isCurrent,
 			})
 		if err != nil {
-			return fmt.Errorf("failed to add officerships for addOfficership: %w", err)
+			return errors.Errorf("failed to add officerships for addOfficership: %+v", err)
 		}
 
 		return c.Redirect(http.StatusFound, "/internal/officerships")
@@ -190,13 +190,13 @@ func (v *Views) OfficershipEditFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		officershipID, err := strconv.Atoi(c.Param("officershipid"))
 		if err != nil {
-			return fmt.Errorf("failed to get officershipid for editOfficership: %w", err)
+			return errors.Errorf("failed to get officershipid for editOfficership: %+v", err)
 		}
 
 		officership1, err := v.officership.GetOfficership(c.Request().Context(),
 			officership.Officership{OfficershipID: officershipID})
 		if err != nil {
-			return fmt.Errorf("failed to get officership for editOfficership: %w", err)
+			return errors.Errorf("failed to get officership for editOfficership: %+v", err)
 		}
 
 		name := c.FormValue("name")
@@ -213,7 +213,7 @@ func (v *Views) OfficershipEditFunc(c echo.Context) error {
 		if historyWikiURL != "" {
 			_, err = url.ParseRequestURI(historyWikiURL)
 			if err != nil {
-				return fmt.Errorf("failed to parse historyWikiURL: %w", err)
+				return errors.Errorf("failed to parse historyWikiURL: %+v", err)
 			}
 		}
 
@@ -225,7 +225,7 @@ func (v *Views) OfficershipEditFunc(c echo.Context) error {
 
 		_, err = v.officership.EditOfficership(c.Request().Context(), officership1)
 		if err != nil {
-			return fmt.Errorf("failed to edit officership for editOfficership: %w", err)
+			return errors.Errorf("failed to edit officership for editOfficership: %+v", err)
 		}
 
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/officership/%d", officershipID))
@@ -239,31 +239,31 @@ func (v *Views) OfficershipDeleteFunc(c echo.Context) error {
 		officershipID, err := strconv.Atoi(c.Param("officershipid"))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest,
-				fmt.Errorf("failed to parse officershipid for officership delete: %w", err))
+				errors.Errorf("failed to parse officershipid for officership delete: %+v", err))
 		}
 
 		o, err := v.officership.GetOfficership(c.Request().Context(),
 			officership.Officership{OfficershipID: officershipID})
 		if err != nil {
-			return fmt.Errorf("failed to get officership for officership delete: %w", err)
+			return errors.Errorf("failed to get officership for officership delete: %+v", err)
 		}
 
 		err = v.officership.RemoveOfficershipForOfficershipMembers(c.Request().Context(), o)
 		if err != nil {
-			return fmt.Errorf("failed to delete officers from officership for officership delete: %w", err)
+			return errors.Errorf("failed to delete officers from officership for officership delete: %+v", err)
 		}
 
 		if o.TeamID.Valid {
 			err = v.officership.DeleteOfficershipTeamMember(c.Request().Context(),
 				officership.OfficershipTeamMember{OfficerID: officershipID})
 			if err != nil {
-				return fmt.Errorf("failed to delete team from officership for officership delete: %w", err)
+				return errors.Errorf("failed to delete team from officership for officership delete: %+v", err)
 			}
 		}
 
 		err = v.officership.DeleteOfficership(c.Request().Context(), o)
 		if err != nil {
-			return fmt.Errorf("failed to delete officership for officership delete: %w", err)
+			return errors.Errorf("failed to delete officership for officership delete: %+v", err)
 		}
 
 		return c.Redirect(http.StatusFound, "/internal/officerships")
@@ -335,7 +335,7 @@ func (v *Views) _officersGet(c echo.Context) error {
 		officers, err = v.officership.GetOfficershipMembers(c.Request().Context(), nil, nil, dbOfficershipStatus,
 			dbOfficerStatus, true)
 		if err != nil {
-			errArr = append(errArr, fmt.Errorf("failed to get officers: %w", err))
+			errArr = append(errArr, errors.Errorf("failed to get officers: %+v", err))
 		}
 	}()
 
@@ -346,7 +346,7 @@ func (v *Views) _officersGet(c echo.Context) error {
 
 		officerships, err = v.officership.GetOfficerships(c.Request().Context(), dbOfficershipStatus)
 		if err != nil {
-			errArr = append(errArr, fmt.Errorf("failed to get officerships: %w", err))
+			errArr = append(errArr, errors.Errorf("failed to get officerships: %+v", err))
 		}
 	}()
 
@@ -357,7 +357,7 @@ func (v *Views) _officersGet(c echo.Context) error {
 
 		users, _, err = v.user.GetUsers(c.Request().Context(), 0, 0, "", "", "", "", "not_deleted")
 		if errArr != nil {
-			errArr = append(errArr, fmt.Errorf("failed to get users: %w", err))
+			errArr = append(errArr, errors.Errorf("failed to get users: %+v", err))
 		}
 	}()
 	wg.Wait()
@@ -374,7 +374,7 @@ func (v *Views) _officersGet(c echo.Context) error {
 
 	p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 	if err != nil {
-		return fmt.Errorf("failed to get user permissions for officers: %w", err)
+		return errors.Errorf("failed to get user permissions for officers: %+v", err)
 	}
 
 	data := struct {
@@ -403,7 +403,7 @@ func (v *Views) _officersGet(c echo.Context) error {
 func (v *Views) _officersPost(c echo.Context) error {
 	o, err := url.Parse("/internal/officership/officers")
 	if err != nil {
-		panic(fmt.Errorf("invalid url: %w", err)) // this panics because if this errors then many other things will be wrong
+		panic(errors.Errorf("invalid url: %+v", err)) // this panics because if this errors then many other things will be wrong
 	}
 
 	q := o.Query()
@@ -438,27 +438,27 @@ func (v *Views) OfficerFunc(c echo.Context) error {
 
 		officerID, err := strconv.Atoi(c.Param("officerid"))
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse officerid for officer: %w", err))
+			return echo.NewHTTPError(http.StatusBadRequest, errors.Errorf("failed to parse officerid for officer: %+v", err))
 		}
 
 		officer, err := v.officership.GetOfficershipMember(c.Request().Context(), officership.OfficershipMember{OfficershipMemberID: officerID})
 		if err != nil {
-			return fmt.Errorf("failed to get officer: %w", err)
+			return errors.Errorf("failed to get officer: %+v", err)
 		}
 
 		officerships, err := v.officership.GetOfficerships(c.Request().Context(), officership.Any)
 		if err != nil {
-			return fmt.Errorf("failed to get officerships: %w", err)
+			return errors.Errorf("failed to get officerships: %+v", err)
 		}
 
 		users, _, err := v.user.GetUsers(c.Request().Context(), 0, 0, "", "", "", "", "not_deleted")
 		if err != nil {
-			return fmt.Errorf("failed to get users: %w", err)
+			return errors.Errorf("failed to get users: %+v", err)
 		}
 
 		p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 		if err != nil {
-			return fmt.Errorf("failed to get user permissions for officer: %w", err)
+			return errors.Errorf("failed to get user permissions for officer: %+v", err)
 		}
 
 		data := struct {
@@ -492,7 +492,7 @@ func (v *Views) OfficerAddFunc(c echo.Context) error {
 
 		parseStart, err := time.Parse("02/01/2006", tempStartDate)
 		if err != nil {
-			return fmt.Errorf("failed to parse start date: %w", err)
+			return errors.Errorf("failed to parse start date: %+v", err)
 		}
 
 		diffStart := time.Now().Compare(parseStart)
@@ -511,7 +511,7 @@ func (v *Views) OfficerAddFunc(c echo.Context) error {
 			var parseEnd time.Time
 			parseEnd, err = time.Parse("02/01/2006", tempEndDate)
 			if err != nil {
-				return fmt.Errorf("failed to parse end date: %w", err)
+				return errors.Errorf("failed to parse end date: %+v", err)
 			}
 
 			diffEnd := time.Now().Compare(parseEnd)
@@ -524,22 +524,22 @@ func (v *Views) OfficerAddFunc(c echo.Context) error {
 
 		userID, err := strconv.Atoi(tempUserID)
 		if err != nil {
-			return fmt.Errorf("failed to convert user id to int: %w", err)
+			return errors.Errorf("failed to convert user id to int: %+v", err)
 		}
 
 		officershipID, err := strconv.Atoi(tempOfficershipID)
 		if err != nil {
-			return fmt.Errorf("failed to convert officershipID to int: %w", err)
+			return errors.Errorf("failed to convert officershipID to int: %+v", err)
 		}
 
 		u1, err := v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 		if err != nil {
-			return fmt.Errorf("failed to get user for officerAdd: %w", err)
+			return errors.Errorf("failed to get user for officerAdd: %+v", err)
 		}
 
 		o1, err := v.officership.GetOfficership(c.Request().Context(), officership.Officership{OfficershipID: officershipID})
 		if err != nil {
-			return fmt.Errorf("failed to get officership for officerAdd: %w", err)
+			return errors.Errorf("failed to get officership for officerAdd: %+v", err)
 		}
 
 		_, err = v.officership.AddOfficershipMember(c.Request().Context(), officership.OfficershipMember{
@@ -549,7 +549,7 @@ func (v *Views) OfficerAddFunc(c echo.Context) error {
 			EndDate:   endDate,
 		})
 		if err != nil {
-			return fmt.Errorf("failed to add officer for officerAdd: %w", err)
+			return errors.Errorf("failed to add officer for officerAdd: %+v", err)
 		}
 
 		return c.Redirect(http.StatusFound, "/internal/officership/officers")
@@ -562,34 +562,34 @@ func (v *Views) OfficerEditFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		officerID, err := strconv.Atoi(c.Param("officerid"))
 		if err != nil {
-			return fmt.Errorf("failed to get officerid for editOfficer: %w", err)
+			return errors.Errorf("failed to get officerid for editOfficer: %+v", err)
 		}
 
 		officer1, err := v.officership.GetOfficershipMember(c.Request().Context(),
 			officership.OfficershipMember{OfficershipMemberID: officerID})
 		if err != nil {
-			return fmt.Errorf("failed to get officer for editOfficer: %w", err)
+			return errors.Errorf("failed to get officer for editOfficer: %+v", err)
 		}
 
 		userID, err := strconv.Atoi(c.FormValue("userID"))
 		if err != nil {
-			return fmt.Errorf("failed to get userID form for editOfficer: %w", err)
+			return errors.Errorf("failed to get userID form for editOfficer: %+v", err)
 		}
 
 		_, err = v.user.GetUser(c.Request().Context(), user.User{UserID: userID})
 		if err != nil {
-			return fmt.Errorf("failed to get user form for editOfficer: %w", err)
+			return errors.Errorf("failed to get user form for editOfficer: %+v", err)
 		}
 
 		officershipID, err := strconv.Atoi(c.FormValue("officershipID"))
 		if err != nil {
-			return fmt.Errorf("failed to get officershipID form for editOfficer: %w", err)
+			return errors.Errorf("failed to get officershipID form for editOfficer: %+v", err)
 		}
 
 		_, err = v.officership.GetOfficership(c.Request().Context(),
 			officership.Officership{OfficershipID: officershipID})
 		if err != nil {
-			return fmt.Errorf("failed to get officership for editOfficer: %w", err)
+			return errors.Errorf("failed to get officership for editOfficer: %+v", err)
 		}
 
 		tempStartDate := c.FormValue("startDate")
@@ -601,7 +601,7 @@ func (v *Views) OfficerEditFunc(c echo.Context) error {
 
 		parsedStart, err := time.Parse("02/01/2006", tempStartDate)
 		if err != nil {
-			return fmt.Errorf("failed to parse start date: %w", err)
+			return errors.Errorf("failed to parse start date: %+v", err)
 		}
 
 		diff := time.Now().Compare(parsedStart)
@@ -616,7 +616,7 @@ func (v *Views) OfficerEditFunc(c echo.Context) error {
 
 			parsedEnd, err = time.Parse("02/01/2006", tempEndDate)
 			if err != nil {
-				return fmt.Errorf("failed to parse end date: %w", err)
+				return errors.Errorf("failed to parse end date: %+v", err)
 			}
 
 			endDate = null.TimeFrom(parsedEnd)
@@ -629,7 +629,7 @@ func (v *Views) OfficerEditFunc(c echo.Context) error {
 
 		_, err = v.officership.EditOfficershipMember(c.Request().Context(), officer1)
 		if err != nil {
-			return fmt.Errorf("failed to edit officer for editOfficer: %w", err)
+			return errors.Errorf("failed to edit officer for editOfficer: %+v", err)
 		}
 
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/officership/officer/%d", officerID))
@@ -643,18 +643,18 @@ func (v *Views) OfficerDeleteFunc(c echo.Context) error {
 		officerID, err := strconv.Atoi(c.Param("officerid"))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest,
-				fmt.Errorf("failed to parse officerid for officer delete: %w", err))
+				errors.Errorf("failed to parse officerid for officer delete: %+v", err))
 		}
 
 		officer, err := v.officership.GetOfficershipMember(c.Request().Context(),
 			officership.OfficershipMember{OfficershipMemberID: officerID})
 		if err != nil {
-			return fmt.Errorf("failed to get officer for officer delete: %w", err)
+			return errors.Errorf("failed to get officer for officer delete: %+v", err)
 		}
 
 		err = v.officership.DeleteOfficershipMember(c.Request().Context(), officer)
 		if err != nil {
-			return fmt.Errorf("failed to delete officer for officer delete: %w", err)
+			return errors.Errorf("failed to delete officer for officer delete: %+v", err)
 		}
 
 		return c.Redirect(http.StatusFound, "/internal/officership/officers")
@@ -669,12 +669,12 @@ func (v *Views) OfficershipTeamsFunc(c echo.Context) error {
 
 		officers, err := v.officership.GetOfficershipTeams(c.Request().Context())
 		if err != nil {
-			return fmt.Errorf("failed to get officershipTeams: %w", err)
+			return errors.Errorf("failed to get officershipTeams: %+v", err)
 		}
 
 		p1, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 		if err != nil {
-			return fmt.Errorf("failed to get user permissions for officershipTeams: %w", err)
+			return errors.Errorf("failed to get user permissions for officershipTeams: %+v", err)
 		}
 
 		data := struct {
@@ -699,22 +699,22 @@ func (v *Views) OfficershipTeamAddOfficershipFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		teamID, err := strconv.Atoi(c.Param("officershipteamid"))
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to get team id for officership team add officership: %w", err))
+			return echo.NewHTTPError(http.StatusBadRequest, errors.Errorf("failed to get team id for officership team add officership: %+v", err))
 		}
 
 		_, err = v.officership.GetOfficershipTeam(c.Request().Context(), officership.OfficershipTeam{TeamID: teamID})
 		if err != nil {
-			return fmt.Errorf("failed to get team for officership team add officership: %w", err)
+			return errors.Errorf("failed to get team for officership team add officership: %+v", err)
 		}
 
 		officershipID, err := strconv.Atoi(c.Request().FormValue("officershipID"))
 		if err != nil {
-			return fmt.Errorf("failed to get officershipid for officership team add officership: %w", err)
+			return errors.Errorf("failed to get officershipid for officership team add officership: %+v", err)
 		}
 
 		_, err = v.officership.GetOfficership(c.Request().Context(), officership.Officership{OfficershipID: officershipID})
 		if err != nil {
-			return fmt.Errorf("failed to get officership for officership team add officership: %w", err)
+			return errors.Errorf("failed to get officership for officership team add officership: %+v", err)
 		}
 
 		memberLevel := c.FormValue("memberLevel")
@@ -741,7 +741,7 @@ func (v *Views) OfficershipTeamAddOfficershipFunc(c echo.Context) error {
 
 		_, err = v.officership.AddOfficershipTeamMember(c.Request().Context(), officershipTeamMember)
 		if err != nil {
-			return fmt.Errorf("failed to add officership team member for officership team add officership: %w", err)
+			return errors.Errorf("failed to add officership team member for officership team add officership: %+v", err)
 		}
 
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/officership/team/%d", teamID))
@@ -754,22 +754,22 @@ func (v *Views) OfficershipTeamRemoveOfficershipFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		teamID, err := strconv.Atoi(c.Param("officershipteamid"))
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to get teamid for officership team remove officership: %w", err))
+			return echo.NewHTTPError(http.StatusBadRequest, errors.Errorf("failed to get teamid for officership team remove officership: %+v", err))
 		}
 
 		_, err = v.officership.GetOfficershipTeam(c.Request().Context(), officership.OfficershipTeam{TeamID: teamID})
 		if err != nil {
-			return fmt.Errorf("failed to get team for officership team remove officership: %w", err)
+			return errors.Errorf("failed to get team for officership team remove officership: %+v", err)
 		}
 
 		officershipID, err := strconv.Atoi(c.Param("officershipid"))
 		if err != nil {
-			return fmt.Errorf("failed to get officershipid for officership team remove officership: %w", err)
+			return errors.Errorf("failed to get officershipid for officership team remove officership: %+v", err)
 		}
 
 		_, err = v.officership.GetOfficership(c.Request().Context(), officership.Officership{OfficershipID: officershipID})
 		if err != nil {
-			return fmt.Errorf("failed to get officership for officership team remove officership: %w", err)
+			return errors.Errorf("failed to get officership for officership team remove officership: %+v", err)
 		}
 
 		officershipTeamMember := officership.OfficershipTeamMember{
@@ -779,12 +779,12 @@ func (v *Views) OfficershipTeamRemoveOfficershipFunc(c echo.Context) error {
 
 		_, err = v.officership.GetOfficershipTeamMember(c.Request().Context(), officershipTeamMember)
 		if err != nil {
-			return fmt.Errorf("failed to get officership team member for officership team remove officership: %w", err)
+			return errors.Errorf("failed to get officership team member for officership team remove officership: %+v", err)
 		}
 
 		err = v.officership.DeleteOfficershipTeamMember(c.Request().Context(), officershipTeamMember)
 		if err != nil {
-			return fmt.Errorf("failed to remove officership team member for officership team remove officership: %w", err)
+			return errors.Errorf("failed to remove officership team member for officership team remove officership: %+v", err)
 		}
 
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/officership/team/%d", teamID))
@@ -800,29 +800,29 @@ func (v *Views) OfficershipTeamFunc(c echo.Context) error {
 		officershipTeamID, err := strconv.Atoi(c.Param("officershipteamid"))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest,
-				fmt.Errorf("failed to parse officershipteamid for officership team: %w", err))
+				errors.Errorf("failed to parse officershipteamid for officership team: %+v", err))
 		}
 
 		officershipTeam, err := v.officership.GetOfficershipTeam(c.Request().Context(),
 			officership.OfficershipTeam{TeamID: officershipTeamID})
 		if err != nil {
-			return fmt.Errorf("failed to get officershipTeam: %w", err)
+			return errors.Errorf("failed to get officershipTeam: %+v", err)
 		}
 
 		permissions, err := v.user.GetPermissionsForUser(c.Request().Context(), c1.User)
 		if err != nil {
-			return fmt.Errorf("failed to get user permissions for officershipTeam: %w", err)
+			return errors.Errorf("failed to get user permissions for officershipTeam: %+v", err)
 		}
 
 		teamMembers, err := v.officership.GetOfficershipTeamMembers(c.Request().Context(), &officershipTeam,
 			officership.Any)
 		if err != nil {
-			return fmt.Errorf("failed to get officership team members for officershipTeam: %w", err)
+			return errors.Errorf("failed to get officership team members for officershipTeam: %+v", err)
 		}
 
 		officershipsNotInTeam, err := v.officership.GetOfficershipsNotInTeam(c.Request().Context(), officershipTeam)
 		if err != nil {
-			return fmt.Errorf("failed to get officerships not in team: %w", err)
+			return errors.Errorf("failed to get officerships not in team: %+v", err)
 		}
 
 		data := struct {
@@ -877,7 +877,7 @@ func (v *Views) OfficershipTeamAddFunc(c echo.Context) error {
 		t1, err := v.officership.GetOfficershipTeam(c.Request().Context(),
 			officership.OfficershipTeam{TeamID: 0, Name: name})
 		if err == nil && t1.TeamID > 0 {
-			return fmt.Errorf("officership team with name \"%s\" already exists", name)
+			return errors.Errorf("officership team with name \"%s\" already exists", name)
 		}
 
 		_, err = v.officership.AddOfficershipTeam(c.Request().Context(),
@@ -888,7 +888,7 @@ func (v *Views) OfficershipTeamAddFunc(c echo.Context) error {
 				FullDescription:  fullDescription,
 			})
 		if err != nil {
-			return fmt.Errorf("failed to add team for addOfficershipTeam: %w", err)
+			return errors.Errorf("failed to add team for addOfficershipTeam: %+v", err)
 		}
 
 		return c.Redirect(http.StatusFound, "/internal/officership/teams")
@@ -902,13 +902,13 @@ func (v *Views) OfficershipTeamEditFunc(c echo.Context) error {
 		officershipTeamID, err := strconv.Atoi(c.Param("officershipteamid"))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest,
-				fmt.Errorf("failed to parse officershipteamid for editOfficershipTeam: %w", err))
+				errors.Errorf("failed to parse officershipteamid for editOfficershipTeam: %+v", err))
 		}
 
 		team1, err := v.officership.GetOfficershipTeam(c.Request().Context(),
 			officership.OfficershipTeam{TeamID: officershipTeamID})
 		if err != nil {
-			return fmt.Errorf("failed to get team for editOfficershipTeam: %w", err)
+			return errors.Errorf("failed to get team for editOfficershipTeam: %+v", err)
 		}
 
 		name := c.FormValue("name")
@@ -934,7 +934,7 @@ func (v *Views) OfficershipTeamEditFunc(c echo.Context) error {
 
 		_, err = v.officership.EditOfficershipTeam(c.Request().Context(), team1)
 		if err != nil {
-			return fmt.Errorf("failed to edit team for editOfficershipTeam: %w", err)
+			return errors.Errorf("failed to edit team for editOfficershipTeam: %+v", err)
 		}
 
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/internal/officership/team/%d", officershipTeamID))
@@ -948,23 +948,23 @@ func (v *Views) OfficershipTeamDeleteFunc(c echo.Context) error {
 		teamID, err := strconv.Atoi(c.Param("officershipteamid"))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest,
-				fmt.Errorf("failed to parse teamid for officership team delete: %w", err))
+				errors.Errorf("failed to parse teamid for officership team delete: %+v", err))
 		}
 
 		team, err := v.officership.GetOfficershipTeam(c.Request().Context(),
 			officership.OfficershipTeam{TeamID: teamID})
 		if err != nil {
-			return fmt.Errorf("failed to get team for officer team delete: %w", err)
+			return errors.Errorf("failed to get team for officer team delete: %+v", err)
 		}
 
 		err = v.officership.RemoveTeamForOfficershipTeamMembers(c.Request().Context(), team)
 		if err != nil {
-			return fmt.Errorf("failed to remove officerships from team for officership team delete: %w", err)
+			return errors.Errorf("failed to remove officerships from team for officership team delete: %+v", err)
 		}
 
 		err = v.officership.DeleteOfficershipTeam(c.Request().Context(), team)
 		if err != nil {
-			return fmt.Errorf("failed to delete officership team for officership team delete: %w", err)
+			return errors.Errorf("failed to delete officership team for officership team delete: %+v", err)
 		}
 
 		return c.Redirect(http.StatusFound, "/internal/officership/teams")
