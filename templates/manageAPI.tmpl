@@ -51,17 +51,28 @@
                 <a class="button is-info" onclick="addTokenModal()">Add token</a>
                 <br>
                 <br>
-                {{if ne (len .Tokens) 0}}
-                    Current tokens: <div class="toolbar"><ol>
-                    {{range .Tokens}}
-                        <li style='list-style-type: none;'><span class='tab'></span>{{.Name}}{{if .Description}} -
-                            {{.Description}}{{end}}&emsp;
-                            <a class="button is-danger is-outlined" onclick="removeTokenFromAPIModal({{.TokenID}}, {{.Name}})">
-                            <span class="mdi mdi-key-minus"></span>&ensp;Remove token</a></li>
+                <table style="border-collapse: collapse; width: 100%;">
+                    <tbody>
+                    {{if gt (len .Tokens) 0}}
+                        <tr style="border: none;">
+                            <th colspan="2" style="padding: 10px 0 10px 0;">
+                                Current tokens
+                            </th>
+                        </tr>
+                        {{range .Tokens}}
+                            <tr style="border: none;">
+                                <td style="border: none; padding-left: 2em;">
+                                    {{.Name}}{{if .Description}} - {{.Description}}{{end}}
+                                </td>
+                                <td style="border: none;">
+                                    <a class="button is-danger is-outlined" onclick="removeTokenFromAPIModal({{.TokenID}}, {{.Name}})">
+                                        <span class="mdi mdi-key-minus"></span>&ensp;Remove token</a>
+                                </td>
+                            </tr>
+                        {{end}}
                     {{end}}
-                    </ol>
-                    </div>
-                {{end}}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
