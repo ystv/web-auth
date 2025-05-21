@@ -46,9 +46,9 @@ func (s *Store) countUsersAll(ctx context.Context) (CountUsers, error) {
 // addUser will add a user
 func (s *Store) addUser(ctx context.Context, u User) (User, error) {
 	builder := utils.PSQL().Insert("people.users").
-		Columns("username", "university_username", "email", "first_name", "last_name", "nickname",
+		Columns("username", "university_username", "pronouns", "email", "first_name", "last_name", "nickname",
 			"login_type", "password", "salt", "reset_pw", "enabled", "created_at", "created_by").
-		Values(u.Username, u.UniversityUsername, u.Email, u.Firstname, u.Lastname, u.Nickname, u.LoginType, u.Password,
+		Values(u.Username, u.UniversityUsername, u.Pronouns, u.Email, u.Firstname, u.Lastname, u.Nickname, u.LoginType, u.Password,
 			u.Salt, u.ResetPw, u.Enabled, u.CreatedAt, u.CreatedBy).
 		Suffix("RETURNING user_id")
 
@@ -79,6 +79,7 @@ func (s *Store) editUser(ctx context.Context, u User) error {
 			"password":            u.Password,
 			"salt":                u.Salt,
 			"email":               u.Email,
+			"pronouns":            u.Pronouns,
 			"last_login":          u.LastLogin,
 			"reset_pw":            u.ResetPw,
 			"avatar":              u.Avatar,

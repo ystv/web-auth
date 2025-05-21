@@ -92,6 +92,14 @@
                         </tr>
                         <tr style="border: none; padding-bottom: 5px;">
                             <td style="border: none; padding-right: 20px;">
+                                Pronouns
+                            </td>
+                            <td style="border: none;">
+                                {{.Pronouns}}
+                            </td>
+                        </tr>
+                        <tr style="border: none; padding-bottom: 5px;">
+                            <td style="border: none; padding-right: 20px;">
                                 Username
                             </td>
                             <td style="border: none;">
@@ -320,6 +328,19 @@
                                                 name="lastname"
                                                 placeholder="Last Name"
                                                 value="{{.User.Lastname}}"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="pronouns">Pronouns (can be left blank)</label>
+                                    <div class="control">
+                                        <input
+                                                id="pronouns"
+                                                class="input"
+                                                type="text"
+                                                name="pronouns"
+                                                placeholder="Pronouns"
+                                                value="{{.User.Pronouns}}"
                                         />
                                     </div>
                                 </div>

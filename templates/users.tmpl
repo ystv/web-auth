@@ -233,6 +233,18 @@
                                     </div>
                                 </div>
                                 <div class="field">
+                                    <label class="label" for="pronouns">Pronouns (can be left blank)</label>
+                                    <div class="control">
+                                        <input
+                                                id="pronouns"
+                                                class="input"
+                                                type="text"
+                                                name="pronouns"
+                                                placeholder="Pronouns"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
                                     <label class="label" for="universityusername">University username</label>
                                     <div class="control">
                                         <input
@@ -333,6 +345,7 @@
                     $("#error").html(data.error);
                     document.getElementById("firstname").value = "";
                     document.getElementById("lastname").value = "";
+                    document.getElementById("pronouns").value = "";
                     document.getElementById("universityusername").value = "";
                     document.getElementById("username").value = "";
                     document.getElementById("email").value = "";

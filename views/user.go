@@ -445,10 +445,13 @@ func (v *Views) _userAddPost(c echo.Context) error {
 		return fmt.Errorf("error generating salt: %w", err)
 	}
 
+	pronouns := c.FormValue("pronouns")
+
 	u := user.User{
 		UserID:             0,
 		Username:           username,
 		UniversityUsername: universityUsername,
+		Pronouns:           null.NewString(pronouns, len(pronouns) > 0),
 		LoginType:          "internal",
 		Firstname:          firstName,
 		Nickname:           firstName,
