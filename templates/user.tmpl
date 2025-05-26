@@ -90,14 +90,15 @@
                                 {{.Lastname}}
                             </td>
                         </tr>
+                        {{if .Pronouns.Valid}}
                         <tr style="border: none; padding-bottom: 5px;">
                             <td style="border: none; padding-right: 20px;">
                                 Pronouns
                             </td>
                             <td style="border: none;">
-                                {{.Pronouns}}
+                                {{.Pronouns.String}}
                             </td>
-                        </tr>
+                        </tr>{{end}}
                         <tr style="border: none; padding-bottom: 5px;">
                             <td style="border: none; padding-right: 20px;">
                                 Username
@@ -340,7 +341,7 @@
                                                 type="text"
                                                 name="pronouns"
                                                 placeholder="Pronouns"
-                                                value="{{.User.Pronouns}}"
+                                                value="{{if .User.Pronouns.Valid}}{{.User.Pronouns.Value}}{{end}}"
                                         />
                                     </div>
                                 </div>

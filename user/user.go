@@ -337,6 +337,10 @@ func (s *Store) EditUser(ctx context.Context, u User, userID int) error {
 		user.Lastname = u.Lastname
 	}
 
+	if len(u.Pronouns.String) > 0 {
+		user.Pronouns = u.Pronouns
+	}
+
 	if len(u.Avatar) > 0 {
 		user.Avatar = u.Avatar
 	}

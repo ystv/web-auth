@@ -543,6 +543,7 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 		nickname := c.FormValue("nickname")
 		lastName := c.FormValue("lastname")
 		username := c.FormValue("username")
+		pronouns := c.FormValue("pronouns")
 		universityUsername := c.FormValue("universityusername")
 		LDAPUsername := c.FormValue("ldapusername")
 		email := c.FormValue("email")
@@ -564,6 +565,10 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 
 		if len(username) > 0 {
 			user1.Username = username
+		}
+
+		if len(pronouns) > 0 {
+			user1.Pronouns = null.StringFrom(pronouns)
 		}
 
 		if len(universityUsername) > 0 {
