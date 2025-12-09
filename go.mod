@@ -1,8 +1,6 @@
 module github.com/ystv/web-auth
 
-go 1.24.0
-
-toolchain go1.24.4
+go 1.25.5
 
 require (
 	github.com/Clarilab/gocloaksession v1.14.0
@@ -11,8 +9,8 @@ require (
 	github.com/aws/aws-sdk-go v1.55.8
 	github.com/balacode/zr-whirl v1.0.2
 	github.com/dustin/go-humanize v1.0.1
-	github.com/go-playground/validator/v10 v10.26.0
-	github.com/golang-jwt/jwt/v5 v5.2.3
+	github.com/go-playground/validator/v10 v10.28.0
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/schema v1.4.1
 	github.com/gorilla/securecookie v1.1.2
@@ -24,22 +22,22 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
-	github.com/pressly/goose/v3 v3.24.3
+	github.com/pressly/goose/v3 v3.26.0
 	github.com/rs/zerolog v1.34.0
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/xhit/go-simple-mail/v2 v2.16.0
-	go.uber.org/mock v0.5.2
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20251009181029-0b7aa0cfb07b
+	go.uber.org/mock v0.6.0
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20251208183426-19acf81bd7bc
 	gopkg.in/guregu/null.v4 v4.0.0
 )
 
-require github.com/go-resty/resty/v2 v2.16.5 // indirect
+require github.com/go-resty/resty/v2 v2.17.0 // indirect
 
 require (
 	github.com/Nerzal/gocloak/v13 v13.9.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.10 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.11 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-test/deep v1.1.1 // indirect
@@ -59,14 +57,14 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.38.0 // indirect
-	golang.org/x/net v0.40.0 // indirect
-	golang.org/x/sync v0.14.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/text v0.25.0 // indirect
-	golang.org/x/time v0.11.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251014184007-4626949a642f // indirect
-	google.golang.org/grpc v1.72.3 // indirect
+	golang.org/x/crypto v0.46.0 // indirect
+	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/sync v0.19.0 // indirect
+	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/text v0.32.0 // indirect
+	golang.org/x/time v0.14.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
+	google.golang.org/grpc v1.77.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
